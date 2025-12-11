@@ -9,8 +9,8 @@ const BOSS_NAME_PREFIXES = [
 
 const BOSS_NAME_SUFFIXES = [
     'Beredy', 'Radzimirskiego', 'Biznesu', 'Kustosz', 'Nocy', 'Chaosu', 'Kubicy', 'Kamilka', 'Podróżnika',
-    'Ciemności', 'Zniszczenia', 'Śmierci', 'Otchłani', 'Piekła', 'Zagłady', 'Twojej Matki',
-    'Burzy', 'Cieni', 'Krwi', 'Gromu', 'Wieczności', 'Pożogi', 'Zarazy', 'Koszmaru', 'Twojego Ojca'
+    'Ciemności', 'Zniszczenia', 'Śmierci', 'Otchłani', 'Piekła', 'Zagłady',
+    'Burzy', 'Cieni', 'Krwi', 'Gromu', 'Wieczności', 'Pożogi', 'Zarazy', 'Koszmaru'
 ];
 
 function generateBossName() {
@@ -540,7 +540,7 @@ class Pickup {
         this.beingCollected = false;
         this.animationOffset = Math.random() * Math.PI * 2; // Losowy offset animacji
         this.spawnTime = Date.now();
-        this.lifetime = this.type === 'gold' ? 4000 : 15000; // 4s dla złota, 15s dla health
+        this.lifetime = this.type === 'gold' ? 3000 : 15000; // 3s dla złota, 15s dla health
         this.shrinkDuration = 1000; // Ostatnia 1 sekunda - kurczenie
     }
     

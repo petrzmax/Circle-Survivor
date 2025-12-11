@@ -83,10 +83,10 @@ class WaveManager {
                 const type = this.getRandomEnemyType();
                 const enemy = new Enemy(spawn.x, spawn.y, type);
                 
-                // Skalowanie wrogów od fali 5 (+2% HP i DMG na falę)
+                // Skalowanie wrogów od fali 5 (wykładnicze: 1.02^n)
                 if (this.waveNumber >= 5) {
                     const scalingWave = this.waveNumber - 5;
-                    const multiplier = 1 + (scalingWave * 0.02);
+                    const multiplier = Math.pow(1.02, scalingWave);
                     enemy.hp = Math.round(enemy.hp * multiplier);
                     enemy.maxHp = enemy.hp;
                     enemy.damage = Math.round(enemy.damage * multiplier);

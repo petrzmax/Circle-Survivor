@@ -134,14 +134,20 @@ class Game {
     
     // Show menu leaderboard with specific tab
     async showMenuLeaderboard(tab = 'local') {
-        const scores = await leaderboard.getScores(tab);
         const listEl = document.getElementById('menu-leaderboard-list');
-        listEl.innerHTML = leaderboard.renderLeaderboard(scores);
+        
+        // Pokaż loading dla globalnych wyników
+        if (tab === 'global') {
+            listEl.innerHTML = '<li style="text-align: center; color: #888; padding: 20px;">⏳ Ładowanie...</li>';
+        }
         
         // Update tab buttons
         document.querySelectorAll('.menu-tab-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tab === tab);
         });
+        
+        const scores = await leaderboard.getScores(tab);
+        listEl.innerHTML = leaderboard.renderLeaderboard(scores);
         
         this.currentMenuLeaderboardTab = tab;
     }
@@ -191,14 +197,20 @@ class Game {
     
     // Show leaderboard with specific tab
     async showLeaderboard(tab = 'local', highlightName = null) {
-        const scores = await leaderboard.getScores(tab);
         const listEl = document.getElementById('leaderboard-list');
-        listEl.innerHTML = leaderboard.renderLeaderboard(scores, highlightName);
+        
+        // Pokaż loading dla globalnych wyników
+        if (tab === 'global') {
+            listEl.innerHTML = '<li style="text-align: center; color: #888; padding: 20px;">⏳ Ładowanie...</li>';
+        }
         
         // Update tab buttons
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tab === tab);
         });
+        
+        const scores = await leaderboard.getScores(tab);
+        listEl.innerHTML = leaderboard.renderLeaderboard(scores, highlightName);
         
         this.currentLeaderboardTab = tab;
         this.highlightedName = highlightName;
@@ -383,7 +395,13 @@ class Game {
                     continue;
                 }
                 
-                const isDead = this.player.takeDamage(enemy.damage, currentTime);
+                // Boss zadaje x3 obrażenia przy dotknięciu
+                let damage = enemy.damage;
+                if (enemy.isBoss) {
+                    damage *= 3;
+                }
+                
+                const isDead = this.player.takeDamage(damage, currentTime);
                 audio.playerHit();
                 
                 // Thorns damage
@@ -702,10 +720,14 @@ class Game {
             const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.5;
             const config = WEAPON_TYPES.minibanana;
             
+            // Losowa prędkość (6-10) i dystans (60-100px) dla każdego mini banana
+            const randomSpeed = 6 + Math.random() * 4;
+            const randomRange = 60 + Math.random() * 40;
+            
             const bullet = new Bullet(
                 x, y,
-                Math.cos(angle) * config.bulletSpeed,
-                Math.sin(angle) * config.bulletSpeed,
+                Math.cos(angle) * randomSpeed,
+                Math.sin(angle) * randomSpeed,
                 config.damage * this.player.damageMultiplier,
                 config.color,
                 false
@@ -717,8 +739,8 @@ class Game {
             bullet.isBanana = config.isBanana;
             bullet.isMini = true;
             bullet.weaponCategory = config.weaponCategory;
-            bullet.explosiveRange = config.explosiveRange;
-            bullet.baseSpeed = config.bulletSpeed;
+            bullet.explosiveRange = randomRange;
+            bullet.baseSpeed = randomSpeed;
             bullet.startX = x;
             bullet.startY = y;
             bullet.distanceTraveled = 0;

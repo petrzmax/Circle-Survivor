@@ -25,7 +25,8 @@ const WEAPON_TYPES = {
         price: 50,
         color: '#ffa500',
         range: 215,
-        weaponCategory: 'gun'
+        weaponCategory: 'gun',
+        knockbackMultiplier: 0.4
     },
     shotgun: {
         name: 'Shotgun',

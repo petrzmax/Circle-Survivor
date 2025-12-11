@@ -22,9 +22,23 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Inject secrets into leaderboard.js
+        env:
+          JSONBIN_BIN_ID: ${{ secrets.JSONBIN_BIN_ID }}
+          JSONBIN_API_KEY: ${{ secrets.JSONBIN_API_KEY }}
         run: |
-          sed -i "s|this.JSONBIN_BIN_ID = null;|this.JSONBIN_BIN_ID = '${{ secrets.JSONBIN_BIN_ID }}';|g" js/leaderboard.js
-          sed -i "s|this.JSONBIN_API_KEY = null;|this.JSONBIN_API_KEY = '${{ secrets.JSONBIN_API_KEY }}';|g" js/leaderboard.js
+          node -e "
+            const fs = require('fs');
+            let content = fs.readFileSync('js/leaderboard.js', 'utf8');
+            content = content.replace(
+              'this.JSONBIN_BIN_ID = null;',
+              'this.JSONBIN_BIN_ID = \"' + process.env.JSONBIN_BIN_ID + '\";'
+            );
+            content = content.replace(
+              'this.JSONBIN_API_KEY = null;',
+              'this.JSONBIN_API_KEY = \"' + process.env.JSONBIN_API_KEY + '\";'
+            );
+            fs.writeFileSync('js/leaderboard.js', content);
+          "
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -35,11 +49,11 @@ jobs:
           path: '.'
 
   deploy:
+    runs-on: ubuntu-latest
+    needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

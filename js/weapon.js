@@ -1,0 +1,583 @@
+// Weapon definitions and Bullet class
+
+const WEAPON_TYPES = {
+    pistol: {
+        name: 'Pistolet',
+        emoji: '🔫',
+        fireRate: 500,
+        damage: 10,
+        bulletSpeed: 8,
+        bulletCount: 1,
+        spread: 0,
+        price: 0,
+        color: '#ffff00'
+    },
+    smg: {
+        name: 'SMG',
+        emoji: '🔫',
+        fireRate: 150,
+        damage: 5,
+        bulletSpeed: 10,
+        bulletCount: 1,
+        spread: 15,
+        price: 50,
+        color: '#ffa500'
+    },
+    shotgun: {
+        name: 'Shotgun',
+        emoji: '💥',
+        fireRate: 800,
+        damage: 8,
+        bulletSpeed: 7,
+        bulletCount: 5,
+        spread: 30,
+        price: 80,
+        color: '#ff4444'
+    },
+    sniper: {
+        name: 'Snajperka',
+        emoji: '🎯',
+        fireRate: 1500,
+        damage: 50,
+        bulletSpeed: 15,
+        bulletCount: 1,
+        spread: 0,
+        pierce: true,
+        price: 100,
+        color: '#00ffff'
+    },
+    laser: {
+        name: 'Laser',
+        emoji: '⚡',
+        fireRate: 100,
+        damage: 3,
+        bulletSpeed: 20,
+        bulletCount: 1,
+        spread: 5,
+        price: 120,
+        color: '#ff00ff'
+    },
+    // NOWE BRONIE
+    minigun: {
+        name: 'Minigun',
+        emoji: '🔥',
+        fireRate: 50,       // Super szybki!
+        damage: 4,
+        bulletSpeed: 12,
+        bulletCount: 1,
+        spread: 20,
+        price: 150,
+        color: '#ff6600'
+    },
+    bazooka: {
+        name: 'Bazooka',
+        emoji: '🚀',
+        fireRate: 2000,
+        damage: 80,
+        bulletSpeed: 5,
+        bulletCount: 1,
+        spread: 0,
+        explosive: true,
+        explosionRadius: 80,
+        price: 180,
+        color: '#ff0000',
+        bulletRadius: 10
+    },
+    flamethrower: {
+        name: 'Miotacz Ognia',
+        emoji: '🔥',
+        fireRate: 80,
+        damage: 6,
+        bulletSpeed: 6,
+        bulletCount: 3,
+        spread: 40,
+        price: 140,
+        color: '#ff4400',
+        bulletRadius: 6,
+        shortRange: true,
+        maxDistance: 150
+    },
+    mines: {
+        name: 'Miny',
+        emoji: '💣',
+        fireRate: 4500,
+        damage: 60,
+        bulletSpeed: 0,
+        bulletCount: 1,
+        spread: 0,
+        explosive: true,
+        explosionRadius: 70,
+        price: 130,
+        color: '#333333',
+        bulletRadius: 12,
+        isMine: true
+    },
+    nuke: {
+        name: 'Wyrzutnia Nuklearna',
+        emoji: '☢️',
+        fireRate: 8000,
+        damage: 300,
+        bulletSpeed: 3,
+        bulletCount: 1,
+        spread: 0,
+        explosive: true,
+        explosionRadius: 200,
+        price: 500,
+        color: '#00ff00',
+        bulletRadius: 15,
+        isNuke: true
+    },
+    
+    // === NOWE BRONIE ===
+    scythe: {
+        name: 'Kosa Kubusia',
+        emoji: '🌙',
+        fireRate: 1200,
+        damage: 35,
+        bulletSpeed: 6,
+        bulletCount: 1,
+        spread: 0,
+        pierce: true,
+        pierceCount: 10,
+        price: 200,
+        color: '#9932cc',
+        bulletRadius: 20,
+        isScythe: true  // Obraca się!
+    },
+    sword: {
+        name: 'Miecz Kamilka',
+        emoji: '⚔️',
+        fireRate: 400,
+        damage: 45,
+        bulletSpeed: 12,
+        bulletCount: 3,
+        spread: 60,
+        price: 180,
+        color: '#silver',
+        bulletRadius: 8,
+        isSword: true,
+        shortRange: true,
+        maxDistance: 100
+    },
+    holyGrenade: {
+        name: 'Święty Granat',
+        emoji: '✝️',
+        fireRate: 3000,
+        damage: 150,
+        bulletSpeed: 4,
+        bulletCount: 1,
+        spread: 0,
+        explosive: true,
+        explosionRadius: 120,
+        price: 250,
+        color: '#ffd700',
+        bulletRadius: 12,
+        isHolyGrenade: true  // Specjalna eksplozja!
+    },
+    banana: {
+        name: 'Banan z Worms',
+        emoji: '🍌',
+        fireRate: 2500,
+        damage: 40,
+        bulletSpeed: 5,
+        bulletCount: 1,
+        spread: 0,
+        explosive: true,
+        explosionRadius: 90,
+        price: 220,
+        color: '#ffff00',
+        bulletRadius: 10,
+        isBanana: true  // Dzieli się na mniejsze!
+    },
+    crossbow: {
+        name: 'Kusza Przebijająca',
+        emoji: '🏹',
+        fireRate: 1000,
+        damage: 60,
+        bulletSpeed: 14,
+        bulletCount: 1,
+        spread: 0,
+        pierce: true,
+        pierceCount: 5,
+        price: 280,
+        color: '#8b4513',
+        bulletRadius: 6
+    }
+};
+
+class Weapon {
+    constructor(type) {
+        const config = WEAPON_TYPES[type];
+        this.type = type;
+        this.name = config.name;
+        this.emoji = config.emoji;
+        this.fireRate = config.fireRate;
+        this.baseDamage = config.damage;
+        this.damage = config.damage;
+        this.bulletSpeed = config.bulletSpeed;
+        this.bulletCount = config.bulletCount;
+        this.spread = config.spread;
+        this.pierce = config.pierce || false;
+        this.pierceCount = config.pierceCount || (config.pierce ? 999 : 0);
+        this.color = config.color;
+        this.lastFired = 0;
+        this.level = 1;
+        
+        // Nowe właściwości
+        this.explosive = config.explosive || false;
+        this.explosionRadius = config.explosionRadius || 0;
+        this.bulletRadius = config.bulletRadius || 4;
+        this.isMine = config.isMine || false;
+        this.isNuke = config.isNuke || false;
+        this.shortRange = config.shortRange || false;
+        this.maxDistance = config.maxDistance || Infinity;
+        
+        // Specjalne efekty
+        this.chain = config.chain || false;      // Kusza łańcuchowa
+        this.chainCount = config.chainCount || 0;
+        this.isScythe = config.isScythe || false; // Kosa
+        this.isSword = config.isSword || false;   // Miecz
+        this.isBanana = config.isBanana || false; // Banan
+        this.isHolyGrenade = config.isHolyGrenade || false;
+    }
+
+    canFire(currentTime) {
+        return currentTime - this.lastFired >= this.fireRate;
+    }
+    
+    // Ulepsz broń
+    upgrade() {
+        this.level++;
+        this.damage = this.baseDamage * (1 + (this.level - 1) * 0.3);
+        this.bulletCount += 1;
+        if (this.explosive) {
+            this.explosionRadius *= 1.15;
+        }
+    }
+    
+    // Dźwięk strzału w zależności od typu broni
+    playShootSound() {
+        if (typeof audio === 'undefined') return;
+        
+        switch (this.type) {
+            case 'shotgun':
+                audio.shootShotgun();
+                break;
+            case 'sniper':
+                audio.shootSniper();
+                break;
+            case 'laser':
+                audio.shootLaser();
+                break;
+            case 'minigun':
+                audio.shootMinigun();
+                break;
+            case 'flamethrower':
+                audio.flamethrower();
+                break;
+            case 'scythe':
+                audio.scytheSwing();
+                break;
+            case 'sword':
+                audio.swordSlash();
+                break;
+            case 'crossbow':
+                audio.crossbowShoot();
+                break;
+            case 'bazooka':
+            case 'nuke':
+            case 'mines':
+            case 'holyGrenade':
+            case 'banana':
+                // Eksplozja gra przy trafieniu, nie przy strzale
+                audio.shoot();
+                break;
+            default:
+                audio.shoot();
+        }
+    }
+
+    fire(x, y, targetX, targetY, currentTime, damageMultiplier, attackSpeedMultiplier, critChance = 0, critDamage = 1.5, extraProjectiles = 0, extraPierce = 0) {
+        if (!this.canFire(currentTime)) return [];
+
+        this.lastFired = currentTime - (this.fireRate * (1 - attackSpeedMultiplier));
+        
+        // Dźwięk strzału
+        this.playShootSound();
+        
+        const bullets = [];
+        const baseAngle = Math.atan2(targetY - y, targetX - x);
+        const totalBullets = this.bulletCount + extraProjectiles;
+
+        for (let i = 0; i < totalBullets; i++) {
+            let angle = baseAngle;
+            
+            if (totalBullets > 1) {
+                // Spread bullets evenly
+                const spreadRad = (this.spread * Math.PI) / 180;
+                angle = baseAngle - spreadRad / 2 + (spreadRad / (totalBullets - 1)) * i;
+            } else if (this.spread > 0) {
+                // Random spread for single bullet
+                const spreadRad = ((Math.random() - 0.5) * this.spread * Math.PI) / 180;
+                angle += spreadRad;
+            }
+            
+            // Critical hit
+            let finalDamage = this.damage * damageMultiplier;
+            let isCrit = false;
+            if (Math.random() < critChance) {
+                finalDamage *= critDamage;
+                isCrit = true;
+            }
+
+            const bullet = new Bullet(
+                x, y,
+                Math.cos(angle) * this.bulletSpeed,
+                Math.sin(angle) * this.bulletSpeed,
+                finalDamage,
+                this.color,
+                this.pierce || extraPierce > 0
+            );
+            
+            // Dodaj specjalne właściwości
+            bullet.radius = this.bulletRadius;
+            bullet.explosive = this.explosive;
+            bullet.explosionRadius = this.explosionRadius;
+            bullet.isMine = this.isMine;
+            bullet.isNuke = this.isNuke;
+            bullet.shortRange = this.shortRange;
+            bullet.maxDistance = this.maxDistance;
+            bullet.distanceTraveled = 0;
+            bullet.startX = x;
+            bullet.startY = y;
+            bullet.isCrit = isCrit;
+            bullet.pierceCount = this.pierceCount + extraPierce;
+            
+            // Specjalne efekty broni
+            bullet.chain = this.chain;
+            bullet.chainCount = this.chainCount;
+            bullet.isScythe = this.isScythe;
+            bullet.isSword = this.isSword;
+            bullet.isBanana = this.isBanana;
+            bullet.isHolyGrenade = this.isHolyGrenade;
+            
+            bullets.push(bullet);
+        }
+
+        return bullets;
+    }
+}
+
+class Bullet {
+    constructor(x, y, vx, vy, damage, color, pierce = false) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.damage = damage;
+        this.color = color;
+        this.radius = 4;
+        this.pierce = pierce;
+        this.hitEnemies = new Set();
+        
+        // Specjalne właściwości (ustawiane przez Weapon)
+        this.explosive = false;
+        this.explosionRadius = 0;
+        this.isMine = false;
+        this.isNuke = false;
+        this.shortRange = false;
+        this.maxDistance = Infinity;
+        this.distanceTraveled = 0;
+        this.startX = x;
+        this.startY = y;
+        this.mineTimer = 0;
+        this.mineArmed = false;
+    }
+
+    update() {
+        // Miny nie lecą, tylko czekają
+        if (this.isMine) {
+            this.mineTimer++;
+            if (this.mineTimer > 30) this.mineArmed = true; // Arm after 0.5s
+            return;
+        }
+        
+        this.x += this.vx;
+        this.y += this.vy;
+        
+        // Track distance for short range weapons
+        if (this.shortRange) {
+            this.distanceTraveled = Math.sqrt(
+                (this.x - this.startX) ** 2 + 
+                (this.y - this.startY) ** 2
+            );
+        }
+    }
+    
+    shouldExpire() {
+        // Short range bullets expire after max distance
+        if (this.shortRange && this.distanceTraveled > this.maxDistance) {
+            return true;
+        }
+        return false;
+    }
+
+    render(ctx) {
+        ctx.save();
+        
+        // Różne renderowanie dla różnych typów
+        if (this.isNuke) {
+            // Nuke - duża świecąca kula z symbolem
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+            gradient.addColorStop(0, '#ffffff');
+            gradient.addColorStop(0.5, '#00ff00');
+            gradient.addColorStop(1, '#004400');
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.shadowColor = '#00ff00';
+            ctx.shadowBlur = 20;
+            ctx.fill();
+        } else if (this.isMine) {
+            // Mina - ciemna z czerwonym światełkiem
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#333';
+            ctx.fill();
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            if (this.mineArmed) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y - 3, 3, 0, Math.PI * 2);
+                ctx.fillStyle = Math.floor(Date.now() / 200) % 2 ? '#ff0000' : '#440000';
+                ctx.fill();
+            }
+        } else if (this.isScythe) {
+            // Kosa Kubusia - obracająca się kosa
+            ctx.translate(this.x, this.y);
+            ctx.rotate(Date.now() / 100);
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius, 0, Math.PI * 1.5);
+            ctx.lineTo(0, 0);
+            ctx.fillStyle = '#9932cc';
+            ctx.fill();
+            ctx.strokeStyle = '#660099';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.shadowColor = '#9932cc';
+            ctx.shadowBlur = 15;
+        } else if (this.isSword) {
+            // Miecz Kamilka - błyskawiczny slash
+            ctx.translate(this.x, this.y);
+            ctx.rotate(Math.atan2(this.vy, this.vx));
+            ctx.beginPath();
+            ctx.moveTo(-this.radius, 0);
+            ctx.lineTo(this.radius, -3);
+            ctx.lineTo(this.radius + 5, 0);
+            ctx.lineTo(this.radius, 3);
+            ctx.closePath();
+            ctx.fillStyle = '#c0c0c0';
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        } else if (this.isHolyGrenade) {
+            // Święty granat - złoty z krzyżem
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+            gradient.addColorStop(0, '#ffffff');
+            gradient.addColorStop(0.5, '#ffd700');
+            gradient.addColorStop(1, '#b8860b');
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            // Krzyż
+            ctx.strokeStyle = '#8b0000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y - 5);
+            ctx.lineTo(this.x, this.y + 5);
+            ctx.moveTo(this.x - 4, this.y - 1);
+            ctx.lineTo(this.x + 4, this.y - 1);
+            ctx.stroke();
+            ctx.shadowColor = '#ffd700';
+            ctx.shadowBlur = 15;
+        } else if (this.isBanana) {
+            // Banan z Worms - żółty banan
+            ctx.translate(this.x, this.y);
+            ctx.rotate(Date.now() / 150);
+            ctx.beginPath();
+            ctx.arc(0, -5, this.radius, 0.2 * Math.PI, 0.8 * Math.PI);
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = '#ffff00';
+            ctx.stroke();
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#cccc00';
+            ctx.stroke();
+        } else if (this.chain) {
+            // Kusza - strzała z łańcuchem
+            ctx.translate(this.x, this.y);
+            ctx.rotate(Math.atan2(this.vy, this.vx));
+            // Strzała
+            ctx.beginPath();
+            ctx.moveTo(-this.radius, 0);
+            ctx.lineTo(this.radius, 0);
+            ctx.lineTo(this.radius + 4, -2);
+            ctx.moveTo(this.radius, 0);
+            ctx.lineTo(this.radius + 4, 2);
+            ctx.strokeStyle = '#8b4513';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            // Świecący hak
+            ctx.fillStyle = '#00ffff';
+            ctx.beginPath();
+            ctx.arc(this.radius, 0, 3, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (this.explosive && !this.isMine) {
+            // Bazooka rocket
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+            gradient.addColorStop(0, '#ffff00');
+            gradient.addColorStop(0.7, '#ff4400');
+            gradient.addColorStop(1, '#aa0000');
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(this.x - this.vx * 2, this.y - this.vy * 2);
+            ctx.lineTo(this.x - this.vx * 4, this.y - this.vy * 4);
+            ctx.strokeStyle = '#ff8800';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+        } else {
+            // Standard bullet
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+            
+            // Crit indicator
+            if (this.isCrit) {
+                ctx.shadowColor = '#ff0000';
+                ctx.shadowBlur = 15;
+                ctx.strokeStyle = '#ff0000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            } else {
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+            }
+            ctx.fill();
+        }
+        
+        ctx.restore();
+    }
+
+    isOffScreen(canvas) {
+        if (this.isMine) return false;
+        return this.x < -50 || this.x > canvas.width + 50 ||
+               this.y < -50 || this.y > canvas.height + 50;
+    }
+}

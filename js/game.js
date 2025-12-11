@@ -1054,14 +1054,14 @@ class Game {
         const boss = this.enemies.find(e => e.isBoss);
         if (!boss) return;
         
-        const barWidth = this.canvas.width * 0.6;
-        const barHeight = 25;
-        const barX = (this.canvas.width - barWidth) / 2;
-        const barY = 50;
+        // Oznacz bossa, żeby nie rysować małego paska nad nim
+        boss.hasTopHealthBar = true;
         
-        // Tło paska
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        this.ctx.fillRect(barX - 5, barY - 30, barWidth + 10, barHeight + 40);
+        const barWidth = this.canvas.width * 0.5;
+        const barHeight = 18;
+        const barX = (this.canvas.width - barWidth) / 2;
+        const barY = 95; // Poniżej info o fali/czasie
+        const cornerRadius = 9;
         
         // Nazwa bossa z emoji
         const bossEmoji = boss.type === 'boss' ? '👹' : 
@@ -1071,44 +1071,75 @@ class Game {
                          boss.type === 'bossExploder' ? '💥' :
                          boss.type === 'bossGhost' ? '👻' : '👹';
         
-        this.ctx.fillStyle = '#ffd700';
-        this.ctx.font = 'bold 16px Arial';
+        // Nazwa bossa - styl pasujący do gry
+        this.ctx.save();
+        this.ctx.font = 'bold 13px Arial';
         this.ctx.textAlign = 'center';
-        this.ctx.fillText(`${bossEmoji} ${boss.bossName || 'BOSS'}`, this.canvas.width / 2, barY - 10);
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        this.ctx.fillText(`${bossEmoji} ${boss.bossName || 'BOSS'}`, this.canvas.width / 2 + 1, barY - 6);
+        this.ctx.fillStyle = '#ff6b6b';
+        this.ctx.fillText(`${bossEmoji} ${boss.bossName || 'BOSS'}`, this.canvas.width / 2, barY - 7);
         
-        // Ramka paska HP
-        this.ctx.strokeStyle = '#ffd700';
-        this.ctx.lineWidth = 2;
-        this.ctx.strokeRect(barX, barY, barWidth, barHeight);
+        // Tło paska - ciemne z zaokrąglonymi rogami
+        this.ctx.beginPath();
+        this.ctx.roundRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4, cornerRadius + 2);
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        this.ctx.fill();
         
-        // Wypełnienie paska HP z gradientem
+        // Wewnętrzne tło paska
+        this.ctx.beginPath();
+        this.ctx.roundRect(barX, barY, barWidth, barHeight, cornerRadius);
+        this.ctx.fillStyle = '#1a1a2e';
+        this.ctx.fill();
+        
+        // Wypełnienie paska HP
         const hpPercent = boss.hp / boss.maxHp;
-        const fillWidth = barWidth * hpPercent;
+        const fillWidth = Math.max(0, barWidth * hpPercent);
         
-        // Gradient: zielony -> żółty -> czerwony
-        const gradient = this.ctx.createLinearGradient(barX, barY, barX + barWidth, barY);
-        if (hpPercent > 0.5) {
-            gradient.addColorStop(0, '#00ff00');
-            gradient.addColorStop(1, '#88ff00');
-        } else if (hpPercent > 0.25) {
-            gradient.addColorStop(0, '#ffff00');
-            gradient.addColorStop(1, '#ff8800');
-        } else {
-            gradient.addColorStop(0, '#ff4400');
-            gradient.addColorStop(1, '#ff0000');
+        if (fillWidth > 0) {
+            // Gradient bazujący na HP
+            const gradient = this.ctx.createLinearGradient(barX, barY, barX + fillWidth, barY + barHeight);
+            if (hpPercent > 0.5) {
+                gradient.addColorStop(0, '#00d26a');
+                gradient.addColorStop(1, '#00b359');
+            } else if (hpPercent > 0.25) {
+                gradient.addColorStop(0, '#ffc107');
+                gradient.addColorStop(1, '#ff9800');
+            } else {
+                gradient.addColorStop(0, '#ff5252');
+                gradient.addColorStop(1, '#d32f2f');
+            }
+            
+            this.ctx.beginPath();
+            this.ctx.roundRect(barX, barY, fillWidth, barHeight, cornerRadius);
+            this.ctx.fillStyle = gradient;
+            this.ctx.fill();
+            
+            // Efekt blasku na górze paska
+            const shineGradient = this.ctx.createLinearGradient(barX, barY, barX, barY + barHeight / 2);
+            shineGradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+            shineGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            this.ctx.beginPath();
+            this.ctx.roundRect(barX, barY, fillWidth, barHeight / 2, [cornerRadius, cornerRadius, 0, 0]);
+            this.ctx.fillStyle = shineGradient;
+            this.ctx.fill();
         }
         
-        this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(barX, barY, fillWidth, barHeight);
+        // Delikatna ramka
+        this.ctx.beginPath();
+        this.ctx.roundRect(barX, barY, barWidth, barHeight, cornerRadius);
+        this.ctx.strokeStyle = 'rgba(255, 107, 107, 0.4)';
+        this.ctx.lineWidth = 1;
+        this.ctx.stroke();
         
-        // Tekst HP
-        this.ctx.fillStyle = 'white';
-        this.ctx.font = 'bold 14px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText(`${Math.ceil(boss.hp)} / ${boss.maxHp}`, this.canvas.width / 2, barY + 18);
+        // Tekst HP - mniejszy, po prawej stronie paska
+        const percentText = Math.ceil(hpPercent * 100) + '%';
+        this.ctx.font = 'bold 11px Arial';
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        this.ctx.textAlign = 'right';
+        this.ctx.fillText(percentText, barX + barWidth - 6, barY + 13);
         
-        // Reset text align
-        this.ctx.textAlign = 'left';
+        this.ctx.restore();
     }
 
     updateHUD() {

@@ -418,8 +418,8 @@ class Enemy {
         ctx.lineWidth = 2;
         ctx.stroke();
         
-        // HP bar (only if damaged)
-        if (this.hp < this.maxHp) {
+        // HP bar (only if damaged, and not for bosses with top health bar)
+        if (this.hp < this.maxHp && !this.hasTopHealthBar) {
             const barWidth = this.radius * 2;
             const barHeight = 4;
             const hpPercent = this.hp / this.maxHp;

@@ -4,13 +4,13 @@
 const BOSS_NAME_PREFIXES = [
     'Kieł', 'Opus', 'Miłośnik', 'Marcel', 'Władca', 'Pan', 'Pogromca',
     'Cień', 'Gniew', 'Strach', 'Żelazny', 'Krwawy', 'Złoty', 'Mroczny',
-    'Szalony', 'Bezlitosny', 'Potężny', 'Wielki', 'Starożytny', 'Niszczyciel'
+    'Szalony', 'Bezlitosny', 'Potężny', 'Wielki', 'Starożytny', 'Niszczyciel', 'Ojciec', 'Matka'
 ];
 
 const BOSS_NAME_SUFFIXES = [
-    'Beredy', 'Radzimirskiego', 'Biznesu', 'Kustosz', 'Nocy', 'Chaosu',
-    'Ciemności', 'Zniszczenia', 'Śmierci', 'Otchłani', 'Piekła', 'Zagłady',
-    'Burzy', 'Cieni', 'Krwi', 'Gromu', 'Wieczności', 'Pożogi', 'Zarazy', 'Koszmaru'
+    'Beredy', 'Radzimirskiego', 'Biznesu', 'Kustosz', 'Nocy', 'Chaosu', 'Kubicy', 'Kamilka', 'Podróżnika',
+    'Ciemności', 'Zniszczenia', 'Śmierci', 'Otchłani', 'Piekła', 'Zagłady', 'Twojej Matki',
+    'Burzy', 'Cieni', 'Krwi', 'Gromu', 'Wieczności', 'Pożogi', 'Zarazy', 'Koszmaru', 'Twojego Ojca'
 ];
 
 function generateBossName() {

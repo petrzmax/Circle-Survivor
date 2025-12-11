@@ -11,7 +11,7 @@ const WEAPON_TYPES = {
         spread: 0,
         price: 0,
         color: '#ffff00',
-        range: 350
+        range: 265
     },
     smg: {
         name: 'SMG',
@@ -23,7 +23,7 @@ const WEAPON_TYPES = {
         spread: 15,
         price: 50,
         color: '#ffa500',
-        range: 280
+        range: 215
     },
     shotgun: {
         name: 'Shotgun',
@@ -35,7 +35,7 @@ const WEAPON_TYPES = {
         spread: 30,
         price: 80,
         color: '#ff4444',
-        range: 180
+        range: 140
     },
     sniper: {
         name: 'Snajperka',
@@ -48,7 +48,7 @@ const WEAPON_TYPES = {
         pierce: true,
         price: 100,
         color: '#00ffff',
-        range: 500
+        range: 400
     },
     laser: {
         name: 'Laser',
@@ -60,7 +60,7 @@ const WEAPON_TYPES = {
         spread: 5,
         price: 120,
         color: '#ff00ff',
-        range: 450
+        range: 350
     },
     // NOWE BRONIE
     minigun: {
@@ -73,7 +73,7 @@ const WEAPON_TYPES = {
         spread: 20,
         price: 220,         // Increased from 150
         color: '#ff6600',
-        range: 200,
+        range: 160,
         knockbackMultiplier: 0.3  // Reduced knockback
     },
     bazooka: {
@@ -89,7 +89,7 @@ const WEAPON_TYPES = {
         price: 180,
         color: '#ff0000',
         bulletRadius: 10,
-        range: 400
+        range: 310
     },
     flamethrower: {
         name: 'Miotacz Ognia',
@@ -103,8 +103,8 @@ const WEAPON_TYPES = {
         color: '#ff4400',
         bulletRadius: 6,
         shortRange: true,
-        maxDistance: 150,
-        range: 150
+        maxDistance: 120,
+        range: 120
     },
     mines: {
         name: 'Miny',
@@ -154,7 +154,7 @@ const WEAPON_TYPES = {
         color: '#9932cc',
         bulletRadius: 20,
         isScythe: true,  // Obraca się!
-        range: 300
+        range: 230
     },
     sword: {
         name: 'Miecz Kamilka',
@@ -170,7 +170,7 @@ const WEAPON_TYPES = {
         isSword: true,
         shortRange: true,
         maxDistance: 100,
-        range: 120
+        range: 100
     },
     holyGrenade: {
         name: 'Święty Granat',
@@ -186,7 +186,7 @@ const WEAPON_TYPES = {
         color: '#ffd700',
         bulletRadius: 12,
         isHolyGrenade: true,  // Specjalna eksplozja!
-        range: 350
+        range: 275
     },
     banana: {
         name: 'Banan z Worms',
@@ -202,7 +202,7 @@ const WEAPON_TYPES = {
         color: '#ffff00',
         bulletRadius: 10,
         isBanana: true,  // Dzieli się na mniejsze!
-        range: 300
+        range: 235
     },
     crossbow: {
         name: 'Kusza Przebijająca',
@@ -217,7 +217,7 @@ const WEAPON_TYPES = {
         price: 280,
         color: '#8b4513',
         bulletRadius: 6,
-        range: 400
+        range: 320
     }
 };
 

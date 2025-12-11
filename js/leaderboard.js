@@ -75,7 +75,7 @@ class Leaderboard {
         try {
             const response = await fetch(`https://api.jsonbin.io/v3/b/${this.JSONBIN_BIN_ID}/latest`, {
                 headers: {
-                    'X-Master-Key': this.JSONBIN_API_KEY
+                    'X-Access-Key': this.JSONBIN_API_KEY
                 }
             });
 

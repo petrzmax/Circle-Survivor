@@ -366,7 +366,7 @@ class Game {
         const nearestEnemy = this.findNearestEnemy();
         
         // Fire weapons - każda broń celuje niezależnie
-        const newBullets = this.player.fireAllWeapons(nearestEnemy, currentTime, (x, y) => this.findNearestEnemyFrom(x, y));
+        const newBullets = this.player.fireAllWeapons(nearestEnemy, currentTime, (x, y, maxRange) => this.findNearestEnemyFrom(x, y, maxRange));
         this.bullets.push(...newBullets);
         
         // Update enemies

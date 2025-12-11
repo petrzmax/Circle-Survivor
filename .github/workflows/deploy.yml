@@ -25,20 +25,7 @@ jobs:
         env:
           JSONBIN_BIN_ID: ${{ secrets.JSONBIN_BIN_ID }}
           JSONBIN_API_KEY: ${{ secrets.JSONBIN_API_KEY }}
-        run: |
-          node -e "
-            const fs = require('fs');
-            let content = fs.readFileSync('js/leaderboard.js', 'utf8');
-            content = content.replace(
-              'this.JSONBIN_BIN_ID = null;',
-              'this.JSONBIN_BIN_ID = \"' + process.env.JSONBIN_BIN_ID + '\";'
-            );
-            content = content.replace(
-              'this.JSONBIN_API_KEY = null;',
-              'this.JSONBIN_API_KEY = \"' + process.env.JSONBIN_API_KEY + '\";'
-            );
-            fs.writeFileSync('js/leaderboard.js', content);
-          "
+        run: node scripts/inject-secrets.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

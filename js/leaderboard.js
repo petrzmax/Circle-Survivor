@@ -7,7 +7,6 @@ class Leaderboard {
         // Set these values to enable global leaderboard:
         this.JSONBIN_BIN_ID = null;  // Your bin ID (e.g., '6789abcdef012345')
         this.JSONBIN_API_KEY = null; // Your X-Access-Key (starts with $2a$... or $2b$...)
-        this.JSONBIN_API_KEY = null; // Your X-Access-Key (starts with $2a$... or $2b$...)
         
         // Local storage key
         this.LOCAL_STORAGE_KEY = 'circle_survivor_leaderboard';

@@ -479,7 +479,7 @@ class Game {
                         break;
                     }
                     
-                    const isDead = enemy.takeDamage(bullet.damage, bullet.x, bullet.y, this.player.knockback);
+                    const isDead = enemy.takeDamage(bullet.damage, bullet.x, bullet.y, this.player.knockback * bullet.knockbackMultiplier);
                     
                     // Chain effect (crossbow) - przekaż pozycję, nie wroga!
                     if (bullet.chain && bullet.chainCount > 0) {
@@ -735,16 +735,21 @@ class Game {
         return nearest;
     }
     
-    // Znajdź najbliższego wroga od danej pozycji (dla broni)
-    findNearestEnemyFrom(x, y) {
+    // Znajdź najbliższego wroga od danej pozycji (dla broni) z limitem zasięgu
+    findNearestEnemyFrom(x, y, maxRange = Infinity) {
         let nearest = null;
         let nearestDist = Infinity;
+        
+        // Apply player's attackRange multiplier
+        const effectiveRange = maxRange * (this.player?.attackRange || 1);
         
         for (const enemy of this.enemies) {
             const dx = enemy.x - x;
             const dy = enemy.y - y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < nearestDist) {
+            
+            // Only consider enemies within range
+            if (dist < nearestDist && dist <= effectiveRange) {
                 nearestDist = dist;
                 nearest = enemy;
             }

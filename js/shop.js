@@ -275,6 +275,25 @@ const SHOP_ITEMS = {
         emoji: '⚡',
         effect: { attackSpeedMultiplier: 0.15 }
     },
+    
+    // --- Zasięg broni ---
+    scope: {
+        type: 'item',
+        name: 'Luneta',
+        description: '+20% zasięgu broni',
+        price: 80,
+        emoji: '🔭',
+        effect: { attackRange: 0.20 }
+    },
+    laserSight: {
+        type: 'item',
+        name: 'Celownik Laserowy',
+        description: '+15% zasięgu, +5% crit',
+        price: 120,
+        emoji: '🎯',
+        effect: { attackRange: 0.15, critChance: 0.05 }
+    },
+    
     allStats: {
         type: 'item',
         name: 'Korona Króla',

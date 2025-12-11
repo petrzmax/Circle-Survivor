@@ -25,6 +25,7 @@ class Player {
         this.explosionRadius = 1;    // Mnożnik zasięgu eksplozji
         this.projectileCount = 0;    // Dodatkowe pociski
         this.pierce = 0;             // Dodatkowe przebicia
+        this.attackRange = 1;        // Mnożnik zasięgu broni
         
         // Utility Stats
         this.luck = 0;               // Bonus do dropów
@@ -129,12 +130,22 @@ class Player {
             // Oblicz pozycję broni
             const weaponPos = this.getWeaponPosition(i, currentTime, mainTarget);
             
-            // Znajdź najbliższego wroga od pozycji tej broni
-            let target = mainTarget;
+            // Znajdź najbliższego wroga od pozycji tej broni (z limitem zasięgu)
+            let target = null;
             if (findEnemyFromFn) {
-                const nearestToWeapon = findEnemyFromFn(weaponPos.x, weaponPos.y);
+                const nearestToWeapon = findEnemyFromFn(weaponPos.x, weaponPos.y, weapon.range);
                 if (nearestToWeapon) {
                     target = nearestToWeapon;
+                }
+            }
+            
+            // Fallback to main target if within range
+            if (!target && mainTarget) {
+                const dx = mainTarget.x - weaponPos.x;
+                const dy = mainTarget.y - weaponPos.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist <= weapon.range * this.attackRange) {
+                    target = mainTarget;
                 }
             }
             
@@ -186,8 +197,35 @@ class Player {
 
     addWeapon(type) {
         // Można mieć wiele tej samej broni!
-        this.weapons.push(new Weapon(type));
+        const weapon = new Weapon(type);
+        this.weapons.push(weapon);
+        
+        // Recalculate fire offsets for staggered shooting
+        this.recalculateFireOffsets();
+        
         return true;
+    }
+    
+    // Rozłóż strzały równomiernie dla broni tego samego typu
+    recalculateFireOffsets() {
+        // Group weapons by type
+        const weaponsByType = {};
+        for (const weapon of this.weapons) {
+            if (!weaponsByType[weapon.type]) {
+                weaponsByType[weapon.type] = [];
+            }
+            weaponsByType[weapon.type].push(weapon);
+        }
+        
+        // Assign staggered offsets within each type group
+        for (const type in weaponsByType) {
+            const weapons = weaponsByType[type];
+            const count = weapons.length;
+            for (let i = 0; i < count; i++) {
+                // Offset each weapon by fraction of fire rate
+                weapons[i].fireOffset = (i / count) * weapons[i].fireRate;
+            }
+        }
     }
 
     render(ctx, currentTime, target = null) {

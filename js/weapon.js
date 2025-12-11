@@ -10,7 +10,8 @@ const WEAPON_TYPES = {
         bulletCount: 1,
         spread: 0,
         price: 0,
-        color: '#ffff00'
+        color: '#ffff00',
+        range: 350
     },
     smg: {
         name: 'SMG',
@@ -21,7 +22,8 @@ const WEAPON_TYPES = {
         bulletCount: 1,
         spread: 15,
         price: 50,
-        color: '#ffa500'
+        color: '#ffa500',
+        range: 280
     },
     shotgun: {
         name: 'Shotgun',
@@ -32,7 +34,8 @@ const WEAPON_TYPES = {
         bulletCount: 5,
         spread: 30,
         price: 80,
-        color: '#ff4444'
+        color: '#ff4444',
+        range: 180
     },
     sniper: {
         name: 'Snajperka',
@@ -44,7 +47,8 @@ const WEAPON_TYPES = {
         spread: 0,
         pierce: true,
         price: 100,
-        color: '#00ffff'
+        color: '#00ffff',
+        range: 500
     },
     laser: {
         name: 'Laser',
@@ -55,19 +59,22 @@ const WEAPON_TYPES = {
         bulletCount: 1,
         spread: 5,
         price: 120,
-        color: '#ff00ff'
+        color: '#ff00ff',
+        range: 450
     },
     // NOWE BRONIE
     minigun: {
         name: 'Minigun',
         emoji: '🔥',
         fireRate: 50,       // Super szybki!
-        damage: 4,
+        damage: 2,          // Nerfed from 4
         bulletSpeed: 12,
         bulletCount: 1,
         spread: 20,
-        price: 150,
-        color: '#ff6600'
+        price: 220,         // Increased from 150
+        color: '#ff6600',
+        range: 200,
+        knockbackMultiplier: 0.3  // Reduced knockback
     },
     bazooka: {
         name: 'Bazooka',
@@ -81,7 +88,8 @@ const WEAPON_TYPES = {
         explosionRadius: 80,
         price: 180,
         color: '#ff0000',
-        bulletRadius: 10
+        bulletRadius: 10,
+        range: 400
     },
     flamethrower: {
         name: 'Miotacz Ognia',
@@ -95,7 +103,8 @@ const WEAPON_TYPES = {
         color: '#ff4400',
         bulletRadius: 6,
         shortRange: true,
-        maxDistance: 150
+        maxDistance: 150,
+        range: 150
     },
     mines: {
         name: 'Miny',
@@ -110,7 +119,8 @@ const WEAPON_TYPES = {
         price: 130,
         color: '#333333',
         bulletRadius: 12,
-        isMine: true
+        isMine: true,
+        range: 9999  // Mines don't need range limit
     },
     nuke: {
         name: 'Wyrzutnia Nuklearna',
@@ -125,7 +135,8 @@ const WEAPON_TYPES = {
         price: 500,
         color: '#00ff00',
         bulletRadius: 15,
-        isNuke: true
+        isNuke: true,
+        range: 9999  // Nuke shoots at any distance
     },
     
     // === NOWE BRONIE ===
@@ -142,7 +153,8 @@ const WEAPON_TYPES = {
         price: 200,
         color: '#9932cc',
         bulletRadius: 20,
-        isScythe: true  // Obraca się!
+        isScythe: true,  // Obraca się!
+        range: 300
     },
     sword: {
         name: 'Miecz Kamilka',
@@ -157,7 +169,8 @@ const WEAPON_TYPES = {
         bulletRadius: 8,
         isSword: true,
         shortRange: true,
-        maxDistance: 100
+        maxDistance: 100,
+        range: 120
     },
     holyGrenade: {
         name: 'Święty Granat',
@@ -172,7 +185,8 @@ const WEAPON_TYPES = {
         price: 250,
         color: '#ffd700',
         bulletRadius: 12,
-        isHolyGrenade: true  // Specjalna eksplozja!
+        isHolyGrenade: true,  // Specjalna eksplozja!
+        range: 350
     },
     banana: {
         name: 'Banan z Worms',
@@ -187,7 +201,8 @@ const WEAPON_TYPES = {
         price: 220,
         color: '#ffff00',
         bulletRadius: 10,
-        isBanana: true  // Dzieli się na mniejsze!
+        isBanana: true,  // Dzieli się na mniejsze!
+        range: 300
     },
     crossbow: {
         name: 'Kusza Przebijająca',
@@ -201,7 +216,8 @@ const WEAPON_TYPES = {
         pierceCount: 5,
         price: 280,
         color: '#8b4513',
-        bulletRadius: 6
+        bulletRadius: 6,
+        range: 400
     }
 };
 
@@ -232,6 +248,13 @@ class Weapon {
         this.shortRange = config.shortRange || false;
         this.maxDistance = config.maxDistance || Infinity;
         
+        // Range system
+        this.range = config.range || 300;  // Default range
+        this.knockbackMultiplier = config.knockbackMultiplier || 1;  // Per-weapon knockback
+        
+        // Fire offset for staggered shooting (set by player)
+        this.fireOffset = 0;
+        
         // Specjalne efekty
         this.chain = config.chain || false;      // Kusza łańcuchowa
         this.chainCount = config.chainCount || 0;
@@ -242,7 +265,13 @@ class Weapon {
     }
 
     canFire(currentTime) {
-        return currentTime - this.lastFired >= this.fireRate;
+        // Include fire offset for staggered shooting
+        return currentTime - this.lastFired >= this.fireRate + this.fireOffset;
+    }
+    
+    // Reset offset after first shot (so subsequent shots use normal timing)
+    resetOffset() {
+        this.fireOffset = 0;
     }
     
     // Ulepsz broń
@@ -302,6 +331,9 @@ class Weapon {
 
         this.lastFired = currentTime - (this.fireRate * (1 - attackSpeedMultiplier));
         
+        // Reset offset after first shot (staggering only applies to initial burst)
+        this.fireOffset = 0;
+        
         // Dźwięk strzału
         this.playShootSound();
         
@@ -360,6 +392,7 @@ class Weapon {
             bullet.isSword = this.isSword;
             bullet.isBanana = this.isBanana;
             bullet.isHolyGrenade = this.isHolyGrenade;
+            bullet.knockbackMultiplier = this.knockbackMultiplier;
             
             bullets.push(bullet);
         }
@@ -379,6 +412,9 @@ class Bullet {
         this.radius = 4;
         this.pierce = pierce;
         this.hitEnemies = new Set();
+        
+        // Knockback multiplier from weapon
+        this.knockbackMultiplier = 1;
         
         // Specjalne właściwości (ustawiane przez Weapon)
         this.explosive = false;

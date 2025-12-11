@@ -6,7 +6,7 @@ class Leaderboard {
         // JSONBin.io configuration (create free account at jsonbin.io)
         // Set these values to enable global leaderboard:
         this.JSONBIN_BIN_ID = null;  // Your bin ID (e.g., '6789abcdef012345')
-        this.JSONBIN_API_KEY = null; // Your X-Master-Key or X-Access-Key
+        this.JSONBIN_API_KEY = null; // Your X-Access-Key (starts with $2a$... or $2b$...)
         
         // Local storage key
         this.LOCAL_STORAGE_KEY = 'circle_survivor_leaderboard';
@@ -18,6 +18,12 @@ class Leaderboard {
         this.globalScores = [];
         this.lastFetch = 0;
         this.CACHE_DURATION = 60000; // 1 minute cache
+        
+        // Debug mode - set to true to see API issues
+        this.DEBUG = false;
+    }
+
+    // ============ LOCAL LEADERBOARD ============
     }
 
     // ============ LOCAL LEADERBOARD ============
@@ -72,11 +78,15 @@ class Leaderboard {
         try {
             const response = await fetch(`https://api.jsonbin.io/v3/b/${this.JSONBIN_BIN_ID}/latest`, {
                 headers: {
-                    'X-Access-Key': this.JSONBIN_API_KEY
+                    'X-Master-Key': this.JSONBIN_API_KEY
                 }
             });
 
-            if (!response.ok) throw new Error('Failed to fetch global scores');
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                if (this.DEBUG) console.log('JSONBin response:', response.status, errorData);
+                throw new Error(`Failed to fetch global scores: ${response.status}`);
+            }
             
             const data = await response.json();
             this.globalScores = data.record?.scores || [];
@@ -84,7 +94,7 @@ class Leaderboard {
             
             return this.globalScores;
         } catch (e) {
-            console.error('Error fetching global leaderboard:', e);
+            if (this.DEBUG) console.error('Error fetching global leaderboard:', e);
             return this.globalScores; // Return cached data on error
         }
     }
@@ -116,7 +126,11 @@ class Leaderboard {
                 body: JSON.stringify({ scores: topScores })
             });
 
-            if (!response.ok) throw new Error('Failed to save global score');
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                if (this.DEBUG) console.log('JSONBin save response:', response.status, errorData);
+                throw new Error(`Failed to save global score: ${response.status}`);
+            }
             
             this.globalScores = topScores;
             this.lastFetch = Date.now();

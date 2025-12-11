@@ -99,6 +99,114 @@ class Game {
         document.getElementById('resume-btn').onclick = () => this.resumeGame();
         document.getElementById('quit-btn').onclick = () => this.quitToMenu();
         document.getElementById('sound-toggle').onclick = () => this.toggleSound();
+        
+        // Leaderboard
+        document.getElementById('submit-score-btn').onclick = () => this.submitScore();
+        document.getElementById('player-name').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.submitScore();
+        });
+        
+        // Leaderboard tabs
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.onclick = () => this.switchLeaderboardTab(btn.dataset.tab);
+        });
+        
+        // Menu leaderboard
+        document.getElementById('menu-leaderboard-btn').onclick = () => this.openMenuLeaderboard();
+        document.getElementById('menu-leaderboard-close').onclick = () => this.closeMenuLeaderboard();
+        document.querySelectorAll('.menu-tab-btn').forEach(btn => {
+            btn.onclick = () => this.switchMenuLeaderboardTab(btn.dataset.tab);
+        });
+    }
+    
+    // Open leaderboard from menu
+    async openMenuLeaderboard() {
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('menu-leaderboard').classList.remove('hidden');
+        await this.showMenuLeaderboard('local');
+    }
+    
+    // Close menu leaderboard
+    closeMenuLeaderboard() {
+        document.getElementById('menu-leaderboard').classList.add('hidden');
+        document.getElementById('start-screen').classList.remove('hidden');
+    }
+    
+    // Show menu leaderboard with specific tab
+    async showMenuLeaderboard(tab = 'local') {
+        const scores = await leaderboard.getScores(tab);
+        const listEl = document.getElementById('menu-leaderboard-list');
+        listEl.innerHTML = leaderboard.renderLeaderboard(scores);
+        
+        // Update tab buttons
+        document.querySelectorAll('.menu-tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tab);
+        });
+        
+        this.currentMenuLeaderboardTab = tab;
+    }
+    
+    // Switch menu leaderboard tab
+    switchMenuLeaderboardTab(tab) {
+        this.showMenuLeaderboard(tab);
+    }
+    
+    // Submit score to leaderboard
+    async submitScore() {
+        const nameInput = document.getElementById('player-name');
+        const submitBtn = document.getElementById('submit-score-btn');
+        const name = nameInput.value.trim();
+        
+        if (!name) {
+            nameInput.focus();
+            nameInput.style.borderColor = '#e94560';
+            setTimeout(() => nameInput.style.borderColor = '', 500);
+            return;
+        }
+        
+        // Disable button and show loading
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Zapisywanie...';
+        
+        try {
+            await leaderboard.submitScore(
+                name, 
+                this.waveManager.waveNumber, 
+                this.xp, 
+                this.selectedCharacter
+            );
+            
+            // Hide submit form, show leaderboard
+            document.getElementById('score-submit').style.display = 'none';
+            this.showLeaderboard('local', name);
+            
+            // Save name for next time
+            localStorage.setItem('circle_survivor_player_name', name);
+        } catch (e) {
+            console.error('Error submitting score:', e);
+            submitBtn.textContent = '❌ Błąd - spróbuj ponownie';
+            submitBtn.disabled = false;
+        }
+    }
+    
+    // Show leaderboard with specific tab
+    async showLeaderboard(tab = 'local', highlightName = null) {
+        const scores = await leaderboard.getScores(tab);
+        const listEl = document.getElementById('leaderboard-list');
+        listEl.innerHTML = leaderboard.renderLeaderboard(scores, highlightName);
+        
+        // Update tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tab);
+        });
+        
+        this.currentLeaderboardTab = tab;
+        this.highlightedName = highlightName;
+    }
+    
+    // Switch leaderboard tab
+    switchLeaderboardTab(tab) {
+        this.showLeaderboard(tab, this.highlightedName);
     }
     
     selectCharacter(characterType) {
@@ -121,6 +229,13 @@ class Game {
             card.classList.remove('selected');
         });
         this.selectedCharacter = null;
+        
+        // Reset score submit form for next game
+        const scoreSubmit = document.getElementById('score-submit');
+        scoreSubmit.style.display = 'flex';
+        const submitBtn = document.getElementById('submit-score-btn');
+        submitBtn.disabled = false;
+        submitBtn.textContent = '📊 Zapisz wynik';
     }
     
     toggleSound() {
@@ -832,6 +947,13 @@ class Game {
         document.getElementById('final-wave').textContent = this.waveManager.waveNumber;
         document.getElementById('final-xp').textContent = this.xp;
         document.getElementById('game-over').classList.remove('hidden');
+        
+        // Load saved player name
+        const savedName = localStorage.getItem('circle_survivor_player_name') || '';
+        document.getElementById('player-name').value = savedName;
+        
+        // Show leaderboard
+        this.showLeaderboard('local');
     }
 }
 

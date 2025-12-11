@@ -93,7 +93,7 @@ body {
 }
 
 /* Overlays */
-#shop, #game-over, #start-screen, #pause-menu {
+#shop, #game-over, #start-screen, #pause-menu, #menu-leaderboard {
     position: absolute;
     top: 0;
     left: 0;
@@ -307,4 +307,265 @@ button:hover {
     padding: 3px 5px;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 3px;
+}
+
+/* ============ LEADERBOARD STYLES ============ */
+
+#score-submit {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+    justify-content: center;
+}
+
+#player-name {
+    padding: 10px 15px;
+    font-size: 16px;
+    border: 2px solid #0f3460;
+    border-radius: 8px;
+    background: #1a1a2e;
+    color: white;
+    width: 200px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+#player-name:focus {
+    border-color: #e94560;
+}
+
+#player-name::placeholder {
+    color: #666;
+}
+
+#submit-score-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    margin: 0;
+}
+
+#submit-score-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+#leaderboard-container {
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 15px;
+    padding: 15px;
+    width: 350px;
+    margin: 15px 0;
+}
+
+.leaderboard-tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+    justify-content: center;
+}
+
+.tab-btn {
+    padding: 8px 20px;
+    font-size: 12px;
+    margin: 0;
+    background: #1a1a2e;
+    border: 2px solid #0f3460;
+    border-radius: 20px;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    border-color: #e94560;
+    transform: none;
+    box-shadow: none;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, #e94560, #0f3460);
+    border-color: #e94560;
+}
+
+.leaderboard-content h3 {
+    color: #ffd700;
+    font-size: 16px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+#leaderboard-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+#leaderboard-list li {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    margin: 4px 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    font-size: 13px;
+    transition: background 0.2s;
+}
+
+#leaderboard-list li:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+#leaderboard-list li.highlighted {
+    background: rgba(233, 69, 96, 0.3);
+    border: 1px solid #e94560;
+}
+
+#leaderboard-list li.no-scores {
+    justify-content: center;
+    color: #666;
+    font-style: italic;
+}
+
+#leaderboard-list .rank {
+    width: 30px;
+    font-weight: bold;
+    text-align: center;
+}
+
+#leaderboard-list .name {
+    flex: 1;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#leaderboard-list .score {
+    color: #aaa;
+    font-size: 11px;
+    text-align: right;
+}
+
+/* Scrollbar for leaderboard */
+#leaderboard-list::-webkit-scrollbar,
+#menu-leaderboard-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+#leaderboard-list::-webkit-scrollbar-track,
+#menu-leaderboard-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+}
+
+#leaderboard-list::-webkit-scrollbar-thumb,
+#menu-leaderboard-list::-webkit-scrollbar-thumb {
+    background: #e94560;
+    border-radius: 3px;
+}
+
+/* Menu leaderboard */
+#menu-leaderboard-btn {
+    margin-top: 15px;
+    padding: 10px 25px;
+    font-size: 14px;
+    background: transparent;
+    border: 2px solid #0f3460;
+    color: #888;
+}
+
+#menu-leaderboard-btn:hover {
+    border-color: #e94560;
+    color: #fff;
+    box-shadow: none;
+    transform: none;
+}
+
+#menu-leaderboard-container {
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 15px;
+    padding: 20px;
+    width: 400px;
+    margin: 20px 0;
+}
+
+#menu-leaderboard-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+#menu-leaderboard-list li {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    margin: 5px 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+#menu-leaderboard-list li:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+#menu-leaderboard-list li.no-scores {
+    justify-content: center;
+    color: #666;
+    font-style: italic;
+}
+
+#menu-leaderboard-list .rank {
+    width: 35px;
+    font-weight: bold;
+    text-align: center;
+}
+
+#menu-leaderboard-list .name {
+    flex: 1;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#menu-leaderboard-list .score {
+    color: #aaa;
+    font-size: 12px;
+    text-align: right;
+}
+
+#menu-leaderboard-close {
+    background: #666;
+    padding: 12px 30px;
+    font-size: 14px;
+}
+
+#menu-leaderboard-close:hover {
+    background: #888;
+}
+
+.menu-tab-btn {
+    padding: 8px 20px;
+    font-size: 12px;
+    margin: 0;
+    background: #1a1a2e;
+    border: 2px solid #0f3460;
+    border-radius: 20px;
+    transition: all 0.2s;
+}
+
+.menu-tab-btn:hover {
+    border-color: #e94560;
+    transform: none;
+    box-shadow: none;
+}
+
+.menu-tab-btn.active {
+    background: linear-gradient(135deg, #e94560, #0f3460);
+    border-color: #e94560;
 }

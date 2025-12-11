@@ -44,6 +44,25 @@
             <h2>💀 GAME OVER</h2>
             <p>Przetrwałeś do fali: <span id="final-wave">1</span></p>
             <p>Zdobyte XP: <span id="final-xp">0</span></p>
+            
+            <!-- Score submission -->
+            <div id="score-submit">
+                <input type="text" id="player-name" placeholder="Twoje imię..." maxlength="20">
+                <button id="submit-score-btn">📊 Zapisz wynik</button>
+            </div>
+            
+            <!-- Leaderboard tabs -->
+            <div id="leaderboard-container">
+                <div class="leaderboard-tabs">
+                    <button class="tab-btn active" data-tab="local">🏠 Lokalne</button>
+                    <button class="tab-btn" data-tab="global">🌍 Globalne</button>
+                </div>
+                <div class="leaderboard-content">
+                    <h3>🏆 TOP 10</h3>
+                    <ol id="leaderboard-list"></ol>
+                </div>
+            </div>
+            
             <button id="restart-btn">🔄 Zagraj ponownie</button>
         </div>
 
@@ -97,6 +116,22 @@
                 </div>
             </div>
             <p class="controls">WASD - ruch | Auto-strzelanie | Kliknij postać aby wybrać</p>
+            <button id="menu-leaderboard-btn">🏆 TOP 20</button>
+        </div>
+
+        <!-- Menu Leaderboard overlay -->
+        <div id="menu-leaderboard" class="hidden">
+            <h2>🏆 TOP 20</h2>
+            <div id="menu-leaderboard-container">
+                <div class="leaderboard-tabs">
+                    <button class="menu-tab-btn active" data-tab="local">🏠 Lokalne</button>
+                    <button class="menu-tab-btn" data-tab="global">🌍 Globalne</button>
+                </div>
+                <div class="leaderboard-content">
+                    <ol id="menu-leaderboard-list"></ol>
+                </div>
+            </div>
+            <button id="menu-leaderboard-close">⬅ Powrót</button>
         </div>
     </div>
 
@@ -107,6 +142,7 @@
     <script src="js/enemy.js"></script>
     <script src="js/wave.js"></script>
     <script src="js/shop.js"></script>
+    <script src="js/leaderboard.js"></script>
     <script src="js/game.js"></script>
 </body>
 </html>

@@ -11,7 +11,8 @@ const WEAPON_TYPES = {
         spread: 0,
         price: 0,
         color: '#ffff00',
-        range: 265
+        range: 265,
+        weaponCategory: 'gun'
     },
     smg: {
         name: 'SMG',
@@ -23,7 +24,8 @@ const WEAPON_TYPES = {
         spread: 15,
         price: 50,
         color: '#ffa500',
-        range: 215
+        range: 215,
+        weaponCategory: 'gun'
     },
     shotgun: {
         name: 'Shotgun',
@@ -35,7 +37,8 @@ const WEAPON_TYPES = {
         spread: 30,
         price: 80,
         color: '#ff4444',
-        range: 140
+        range: 140,
+        weaponCategory: 'gun'
     },
     sniper: {
         name: 'Snajperka',
@@ -48,7 +51,8 @@ const WEAPON_TYPES = {
         pierce: true,
         price: 100,
         color: '#00ffff',
-        range: 400
+        range: 400,
+        weaponCategory: 'gun'
     },
     laser: {
         name: 'Laser',
@@ -60,7 +64,8 @@ const WEAPON_TYPES = {
         spread: 5,
         price: 120,
         color: '#ff00ff',
-        range: 350
+        range: 350,
+        weaponCategory: 'gun'
     },
     // NOWE BRONIE
     minigun: {
@@ -74,7 +79,8 @@ const WEAPON_TYPES = {
         price: 220,         // Increased from 150
         color: '#ff6600',
         range: 160,
-        knockbackMultiplier: 0.3  // Reduced knockback
+        knockbackMultiplier: 0.3,  // Reduced knockback
+        weaponCategory: 'gun'
     },
     bazooka: {
         name: 'Bazooka',
@@ -89,7 +95,8 @@ const WEAPON_TYPES = {
         price: 180,
         color: '#ff0000',
         bulletRadius: 10,
-        range: 310
+        range: 310,
+        weaponCategory: 'rocket'
     },
     flamethrower: {
         name: 'Miotacz Ognia',
@@ -104,7 +111,8 @@ const WEAPON_TYPES = {
         bulletRadius: 6,
         shortRange: true,
         maxDistance: 120,
-        range: 120
+        range: 120,
+        weaponCategory: 'special'
     },
     mines: {
         name: 'Miny',
@@ -120,7 +128,8 @@ const WEAPON_TYPES = {
         color: '#333333',
         bulletRadius: 12,
         isMine: true,
-        range: 9999  // Mines don't need range limit
+        range: 9999,  // Mines don't need range limit
+        weaponCategory: 'special'
     },
     nuke: {
         name: 'Wyrzutnia Nuklearna',
@@ -136,7 +145,8 @@ const WEAPON_TYPES = {
         color: '#00ff00',
         bulletRadius: 15,
         isNuke: true,
-        range: 9999  // Nuke shoots at any distance
+        range: 9999,  // Nuke shoots at any distance
+        weaponCategory: 'rocket'
     },
     
     // === NOWE BRONIE ===
@@ -154,7 +164,8 @@ const WEAPON_TYPES = {
         color: '#9932cc',
         bulletRadius: 20,
         isScythe: true,  // Obraca się!
-        range: 230
+        range: 230,
+        weaponCategory: 'melee'
     },
     sword: {
         name: 'Miecz Kamilka',
@@ -170,7 +181,8 @@ const WEAPON_TYPES = {
         isSword: true,
         shortRange: true,
         maxDistance: 100,
-        range: 100
+        range: 100,
+        weaponCategory: 'melee'
     },
     holyGrenade: {
         name: 'Święty Granat',
@@ -186,7 +198,9 @@ const WEAPON_TYPES = {
         color: '#ffd700',
         bulletRadius: 12,
         isHolyGrenade: true,  // Specjalna eksplozja!
-        range: 275
+        range: 275,
+        weaponCategory: 'grenade',
+        explosiveRange: 275
     },
     banana: {
         name: 'Banan z Worms',
@@ -202,7 +216,9 @@ const WEAPON_TYPES = {
         color: '#ffff00',
         bulletRadius: 10,
         isBanana: true,  // Dzieli się na mniejsze!
-        range: 235
+        range: 235,
+        weaponCategory: 'grenade',
+        explosiveRange: 235
     },
     crossbow: {
         name: 'Kusza Przebijająca',
@@ -217,7 +233,29 @@ const WEAPON_TYPES = {
         price: 280,
         color: '#8b4513',
         bulletRadius: 6,
-        range: 320
+        range: 320,
+        weaponCategory: 'gun'
+    },
+    
+    // === WEWNĘTRZNY TYP - mini banan ===
+    minibanana: {
+        name: 'Mini Banan',
+        emoji: '🍌',
+        fireRate: 0,
+        damage: 16,           // 40% z 40
+        bulletSpeed: 8,
+        bulletCount: 1,
+        spread: 0,
+        explosive: true,
+        explosionRadius: 45,  // 50% z 90
+        price: 0,
+        color: '#ffff00',
+        bulletRadius: 6,
+        isBanana: true,
+        isMini: true,
+        range: 80,
+        weaponCategory: 'grenade',
+        explosiveRange: 80
     }
 };
 
@@ -394,6 +432,11 @@ class Weapon {
             bullet.isHolyGrenade = this.isHolyGrenade;
             bullet.knockbackMultiplier = this.knockbackMultiplier;
             
+            // Kategoria broni i explosiveRange dla granatów
+            bullet.weaponCategory = WEAPON_TYPES[this.type]?.weaponCategory || 'gun';
+            bullet.explosiveRange = WEAPON_TYPES[this.type]?.explosiveRange || 0;
+            bullet.isMini = WEAPON_TYPES[this.type]?.isMini || false;
+            
             bullets.push(bullet);
         }
 
@@ -428,6 +471,13 @@ class Bullet {
         this.startY = y;
         this.mineTimer = 0;
         this.mineArmed = false;
+        
+        // Dla granatów - hamowanie i wybuch po dystansie
+        this.weaponCategory = 'gun';
+        this.explosiveRange = 0;
+        this.shouldExplodeOnExpire = false;
+        this.isMini = false;
+        this.baseSpeed = Math.sqrt(vx * vx + vy * vy);
     }
 
     update() {
@@ -441,16 +491,43 @@ class Bullet {
         this.x += this.vx;
         this.y += this.vy;
         
-        // Track distance for short range weapons
-        if (this.shortRange) {
-            this.distanceTraveled = Math.sqrt(
-                (this.x - this.startX) ** 2 + 
-                (this.y - this.startY) ** 2
-            );
+        // Track distance traveled
+        this.distanceTraveled = Math.sqrt(
+            (this.x - this.startX) ** 2 + 
+            (this.y - this.startY) ** 2
+        );
+        
+        // Granaty (weaponCategory === 'grenade') - płynne hamowanie
+        if (this.weaponCategory === 'grenade' && this.explosiveRange > 0) {
+            const progress = this.distanceTraveled / this.explosiveRange;
+            
+            if (progress > 0.7 && progress < 1) {
+                // Ease-out: prędkość spada od 100% do ~10% w ostatnich 30%
+                const slowdownProgress = (progress - 0.7) / 0.3;
+                const speedMultiplier = Math.max(0.1, 1 - (slowdownProgress * 0.9));
+                
+                // Normalizuj kierunek i zastosuj nową prędkość
+                const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                if (currentSpeed > 0.1) {
+                    const targetSpeed = this.baseSpeed * speedMultiplier;
+                    const scale = targetSpeed / currentSpeed;
+                    this.vx *= scale;
+                    this.vy *= scale;
+                }
+            }
+            
+            if (progress >= 1) {
+                this.shouldExplodeOnExpire = true;
+            }
         }
     }
     
     shouldExpire() {
+        // Granaty wybuchają po dystansie
+        if (this.shouldExplodeOnExpire) {
+            return true;
+        }
+        
         // Short range bullets expire after max distance
         if (this.shortRange && this.distanceTraveled > this.maxDistance) {
             return true;

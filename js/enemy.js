@@ -143,9 +143,10 @@ const ENEMY_TYPES = {
         goldValue: 50,
         isBoss: true,
         canShoot: true,
-        fireRate: 2000,
+        fireRate: 1300,
         bulletSpeed: 4,
-        bulletDamage: 20
+        bulletDamage: 20,
+        attackPatterns: ['single', 'spread']
     },
     bossSwarm: {
         name: 'BOSS',
@@ -160,9 +161,10 @@ const ENEMY_TYPES = {
         splitOnDeath: true,
         splitCount: 8,
         canShoot: true,
-        fireRate: 1500,
+        fireRate: 1000,
         bulletSpeed: 5,
-        bulletDamage: 10
+        bulletDamage: 10,
+        attackPatterns: ['single', 'spread']
     },
     bossTank: {
         name: 'BOSS',
@@ -175,9 +177,10 @@ const ENEMY_TYPES = {
         goldValue: 75,
         isBoss: true,
         canShoot: true,
-        fireRate: 3000,
+        fireRate: 2000,
         bulletSpeed: 3,
-        bulletDamage: 35
+        bulletDamage: 35,
+        attackPatterns: ['single', 'shockwave']
     },
     bossSpeed: {
         name: 'BOSS',
@@ -191,9 +194,10 @@ const ENEMY_TYPES = {
         isBoss: true,
         zigzag: true,
         canShoot: true,
-        fireRate: 800,
+        fireRate: 550,
         bulletSpeed: 7,
-        bulletDamage: 12
+        bulletDamage: 12,
+        attackPatterns: ['single', 'spread']
     },
     bossExploder: {
         name: 'BOSS',
@@ -209,9 +213,10 @@ const ENEMY_TYPES = {
         explosionRadius: 150,
         explosionDamage: 50,
         canShoot: true,
-        fireRate: 2500,
+        fireRate: 1600,
         bulletSpeed: 4,
-        bulletDamage: 25
+        bulletDamage: 25,
+        attackPatterns: ['spread', 'shockwave']
     },
     bossGhost: {
         name: 'BOSS',
@@ -225,9 +230,10 @@ const ENEMY_TYPES = {
         isBoss: true,
         phasing: true,
         canShoot: true,
-        fireRate: 1800,
+        fireRate: 1200,
         bulletSpeed: 5,
-        bulletDamage: 18
+        bulletDamage: 18,
+        attackPatterns: ['single', 'spread']
     }
 };
 class Enemy {
@@ -271,6 +277,7 @@ class Enemy {
         this.bulletSpeed = config.bulletSpeed || 4;
         this.bulletDamage = config.bulletDamage || 15;
         this.lastFireTime = 0;
+        this.attackPatterns = config.attackPatterns || ['single'];
         
         // Knockback
         this.knockbackX = 0;
@@ -312,12 +319,15 @@ class Enemy {
         this.knockbackY *= 0.8;
     }
     
-    // Strzelanie bossa do gracza
-    tryShoot(player, currentTime) {
+    // Strzelanie bossa do gracza - różne wzorce ataków
+    tryAttack(player, currentTime) {
         if (!this.canShoot) return null;
         if (currentTime - this.lastFireTime < this.fireRate) return null;
         
         this.lastFireTime = currentTime;
+        
+        // Losuj wzorzec ataku
+        const pattern = this.attackPatterns[Math.floor(Math.random() * this.attackPatterns.length)];
         
         // Kierunek do gracza
         const dx = player.x - this.x;
@@ -326,10 +336,51 @@ class Enemy {
         
         if (dist === 0) return null;
         
-        const vx = (dx / dist) * this.bulletSpeed;
-        const vy = (dy / dist) * this.bulletSpeed;
+        const baseAngle = Math.atan2(dy, dx);
         
-        return new EnemyBullet(this.x, this.y, vx, vy, this.bulletDamage, this.color);
+        switch (pattern) {
+            case 'spread':
+                // Strzał wachlarzowy - 5 pocisków w łuku 60°
+                const spreadBullets = [];
+                const spreadCount = 5;
+                const spreadAngle = Math.PI / 3; // 60 stopni
+                
+                for (let i = 0; i < spreadCount; i++) {
+                    const angle = baseAngle - spreadAngle / 2 + (spreadAngle / (spreadCount - 1)) * i;
+                    const vx = Math.cos(angle) * this.bulletSpeed;
+                    const vy = Math.sin(angle) * this.bulletSpeed;
+                    spreadBullets.push(new EnemyBullet(this.x, this.y, vx, vy, this.bulletDamage * 0.6, this.color));
+                }
+                return { type: 'bullets', bullets: spreadBullets };
+                
+            case 'shockwave':
+                // Fala uderzeniowa - atak obszarowy
+                return { 
+                    type: 'shockwave', 
+                    x: this.x, 
+                    y: this.y, 
+                    radius: this.radius * 3,  // Promień fali = 3x promień bossa
+                    damage: this.bulletDamage * 1.5,
+                    color: this.color
+                };
+                
+            case 'single':
+            default:
+                // Pojedynczy strzał
+                const vx = (dx / dist) * this.bulletSpeed;
+                const vy = (dy / dist) * this.bulletSpeed;
+                return { type: 'bullets', bullets: [new EnemyBullet(this.x, this.y, vx, vy, this.bulletDamage, this.color)] };
+        }
+    }
+    
+    // Zachowaj starą metodę dla kompatybilności
+    tryShoot(player, currentTime) {
+        const result = this.tryAttack(player, currentTime);
+        if (!result) return null;
+        if (result.type === 'bullets' && result.bullets.length === 1) {
+            return result.bullets[0];
+        }
+        return result;
     }
 
     takeDamage(amount, bulletX, bulletY, knockbackMultiplier = 1) {

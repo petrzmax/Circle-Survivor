@@ -200,6 +200,8 @@ class Game {
     startNextWave() {
         this.shop.hideShop();
         this.state = 'playing';
+        // Odzyskaj pełne zdrowie na początku fali
+        this.player.hp = this.player.maxHp;
         // Czyść pozostawione pickupy z poprzedniej fali
         this.pickups = [];
         // Czyść miny (pociski z isMine)

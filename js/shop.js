@@ -368,24 +368,6 @@ const SHOP_ITEMS = {
         description: '+30% DMG, +1 pocisk',
         price: 100,
         emoji: '⬆️'
-    },
-
-    // ============ LECZENIE ============
-    heal: {
-        type: 'heal',
-        name: 'Leczenie',
-        description: 'Przywraca 50 HP',
-        price: 30,
-        value: 50,
-        emoji: '💊'
-    },
-    fullHeal: {
-        type: 'heal',
-        name: 'Pełne Leczenie',
-        description: 'Przywraca 100% HP',
-        price: 80,
-        value: 9999,
-        emoji: '💉'
     }
 };
 
@@ -425,13 +407,9 @@ class Shop {
         const weapons = [];
         const items = [];
         const upgrades = [];
-        const heals = [];
         
         Object.keys(SHOP_ITEMS).forEach(key => {
             const item = SHOP_ITEMS[key];
-            
-            // Don't offer heal if full HP
-            if (item.type === 'heal' && player.hp >= player.maxHp) return;
             
             // Don't offer weapon upgrade if no weapons to upgrade
             if (item.type === 'weaponUpgrade' && player.weapons.length === 0) return;
@@ -439,7 +417,6 @@ class Shop {
             if (item.type === 'weapon') weapons.push(key);
             else if (item.type === 'item') items.push(key);
             else if (item.type === 'weaponUpgrade') upgrades.push(key);
-            else if (item.type === 'heal') heals.push(key);
         });
         
         // Shuffle each category
@@ -447,7 +424,6 @@ class Shop {
         shuffle(weapons);
         shuffle(items);
         shuffle(upgrades);
-        shuffle(heals);
         
         // Build shop with guaranteed variety
         this.availableItems = [];
@@ -464,8 +440,8 @@ class Shop {
             this.availableItems.push(items[i]);
         }
         
-        // 1 losowe z: upgrade, heal, lub dodatkowy item/weapon
-        const extras = [...upgrades, ...heals];
+        // 1 losowe z: upgrade, lub dodatkowy item/weapon
+        const extras = [...upgrades];
         if (weapons.length > weaponCount) extras.push(weapons[weaponCount]);
         if (items.length > itemCount) extras.push(items[itemCount]);
         shuffle(extras);

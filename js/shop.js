@@ -373,7 +373,7 @@ const SHOP_ITEMS = {
     rekaMidasa: {
         type: 'item',
         name: 'Ręka Midasa',
-        description: '+50% zdobywanego złota (najlepszy!)',
+        description: '+50% zdobywanego złota!',
         price: 180,
         emoji: '👑',
         effect: { goldMultiplier: 0.50 }

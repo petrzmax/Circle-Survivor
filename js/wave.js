@@ -226,23 +226,6 @@ class WaveManager {
     }
 
     render(ctx) {
-        // Wave progress bar at bottom
-        if (this.isWaveActive) {
-            const barWidth = 200;
-            const barHeight = 8;
-            const x = ctx.canvas.width / 2 - barWidth / 2;
-            const y = ctx.canvas.height - 30;
-            const progress = this.timeRemaining / this.getWaveDuration();
-
-            ctx.fillStyle = '#333';
-            ctx.fillRect(x, y, barWidth, barHeight);
-
-            ctx.fillStyle = '#e94560';
-            ctx.fillRect(x, y, barWidth * progress, barHeight);
-
-            ctx.strokeStyle = '#0f3460';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(x, y, barWidth, barHeight);
-        }
+        // Pasek usunięty - jest licznik w HUD
     }
 }

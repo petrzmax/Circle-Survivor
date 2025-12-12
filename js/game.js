@@ -365,8 +365,11 @@ class Game {
             }
         }
         
+        // Sprawdź czy boss żyje
+        const bossAlive = this.enemies.some(e => e.isBoss);
+        
         // Update wave manager
-        const waveResult = this.waveManager.update(deltaTime, this.canvas);
+        const waveResult = this.waveManager.update(deltaTime, this.canvas, bossAlive);
         this.enemies.push(...waveResult.enemies);
         
         if (waveResult.waveEnded) {

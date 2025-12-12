@@ -511,17 +511,37 @@ class Shop {
             const currentPrice = this.calculatePrice(item.price, player);
             const canAfford = gold >= currentPrice;
             
+            // Sprawdź czy broń jest zablokowana (pełne sloty i nie masz tej broni)
+            let isWeaponLocked = false;
+            if (item.type === 'weapon') {
+                const hasThisWeapon = player.weapons.some(w => w.type === item.weaponType);
+                if (player.weapons.length >= player.maxWeapons && !hasThisWeapon) {
+                    isWeaponLocked = true;
+                }
+            }
+            
+            const canBuy = canAfford && !isWeaponLocked;
+            
             const itemEl = document.createElement('div');
-            itemEl.className = `shop-item ${canAfford ? '' : 'disabled'}`;
+            itemEl.className = `shop-item ${canBuy ? '' : 'disabled'}`;
+            
+            // Pokaż info o blokadzie
+            let extraInfo = '';
+            if (isWeaponLocked) {
+                extraInfo = '<div style="color: #ff6b6b; font-size: 10px">🔒 Pełne sloty</div>';
+            } else if (item.type === 'weapon' && player.weapons.some(w => w.type === item.weaponType)) {
+                extraInfo = '<div style="color: #4ecdc4; font-size: 10px">⬆️ Upgrade</div>';
+            }
             
             itemEl.innerHTML = `
                 <div style="font-size: 24px">${item.emoji}</div>
                 <h3>${item.name}</h3>
                 <p>${item.description}</p>
+                ${extraInfo}
                 <div class="price">💰 ${currentPrice}</div>
             `;
             
-            if (canAfford) {
+            if (canBuy) {
                 itemEl.onclick = () => this.buyItem(itemKey, player, currentPrice);
             }
             
@@ -559,13 +579,10 @@ class Shop {
                             window.game.showNotification(`⬆️ ${item.name} +${randomWeapon.level}`);
                         }
                     } else {
-                        // Nie ma broni tego typu - upgrade losową inną
-                        const randomWeapon = player.weapons[Math.floor(Math.random() * player.weapons.length)];
-                        randomWeapon.upgrade();
-                        
-                        if (window.game && window.game.showNotification) {
-                            window.game.showNotification(`⬆️ ${randomWeapon.name} +${randomWeapon.level}`);
-                        }
+                        // Nie ma broni tego typu - zwróć kasę (nie powinno się zdarzyć)
+                        window.game.gold += price;
+                        if (typeof audio !== 'undefined') audio.error();
+                        return;
                     }
                 } else {
                     // Dodaj nową broń

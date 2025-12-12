@@ -44,12 +44,17 @@ class WaveManager {
         console.log(`Fala ${wave}: spawn co ${this.spawnInterval}ms, ${this.enemiesPerSpawn} wrogów/spawn`);
     }
 
-    update(deltaTime, canvas) {
+    update(deltaTime, canvas, bossAlive = false) {
         if (!this.isWaveActive) return { enemies: [], waveEnded: false };
 
         const enemies = [];
 
-        // Update timer
+        // Gdy boss żyje - zatrzymaj timer i nie spawnuj nowych wrogów
+        if (bossAlive) {
+            return { enemies: [], waveEnded: false };
+        }
+
+        // Update timer (tylko gdy boss nie żyje)
         this.timeRemaining -= deltaTime / 1000;
         
         if (this.timeRemaining <= 0) {
@@ -73,7 +78,7 @@ class WaveManager {
             this.bossSpawned = true;
         }
 
-        // Spawn enemies
+        // Spawn enemies (tylko gdy boss nie żyje)
         this.spawnTimer += deltaTime;
         if (this.spawnTimer >= this.spawnInterval) {
             this.spawnTimer = 0;

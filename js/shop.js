@@ -415,6 +415,37 @@ class Shop {
     constructor() {
         this.availableItems = [];
         this.itemCount = 5; // Więcej opcji w sklepie
+        this.rerollCount = 0; // Ile razy przegłosowano w tej wizycie
+    }
+    
+    // Oblicz cenę reroll
+    getRerollPrice() {
+        const waveNumber = window.game ? window.game.waveManager.waveNumber : 1;
+        const basePrice = 15;
+        // Cena = baza * (1 + fala*0.2) * (1 + reroll*0.5)
+        const waveMultiplier = 1 + (waveNumber - 1) * 0.2;
+        const rerollMultiplier = 1 + this.rerollCount * 0.5;
+        return Math.round(basePrice * waveMultiplier * rerollMultiplier / 5) * 5;
+    }
+    
+    // Reroll przedmiotów w sklepie
+    rerollItems(player) {
+        const price = this.getRerollPrice();
+        
+        if (window.game.gold < price) {
+            if (typeof audio !== 'undefined') audio.error();
+            return;
+        }
+        
+        window.game.gold -= price;
+        this.rerollCount++;
+        
+        if (typeof audio !== 'undefined') audio.purchase();
+        
+        // Generuj nowe przedmioty
+        this.generateItems(player);
+        this.renderShop(window.game.gold, player);
+        window.game.updateHUD();
     }
     
     // Dynamiczne skalowanie cen
@@ -491,6 +522,14 @@ class Shop {
         
         // Shuffle final list
         shuffle(this.availableItems);
+        
+        // Reset reroll count przy nowym sklepie (tylko przy pierwszym generateItems)
+        // Reroll count resetowany jest w openShop
+    }
+    
+    // Reset reroll przy otwarciu sklepu
+    resetReroll() {
+        this.rerollCount = 0;
     }
 
     renderShop(gold, player) {
@@ -547,6 +586,25 @@ class Shop {
             
             itemsEl.appendChild(itemEl);
         });
+        
+        // Przycisk Reroll
+        const rerollPrice = this.getRerollPrice();
+        const canReroll = gold >= rerollPrice;
+        
+        const rerollEl = document.createElement('div');
+        rerollEl.className = `shop-item reroll-btn ${canReroll ? '' : 'disabled'}`;
+        rerollEl.innerHTML = `
+            <div style="font-size: 24px">🎲</div>
+            <h3>Losuj</h3>
+            <p>Nowe przedmioty</p>
+            <div class="price">💰 ${rerollPrice}</div>
+        `;
+        
+        if (canReroll) {
+            rerollEl.onclick = () => this.rerollItems(player);
+        }
+        
+        itemsEl.appendChild(rerollEl);
         
         shopEl.classList.remove('hidden');
     }

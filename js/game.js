@@ -1195,6 +1195,7 @@ class Game {
         this.state = 'shop';
         this.waveManager.endWave(); // Zwiększ numer fali!
         this.enemies = []; // Clear remaining enemies
+        this.shop.resetReroll(); // Reset reroll count
         this.shop.generateItems(this.player);
         this.shop.renderShop(this.gold, this.player);
     }

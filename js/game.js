@@ -384,7 +384,7 @@ class Game {
         // Update enemies
         for (let j = this.enemies.length - 1; j >= 0; j--) {
             const enemy = this.enemies[j];
-            enemy.update(this.player);
+            enemy.update(this.player, 16, this.canvas.width, this.canvas.height);
             
             // Check collision with player
             if (circleCollision(enemy, this.player)) {

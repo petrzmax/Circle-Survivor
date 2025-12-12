@@ -286,9 +286,12 @@ class Enemy {
         // Zigzag timer
         this.zigzagTimer = 0;
         this.zigzagDir = 1;
+        
+        // Flaga - czy wróg już wszedł na planszę (spawn jest poza ekranem)
+        this.hasEnteredArena = false;
     }
 
-    update(player, deltaTime = 16) {
+    update(player, deltaTime = 16, canvasWidth = 900, canvasHeight = 700) {
         // Move towards player
         const dx = player.x - this.x;
         const dy = player.y - this.y;
@@ -317,6 +320,20 @@ class Enemy {
         // Reduce knockback
         this.knockbackX *= 0.8;
         this.knockbackY *= 0.8;
+        
+        // Sprawdź czy wróg wszedł na planszę (cały jest wewnątrz)
+        const isFullyInside = this.x > this.radius && this.x < canvasWidth - this.radius &&
+                              this.y > this.radius && this.y < canvasHeight - this.radius;
+        
+        if (isFullyInside) {
+            this.hasEnteredArena = true;
+        }
+        
+        // Ogranicz pozycję tylko jeśli wróg już wszedł na planszę
+        if (this.hasEnteredArena) {
+            this.x = Math.max(this.radius, Math.min(canvasWidth - this.radius, this.x));
+            this.y = Math.max(this.radius, Math.min(canvasHeight - this.radius, this.y));
+        }
     }
     
     // Strzelanie bossa do gracza - różne wzorce ataków

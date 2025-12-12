@@ -568,7 +568,8 @@ class Shop {
             let extraInfo = '';
             if (isWeaponLocked) {
                 extraInfo = '<div style="color: #ff6b6b; font-size: 10px">🔒 Pełne sloty</div>';
-            } else if (item.type === 'weapon' && player.weapons.some(w => w.type === item.weaponType)) {
+            } else if (item.type === 'weapon' && player.weapons.length >= player.maxWeapons && player.weapons.some(w => w.type === item.weaponType)) {
+                // Upgrade tylko gdy masz pełne sloty I masz już tę broń
                 extraInfo = '<div style="color: #4ecdc4; font-size: 10px">⬆️ Upgrade</div>';
             }
             

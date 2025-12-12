@@ -331,8 +331,9 @@ class Game {
         this.player.hp = this.player.maxHp;
         // Czyść pozostawione pickupy z poprzedniej fali
         this.pickups = [];
-        // Czyść miny (pociski z isMine)
-        this.bullets = this.bullets.filter(b => !b.isMine);
+        // Czyść wszystkie pociski (gracza i wrogów)
+        this.bullets = [];
+        this.enemyBullets = [];
         this.waveManager.startWave();
         audio.waveStart();
     }

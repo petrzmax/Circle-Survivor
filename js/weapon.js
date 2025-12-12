@@ -103,7 +103,7 @@ const WEAPON_TYPES = {
         name: 'Miotacz Ognia',
         emoji: '🔥',
         fireRate: 80,
-        damage: 6,
+        damage: 4,
         bulletSpeed: 6,
         bulletCount: 3,
         spread: 40,

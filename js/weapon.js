@@ -173,7 +173,7 @@ const WEAPON_TYPES = {
         name: 'Miecz Kamilka',
         emoji: '⚔️',
         fireRate: 400,
-        damage: 45,
+        damage: 30,
         bulletSpeed: 12,
         bulletCount: 3,
         spread: 60,
@@ -184,7 +184,8 @@ const WEAPON_TYPES = {
         shortRange: true,
         maxDistance: 100,
         range: 100,
-        weaponCategory: 'melee'
+        weaponCategory: 'melee',
+        knockbackMultiplier: 0.3
     },
     holyGrenade: {
         name: 'Święty Granat',

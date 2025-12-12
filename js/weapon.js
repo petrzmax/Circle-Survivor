@@ -172,8 +172,8 @@ const WEAPON_TYPES = {
     sword: {
         name: 'Miecz Kamilka',
         emoji: '⚔️',
-        fireRate: 400,
-        damage: 30,
+        fireRate: 700,
+        damage: 10,
         bulletSpeed: 12,
         bulletCount: 3,
         spread: 60,

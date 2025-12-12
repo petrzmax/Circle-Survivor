@@ -67,12 +67,22 @@ class WaveManager {
             const bossType = this.getBossType();
             const boss = new Enemy(spawn.x, spawn.y, bossType);
             
-            // Skaluj HP bossa z numerem fali
+            // Skalowanie 1: Z numerem fali bossowej (+50% HP, +25% DMG za każdą falę bossową)
             const bossWave = Math.floor(this.waveNumber / 5);
-            const hpMultiplier = 1 + (bossWave - 1) * 0.5; // +50% HP za każdą kolejną falę bossa
-            boss.maxHp *= hpMultiplier;
+            const bossMultiplierHp = 1 + (bossWave - 1) * 0.5;
+            const bossMultiplierDmg = 1 + (bossWave - 1) * 0.25;
+            
+            // Skalowanie 2: Wykładnicze jak zwykli wrogowie (1.04^n od fali 5)
+            let expMultiplier = 1;
+            if (this.waveNumber >= 5) {
+                const scalingWave = this.waveNumber - 5;
+                expMultiplier = Math.pow(1.04, scalingWave);
+            }
+            
+            // Łączne skalowanie
+            boss.maxHp = Math.round(boss.maxHp * bossMultiplierHp * expMultiplier);
             boss.hp = boss.maxHp;
-            boss.damage *= (1 + (bossWave - 1) * 0.25); // +25% DMG
+            boss.damage = Math.round(boss.damage * bossMultiplierDmg * expMultiplier);
             
             enemies.push(boss);
             this.bossSpawned = true;
@@ -88,10 +98,10 @@ class WaveManager {
                 const type = this.getRandomEnemyType();
                 const enemy = new Enemy(spawn.x, spawn.y, type);
                 
-                // Skalowanie wrogów od fali 5 (wykładnicze: 1.03^n)
+                // Skalowanie wrogów od fali 5 (wykładnicze: 1.04^n)
                 if (this.waveNumber >= 5) {
                     const scalingWave = this.waveNumber - 5;
-                    const multiplier = Math.pow(1.03, scalingWave);
+                    const multiplier = Math.pow(1.04, scalingWave);
                     enemy.hp = Math.round(enemy.hp * multiplier);
                     enemy.maxHp = enemy.hp;
                     enemy.damage = Math.round(enemy.damage * multiplier);

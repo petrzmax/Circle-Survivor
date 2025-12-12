@@ -68,14 +68,14 @@ class WaveManager {
             const boss = new Enemy(spawn.x, spawn.y, bossType);
             
             // Skalowanie 1: Z numerem fali bossowej (+50% HP, +25% DMG za każdą falę bossową)
-            const bossWave = Math.floor(this.waveNumber / 5);
+            const bossWave = Math.floor(this.waveNumber / 3);
             const bossMultiplierHp = 1 + (bossWave - 1) * 0.5;
             const bossMultiplierDmg = 1 + (bossWave - 1) * 0.25;
             
-            // Skalowanie 2: Wykładnicze jak zwykli wrogowie (1.04^n od fali 5)
+            // Skalowanie 2: Wykładnicze jak zwykli wrogowie (1.04^n od fali 3)
             let expMultiplier = 1;
-            if (this.waveNumber >= 5) {
-                const scalingWave = this.waveNumber - 5;
+            if (this.waveNumber >= 3) {
+                const scalingWave = this.waveNumber - 3;
                 expMultiplier = Math.pow(1.04, scalingWave);
             }
             
@@ -212,22 +212,22 @@ class WaveManager {
         return 'brute';
     }
     
-    // Spawn bossa co 5 fal
+    // Spawn bossa co 3 fale
     shouldSpawnBoss() {
-        return this.waveNumber % 5 === 0 && !this.bossSpawned && this.timeRemaining < 20;
+        return this.waveNumber % 3 === 0 && !this.bossSpawned && this.timeRemaining < 20;
     }
     
     // Różne typy bossów w zależności od fali
     getBossType() {
-        const bossWave = Math.floor(this.waveNumber / 5); // 1, 2, 3, 4...
+        const bossWave = Math.floor(this.waveNumber / 3); // 1, 2, 3, 4...
         
         const bossTypes = [
-            'boss',         // Fala 5 - podstawowy
-            'bossSwarm',    // Fala 10 - rozpada się na swarmy
-            'bossTank',     // Fala 15 - ogromny tank
-            'bossSpeed',    // Fala 20 - szybki zigzag
-            'bossExploder', // Fala 25 - eksploduje przy śmierci
-            'bossGhost'     // Fala 30 - półprzezroczysty
+            'boss',         // Fala 3 - podstawowy
+            'bossSwarm',    // Fala 6 - rozpada się na swarmy
+            'bossTank',     // Fala 9 - ogromny tank
+            'bossSpeed',    // Fala 12 - szybki zigzag
+            'bossExploder', // Fala 15 - eksploduje przy śmierci
+            'bossGhost'     // Fala 18 - półprzezroczysty
         ];
         
         // Cyklicznie wybiera bossa, ale każdy kolejny ma +50% HP

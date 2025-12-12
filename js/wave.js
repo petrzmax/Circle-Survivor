@@ -26,9 +26,9 @@ class WaveManager {
     }
 
     getWaveDuration() {
-        if (this.waveNumber <= 2) return 30;
-        if (this.waveNumber <= 4) return 40;
-        return 50;
+        if (this.waveNumber <= 2) return 25;
+        if (this.waveNumber <= 4) return 35;
+        return 40;
     }
 
     updateSpawnSettings() {

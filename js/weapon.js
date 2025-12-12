@@ -113,7 +113,8 @@ const WEAPON_TYPES = {
         shortRange: true,
         maxDistance: 120,
         range: 120,
-        weaponCategory: 'special'
+        weaponCategory: 'special',
+        knockbackMultiplier: 0.2
     },
     mines: {
         name: 'Miny',

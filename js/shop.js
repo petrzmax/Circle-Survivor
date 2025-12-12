@@ -72,7 +72,8 @@ const SHOP_ITEMS = {
         name: 'Wyrzutnia Nuklearna',
         description: 'BOOM! Ogromna eksplozja',
         price: 500,
-        emoji: '☢️'
+        emoji: '☢️',
+        minWave: 5
     },
     // Nowe bronie specjalne
     scythe: {
@@ -262,10 +263,10 @@ const SHOP_ITEMS = {
     goldBoost: {
         type: 'item',
         name: 'Sakwa Skąpca',
-        description: '+25% zdobywanego złota',
-        price: 70,
+        description: '+15% zdobywanego złota',
+        price: 60,
         emoji: '💰',
-        effect: { goldMultiplier: 0.25 }
+        effect: { goldMultiplier: 0.15 }
     },
     attackSpeedGem: {
         type: 'item',
@@ -336,12 +337,12 @@ const SHOP_ITEMS = {
     koronaPodroznika: {
         type: 'item',
         name: 'Korona Podróżnika',
-        description: '+50% XP, +50% złota, +25% luck',
+        description: '+50% XP, +30% złota, +25% luck',
         price: 250,
         emoji: '🗺️',
         effect: { 
             xpMultiplier: 0.50,
-            goldMultiplier: 0.50,
+            goldMultiplier: 0.30,
             luck: 0.25
         }
     },
@@ -367,6 +368,26 @@ const SHOP_ITEMS = {
             knockback: 1.0
         }
     },
+    
+    // === NOWE PRZEDMIOTY ===
+    rekaMidasa: {
+        type: 'item',
+        name: 'Ręka Midasa',
+        description: '+50% zdobywanego złota (najlepszy!)',
+        price: 180,
+        emoji: '👑',
+        effect: { goldMultiplier: 0.50 }
+    },
+    trzeciaReka: {
+        type: 'item',
+        name: 'Trzecia Ręka',
+        description: '+1 slot na broń',
+        price: 350,
+        emoji: '✋',
+        effect: { maxWeapons: 1 },
+        minWave: 10
+    },
+    
     kopytoDzika: {
         type: 'item',
         name: 'Kopyto Prawdziwego Dzika',
@@ -482,7 +503,7 @@ class Shop {
         const waveNumber = window.game ? window.game.waveManager.waveNumber : 1;
         const infoEl = document.createElement('div');
         infoEl.className = 'shop-info';
-        infoEl.innerHTML = `<small>Fala ${waveNumber} | Bronie: ${player.weapons.length} | Przedmioty: ${player.items ? player.items.length : 0} | <span style="color: #ffd700">💰 ${gold}</span></small>`;
+        infoEl.innerHTML = `<small>Fala ${waveNumber} | Bronie: ${player.weapons.length}/${player.maxWeapons} | Przedmioty: ${player.items ? player.items.length : 0} | <span style="color: #ffd700">💰 ${gold}</span></small>`;
         itemsEl.appendChild(infoEl);
         
         this.availableItems.forEach((itemKey, index) => {
@@ -524,7 +545,32 @@ class Shop {
         
         switch (item.type) {
             case 'weapon':
-                player.addWeapon(item.weaponType);
+                // Sprawdź czy gracz ma pełne sloty
+                if (player.weapons.length >= player.maxWeapons) {
+                    // Upgrade losowej broni tego samego typu
+                    const sameTypeWeapons = player.weapons.filter(w => w.type === item.weaponType);
+                    if (sameTypeWeapons.length > 0) {
+                        // Wybierz losową broń tego typu
+                        const randomWeapon = sameTypeWeapons[Math.floor(Math.random() * sameTypeWeapons.length)];
+                        randomWeapon.upgrade();
+                        
+                        // Pokaż komunikat o upgrade
+                        if (window.game && window.game.showNotification) {
+                            window.game.showNotification(`⬆️ ${item.name} +${randomWeapon.level}`);
+                        }
+                    } else {
+                        // Nie ma broni tego typu - upgrade losową inną
+                        const randomWeapon = player.weapons[Math.floor(Math.random() * player.weapons.length)];
+                        randomWeapon.upgrade();
+                        
+                        if (window.game && window.game.showNotification) {
+                            window.game.showNotification(`⬆️ ${randomWeapon.name} +${randomWeapon.level}`);
+                        }
+                    }
+                } else {
+                    // Dodaj nową broń
+                    player.addWeapon(item.weaponType);
+                }
                 break;
                 
             case 'item':

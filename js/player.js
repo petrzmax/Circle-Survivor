@@ -36,7 +36,8 @@ class Player {
         this.regen = 0;              // HP/s regeneracja
         this.regenTimer = 0;
         
-        // Weapons (bez limitu, można mieć wiele tej samej)
+        // Weapons (limit 6 slotów, można mieć wiele tej samej)
+        this.maxWeapons = 6;
         this.weapons = [new Weapon('pistol')];
         
         // Przedmioty (inventory)
@@ -196,7 +197,11 @@ class Player {
     }
 
     addWeapon(type) {
-        // Można mieć wiele tej samej broni!
+        // Sprawdź limit broni
+        if (this.weapons.length >= this.maxWeapons) {
+            return false; // Brak miejsca na nową broń
+        }
+        
         const weapon = new Weapon(type);
         this.weapons.push(weapon);
         

@@ -1,0 +1,134 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        default: 'patch'
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # Always runs on develop branch, regardless of UI selection
+    steps:
+      - name: Checkout develop branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: develop  # Always checkout develop, ignore UI branch selection
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version
+        id: version
+        run: |
+          # Get current version from latest tag
+          CURRENT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          CURRENT_VERSION=${CURRENT_TAG#v}
+          
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Parse semantic version
+          IFS='.' read -r -a VERSION_PARTS <<< "$CURRENT_VERSION"
+          MAJOR=${VERSION_PARTS[0]:-0}
+          MINOR=${VERSION_PARTS[1]:-0}
+          PATCH=${VERSION_PARTS[2]:-0}
+          
+          # Increment based on user choice
+          BUMP_TYPE=${{ inputs.bump_type }}
+          
+          case $BUMP_TYPE in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+          
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          CURRENT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          NEW_VERSION=${{ steps.version.outputs.NEW_VERSION }}
+          
+          echo "Generating changelog from $CURRENT_TAG to HEAD..."
+          
+          # Generate changelog from commits
+          git log $CURRENT_TAG..HEAD --pretty=format:"- %s (%h)" > CHANGELOG_ENTRY.md
+          
+          # If no commits, add placeholder
+          if [ ! -s CHANGELOG_ENTRY.md ]; then
+            echo "- No changes" > CHANGELOG_ENTRY.md
+          fi
+          
+          echo "Changelog generated:"
+          cat CHANGELOG_ENTRY.md
+
+      - name: Create and push tag
+        run: |
+          NEW_VERSION=${{ steps.version.outputs.NEW_VERSION }}
+          git tag -a $NEW_VERSION -m "Release $NEW_VERSION"
+          git push origin $NEW_VERSION
+          echo "Tag $NEW_VERSION created and pushed"
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NEW_VERSION=${{ steps.version.outputs.NEW_VERSION }}
+          
+          gh release create $NEW_VERSION \
+            --title "Release $NEW_VERSION" \
+            --notes-file CHANGELOG_ENTRY.md \
+            --target develop
+
+      - name: Create PR and merge to master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NEW_VERSION=${{ steps.version.outputs.NEW_VERSION }}
+          
+          # Create pull request from develop to master
+          PR_URL=$(gh pr create \
+            --base master \
+            --head develop \
+            --title "Release $NEW_VERSION" \
+            --body "Automated release merge from develop to master.
+          
+          ## Changes
+          $(cat CHANGELOG_ENTRY.md)")
+          
+          echo "Pull request created: $PR_URL"
+          
+          # Extract PR number from URL
+          PR_NUMBER=$(echo $PR_URL | grep -oE '[0-9]+$')
+          
+          # Automatically merge the PR
+          gh pr merge $PR_NUMBER --merge --auto
+          
+          echo "Pull request #$PR_NUMBER merged to master"

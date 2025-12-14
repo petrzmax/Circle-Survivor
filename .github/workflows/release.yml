@@ -1,0 +1,137 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        default: 'patch'
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout develop branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: develop
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version
+        id: version
+        run: |
+          # Get current version from latest tag
+          CURRENT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          CURRENT_VERSION=${CURRENT_TAG#v}
+          
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Parse semantic version
+          IFS='.' read -r -a VERSION_PARTS <<< "$CURRENT_VERSION"
+          MAJOR=${VERSION_PARTS[0]:-0}
+          MINOR=${VERSION_PARTS[1]:-0}
+          PATCH=${VERSION_PARTS[2]:-0}
+          
+          # Increment based on user choice
+          BUMP_TYPE=${{ inputs.bump_type }}
+          
+          case $BUMP_TYPE in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+          
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          CURRENT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          NEW_VERSION=${{ steps.version.outputs.NEW_VERSION }}
+          
+          echo "Generating changelog from $CURRENT_TAG to HEAD..."
+          
+          # Generate changelog from commits
+          git log $CURRENT_TAG..HEAD --pretty=format:"- %s (%h)" > CHANGELOG_ENTRY.md
+          
+          # If no commits, add placeholder
+          if [ ! -s CHANGELOG_ENTRY.md ]; then
+            echo "- No changes" > CHANGELOG_ENTRY.md
+          fi
+          
+          # Save to output for GitHub Release
+          {
+            echo "CHANGELOG<<EOF"
+            cat CHANGELOG_ENTRY.md
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+          
+          echo "Changelog generated:"
+          cat CHANGELOG_ENTRY.md
+
+      - name: Create and push tag
+        run: |
+          NEW_VERSION=${{ steps.version.outputs.NEW_VERSION }}
+          git tag -a $NEW_VERSION -m "Release $NEW_VERSION"
+          git push origin $NEW_VERSION
+          echo "Tag $NEW_VERSION created and pushed"
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NEW_VERSION=${{ steps.version.outputs.NEW_VERSION }}
+          CHANGELOG="${{ steps.changelog.outputs.CHANGELOG }}"
+          
+          gh release create $NEW_VERSION \
+            --title "Release $NEW_VERSION" \
+            --notes "$CHANGELOG" \
+            --target develop
+
+      - name: Merge develop to master
+        run: |
+          NEW_VERSION=${{ steps.version.outputs.NEW_VERSION }}
+          
+          # Fetch and checkout master
+          git fetch origin master
+          git checkout master
+          git pull origin master
+          
+          # Merge develop into master
+          git merge develop --no-ff -m "Release $NEW_VERSION: merge develop to master"
+          
+          # Push to master (triggers deploy workflow)
+          git push origin master
+          
+          echo "Successfully merged develop to master"
+
+      - name: Switch back to develop
+        run: |
+          git checkout develop
+          echo "Switched back to develop branch"

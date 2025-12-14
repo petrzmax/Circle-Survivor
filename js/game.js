@@ -399,10 +399,10 @@ class Game {
                     continue;
                 }
                 
-                // Boss zadaje x3 obrażenia przy dotknięciu
+                // Boss zadaje x2 obrażenia przy dotknięciu
                 let damage = enemy.damage;
                 if (enemy.isBoss) {
-                    damage *= 3;
+                    damage *= 2;
                 }
                 
                 const isDead = this.player.takeDamage(damage, currentTime);

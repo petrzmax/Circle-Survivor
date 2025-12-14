@@ -123,50 +123,50 @@ const SHOP_ITEMS = {
     ironArmor: {
         type: 'item',
         name: 'Żelazna Zbroja',
-        description: '+15 Pancerza',
+        description: '+10 Pancerza',
         price: 60,
         emoji: '🛡️',
-        effect: { armor: 15 }
+        effect: { armor: 10 }
     },
     titaniumPlate: {
         type: 'item',
         name: 'Płyta Tytanowa',
-        description: '+30 Pancerza',
+        description: '+20 Pancerza',
         price: 120,
         emoji: '🔰',
-        effect: { armor: 30 }
+        effect: { armor: 20 }
     },
     dodgeCloak: {
         type: 'item',
         name: 'Peleryna Uniku',
-        description: '+8% szansy na unik',
+        description: '+5% szansy na unik',
         price: 80,
         emoji: '🧥',
-        effect: { dodge: 0.08 }
+        effect: { dodge: 0.05 }
     },
     thornMail: {
         type: 'item',
         name: 'Kolczuga Cierni',
-        description: 'Odbija 10 obrażeń',
+        description: 'Odbija 5 obrażeń',
         price: 90,
         emoji: '🌵',
-        effect: { thorns: 10 }
+        effect: { thorns: 5 }
     },
     heartContainer: {
         type: 'item',
         name: 'Pojemnik na Serce',
-        description: '+50 Max HP',
+        description: '+30 Max HP',
         price: 100,
         emoji: '💖',
-        effect: { maxHp: 50 }
+        effect: { maxHp: 30 }
     },
     regenRing: {
         type: 'item',
         name: 'Pierścień Regeneracji',
-        description: '+2 HP/s',
+        description: '+1 HP/s',
         price: 85,
         emoji: '💍',
-        effect: { regen: 2 }
+        effect: { regen: 1 }
     },
 
     // --- Ofensywne ---
@@ -239,10 +239,10 @@ const SHOP_ITEMS = {
     magnet: {
         type: 'item',
         name: 'Magnes',
-        description: '+40 zasięgu zbierania',
+        description: '+25 zasięgu zbierania',
         price: 40,
         emoji: '🧲',
-        effect: { pickupRange: 40 }
+        effect: { pickupRange: 25 }
     },
     luckyClover: {
         type: 'item',
@@ -305,8 +305,8 @@ const SHOP_ITEMS = {
             damageMultiplier: 0.1,
             attackSpeedMultiplier: 0.1,
             speed: 0.2,
-            armor: 10,
-            maxHp: 20
+            armor: 5,
+            maxHp: 10
         }
     },
     
@@ -314,24 +314,24 @@ const SHOP_ITEMS = {
     bolidKubicy: {
         type: 'item',
         name: 'Bolid Kubicy',
-        description: '+25% szybkości ruchu, +20% dodge!',
+        description: '+25% szybkości ruchu, +12% dodge!',
         price: 300,
         emoji: '🏎️',
         effect: { 
             speed: 1,
-            dodge: 0.20
+            dodge: 0.12
         }
     },
     kielichAlichi: {
         type: 'item',
         name: 'Kielich Alicji',
-        description: '+10% lifesteal, +30 max HP, regen +2/s',
+        description: '+10% lifesteal, +30 max HP, regen +1/s',
         price: 280,
         emoji: '🏆',
         effect: { 
             lifesteal: 0.10,
             maxHp: 30,
-            regen: 2
+            regen: 1
         }
     },
     koronaPodroznika: {
@@ -391,23 +391,14 @@ const SHOP_ITEMS = {
     kopytoDzika: {
         type: 'item',
         name: 'Kopyto Prawdziwego Dzika',
-        description: 'DZIK MODE! +15% speed, +15% DMG, +20 thorns!',
+        description: 'DZIK MODE! +15% speed, +15% DMG, +10 thorns!',
         price: 260,
         emoji: '🐗',
         effect: { 
             speed: 0.6,
             damageMultiplier: 0.15,
-            thorns: 20
+            thorns: 10
         }
-    },
-
-    // ============ ULEPSZENIA BRONI ============
-    weaponUpgrade: {
-        type: 'weaponUpgrade',
-        name: 'Ulepsz Losową Broń',
-        description: '+30% DMG, +1 pocisk',
-        price: 100,
-        emoji: '⬆️'
     }
 };
 
@@ -660,14 +651,6 @@ class Shop {
                     } else if (player[stat] !== undefined) {
                         player[stat] += value;
                     }
-                }
-                break;
-                
-            case 'weaponUpgrade':
-                // Ulepsz losową broń
-                if (player.weapons.length > 0) {
-                    const randomWeapon = player.weapons[Math.floor(Math.random() * player.weapons.length)];
-                    randomWeapon.upgrade();
                 }
                 break;
                 

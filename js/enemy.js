@@ -49,7 +49,12 @@ const ENEMY_TYPES = {
         hp: 100,
         damage: 35,
         xpValue: 35,
-        goldValue: 9
+        goldValue: 9,
+        canShoot: true,
+        fireRate: 3000,
+        bulletSpeed: 3,
+        bulletDamage: 15,
+        attackPatterns: ['single']
     },
     swarm: {
         name: 'Swarm',
@@ -81,7 +86,12 @@ const ENEMY_TYPES = {
         hp: 200,
         damage: 60,
         xpValue: 60,
-        goldValue: 15
+        goldValue: 15,
+        canShoot: true,
+        fireRate: 3000,
+        bulletSpeed: 3,
+        bulletDamage: 25,
+        attackPatterns: ['single']
     },
     ghost: {
         name: 'Ghost',

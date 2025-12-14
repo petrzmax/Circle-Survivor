@@ -319,7 +319,7 @@ class Weapon {
     upgrade() {
         this.level++;
         this.damage = this.baseDamage * (1 + (this.level - 1) * 0.3);
-        this.bulletCount += 1;
+        this.fireRate = Math.round(this.fireRate * 0.9);  // +10% szybkości ataku
         if (this.explosive) {
             this.explosionRadius *= 1.15;
         }

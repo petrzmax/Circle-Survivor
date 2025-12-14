@@ -128,8 +128,8 @@ jobs:
           # Extract PR number from URL
           PR_NUMBER=$(echo $PR_URL | grep -oE '[0-9]+$')
           
-          # Automatically merge the PR
-          gh pr merge $PR_NUMBER --merge --auto
+          # Merge the PR immediately (no --auto since there are no required checks)
+          gh pr merge $PR_NUMBER --merge
           
           echo "Pull request #$PR_NUMBER merged to master"
           echo "Deploy workflow will trigger automatically via workflow_run event"

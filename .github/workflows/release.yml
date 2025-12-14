@@ -107,24 +107,28 @@ jobs:
             --notes-file CHANGELOG_ENTRY.md \
             --target develop
 
-      - name: Merge develop to master
+      - name: Create PR and merge to master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           NEW_VERSION=${{ steps.version.outputs.NEW_VERSION }}
           
-          # Fetch and checkout master
-          git fetch origin master
-          git checkout master
-          git pull origin master
+          # Create pull request from develop to master
+          PR_URL=$(gh pr create \
+            --base master \
+            --head develop \
+            --title "Release $NEW_VERSION" \
+            --body "Automated release merge from develop to master.
           
-          # Merge develop into master
-          git merge develop --no-ff -m "Release $NEW_VERSION: merge develop to master"
+          ## Changes
+          $(cat CHANGELOG_ENTRY.md)")
           
-          # Push to master (triggers deploy workflow)
-          git push origin master
+          echo "Pull request created: $PR_URL"
           
-          echo "Successfully merged develop to master"
-
-      - name: Switch back to develop
-        run: |
-          git checkout develop
-          echo "Switched back to develop branch"
+          # Extract PR number from URL
+          PR_NUMBER=$(echo $PR_URL | grep -oE '[0-9]+$')
+          
+          # Automatically merge the PR
+          gh pr merge $PR_NUMBER --merge --auto
+          
+          echo "Pull request #$PR_NUMBER merged to master"

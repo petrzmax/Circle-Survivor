@@ -86,13 +86,6 @@ jobs:
             echo "- No changes" > CHANGELOG_ENTRY.md
           fi
           
-          # Save to output for GitHub Release
-          {
-            echo "CHANGELOG<<EOF"
-            cat CHANGELOG_ENTRY.md
-            echo "EOF"
-          } >> $GITHUB_OUTPUT
-          
           echo "Changelog generated:"
           cat CHANGELOG_ENTRY.md
 
@@ -108,11 +101,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           NEW_VERSION=${{ steps.version.outputs.NEW_VERSION }}
-          CHANGELOG="${{ steps.changelog.outputs.CHANGELOG }}"
           
           gh release create $NEW_VERSION \
             --title "Release $NEW_VERSION" \
-            --notes "$CHANGELOG" \
+            --notes-file CHANGELOG_ENTRY.md \
             --target develop
 
       - name: Merge develop to master

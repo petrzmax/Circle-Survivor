@@ -629,13 +629,38 @@ class Game {
         this.xp += xpGained;
         audio.collectXP();
         
-        // Gold - zawsze wypada
-        this.pickups.push(new Pickup(
-            enemy.x + randomRange(-10, 10),
-            enemy.y + randomRange(-10, 10),
-            'gold',
-            enemy.goldValue
-        ));
+        // Gold - boss dropuje więcej woreczków
+        if (enemy.isBoss) {
+            // Jeden duży woreczek (50% wartości) w centrum
+            this.pickups.push(new Pickup(
+                enemy.x,
+                enemy.y,
+                'gold',
+                Math.floor(enemy.goldValue * 0.5)
+            ));
+            
+            // 6-8 małych woreczków rozrzuconych dookoła
+            const smallBags = 6 + Math.floor(Math.random() * 3);
+            const smallValue = Math.floor((enemy.goldValue * 0.5) / smallBags);
+            for (let i = 0; i < smallBags; i++) {
+                const angle = (Math.PI * 2 / smallBags) * i;
+                const dist = 20 + Math.random() * 30;
+                this.pickups.push(new Pickup(
+                    enemy.x + Math.cos(angle) * dist,
+                    enemy.y + Math.sin(angle) * dist,
+                    'gold',
+                    smallValue
+                ));
+            }
+        } else {
+            // Zwykły wróg - jeden woreczek
+            this.pickups.push(new Pickup(
+                enemy.x + randomRange(-10, 10),
+                enemy.y + randomRange(-10, 10),
+                'gold',
+                enemy.goldValue
+            ));
+        }
         
         // Bonus gold z luck
         if (luck > 0 && Math.random() < luck) {
@@ -656,6 +681,9 @@ class Game {
                 10
             ));
         }
+        
+        // Efekt śmierci (particle burst)
+        this.createDeathEffect(enemy);
         
         // Exploder - deals damage to player if close
         if (enemy.explodeOnDeath) {
@@ -812,6 +840,66 @@ class Game {
                 this.handleEnemyDeath(nearestEnemy, currentTime);
                 const idx = this.enemies.indexOf(nearestEnemy);
                 if (idx !== -1) this.enemies.splice(idx, 1);
+            }
+        }
+    }
+    
+    createDeathEffect(enemy) {
+        if (!this.deathEffects) this.deathEffects = [];
+        
+        // Liczba cząsteczek zależna od typu wroga
+        let particleCount = 8;
+        let particleSize = 4;
+        let particleColor = enemy.color;
+        
+        if (enemy.isBoss) {
+            particleCount = 30;
+            particleSize = 8;
+        } else if (enemy.type === 'tank' || enemy.type === 'brute') {
+            particleCount = 15;
+            particleSize = 6;
+        } else if (enemy.type === 'swarm') {
+            particleCount = 5;
+            particleSize = 3;
+        }
+        
+        // Tworzenie cząsteczek
+        for (let i = 0; i < particleCount; i++) {
+            const angle = (Math.PI * 2 / particleCount) * i + Math.random() * 0.5;
+            const speed = 2 + Math.random() * 4;
+            
+            this.deathEffects.push({
+                x: enemy.x,
+                y: enemy.y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                size: particleSize * (0.5 + Math.random() * 0.5),
+                color: particleColor,
+                alpha: 1,
+                life: 1,
+                decay: 0.02 + Math.random() * 0.02,
+                isBoss: enemy.isBoss
+            });
+        }
+        
+        // Dodatkowy efekt dla bossa - druga fala większych cząsteczek
+        if (enemy.isBoss) {
+            for (let i = 0; i < 20; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1 + Math.random() * 2;
+                
+                this.deathEffects.push({
+                    x: enemy.x,
+                    y: enemy.y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: 10 + Math.random() * 10,
+                    color: '#FFD700', // Złoty kolor
+                    alpha: 1,
+                    life: 1,
+                    decay: 0.01,
+                    isBoss: true
+                });
             }
         }
     }
@@ -1005,6 +1093,41 @@ class Game {
                 this.ctx.moveTo(chain.x1, chain.y1);
                 this.ctx.lineTo(chain.x2, chain.y2);
                 this.ctx.stroke();
+                this.ctx.restore();
+            }
+        }
+        
+        // Render death effects (particle bursts)
+        if (this.deathEffects) {
+            for (let i = this.deathEffects.length - 1; i >= 0; i--) {
+                const p = this.deathEffects[i];
+                
+                // Aktualizacja pozycji i życia
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vx *= 0.95; // Tarcie
+                p.vy *= 0.95;
+                p.life -= p.decay;
+                p.alpha = p.life;
+                
+                if (p.life <= 0) {
+                    this.deathEffects.splice(i, 1);
+                    continue;
+                }
+                
+                this.ctx.save();
+                this.ctx.globalAlpha = p.alpha;
+                this.ctx.fillStyle = p.color;
+                
+                if (p.isBoss) {
+                    // Bossowe cząsteczki z poświatą
+                    this.ctx.shadowColor = p.color;
+                    this.ctx.shadowBlur = 10;
+                }
+                
+                this.ctx.beginPath();
+                this.ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+                this.ctx.fill();
                 this.ctx.restore();
             }
         }

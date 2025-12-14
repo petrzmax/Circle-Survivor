@@ -204,7 +204,7 @@ const SHOP_ITEMS = {
     },
     explosiveRounds: {
         type: 'item',
-        name: 'Wybuchowa Amunicja',
+        name: 'Zimna Wojna',
         description: '+25% zasięgu eksplozji',
         price: 95,
         emoji: '💥',

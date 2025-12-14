@@ -1,6 +1,6 @@
 # Circle Survivor 🎮
 
-Circle Survivor is a Brotato-like survival game, vibe coded in seconds with Copilot.
+Circle Survivor is a Brotato-like survival game, vibe coded with Copilot.
 
 ## 🎯 Play Now
 

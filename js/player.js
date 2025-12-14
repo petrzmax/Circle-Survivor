@@ -181,7 +181,7 @@ class Player {
         const reduction = this.armor / (this.armor + 100); // Diminishing returns
         const finalDamage = amount * (1 - reduction);
         
-        this.hp -= finalDamage;
+        this.hp = Math.max(0, this.hp - finalDamage); // Nie pozwól na ujemne HP
         this.invincibleUntil = currentTime + this.invincibleDuration;
         
         return this.hp <= 0;

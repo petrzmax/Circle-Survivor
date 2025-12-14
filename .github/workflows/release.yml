@@ -20,12 +20,13 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # Always runs on develop branch, regardless of UI selection
     steps:
       - name: Checkout develop branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: develop
+          ref: develop  # Always checkout develop, ignore UI branch selection
 
       - name: Configure Git
         run: |

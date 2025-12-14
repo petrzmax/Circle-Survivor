@@ -16,17 +16,24 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "release"
+  cancel-in-progress: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    # Always runs on develop branch, regardless of UI selection
+    outputs:
+      new_version: ${{ steps.version.outputs.NEW_VERSION }}
     steps:
       - name: Checkout develop branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: develop  # Always checkout develop, ignore UI branch selection
+          ref: develop
 
       - name: Configure Git
         run: |
@@ -68,13 +75,13 @@ jobs:
           
           NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "CURRENT_TAG=$CURRENT_TAG" >> $GITHUB_OUTPUT
           echo "New version: $NEW_VERSION"
 
       - name: Generate changelog
         id: changelog
         run: |
-          CURRENT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          NEW_VERSION=${{ steps.version.outputs.NEW_VERSION }}
+          CURRENT_TAG=${{ steps.version.outputs.CURRENT_TAG }}
           
           echo "Generating changelog from $CURRENT_TAG to HEAD..."
           
@@ -86,7 +93,7 @@ jobs:
             echo "- No changes" > CHANGELOG_ENTRY.md
           fi
           
-          echo "Changelog generated:"
+          echo "Changelog:"
           cat CHANGELOG_ENTRY.md
 
       - name: Create and push tag
@@ -117,10 +124,9 @@ jobs:
           EXISTING_PR=$(gh pr list --base master --head develop --json number --jq '.[0].number')
           
           if [ -n "$EXISTING_PR" ]; then
-            echo "Found existing PR #$EXISTING_PR, will update and merge it"
+            echo "Found existing PR #$EXISTING_PR, updating and merging"
             PR_NUMBER=$EXISTING_PR
             
-            # Update PR title and body
             gh pr edit $PR_NUMBER \
               --title "Release $NEW_VERSION" \
               --body "Automated release merge from develop to master.
@@ -128,7 +134,7 @@ jobs:
           ## Changes
           $(cat CHANGELOG_ENTRY.md)"
           else
-            # Create new pull request from develop to master
+            # Create new PR
             PR_URL=$(gh pr create \
               --base master \
               --head develop \
@@ -139,13 +145,56 @@ jobs:
           $(cat CHANGELOG_ENTRY.md)")
             
             echo "Pull request created: $PR_URL"
-            
-            # Extract PR number from URL
             PR_NUMBER=$(echo $PR_URL | grep -oE '[0-9]+$')
           fi
           
-          # Merge the PR immediately (no --auto since there are no required checks)
+          # Merge PR
           gh pr merge $PR_NUMBER --merge
-          
           echo "Pull request #$PR_NUMBER merged to master"
-          echo "Deploy workflow will trigger automatically via workflow_run event"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - name: Checkout master branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: master
+
+      - name: Get version from git tag
+        id: version
+        run: |
+          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          VERSION=${TAG#v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying version: $VERSION"
+
+      - name: Inject version into version.js
+        run: |
+          echo "// Game version - automatically injected during deploy" > js/version.js
+          echo "const GAME_VERSION = \"${{ steps.version.outputs.VERSION }}\";" >> js/version.js
+          cat js/version.js
+
+      - name: Inject secrets into leaderboard.js
+        env:
+          JSONBIN_BIN_ID: ${{ secrets.JSONBIN_BIN_ID }}
+          JSONBIN_API_KEY: ${{ secrets.JSONBIN_API_KEY }}
+        run: node scripts/inject-secrets.js
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        
+      - name: Summary
+        run: |
+          echo "✅ Release ${{ needs.release.outputs.new_version }} deployed successfully!"
+          echo "🌐 URL: ${{ steps.deployment.outputs.page_url }}"

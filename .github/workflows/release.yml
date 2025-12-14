@@ -132,15 +132,4 @@ jobs:
           gh pr merge $PR_NUMBER --merge --auto
           
           echo "Pull request #$PR_NUMBER merged to master"
-
-      - name: Trigger deploy workflow
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Wait a bit for merge to complete
-          sleep 5
-          
-          # Trigger deploy workflow on master branch
-          gh workflow run deploy.yml --ref master
-          
-          echo "Deploy workflow triggered on master"
+          echo "Deploy workflow will trigger automatically via workflow_run event"

@@ -113,34 +113,39 @@ jobs:
         run: |
           NEW_VERSION=${{ steps.version.outputs.NEW_VERSION }}
           
-          # Create pull request from develop to master
-          PR_URL=$(gh pr create \
-            --base master \
-            --head develop \
-            --title "Release $NEW_VERSION" \
-            --body "Automated release merge from develop to master.
+          # Check if PR already exists
+          EXISTING_PR=$(gh pr list --base master --head develop --json number --jq '.[0].number')
+          
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Found existing PR #$EXISTING_PR, will update and merge it"
+            PR_NUMBER=$EXISTING_PR
+            
+            # Update PR title and body
+            gh pr edit $PR_NUMBER \
+              --title "Release $NEW_VERSION" \
+              --body "Automated release merge from develop to master.
+          
+          ## Changes
+          $(cat CHANGELOG_ENTRY.md)"
+          else
+            # Create new pull request from develop to master
+            PR_URL=$(gh pr create \
+              --base master \
+              --head develop \
+              --title "Release $NEW_VERSION" \
+              --body "Automated release merge from develop to master.
           
           ## Changes
           $(cat CHANGELOG_ENTRY.md)")
+            
+            echo "Pull request created: $PR_URL"
+            
+            # Extract PR number from URL
+            PR_NUMBER=$(echo $PR_URL | grep -oE '[0-9]+$')
+          fi
           
-          echo "Pull request created: $PR_URL"
-          
-          # Extract PR number from URL
-          PR_NUMBER=$(echo $PR_URL | grep -oE '[0-9]+$')
-          
-          # Automatically merge the PR
-          gh pr merge $PR_NUMBER --merge --auto
+          # Merge the PR immediately (no --auto since there are no required checks)
+          gh pr merge $PR_NUMBER --merge
           
           echo "Pull request #$PR_NUMBER merged to master"
-
-      - name: Trigger deploy workflow
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Wait a bit for merge to complete
-          sleep 5
-          
-          # Trigger deploy workflow on master branch
-          gh workflow run deploy.yml --ref master
-          
-          echo "Deploy workflow triggered on master"
+          echo "Deploy workflow will trigger automatically via workflow_run event"

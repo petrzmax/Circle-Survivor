@@ -227,6 +227,19 @@ class AudioSystem {
     thorns() {
         this.playTone(800, 0.03, 'square', 0.2);
     }
+    
+    // Countdown tick (ostatnie 3 sekundy fali)
+    countdownTick(secondsLeft) {
+        if (secondsLeft === 0) {
+            // Finalny dźwięk - wesoły, krótki "ding ding!"
+            this.playTone(500, 0.08, 'triangle', 0.3);
+            setTimeout(() => this.playTone(600, 0.1, 'triangle', 0.35), 100);
+        } else {
+            // Ostrzegawczy "blip" - krótki, elektroniczny
+            this.playTone(300, 0.08, 'square', 0.25);
+            this.playTone(350, 0.06, 'sawtooth', 0.15);
+        }
+    }
 }
 
 // Globalna instancja audio

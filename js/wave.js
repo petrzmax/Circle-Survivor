@@ -10,6 +10,7 @@ class WaveManager {
         this.spawnInterval = 800; // ms between spawns - znacznie szybciej!
         this.enemiesPerSpawn = 2;
         this.bossSpawned = false;
+        this.lastCountdownSecond = -1; // Do śledzenia countdown
     }
 
     startWave() {
@@ -17,6 +18,7 @@ class WaveManager {
         this.timeRemaining = this.getWaveDuration();
         this.spawnTimer = 0;
         this.bossSpawned = false;
+        this.lastCountdownSecond = -1; // Reset countdown
         this.updateSpawnSettings();
     }
 
@@ -45,20 +47,30 @@ class WaveManager {
     }
 
     update(deltaTime, canvas, bossAlive = false) {
-        if (!this.isWaveActive) return { enemies: [], waveEnded: false };
+        if (!this.isWaveActive) return { enemies: [], waveEnded: false, countdown: false };
 
         const enemies = [];
 
         // Gdy boss żyje - zatrzymaj timer i nie spawnuj nowych wrogów
         if (bossAlive) {
-            return { enemies: [], waveEnded: false };
+            return { enemies: [], waveEnded: false, countdown: false };
         }
 
         // Update timer (tylko gdy boss nie żyje)
         this.timeRemaining -= deltaTime / 1000;
         
+        // Countdown w ostatnich 3 sekundach
+        let countdown = false;
+        if (this.timeRemaining <= 3 && this.timeRemaining > 0) {
+            const currentSecond = Math.ceil(this.timeRemaining);
+            if (currentSecond !== this.lastCountdownSecond && currentSecond >= 1 && currentSecond <= 3) {
+                this.lastCountdownSecond = currentSecond;
+                countdown = currentSecond; // Zwróć aktualną sekundę
+            }
+        }
+        
         if (this.timeRemaining <= 0) {
-            return { enemies: [], waveEnded: true };
+            return { enemies: [], waveEnded: true, countdown: 0 }; // 0 = finalny dźwięk
         }
         
         // Spawn boss co 5 fal
@@ -111,7 +123,7 @@ class WaveManager {
             }
         }
 
-        return { enemies, waveEnded: false };
+        return { enemies, waveEnded: false, countdown };
     }
 
     getRandomEnemyType() {

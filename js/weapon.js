@@ -66,7 +66,8 @@ const WEAPON_TYPES = {
         price: 120,
         color: '#ff00ff',
         range: 350,
-        weaponCategory: 'gun'
+        weaponCategory: 'gun',
+        knockbackMultiplier: 0.15
     },
     // NOWE BRONIE
     minigun: {

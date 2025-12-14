@@ -373,6 +373,11 @@ class Game {
         const waveResult = this.waveManager.update(deltaTime, this.canvas, bossAlive);
         this.enemies.push(...waveResult.enemies);
         
+        // Countdown sound i wizualizacja
+        if (waveResult.countdown !== false) {
+            audio.countdownTick(waveResult.countdown);
+        }
+        
         if (waveResult.waveEnded) {
             this.openShop();
             return;
@@ -601,7 +606,8 @@ class Game {
                     if (this.player.dodge > 0 && Math.random() < this.player.dodge) {
                         audio.dodge();
                     } else {
-                        this.player.takeDamage(sw.damage, currentTime);
+                        const isDead = this.player.takeDamage(sw.damage, currentTime);
+                        if (isDead) this.gameOver();
                     }
                     sw.damageDealt = true;
                 }
@@ -689,7 +695,8 @@ class Game {
         if (enemy.explodeOnDeath) {
             const distToPlayer = distance(enemy, this.player);
             if (distToPlayer < enemy.explosionRadius) {
-                this.player.takeDamage(enemy.explosionDamage, currentTime);
+                const isDead = this.player.takeDamage(enemy.explosionDamage, currentTime);
+                if (isDead) this.gameOver();
             }
             // Visual explosion effect (add to effects array if we have one)
             this.createExplosion(enemy.x, enemy.y, enemy.explosionRadius);
@@ -1299,7 +1306,17 @@ class Game {
         
         // Wave info
         document.getElementById('wave-num').textContent = this.waveManager.waveNumber;
-        document.getElementById('wave-timer').textContent = Math.ceil(this.waveManager.timeRemaining);
+        const timerElement = document.getElementById('wave-timer');
+        const timeRemaining = Math.ceil(this.waveManager.timeRemaining);
+        timerElement.textContent = timeRemaining;
+        
+        // Countdown warning - czerwony kolor przy ostatnich 3 sekundach
+        const timerContainer = document.getElementById('timer');
+        if (timeRemaining <= 3 && timeRemaining > 0 && this.waveManager.isWaveActive) {
+            timerContainer.classList.add('countdown-warning');
+        } else {
+            timerContainer.classList.remove('countdown-warning');
+        }
         
         // Resources
         document.getElementById('gold-amount').textContent = this.gold;
@@ -1342,5 +1359,10 @@ class Game {
 
 // Start when page loads
 window.addEventListener('load', () => {
+    // Set version number
+    if (typeof GAME_VERSION !== 'undefined') {
+        document.getElementById('version-number').textContent = GAME_VERSION;
+    }
+    
     new Game();
 });

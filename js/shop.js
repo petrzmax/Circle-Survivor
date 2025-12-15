@@ -211,12 +211,13 @@ const SHOP_ITEMS = {
         effect: { explosionRadius: 0.25 }
     },
     multishot: {
-        type: 'item',
+        type: 'weaponBonus',
         name: 'Multishot',
-        description: '+1 dodatkowy pocisk',
+        description: '+1 pocisk do losowej broni',
         price: 150,
         emoji: '🎯',
-        effect: { projectileCount: 1 }
+        bonusType: 'extraProjectiles',
+        bonusValue: 1
     },
     piercingArrows: {
         type: 'item',
@@ -476,8 +477,11 @@ class Shop {
             // Don't offer weapon upgrade if no weapons to upgrade
             if (item.type === 'weaponUpgrade' && player.weapons.length === 0) return;
             
+            // Don't offer weapon bonus if no weapons
+            if (item.type === 'weaponBonus' && player.weapons.length === 0) return;
+            
             if (item.type === 'weapon') weapons.push(key);
-            else if (item.type === 'item') items.push(key);
+            else if (item.type === 'item' || item.type === 'weaponBonus') items.push(key);
             else if (item.type === 'weaponUpgrade') upgrades.push(key);
         });
         
@@ -637,6 +641,27 @@ class Shop {
                 } else {
                     // Dodaj nową broń
                     player.addWeapon(item.weaponType);
+                }
+                break;
+                
+            case 'weaponBonus':
+                // Bonus do losowej broni (np. multishot)
+                if (player.weapons.length === 0) {
+                    window.game.gold += price;
+                    if (typeof audio !== 'undefined') audio.error();
+                    return;
+                }
+                // Dodaj przedmiot do inventory
+                player.addItem(itemKey);
+                // Wybierz losową broń
+                const randomWeapon = player.weapons[Math.floor(Math.random() * player.weapons.length)];
+                // Aplikuj bonus do broni
+                if (item.bonusType && randomWeapon[item.bonusType] !== undefined) {
+                    randomWeapon[item.bonusType] += item.bonusValue;
+                }
+                // Pokaż komunikat
+                if (window.game && window.game.showNotification) {
+                    window.game.showNotification(`🎯 ${randomWeapon.name} +${item.bonusValue} pocisk!`);
                 }
                 break;
                 

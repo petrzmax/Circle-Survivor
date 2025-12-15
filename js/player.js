@@ -160,7 +160,7 @@ class Player {
                 this.attackSpeedMultiplier,
                 this.critChance,
                 this.critDamage,
-                this.projectileCount,
+                this.projectileCount + weapon.extraProjectiles,  // Globalne + per-weapon bonus
                 this.pierce
             );
             allBullets.push(...bullets);

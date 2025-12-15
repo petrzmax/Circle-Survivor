@@ -297,6 +297,9 @@ class Weapon {
         // Fire offset for staggered shooting (set by player)
         this.fireOffset = 0;
         
+        // Bonus z przedmiotów (per-weapon)
+        this.extraProjectiles = 0;  // Dodatkowe pociski z multishot
+        
         // Specjalne efekty
         this.chain = config.chain || false;      // Kusza łańcuchowa
         this.chainCount = config.chainCount || 0;

@@ -1,38 +1,5 @@
 // Main game controller
-
-// Definicje postaci
-const CHARACTER_TYPES = {
-    wypaleniec: {
-        name: 'Wypaleniec',
-        description: 'Były pracownik korpo. Wypalony, ale wściekły.',
-        color: '#ff6600',
-        maxHp: 80,
-        speed: 3.6,          // -10%
-        damageMultiplier: 1.25, // +25%
-        goldMultiplier: 1,
-        startingWeapon: 'shotgun'
-    },
-    cwaniak: {
-        name: 'Cwaniak',
-        description: 'Zawsze znajdzie lukę w systemie.',
-        color: '#00ff88',
-        maxHp: 70,
-        speed: 4.8,          // +20%
-        damageMultiplier: 1,
-        goldMultiplier: 1.3, // +30%
-        startingWeapon: 'smg'
-    },
-    normik: {
-        name: 'Normik',
-        description: 'Przeciętny Kowalski. Zbalansowany we wszystkim.',
-        color: '#4a9eff',
-        maxHp: 100,
-        speed: 4,
-        damageMultiplier: 1,
-        goldMultiplier: 1,
-        startingWeapon: 'pistol'
-    }
-};
+// CHARACTER_TYPES moved to js/config/shop-items-config.js
 
 class Game {
     constructor() {

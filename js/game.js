@@ -47,104 +47,37 @@ class Game {
     
     // Open leaderboard from menu
     async openMenuLeaderboard() {
-        document.getElementById('start-screen').classList.add('hidden');
-        document.getElementById('menu-leaderboard').classList.remove('hidden');
-        await this.showMenuLeaderboard('local');
+        await LeaderboardUI.openMenuLeaderboard(this);
     }
     
     // Close menu leaderboard
     closeMenuLeaderboard() {
-        document.getElementById('menu-leaderboard').classList.add('hidden');
-        document.getElementById('start-screen').classList.remove('hidden');
+        LeaderboardUI.closeMenuLeaderboard();
     }
     
     // Show menu leaderboard with specific tab
     async showMenuLeaderboard(tab = 'local') {
-        const listEl = document.getElementById('menu-leaderboard-list');
-        
-        // Pokaż loading dla globalnych wyników
-        if (tab === 'global') {
-            listEl.innerHTML = '<li style="text-align: center; color: #888; padding: 20px;">⏳ Ładowanie...</li>';
-        }
-        
-        // Update tab buttons
-        document.querySelectorAll('.menu-tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tab);
-        });
-        
-        const scores = await leaderboard.getScores(tab);
-        listEl.innerHTML = leaderboard.renderLeaderboard(scores);
-        
-        this.currentMenuLeaderboardTab = tab;
+        await LeaderboardUI.showMenuLeaderboard(tab);
     }
     
     // Switch menu leaderboard tab
     switchMenuLeaderboardTab(tab) {
-        this.showMenuLeaderboard(tab);
+        LeaderboardUI.switchMenuLeaderboardTab(tab);
     }
     
     // Submit score to leaderboard
     async submitScore() {
-        const nameInput = document.getElementById('player-name');
-        const submitBtn = document.getElementById('submit-score-btn');
-        const name = nameInput.value.trim();
-        
-        if (!name) {
-            nameInput.focus();
-            nameInput.style.borderColor = '#e94560';
-            setTimeout(() => nameInput.style.borderColor = '', 500);
-            return;
-        }
-        
-        // Disable button and show loading
-        submitBtn.disabled = true;
-        submitBtn.textContent = '⏳ Zapisywanie...';
-        
-        try {
-            await leaderboard.submitScore(
-                name, 
-                this.waveManager.waveNumber, 
-                this.xp, 
-                this.selectedCharacter
-            );
-            
-            // Hide submit form, show leaderboard
-            document.getElementById('score-submit').style.display = 'none';
-            this.showLeaderboard('local', name);
-            
-            // Save name for next time
-            localStorage.setItem('circle_survivor_player_name', name);
-        } catch (e) {
-            console.error('Error submitting score:', e);
-            submitBtn.textContent = '❌ Błąd - spróbuj ponownie';
-            submitBtn.disabled = false;
-        }
+        await LeaderboardUI.submitScore(this);
     }
     
     // Show leaderboard with specific tab
     async showLeaderboard(tab = 'local', highlightName = null) {
-        const listEl = document.getElementById('leaderboard-list');
-        
-        // Pokaż loading dla globalnych wyników
-        if (tab === 'global') {
-            listEl.innerHTML = '<li style="text-align: center; color: #888; padding: 20px;">⏳ Ładowanie...</li>';
-        }
-        
-        // Update tab buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tab);
-        });
-        
-        const scores = await leaderboard.getScores(tab);
-        listEl.innerHTML = leaderboard.renderLeaderboard(scores, highlightName);
-        
-        this.currentLeaderboardTab = tab;
-        this.highlightedName = highlightName;
+        await LeaderboardUI.showLeaderboard(tab, highlightName);
     }
     
     // Switch leaderboard tab
     switchLeaderboardTab(tab) {
-        this.showLeaderboard(tab, this.highlightedName);
+        LeaderboardUI.switchLeaderboardTab(tab);
     }
     
     selectCharacter(characterType) {
@@ -519,234 +452,26 @@ class Game {
     }
     
     handleEnemyDeath(enemy, currentTime) {
-        const luck = this.player.luck;
-        
-        // Dźwięk śmierci
-        if (enemy.isBoss) {
-            audio.nukeExplosion();
-        } else {
-            audio.enemyDeath();
-        }
-        
-        // XP - zbierane natychmiast
-        const xpGained = Math.floor(enemy.xpValue * this.player.xpMultiplier);
-        this.xp += xpGained;
-        audio.collectXP();
-        
-        // Gold - boss dropuje więcej woreczków
-        if (enemy.isBoss) {
-            // Jeden duży woreczek (50% wartości) w centrum
-            this.pickups.push(new Pickup(
-                enemy.x,
-                enemy.y,
-                'gold',
-                Math.floor(enemy.goldValue * 0.5)
-            ));
-            
-            // 6-8 małych woreczków rozrzuconych dookoła
-            const smallBags = 6 + Math.floor(Math.random() * 3);
-            const smallValue = Math.floor((enemy.goldValue * 0.5) / smallBags);
-            for (let i = 0; i < smallBags; i++) {
-                const angle = (Math.PI * 2 / smallBags) * i;
-                const dist = 20 + Math.random() * 30;
-                this.pickups.push(new Pickup(
-                    enemy.x + Math.cos(angle) * dist,
-                    enemy.y + Math.sin(angle) * dist,
-                    'gold',
-                    smallValue
-                ));
-            }
-        } else {
-            // Zwykły wróg - jeden woreczek
-            this.pickups.push(new Pickup(
-                enemy.x + randomRange(-10, 10),
-                enemy.y + randomRange(-10, 10),
-                'gold',
-                enemy.goldValue
-            ));
-        }
-        
-        // Bonus gold z luck
-        if (luck > 0 && Math.random() < luck) {
-            this.pickups.push(new Pickup(
-                enemy.x + randomRange(-15, 15),
-                enemy.y + randomRange(-15, 15),
-                'gold',
-                Math.floor(enemy.goldValue * 0.5)
-            ));
-        }
-        
-        // Health drop chance (15% base + luck bonus)
-        if (Math.random() < (0.15 + luck * 0.2)) {
-            this.pickups.push(new Pickup(
-                enemy.x + randomRange(-10, 10),
-                enemy.y + randomRange(-10, 10),
-                'health',
-                10
-            ));
-        }
-        
-        // Efekt śmierci (particle burst)
-        this.createDeathEffect(enemy);
-        
-        // Exploder - deals damage to player if close
-        if (enemy.explodeOnDeath) {
-            const distToPlayer = distance(enemy, this.player);
-            if (distToPlayer < enemy.explosionRadius) {
-                const isDead = this.player.takeDamage(enemy.explosionDamage, currentTime);
-                if (isDead) this.gameOver();
-            }
-            // Visual explosion effect (add to effects array if we have one)
-            this.createExplosion(enemy.x, enemy.y, enemy.explosionRadius);
-        }
-        
-        // Splitter - spawns smaller enemies
-        if (enemy.splitOnDeath) {
-            for (let i = 0; i < enemy.splitCount; i++) {
-                const angle = (Math.PI * 2 / enemy.splitCount) * i;
-                const spawnX = enemy.x + Math.cos(angle) * 30;
-                const spawnY = enemy.y + Math.sin(angle) * 30;
-                this.enemies.push(new Enemy(spawnX, spawnY, 'swarm'));
-            }
-        }
+        // Delegated to EnemySpawner (js/systems/enemy-spawner.js)
+        EnemySpawner.handleEnemyDeath(this, enemy, currentTime);
     }
     
     // Obsługa eksplozji od broni (bazooka, miny, nuke, holyGrenade, banana)
     handleExplosion(x, y, radius, damage, isNuke = false, isHolyGrenade = false, isBanana = false, currentTime, isMini = false) {
-        // Dźwięk eksplozji
-        if (isNuke) {
-            audio.nukeExplosion();
-        } else {
-            audio.explosion();
-        }
-        
-        // Wizualny efekt
-        this.createExplosion(x, y, radius, isNuke, isHolyGrenade, isBanana);
-        
-        // Banan (nie mini) - spawn mini bananów
-        if (isBanana && !isMini) {
-            this.spawnMiniBananas(x, y, 4 + Math.floor(Math.random() * 3));
-        }
-        
-        // Zadaj obrażenia wszystkim wrogom w zasięgu
-        for (let i = this.enemies.length - 1; i >= 0; i--) {
-            const enemy = this.enemies[i];
-            const dist = distance({x, y}, enemy);
-            
-            if (dist < radius) {
-                // Obrażenia maleją z odległością
-                const damageFalloff = 1 - (dist / radius) * 0.5;
-                const isDead = enemy.takeDamage(damage * damageFalloff, x, y, this.player.knockback * 1.5);
-                
-                // Lifesteal from explosions
-                if (this.player.lifesteal > 0) {
-                    this.player.heal(damage * damageFalloff * this.player.lifesteal);
-                }
-                
-                if (isDead) {
-                    this.handleEnemyDeath(enemy, currentTime);
-                    this.enemies.splice(i, 1);
-                }
-            }
-        }
+        // Delegated to CombatSystem (js/systems/combat-system.js)
+        CombatSystem.handleExplosion(this, x, y, radius, damage, isNuke, isHolyGrenade, isBanana, currentTime, isMini);
     }
     
     // Spawn mini bananów po wybuchu głównego banana
     spawnMiniBananas(x, y, count) {
-        for (let i = 0; i < count; i++) {
-            const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.5;
-            const config = WEAPON_TYPES.minibanana;
-            
-            // Losowa prędkość (6-10) i dystans (60-100px) dla każdego mini banana
-            const randomSpeed = 6 + Math.random() * 4;
-            const randomRange = 60 + Math.random() * 40;
-            
-            const bullet = new Bullet(
-                x, y,
-                Math.cos(angle) * randomSpeed,
-                Math.sin(angle) * randomSpeed,
-                config.damage * this.player.damageMultiplier,
-                config.color,
-                false
-            );
-            
-            bullet.radius = config.bulletRadius;
-            bullet.explosive = config.explosive;
-            bullet.explosionRadius = config.explosionRadius * this.player.explosionRadius;
-            bullet.isBanana = config.isBanana;
-            bullet.isMini = true;
-            bullet.weaponCategory = config.weaponCategory;
-            bullet.explosiveRange = randomRange;
-            bullet.baseSpeed = randomSpeed;
-            bullet.startX = x;
-            bullet.startY = y;
-            bullet.distanceTraveled = 0;
-            
-            this.bullets.push(bullet);
-        }
+        // Delegated to CombatSystem (js/systems/combat-system.js)
+        CombatSystem.spawnMiniBananas(this, x, y, count);
     }
     
     // Chain effect - łączy wrogów i zadaje im obrażenia
     handleChainEffect(startX, startY, damage, chainCount, currentTime) {
-        if (!this.chainEffects) this.chainEffects = [];
-        
-        audio.chainEffect();
-        
-        const chainedEnemyIds = new Set(); // Używamy Set zamiast tablicy
-        let currentX = startX;
-        let currentY = startY;
-        const chainRange = 150;
-        
-        for (let i = 0; i < chainCount; i++) {
-            // Znajdź najbliższego wroga, który nie jest już w łańcuchu
-            let nearestDist = Infinity;
-            let nearestEnemy = null;
-            
-            for (const enemy of this.enemies) {
-                if (!enemy || chainedEnemyIds.has(enemy)) continue;
-                
-                const dist = distance({x: currentX, y: currentY}, enemy);
-                if (dist < chainRange && dist < nearestDist) {
-                    nearestDist = dist;
-                    nearestEnemy = enemy;
-                }
-            }
-            
-            if (!nearestEnemy) break;
-            
-            // Zapisz pozycję PRZED wszystkim innym
-            const enemyX = nearestEnemy.x;
-            const enemyY = nearestEnemy.y;
-            
-            // Dodaj do łańcucha
-            chainedEnemyIds.add(nearestEnemy);
-            
-            // Dodaj efekt wizualny
-            this.chainEffects.push({
-                x1: currentX, y1: currentY,
-                x2: enemyX, y2: enemyY,
-                created: Date.now(),
-                alpha: 1
-            });
-            
-            // Aktualizuj pozycję dla następnego łańcucha
-            currentX = enemyX;
-            currentY = enemyY;
-            
-            // Zadaj obrażenia
-            const isDead = nearestEnemy.takeDamage(damage, enemyX, enemyY, this.player.knockback);
-            
-            // Lifesteal z łańcucha
-            if (this.player.lifesteal > 0) {
-                this.player.heal(damage * this.player.lifesteal);
-            }
-            
-            if (isDead) {
-                this.handleEnemyDeath(nearestEnemy, currentTime);
-                const idx = this.enemies.indexOf(nearestEnemy);
-                if (idx !== -1) this.enemies.splice(idx, 1);
-            }
-        }
+        // Delegated to CombatSystem (js/systems/combat-system.js)
+        CombatSystem.handleChainEffect(this, startX, startY, damage, chainCount, currentTime);
     }
     
     createDeathEffect(enemy) {

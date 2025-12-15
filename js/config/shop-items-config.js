@@ -2,6 +2,14 @@
 
 const SHOP_ITEMS = {
     // ============ BRONIE ============
+    pistol: {
+        type: 'weapon',
+        weaponType: 'pistol',
+        name: 'Pistolet',
+        description: 'Podstawowa broń, niezawodna',
+        price: 30,
+        emoji: '🔫'
+    },
     smg: {
         type: 'weapon',
         weaponType: 'smg',

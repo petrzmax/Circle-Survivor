@@ -28,9 +28,9 @@ class WaveManager {
     }
 
     getWaveDuration() {
-        if (this.waveNumber <= 2) return 25;
-        if (this.waveNumber <= 4) return 35;
-        return 40;
+        if (this.waveNumber <= 2) return GAME_BALANCE.wave.duration.early;
+        if (this.waveNumber <= 4) return GAME_BALANCE.wave.duration.mid;
+        return GAME_BALANCE.wave.duration.late;
     }
 
     updateSpawnSettings() {
@@ -81,14 +81,14 @@ class WaveManager {
             
             // Scaling 1: With boss wave number (+50% HP, +25% DMG per boss wave)
             const bossWave = Math.floor(this.waveNumber / 3);
-            const bossMultiplierHp = 1 + (bossWave - 1) * 0.5;
-            const bossMultiplierDmg = 1 + (bossWave - 1) * 0.25;
+            const bossMultiplierHp = 1 + (bossWave - 1) * GAME_BALANCE.boss.hpScalePerWave;
+            const bossMultiplierDmg = 1 + (bossWave - 1) * GAME_BALANCE.boss.dmgScalePerWave;
             
             // Scaling 2: Exponential like regular enemies (1.04^n from wave 3)
             let expMultiplier = 1;
             if (this.waveNumber >= 3) {
                 const scalingWave = this.waveNumber - 3;
-                expMultiplier = Math.pow(1.04, scalingWave);
+                expMultiplier = Math.pow(GAME_BALANCE.boss.exponentialBase, scalingWave);
             }
             
             // Combined scaling
@@ -110,10 +110,10 @@ class WaveManager {
                 const type = this.getRandomEnemyType();
                 const enemy = new Enemy(spawn.x, spawn.y, type);
                 
-                // Skalowanie wrogów od fali 5 (wykładnicze: 1.04^n)
-                if (this.waveNumber >= 5) {
-                    const scalingWave = this.waveNumber - 5;
-                    const multiplier = Math.pow(1.04, scalingWave);
+                // Enemy scaling from wave 5 (exponential: scalingFactor^n)
+                if (this.waveNumber >= GAME_BALANCE.enemy.scalingStartWave) {
+                    const scalingWave = this.waveNumber - GAME_BALANCE.enemy.scalingStartWave;
+                    const multiplier = Math.pow(GAME_BALANCE.enemy.scalingFactor, scalingWave);
                     enemy.hp = Math.round(enemy.hp * multiplier);
                     enemy.maxHp = enemy.hp;
                     enemy.damage = Math.round(enemy.damage * multiplier);

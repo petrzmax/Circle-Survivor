@@ -60,10 +60,10 @@ class Weapon {
     // Upgrade weapon
     upgrade() {
         this.level++;
-        this.damage = this.baseDamage * (1 + (this.level - 1) * 0.3);
-        this.fireRate = Math.round(this.fireRate * 0.9);  // +10% szybkości ataku
+        this.damage = this.baseDamage * (1 + (this.level - 1) * (GAME_BALANCE.weapons.upgrade.damagePerLevel - 1));
+        this.fireRate = Math.round(this.fireRate / GAME_BALANCE.weapons.upgrade.attackSpeedPerLevel);
         if (this.explosive) {
-            this.explosionRadius *= 1.15;
+            this.explosionRadius *= GAME_BALANCE.weapons.upgrade.explosionPerLevel;
         }
     }
     

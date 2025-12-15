@@ -11,10 +11,10 @@ class Shop {
     // Calculate reroll price
     getRerollPrice() {
         const waveNumber = window.game ? window.game.waveManager.waveNumber : 1;
-        const basePrice = 15;
-        // Price = base * (1 + wave*0.2) * (1 + reroll*0.5)
-        const waveMultiplier = 1 + (waveNumber - 1) * 0.2;
-        const rerollMultiplier = 1 + this.rerollCount * 0.5;
+        const basePrice = GAME_BALANCE.economy.reroll.baseCost;
+        // Price = base * (1 + wave*perWave) * (1 + reroll*perReroll)
+        const waveMultiplier = 1 + (waveNumber - 1) * GAME_BALANCE.economy.reroll.perWave;
+        const rerollMultiplier = 1 + this.rerollCount * GAME_BALANCE.economy.reroll.perReroll;
         return Math.round(basePrice * waveMultiplier * rerollMultiplier / 5) * 5;
     }
     
@@ -42,19 +42,19 @@ class Shop {
     calculatePrice(basePrice, player) {
         const waveNumber = window.game ? window.game.waveManager.waveNumber : 1;
         
-        // Scaling with wave number (after wave 5, +15% per wave)
+        // Scaling with wave number (after startWave, +perWave% per wave)
         let waveMultiplier = 1;
-        if (waveNumber > 5) {
-            waveMultiplier = 1 + (waveNumber - 5) * 0.15;
+        if (waveNumber > GAME_BALANCE.economy.priceScale.startWave) {
+            waveMultiplier = 1 + (waveNumber - GAME_BALANCE.economy.priceScale.startWave) * GAME_BALANCE.economy.priceScale.perWave;
         }
         
-        // Scaling with owned items (+8% per item)
+        // Scaling with owned items (+perItem% per item)
         const itemCount = player.items ? player.items.length : 0;
-        const itemMultiplier = 1 + itemCount * 0.08;
+        const itemMultiplier = 1 + itemCount * GAME_BALANCE.economy.priceScale.perItem;
         
-        // Scaling with weapon count (+10% per weapon)
+        // Scaling with weapon count (+perWeapon% per weapon)
         const weaponCount = player.weapons ? player.weapons.length : 0;
-        const weaponMultiplier = 1 + weaponCount * 0.10;
+        const weaponMultiplier = 1 + weaponCount * GAME_BALANCE.economy.priceScale.perWeapon;
         
         // Final price (rounded to 5)
         const finalPrice = basePrice * waveMultiplier * itemMultiplier * weaponMultiplier;

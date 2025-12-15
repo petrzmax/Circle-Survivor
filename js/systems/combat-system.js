@@ -38,8 +38,8 @@ const CombatSystem = {
             
             if (dist < radius) {
                 // Damage decreases with distance
-                const damageFalloff = 1 - (dist / radius) * 0.5;
-                const isDead = enemy.takeDamage(damage * damageFalloff, x, y, game.player.knockback * 1.5);
+                const damageFalloff = 1 - (dist / radius) * GAME_BALANCE.combat.explosionFalloff;
+                const isDead = enemy.takeDamage(damage * damageFalloff, x, y, game.player.knockback * GAME_BALANCE.combat.explosionKnockback);
                 
                 // Lifesteal from explosions
                 if (game.player.lifesteal > 0) {
@@ -112,7 +112,7 @@ const CombatSystem = {
         const chainedEnemyIds = new Set();
         let currentX = startX;
         let currentY = startY;
-        const chainRange = 150;
+        const chainRange = GAME_BALANCE.combat.chainRange;
         
         for (let i = 0; i < chainCount; i++) {
             // Find nearest enemy not already in chain

@@ -19,7 +19,7 @@ class Player {
         this.damageMultiplier = 1;   // Damage multiplier
         this.attackSpeedMultiplier = 1; // Attack speed multiplier
         this.critChance = 0;         // Crit chance (0-1)
-        this.critDamage = 1.5;       // Crit multiplier
+        this.critDamage = GAME_BALANCE.player.baseCritMultiplier;       // Crit multiplier
         this.lifesteal = 0;          // % of damage as healing
         this.knockback = 1;          // Knockback multiplier
         this.explosionRadius = 1;    // Explosion radius multiplier
@@ -49,7 +49,7 @@ class Player {
         
         // Invincibility frames
         this.invincibleUntil = 0;
-        this.invincibleDuration = 500;
+        this.invincibleDuration = GAME_BALANCE.player.invincibilityMs;
     }
 
     update(keys, canvas, currentTime) {
@@ -178,7 +178,7 @@ class Player {
         }
         
         // Armor reduction
-        const reduction = this.armor / (this.armor + 100); // Diminishing returns
+        const reduction = this.armor / (this.armor + GAME_BALANCE.player.armorDiminishingFactor); // Diminishing returns
         const finalDamage = amount * (1 - reduction);
         
         this.hp = Math.max(0, this.hp - finalDamage); // Nie pozwól na ujemne HP

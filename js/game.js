@@ -266,7 +266,7 @@ class Game {
                 // Boss deals x1.25 contact damage
                 let damage = enemy.damage;
                 if (enemy.isBoss) {
-                    damage *= 1.25;
+                    damage *= GAME_BALANCE.boss.contactDamageMultiplier;
                 }
                 
                 const isDead = this.player.takeDamage(damage, currentTime);

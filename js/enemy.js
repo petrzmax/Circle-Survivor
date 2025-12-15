@@ -169,7 +169,7 @@ class Enemy {
         this.hp -= amount;
         
         // Knockback (less for bosses)
-        const knockbackStrength = (this.isBoss ? 1 : 3) * knockbackMultiplier;
+        const knockbackStrength = (this.isBoss ? GAME_BALANCE.boss.knockbackResistance : GAME_BALANCE.enemy.knockbackMultiplier) * knockbackMultiplier;
         const dx = this.x - bulletX;
         const dy = this.y - bulletY;
         const dist = Math.sqrt(dx * dx + dy * dy);

@@ -16,7 +16,7 @@ const SHOP_ITEMS = {
         name: 'SMG',
         description: 'Szybki ogień, niskie obrażenia',
         price: 50,
-        emoji: '🔫'
+        emoji: '�'
     },
     shotgun: {
         type: 'weapon',

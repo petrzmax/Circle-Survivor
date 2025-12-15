@@ -1,287 +1,131 @@
-# Plan: Git-Flow z branczem develop i automatyczną release'ą
+# Plan Refaktoryzacji Circle-Survivor
 
-## Cel
-Wdrożenie workflow'u rozwojowego z automatycznym release'm: ręczne odpalenie workflow → auto-bump wersji → changelog z git log → auto-merge do master → deploy.
+## ✅ Zakończone
 
-## Architektura Branchy
+### Faza A: Wydzielenie konfiguracji i encji
+
+#### Krok 1: Konfiguracje → `js/config/`
+- [x] `weapons-config.js` ← WEAPON_TYPES z weapon.js (~210 linii)
+- [x] `enemies-config.js` ← ENEMY_TYPES + BOSS_NAME_* z enemy.js (~180 linii)
+- [x] `shop-items-config.js` ← SHOP_ITEMS + CHARACTER_TYPES z shop.js (~320 linii)
+
+#### Krok 2: Encje → `js/entities/`
+- [x] `bullet.js` ← Bullet class z weapon.js
+- [x] `enemy-bullet.js` ← EnemyBullet class z enemy.js
+- [x] `pickup.js` ← Pickup class z enemy.js
+
+#### Krok 3: Systemy → `js/systems/`
+- [x] `collision-system.js` ← logika kolizji z game.js
+- [x] `effects-system.js` ← eksplozje, shockwave, particles z game.js
+- [x] `hud.js` ← updateHUD(), renderBossHealthBar() z game.js
+
+### Faza B: Rozbicie Game.js
+
+#### Krok 4: Wydzielenie z Game class
+- [x] `input-handler.js` ← setupEventListeners(), obsługa klawiszy
+- [x] `weapon-renderer.js` ← renderowanie ikon broni z player.js (~150 linii)
+
+---
+
+## 🔄 Do zrobienia - Faza C: Dalsze czyszczenie
+
+### Krok 5: Combat System → `js/systems/combat-system.js`
+Wydzielenie logiki walki z game.js (~100 linii):
+- [ ] `handleExplosion()` - obsługa eksplozji od broni (bazooka, miny, nuke, holyGrenade, banana)
+- [ ] `handleChainEffect()` - efekt łańcucha (kusza)
+- [ ] `spawnMiniBananas()` - spawn mini bananów po wybuchu głównego banana
+
+### Krok 6: Leaderboard UI → `js/systems/leaderboard-ui.js`
+Wydzielenie obsługi tablicy wyników z game.js (~80 linii):
+- [ ] `submitScore()` - wysyłanie wyniku
+- [ ] `showLeaderboard()`, `switchLeaderboardTab()` - game over screen
+- [ ] `showMenuLeaderboard()`, `switchMenuLeaderboardTab()` - menu screen
+- [ ] `openMenuLeaderboard()`, `closeMenuLeaderboard()` - nawigacja
+
+### Krok 7: Enemy Spawner → `js/systems/enemy-spawner.js`
+Wydzielenie logiki dropów z game.js (~60 linii):
+- [ ] `handleEnemyDeath()` - spawn złota, HP, efekty śmierci
+- [ ] Logika Splitter (spawn mniejszych wrogów)
+- [ ] Logika Exploder (obrażenia przy śmierci)
+
+### Krok 8 (opcjonalny): Game Renderer → `js/systems/game-renderer.js`
+Wydzielenie renderowania z game.js (~50 linii):
+- [ ] `render()` - główna metoda renderowania
+- [ ] Renderowanie tła/siatki
+- [ ] Koordynacja renderowania wszystkich encji
+
+### Krok 9 (opcjonalny): Enemy Renderer → wydzielenie z enemy.js
+Wydzielenie renderowania wroga (~80 linii):
+- [ ] `render()` z Enemy class - korona bossa, oczy, HP bar
+- [ ] Efekty specjalne (ghost, exploder glow)
+
+---
+
+## 📊 Statystyki po Fazie B
+
+| Plik | Linie przed | Linie po | Zmiana |
+|------|-------------|----------|--------|
+| game.js | ~1370 | ~912 | -458 |
+| player.js | ~505 | ~350 | -155 |
+| weapon.js | ~700 | ~195 | -505 |
+| enemy.js | ~670 | ~270 | -400 |
+| shop.js | ~700 | ~299 | -401 |
+
+**Nowe pliki:**
+- `js/config/` - 3 pliki (~710 linii)
+- `js/entities/` - 3 pliki (~200 linii)
+- `js/systems/` - 5 plików (~450 linii)
+
+---
+
+## 📁 Docelowa struktura projektu
 
 ```
-master (produkcja)     ← GitHub Pages deployment
-  ↑
-  │ auto-merge przez release workflow
-  │
-develop (rozwój)       ← domyślny branch, bezpośrednie commity
+js/
+├── config/
+│   ├── weapons-config.js      ✅
+│   ├── enemies-config.js      ✅
+│   └── shop-items-config.js   ✅
+├── entities/
+│   ├── bullet.js              ✅
+│   ├── enemy-bullet.js        ✅
+│   └── pickup.js              ✅
+├── systems/
+│   ├── collision-system.js    ✅
+│   ├── effects-system.js      ✅
+│   ├── hud.js                 ✅
+│   ├── input-handler.js       ✅
+│   ├── weapon-renderer.js     ✅
+│   ├── combat-system.js       🔄 Krok 5
+│   ├── leaderboard-ui.js      🔄 Krok 6
+│   └── enemy-spawner.js       🔄 Krok 7
+├── audio.js
+├── enemy.js
+├── game.js
+├── leaderboard.js
+├── player.js
+├── shop.js
+├── utils.js
+├── version.js
+├── wave.js
+└── weapon.js
 ```
 
-## Kroki Implementacji
+---
 
-### 1. Utworzenie branch `develop`
-- Utworzyć branch `develop` z `master`
-- Ustawić `develop` jako domyślny branch w ustawieniach repo (Settings → Branches → Default branch)
-- Przyszłe commity będą trafiać bezpośrednio do `develop`
+## 🎯 Priorytety
 
-### 2. Branch Protection na `master`
-**RĘCZNE KROKI (GitHub UI):**
-- Settings → Branches → Add branch protection rule
-- Branch name pattern: `master`
-- ✅ Require a pull request before merging
-  - Require approvals: 0 (workflow będzie miał uprawnienia do auto-merge)
-- ✅ Do not allow bypassing the above settings
-- ✅ Allow force pushes → Specify who can push
-  - Dodać: GitHub Actions (aby workflow mógł mergować)
+1. **Krok 5 (combat-system.js)** - największa wartość, czyści główną pętlę gry
+2. **Krok 6 (leaderboard-ui.js)** - czysta separacja UI od logiki gry
+3. **Krok 7 (enemy-spawner.js)** - logika dropów i spawnu
 
-### 3. Utworzenie `.github/workflows/release.yml`
-**Workflow z ręcznym triggerem:**
+Kroki 8-9 są opcjonalne i mogą być wykonane później.
 
-**Trigger:**
-- `workflow_dispatch` z inputem:
-  - `bump_type`: choice (patch/minor/major)
-  - default: `patch`
+---
 
-**Permissions:**
-- `contents: write` - do tworzenia tagów i mergowania
-- `pull-requests: write` - (opcjonalne, na przyszłość)
+## 📝 Notatki
 
-**Kroki:**
-
-#### 3.1. Checkout z pełną historią
-```yaml
-- uses: actions/checkout@v4
-  with:
-    fetch-depth: 0  # potrzebne dla git describe i git log
-    ref: develop     # checkout develop branch
-```
-
-#### 3.2. Konfiguracja Git
-```yaml
-- name: Configure Git
-  run: |
-    git config user.name "github-actions[bot]"
-    git config user.email "github-actions[bot]@users.noreply.github.com"
-```
-
-#### 3.3. Auto-bump wersji (bash script)
-```bash
-# Pobranie ostatniego tagu
-CURRENT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-CURRENT_VERSION=${CURRENT_TAG#v}
-
-# Parsing semantic version
-IFS='.' read -r -a VERSION_PARTS <<< "$CURRENT_VERSION"
-MAJOR=${VERSION_PARTS[0]:-0}
-MINOR=${VERSION_PARTS[1]:-0}
-PATCH=${VERSION_PARTS[2]:-0}
-
-# Inkrementacja wg wyboru użytkownika
-BUMP_TYPE=${{ inputs.bump_type }}
-
-case $BUMP_TYPE in
-  major)
-    MAJOR=$((MAJOR + 1))
-    MINOR=0
-    PATCH=0
-    ;;
-  minor)
-    MINOR=$((MINOR + 1))
-    PATCH=0
-    ;;
-  patch)
-    PATCH=$((PATCH + 1))
-    ;;
-esac
-
-NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
-echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
-echo "New version: $NEW_VERSION"
-```
-
-#### 3.4. Generowanie changelogu (git log parser)
-```bash
-# Prosty parser: wszystkie commity od ostatniego tagu
-git log $CURRENT_TAG..HEAD --pretty=format:"- %s (%h)" > CHANGELOG_ENTRY.md
-
-# Jeśli brak commitów, dodaj placeholder
-if [ ! -s CHANGELOG_ENTRY.md ]; then
-  echo "- No changes" > CHANGELOG_ENTRY.md
-fi
-
-# Zapisz do output dla GitHub Release
-CHANGELOG=$(cat CHANGELOG_ENTRY.md)
-echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
-echo "$CHANGELOG" >> $GITHUB_OUTPUT
-echo "EOF" >> $GITHUB_OUTPUT
-```
-
-#### 3.5. Utworzenie tagu
-```bash
-git tag -a $NEW_VERSION -m "Release $NEW_VERSION"
-git push origin $NEW_VERSION
-```
-
-#### 3.6. Utworzenie GitHub Release
-```yaml
-- name: Create GitHub Release
-  uses: actions/create-release@v1
-  env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  with:
-    tag_name: ${{ steps.version.outputs.NEW_VERSION }}
-    release_name: Release ${{ steps.version.outputs.NEW_VERSION }}
-    body: ${{ steps.version.outputs.CHANGELOG }}
-    draft: false
-    prerelease: false
-```
-
-#### 3.7. Auto-merge `develop` → `master`
-```bash
-# Checkout master
-git fetch origin master
-git checkout master
-git pull origin master
-
-# Merge develop
-git merge develop --no-ff -m "Release $NEW_VERSION: merge develop to master"
-
-# Push do master (triggeruje deploy workflow)
-git push origin master
-```
-
-### 4. Aktualizacja `.github/workflows/deploy.yml`
-**Zmiany w triggerach:**
-
-**Stare:**
-```yaml
-on:
-  push:
-    branches: [ master, main ]
-  workflow_dispatch:
-```
-
-**Nowe:**
-```yaml
-on:
-  push:
-    branches: [ master ]
-```
-
-**Uzasadnienie:**
-- Usunięcie `main` (używamy tylko `master`)
-- Usunięcie `workflow_dispatch` (release odbywa się tylko przez release workflow)
-- Deploy triggeruje się automatycznie po merge'u do `master` przez release workflow
-
-**Pozostała część bez zmian** - workflow dalej:
-- Pobiera wersję z tagu
-- Wstrzykuje wersję do `js/version.js`
-- Wstrzykuje sekrety do `js/leaderboard.js`
-- Deployuje na GitHub Pages
-
-## Workflow Użytkownika
-
-### Normalny development:
-1. Commituj bezpośrednio do `develop`
-   ```bash
-   git add .
-   git commit -m "Add new weapon type"
-   git push origin develop
-   ```
-
-2. Testy lokalne, iteracja, więcej commitów...
-
-### Release (gdy gotowy do wydania wersji):
-1. Idź do GitHub → Actions → Release workflow
-2. Kliknij "Run workflow"
-3. Wybierz `bump_type`:
-   - **patch** (1.0.0 → 1.0.1) - drobne poprawki, bugfixy
-   - **minor** (1.0.0 → 1.1.0) - nowe funkcje, większe zmiany
-   - **major** (1.0.0 → 2.0.0) - breaking changes, duże przepisanie
-4. Kliknij "Run workflow"
-
-### Co się dzieje automatycznie:
-1. ✅ Nowa wersja jest obliczana (np. v1.2.3)
-2. ✅ Changelog generowany z commitów od ostatniego tagu
-3. ✅ Tag tworzony na `develop`
-4. ✅ GitHub Release publikowany z changelogiem
-5. ✅ `develop` mergowany do `master`
-6. ✅ Deploy workflow triggeruje się automatycznie
-7. ✅ Gra deployowana na GitHub Pages z nową wersją
-
-## Uwagi Techniczne
-
-### Permissions w release workflow
-Workflow będzie miał uprawnienia do auto-merge mimo branch protection dzięki:
-- GitHub Actions ma specjalne uprawnienia jako bot
-- `contents: write` pozwala na push do protected branches w kontekście workflow
-
-### Pierwsza wersja
-Jeśli nie masz jeszcze żadnego tagu:
-- Workflow wykryje brak tagów (fallback do `v0.0.0`)
-- Przy pierwszym release z `patch` utworzy `v0.0.1`
-- Możesz też ręcznie wybrać `minor` → `v0.1.0` lub `major` → `v1.0.0`
-
-### Rollback w razie błędu
-Jeśli coś pójdzie nie tak:
-```bash
-# Usuń tag lokalnie i zdalnie
-git tag -d vX.Y.Z
-git push --delete origin vX.Y.Z
-
-# Usuń release na GitHubie (UI lub gh cli)
-gh release delete vX.Y.Z
-
-# Cofnij merge do mastera (jeśli trzeba)
-git checkout master
-git reset --hard HEAD~1
-git push --force origin master
-```
-
-### Upgrade do Conventional Commits (przyszłość)
-W przyszłości, jeśli zaczniesz używać prefixów w commit messages:
-- `feat: add laser weapon` → 🚀 Features
-- `fix: collision detection` → 🐛 Bug Fixes
-- `chore: refactor code` → 🧰 Maintenance
-
-Możesz upgrade'ować parser changelogu do auto-kategoryzacji:
-```bash
-# Features
-git log $TAG..HEAD --pretty=format:"- %s (%h)" --grep="^feat:"
-
-# Bug Fixes  
-git log $TAG..HEAD --pretty=format:"- %s (%h)" --grep="^fix:"
-
-# Maintenance
-git log $TAG..HEAD --pretty=format:"- %s (%h)" --grep="^chore:"
-```
-
-## Pliki do Utworzenia/Modyfikacji
-
-### Nowe:
-- `.github/workflows/release.yml` - workflow release'owy
-
-### Zmodyfikowane:
-- `.github/workflows/deploy.yml` - zmiana triggerów
-
-### Ręczne (GitHub UI):
-- Branch protection rule dla `master`
-- Ustawienie `develop` jako default branch
-
-## Kolejność Implementacji
-
-1. Utworzyć branch `develop` lokalnie i wypchnąć
-2. Ustawić branch protection + default branch (GitHub UI)
-3. Utworzyć `.github/workflows/release.yml`
-4. Zmodyfikować `.github/workflows/deploy.yml`
-5. Przetestować release workflow z wersją `patch`
-6. Sprawdzić czy deploy na master działa
-7. Sprawdzić czy wersja wyświetla się poprawnie w grze
-
-## Checklist
-
-- [ ] Branch `develop` utworzony i wypchnięty
-- [ ] `develop` ustawiony jako default branch (GitHub Settings)
-- [ ] Branch protection na `master` skonfigurowany (GitHub Settings)
-- [ ] Plik `.github/workflows/release.yml` utworzony
-- [ ] Plik `.github/workflows/deploy.yml` zaktualizowany
-- [ ] Pierwszy testowy release wykonany (np. v0.1.0)
-- [ ] GitHub Release widoczny z changelogiem
-- [ ] Deploy na master zadziałał automatycznie
-- [ ] Wersja wyświetla się poprawnie w grze (menu)
+- Bundler (Vite/Webpack) - nie jest konieczny na tym etapie
+- TypeScript - rozważyć po zakończeniu refaktoryzacji struktury
+- Object Pooling dla Bullet/Pickup - rozważyć jeśli pojawią się problemy z FPS
+- State Pattern dla scen - rozważyć w przyszłości (menu, playing, shop, gameover)

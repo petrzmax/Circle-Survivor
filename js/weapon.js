@@ -104,7 +104,7 @@ const WEAPON_TYPES = {
         name: 'Miotacz Ognia',
         emoji: '🔥',
         fireRate: 80,
-        damage: 4,
+        damage: 2,
         bulletSpeed: 6,
         bulletCount: 3,
         spread: 40,
@@ -115,7 +115,7 @@ const WEAPON_TYPES = {
         maxDistance: 120,
         range: 120,
         weaponCategory: 'special',
-        knockbackMultiplier: 0.2
+        knockbackMultiplier: 0
     },
     mines: {
         name: 'Miny',

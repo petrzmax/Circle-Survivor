@@ -1,5 +1,8 @@
 // Main game controller
 // CHARACTER_TYPES moved to js/config/shop-items-config.js
+// Collision logic -> js/systems/collision-system.js
+// Effects rendering -> js/systems/effects-system.js
+// HUD updates -> js/systems/hud.js
 
 class Game {
     constructor() {
@@ -554,37 +557,9 @@ class Game {
     
     // Aktualizacja shockwave'ów
     updateShockwaves(currentTime) {
-        if (!this.shockwaves) return;
-        
-        for (let i = this.shockwaves.length - 1; i >= 0; i--) {
-            const sw = this.shockwaves[i];
-            const age = Date.now() - sw.created;
-            const duration = 400; // ms
-            
-            // Rozszerzaj okrąg
-            sw.currentRadius = sw.maxRadius * Math.min(1, age / (duration * 0.7));
-            sw.alpha = 1 - (age / duration);
-            
-            // Zadaj obrażenia graczowi gdy fala go dotrze (tylko raz)
-            if (!sw.damageDealt) {
-                const distToPlayer = distance({x: sw.x, y: sw.y}, this.player);
-                if (distToPlayer <= sw.currentRadius && distToPlayer >= sw.currentRadius - 30) {
-                    // Gracz w zasięgu fali
-                    if (this.player.dodge > 0 && Math.random() < this.player.dodge) {
-                        audio.dodge();
-                    } else {
-                        const isDead = this.player.takeDamage(sw.damage, currentTime);
-                        if (isDead) this.gameOver();
-                    }
-                    sw.damageDealt = true;
-                }
-            }
-            
-            // Usuń zakończone
-            if (sw.alpha <= 0) {
-                this.shockwaves.splice(i, 1);
-            }
-        }
+        // Delegated to EffectsSystem (js/systems/effects-system.js)
+        const playerDied = EffectsSystem.updateShockwaves(this, currentTime);
+        if (playerDied) this.gameOver();
     }
     
     handleEnemyDeath(enemy, currentTime) {
@@ -819,97 +794,19 @@ class Game {
     }
     
     createDeathEffect(enemy) {
-        if (!this.deathEffects) this.deathEffects = [];
-        
-        // Liczba cząsteczek zależna od typu wroga
-        let particleCount = 8;
-        let particleSize = 4;
-        let particleColor = enemy.color;
-        
-        if (enemy.isBoss) {
-            particleCount = 30;
-            particleSize = 8;
-        } else if (enemy.type === 'tank' || enemy.type === 'brute') {
-            particleCount = 15;
-            particleSize = 6;
-        } else if (enemy.type === 'swarm') {
-            particleCount = 5;
-            particleSize = 3;
-        }
-        
-        // Tworzenie cząsteczek
-        for (let i = 0; i < particleCount; i++) {
-            const angle = (Math.PI * 2 / particleCount) * i + Math.random() * 0.5;
-            const speed = 2 + Math.random() * 4;
-            
-            this.deathEffects.push({
-                x: enemy.x,
-                y: enemy.y,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                size: particleSize * (0.5 + Math.random() * 0.5),
-                color: particleColor,
-                alpha: 1,
-                life: 1,
-                decay: 0.02 + Math.random() * 0.02,
-                isBoss: enemy.isBoss
-            });
-        }
-        
-        // Dodatkowy efekt dla bossa - druga fala większych cząsteczek
-        if (enemy.isBoss) {
-            for (let i = 0; i < 20; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = 1 + Math.random() * 2;
-                
-                this.deathEffects.push({
-                    x: enemy.x,
-                    y: enemy.y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    size: 10 + Math.random() * 10,
-                    color: '#FFD700', // Złoty kolor
-                    alpha: 1,
-                    life: 1,
-                    decay: 0.01,
-                    isBoss: true
-                });
-            }
-        }
+        // Delegated to EffectsSystem (js/systems/effects-system.js)
+        EffectsSystem.createDeathEffect(this, enemy);
     }
     
     createExplosion(x, y, radius, isNuke = false, isHolyGrenade = false, isBanana = false) {
-        // Store explosion for rendering
-        if (!this.explosions) this.explosions = [];
-        this.explosions.push({
-            x, y, radius,
-            maxRadius: radius,
-            alpha: 1,
-            created: Date.now(),
-            isNuke: isNuke,
-            isHolyGrenade: isHolyGrenade,
-            isBanana: isBanana
-        });
+        // Delegated to EffectsSystem (js/systems/effects-system.js)
+        EffectsSystem.createExplosion(this, x, y, radius, isNuke, isHolyGrenade, isBanana);
     }
     
     // Obsługa shockwave od bossa
     handleShockwave(shockwave, currentTime) {
-        if (!this.shockwaves) this.shockwaves = [];
-        
-        // Dźwięk
-        audio.explosion();
-        
-        // Dodaj efekt wizualny
-        this.shockwaves.push({
-            x: shockwave.x,
-            y: shockwave.y,
-            maxRadius: shockwave.radius,
-            currentRadius: 0,
-            damage: shockwave.damage,
-            color: shockwave.color,
-            created: Date.now(),
-            damageDealt: false
-        });
+        // Delegated to EffectsSystem (js/systems/effects-system.js)
+        EffectsSystem.createShockwave(this, shockwave);
     }
 
     findNearestEnemy() {
@@ -972,166 +869,8 @@ class Game {
             this.ctx.stroke();
         }
         
-        // Render explosions
-        if (this.explosions) {
-            for (let i = this.explosions.length - 1; i >= 0; i--) {
-                const exp = this.explosions[i];
-                const age = Date.now() - exp.created;
-                const duration = exp.isNuke ? 600 : 300;
-                exp.alpha = 1 - (age / duration);
-                
-                if (exp.alpha <= 0) {
-                    this.explosions.splice(i, 1);
-                    continue;
-                }
-                
-                this.ctx.save();
-                this.ctx.globalAlpha = exp.alpha;
-                this.ctx.beginPath();
-                this.ctx.arc(exp.x, exp.y, exp.radius * (1 - exp.alpha * 0.3), 0, Math.PI * 2);
-                
-                if (exp.isNuke) {
-                    // Nuke - zielona eksplozja z wieloma pierścieniami
-                    const gradient = this.ctx.createRadialGradient(exp.x, exp.y, 0, exp.x, exp.y, exp.radius);
-                    gradient.addColorStop(0, '#ffffff');
-                    gradient.addColorStop(0.3, '#00ff00');
-                    gradient.addColorStop(0.6, '#008800');
-                    gradient.addColorStop(1, 'rgba(0, 50, 0, 0)');
-                    this.ctx.fillStyle = gradient;
-                    this.ctx.fill();
-                    // Drugi pierścień
-                    this.ctx.beginPath();
-                    this.ctx.arc(exp.x, exp.y, exp.radius * 0.6 * (1 - exp.alpha * 0.5), 0, Math.PI * 2);
-                    this.ctx.strokeStyle = '#00ff00';
-                    this.ctx.lineWidth = 5;
-                    this.ctx.stroke();
-                } else if (exp.isHolyGrenade) {
-                    // Holy Grenade - złota święta eksplozja
-                    const gradient = this.ctx.createRadialGradient(exp.x, exp.y, 0, exp.x, exp.y, exp.radius);
-                    gradient.addColorStop(0, '#ffffff');
-                    gradient.addColorStop(0.3, '#ffdd00');
-                    gradient.addColorStop(0.6, '#ffaa00');
-                    gradient.addColorStop(1, 'rgba(255, 200, 0, 0)');
-                    this.ctx.fillStyle = gradient;
-                    this.ctx.fill();
-                    // Świetlisty krzyż
-                    this.ctx.strokeStyle = '#ffffff';
-                    this.ctx.lineWidth = 4;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(exp.x, exp.y - exp.radius * 0.5);
-                    this.ctx.lineTo(exp.x, exp.y + exp.radius * 0.5);
-                    this.ctx.moveTo(exp.x - exp.radius * 0.4, exp.y);
-                    this.ctx.lineTo(exp.x + exp.radius * 0.4, exp.y);
-                    this.ctx.stroke();
-                } else if (exp.isBanana) {
-                    // Banana bomb - żółta eksplozja
-                    const gradient = this.ctx.createRadialGradient(exp.x, exp.y, 0, exp.x, exp.y, exp.radius);
-                    gradient.addColorStop(0, '#ffff00');
-                    gradient.addColorStop(0.4, '#ffcc00');
-                    gradient.addColorStop(0.7, '#ff6600');
-                    gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
-                    this.ctx.fillStyle = gradient;
-                    this.ctx.fill();
-                } else {
-                    // Zwykła eksplozja
-                    this.ctx.fillStyle = '#ffff00';
-                    this.ctx.fill();
-                    this.ctx.strokeStyle = '#ff8800';
-                    this.ctx.lineWidth = 3;
-                    this.ctx.stroke();
-                }
-                this.ctx.restore();
-            }
-        }
-        
-        // Render chain effects
-        if (this.chainEffects) {
-            for (let i = this.chainEffects.length - 1; i >= 0; i--) {
-                const chain = this.chainEffects[i];
-                const age = Date.now() - chain.created;
-                const duration = 300;
-                chain.alpha = 1 - (age / duration);
-                
-                if (chain.alpha <= 0) {
-                    this.chainEffects.splice(i, 1);
-                    continue;
-                }
-                
-                this.ctx.save();
-                this.ctx.globalAlpha = chain.alpha;
-                this.ctx.strokeStyle = '#00ffff';
-                this.ctx.lineWidth = 3;
-                this.ctx.shadowColor = '#00ffff';
-                this.ctx.shadowBlur = 10;
-                this.ctx.beginPath();
-                this.ctx.moveTo(chain.x1, chain.y1);
-                this.ctx.lineTo(chain.x2, chain.y2);
-                this.ctx.stroke();
-                this.ctx.restore();
-            }
-        }
-        
-        // Render death effects (particle bursts)
-        if (this.deathEffects) {
-            for (let i = this.deathEffects.length - 1; i >= 0; i--) {
-                const p = this.deathEffects[i];
-                
-                // Aktualizacja pozycji i życia
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vx *= 0.95; // Tarcie
-                p.vy *= 0.95;
-                p.life -= p.decay;
-                p.alpha = p.life;
-                
-                if (p.life <= 0) {
-                    this.deathEffects.splice(i, 1);
-                    continue;
-                }
-                
-                this.ctx.save();
-                this.ctx.globalAlpha = p.alpha;
-                this.ctx.fillStyle = p.color;
-                
-                if (p.isBoss) {
-                    // Bossowe cząsteczki z poświatą
-                    this.ctx.shadowColor = p.color;
-                    this.ctx.shadowBlur = 10;
-                }
-                
-                this.ctx.beginPath();
-                this.ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-                this.ctx.fill();
-                this.ctx.restore();
-            }
-        }
-        
-        // Render shockwaves
-        if (this.shockwaves) {
-            for (const sw of this.shockwaves) {
-                if (sw.alpha <= 0) continue;
-                
-                this.ctx.save();
-                this.ctx.globalAlpha = sw.alpha * 0.6;
-                
-                // Zewnętrzny pierścień (rozszerzający się)
-                this.ctx.beginPath();
-                this.ctx.arc(sw.x, sw.y, sw.currentRadius, 0, Math.PI * 2);
-                this.ctx.strokeStyle = sw.color || '#ff4444';
-                this.ctx.lineWidth = 8;
-                this.ctx.shadowColor = sw.color || '#ff4444';
-                this.ctx.shadowBlur = 20;
-                this.ctx.stroke();
-                
-                // Wewnętrzny pierścień
-                this.ctx.beginPath();
-                this.ctx.arc(sw.x, sw.y, sw.currentRadius * 0.7, 0, Math.PI * 2);
-                this.ctx.lineWidth = 4;
-                this.ctx.stroke();
-                
-                this.ctx.restore();
-            }
-        }
+        // Render all effects (delegated to EffectsSystem)
+        EffectsSystem.renderAll(this.ctx, this);
         
         // Render pickups
         for (const pickup of this.pickups) {
@@ -1165,138 +904,19 @@ class Game {
         // Render boss health bar at top of screen
         this.renderBossHealthBar();
         
-        // Render enemy count
-        this.ctx.fillStyle = 'white';
-        this.ctx.font = '12px Arial';
-        this.ctx.fillText(`Wrogów: ${this.enemies.length}`, 10, this.canvas.height - 10);
+        // Render enemy count (delegated to HUD)
+        HUD.renderEnemyCount(this.ctx, this.enemies.length, this.canvas.height);
     }
     
     // Duży pasek HP bossa na górze ekranu
     renderBossHealthBar() {
-        // Znajdź aktywnego bossa
-        const boss = this.enemies.find(e => e.isBoss);
-        if (!boss) return;
-        
-        // Oznacz bossa, żeby nie rysować małego paska nad nim
-        boss.hasTopHealthBar = true;
-        
-        const barWidth = this.canvas.width * 0.5;
-        const barHeight = 18;
-        const barX = (this.canvas.width - barWidth) / 2;
-        const barY = 95; // Poniżej info o fali/czasie
-        const cornerRadius = 9;
-        
-        // Nazwa bossa z emoji
-        const bossEmoji = boss.type === 'boss' ? '👹' : 
-                         boss.type === 'bossSwarm' ? '🐝' :
-                         boss.type === 'bossTank' ? '🛡️' :
-                         boss.type === 'bossSpeed' ? '⚡' :
-                         boss.type === 'bossExploder' ? '💥' :
-                         boss.type === 'bossGhost' ? '👻' : '👹';
-        
-        // Nazwa bossa - styl pasujący do gry
-        this.ctx.save();
-        this.ctx.font = 'bold 13px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        this.ctx.fillText(`${bossEmoji} ${boss.bossName || 'BOSS'}`, this.canvas.width / 2 + 1, barY - 6);
-        this.ctx.fillStyle = '#ff6b6b';
-        this.ctx.fillText(`${bossEmoji} ${boss.bossName || 'BOSS'}`, this.canvas.width / 2, barY - 7);
-        
-        // Tło paska - ciemne z zaokrąglonymi rogami
-        this.ctx.beginPath();
-        this.ctx.roundRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4, cornerRadius + 2);
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-        this.ctx.fill();
-        
-        // Wewnętrzne tło paska
-        this.ctx.beginPath();
-        this.ctx.roundRect(barX, barY, barWidth, barHeight, cornerRadius);
-        this.ctx.fillStyle = '#1a1a2e';
-        this.ctx.fill();
-        
-        // Wypełnienie paska HP
-        const hpPercent = boss.hp / boss.maxHp;
-        const fillWidth = Math.max(0, barWidth * hpPercent);
-        
-        if (fillWidth > 0) {
-            // Gradient bazujący na HP
-            const gradient = this.ctx.createLinearGradient(barX, barY, barX + fillWidth, barY + barHeight);
-            if (hpPercent > 0.5) {
-                gradient.addColorStop(0, '#00d26a');
-                gradient.addColorStop(1, '#00b359');
-            } else if (hpPercent > 0.25) {
-                gradient.addColorStop(0, '#ffc107');
-                gradient.addColorStop(1, '#ff9800');
-            } else {
-                gradient.addColorStop(0, '#ff5252');
-                gradient.addColorStop(1, '#d32f2f');
-            }
-            
-            this.ctx.beginPath();
-            this.ctx.roundRect(barX, barY, fillWidth, barHeight, cornerRadius);
-            this.ctx.fillStyle = gradient;
-            this.ctx.fill();
-            
-            // Efekt blasku na górze paska
-            const shineGradient = this.ctx.createLinearGradient(barX, barY, barX, barY + barHeight / 2);
-            shineGradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
-            shineGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-            this.ctx.beginPath();
-            this.ctx.roundRect(barX, barY, fillWidth, barHeight / 2, [cornerRadius, cornerRadius, 0, 0]);
-            this.ctx.fillStyle = shineGradient;
-            this.ctx.fill();
-        }
-        
-        // Delikatna ramka
-        this.ctx.beginPath();
-        this.ctx.roundRect(barX, barY, barWidth, barHeight, cornerRadius);
-        this.ctx.strokeStyle = 'rgba(255, 107, 107, 0.4)';
-        this.ctx.lineWidth = 1;
-        this.ctx.stroke();
-        
-        // Tekst HP - mniejszy, po prawej stronie paska
-        const percentText = Math.ceil(hpPercent * 100) + '%';
-        this.ctx.font = 'bold 11px Arial';
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        this.ctx.textAlign = 'right';
-        this.ctx.fillText(percentText, barX + barWidth - 6, barY + 13);
-        
-        this.ctx.restore();
+        // Delegated to HUD system (js/systems/hud.js)
+        HUD.renderBossHealthBar(this.ctx, this.canvas.width, this.enemies);
     }
 
     updateHUD() {
-        // HP
-        const hpPercent = (this.player.hp / this.player.maxHp) * 100;
-        document.getElementById('hp-fill').style.width = `${hpPercent}%`;
-        document.getElementById('hp-text').textContent = `${Math.ceil(this.player.hp)}/${this.player.maxHp}`;
-        
-        // Wave info
-        document.getElementById('wave-num').textContent = this.waveManager.waveNumber;
-        const timerElement = document.getElementById('wave-timer');
-        const timeRemaining = Math.ceil(this.waveManager.timeRemaining);
-        timerElement.textContent = timeRemaining;
-        
-        // Countdown warning - czerwony kolor przy ostatnich 3 sekundach
-        const timerContainer = document.getElementById('timer');
-        if (timeRemaining <= 3 && timeRemaining > 0 && this.waveManager.isWaveActive) {
-            timerContainer.classList.add('countdown-warning');
-        } else {
-            timerContainer.classList.remove('countdown-warning');
-        }
-        
-        // Resources
-        document.getElementById('gold-amount').textContent = this.gold;
-        document.getElementById('xp-amount').textContent = this.xp;
-        
-        // Stats panel
-        // Armor używa formuły: reduction = armor / (armor + 100)
-        const armorReduction = this.player.armor / (this.player.armor + 100);
-        document.getElementById('stat-armor').textContent = `${Math.round(armorReduction * 100)}%`;
-        document.getElementById('stat-damage').textContent = `+${Math.round((this.player.damageMultiplier - 1) * 100)}%`;
-        document.getElementById('stat-crit').textContent = `${Math.round(this.player.critChance * 100)}%`;
-        document.getElementById('stat-dodge').textContent = `${Math.round(this.player.dodge * 100)}%`;
-        document.getElementById('stat-regen').textContent = this.player.regen.toFixed(1);
+        // Delegated to HUD system (js/systems/hud.js)
+        HUD.update(this.player, this.waveManager, this.gold, this.xp);
     }
 
     openShop() {

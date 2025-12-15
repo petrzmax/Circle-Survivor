@@ -24,17 +24,17 @@ class EnemyBullet {
     render(ctx) {
         ctx.save();
         
-        // Poświata
+        // Glow effect
         ctx.shadowColor = this.color;
         ctx.shadowBlur = 10;
         
-        // Główny pocisk
+        // Main bullet
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = this.color;
         ctx.fill();
         
-        // Ciemniejszy środek
+        // Darker center
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius * 0.5, 0, Math.PI * 2);
         ctx.fillStyle = '#000';

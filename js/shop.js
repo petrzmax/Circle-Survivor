@@ -4,21 +4,21 @@
 class Shop {
     constructor() {
         this.availableItems = [];
-        this.itemCount = 5; // Więcej opcji w sklepie
-        this.rerollCount = 0; // Ile razy przegłosowano w tej wizycie
+        this.itemCount = 5; // More options in shop
+        this.rerollCount = 0; // How many times rerolled in this visit
     }
     
-    // Oblicz cenę reroll
+    // Calculate reroll price
     getRerollPrice() {
         const waveNumber = window.game ? window.game.waveManager.waveNumber : 1;
         const basePrice = 15;
-        // Cena = baza * (1 + fala*0.2) * (1 + reroll*0.5)
+        // Price = base * (1 + wave*0.2) * (1 + reroll*0.5)
         const waveMultiplier = 1 + (waveNumber - 1) * 0.2;
         const rerollMultiplier = 1 + this.rerollCount * 0.5;
         return Math.round(basePrice * waveMultiplier * rerollMultiplier / 5) * 5;
     }
     
-    // Reroll przedmiotów w sklepie
+    // Reroll items in shop
     rerollItems(player) {
         const price = this.getRerollPrice();
         
@@ -32,31 +32,31 @@ class Shop {
         
         if (typeof audio !== 'undefined') audio.purchase();
         
-        // Generuj nowe przedmioty
+        // Generate new items
         this.generateItems(player);
         this.renderShop(window.game.gold, player);
         window.game.updateHUD();
     }
     
-    // Dynamiczne skalowanie cen
+    // Dynamic price scaling
     calculatePrice(basePrice, player) {
         const waveNumber = window.game ? window.game.waveManager.waveNumber : 1;
         
-        // Skalowanie z numerem fali (po fali 5, +15% za każdą falę)
+        // Scaling with wave number (after wave 5, +15% per wave)
         let waveMultiplier = 1;
         if (waveNumber > 5) {
             waveMultiplier = 1 + (waveNumber - 5) * 0.15;
         }
         
-        // Skalowanie z ilością posiadanych przedmiotów (każdy przedmiot +8%)
+        // Scaling with owned items (+8% per item)
         const itemCount = player.items ? player.items.length : 0;
         const itemMultiplier = 1 + itemCount * 0.08;
         
-        // Skalowanie z ilością broni (każda broń +10%)
+        // Scaling with weapon count (+10% per weapon)
         const weaponCount = player.weapons ? player.weapons.length : 0;
         const weaponMultiplier = 1 + weaponCount * 0.10;
         
-        // Końcowa cena (zaokrąglona do 5)
+        // Final price (rounded to 5)
         const finalPrice = basePrice * waveMultiplier * itemMultiplier * weaponMultiplier;
         return Math.round(finalPrice / 5) * 5;
     }
@@ -64,7 +64,7 @@ class Shop {
     generateItems(player) {
         const waveNumber = window.game ? window.game.waveManager.waveNumber : 1;
         
-        // Kategoryzacja przedmiotów
+        // Item categorization
         const weapons = [];
         const items = [];
         const upgrades = [];
@@ -92,19 +92,19 @@ class Shop {
         // Build shop with guaranteed variety
         this.availableItems = [];
         
-        // Gwarantowane 2 bronie (lub ile jest dostępnych)
+        // Guaranteed 2 weapons (or as many as available)
         const weaponCount = Math.min(2, weapons.length);
         for (let i = 0; i < weaponCount; i++) {
             this.availableItems.push(weapons[i]);
         }
         
-        // Gwarantowane 2 przedmioty
+        // Guaranteed 2 items
         const itemCount = Math.min(2, items.length);
         for (let i = 0; i < itemCount; i++) {
             this.availableItems.push(items[i]);
         }
         
-        // 1 losowe z: upgrade, lub dodatkowy item/weapon
+        // 1 random from: upgrade, or additional item/weapon
         const extras = [...upgrades];
         if (weapons.length > weaponCount) extras.push(weapons[weaponCount]);
         if (items.length > itemCount) extras.push(items[itemCount]);
@@ -116,11 +116,11 @@ class Shop {
         // Shuffle final list
         shuffle(this.availableItems);
         
-        // Reset reroll count przy nowym sklepie (tylko przy pierwszym generateItems)
-        // Reroll count resetowany jest w openShop
+        // Reset reroll count for new shop (only on first generateItems)
+        // Reroll count is reset in openShop
     }
     
-    // Reset reroll przy otwarciu sklepu
+    // Reset reroll on shop open
     resetReroll() {
         this.rerollCount = 0;
     }
@@ -131,7 +131,7 @@ class Shop {
         
         itemsEl.innerHTML = '';
         
-        // Pokaż informację o fali, broniach, przedmiotach i kasie w jednej linii
+        // Show info about wave, weapons, items and gold in one line
         const waveNumber = window.game ? window.game.waveManager.waveNumber : 1;
         const infoEl = document.createElement('div');
         infoEl.className = 'shop-info';
@@ -143,7 +143,7 @@ class Shop {
             const currentPrice = this.calculatePrice(item.price, player);
             const canAfford = gold >= currentPrice;
             
-            // Sprawdź czy broń jest zablokowana (pełne sloty i nie masz tej broni)
+            // Check if weapon is locked (full slots and don't have this weapon)
             let isWeaponLocked = false;
             if (item.type === 'weapon') {
                 const hasThisWeapon = player.weapons.some(w => w.type === item.weaponType);
@@ -157,12 +157,12 @@ class Shop {
             const itemEl = document.createElement('div');
             itemEl.className = `shop-item ${canBuy ? '' : 'disabled'}`;
             
-            // Pokaż info o blokadzie
-            let extraInfo = '';
+            // Show lock info
+            let extraInfo = '';;
             if (isWeaponLocked) {
                 extraInfo = '<div style="color: #ff6b6b; font-size: 10px">🔒 Pełne sloty</div>';
             } else if (item.type === 'weapon' && player.weapons.length >= player.maxWeapons && player.weapons.some(w => w.type === item.weaponType)) {
-                // Upgrade tylko gdy masz pełne sloty I masz już tę broń
+                // Upgrade only when you have full slots AND already have this weapon
                 extraInfo = '<div style="color: #4ecdc4; font-size: 10px">⬆️ Upgrade</div>';
             }
             
@@ -181,7 +181,7 @@ class Shop {
             itemsEl.appendChild(itemEl);
         });
         
-        // Przycisk Reroll
+        // Reroll button
         const rerollPrice = this.getRerollPrice();
         const canReroll = gold >= rerollPrice;
         
@@ -217,60 +217,60 @@ class Shop {
         
         switch (item.type) {
             case 'weapon':
-                // Sprawdź czy gracz ma pełne sloty
+                // Check if player has full slots
                 if (player.weapons.length >= player.maxWeapons) {
-                    // Upgrade losowej broni tego samego typu
+                    // Upgrade random weapon of the same type
                     const sameTypeWeapons = player.weapons.filter(w => w.type === item.weaponType);
                     if (sameTypeWeapons.length > 0) {
-                        // Wybierz losową broń tego typu
+                        // Pick random weapon of this type
                         const randomWeapon = sameTypeWeapons[Math.floor(Math.random() * sameTypeWeapons.length)];
                         randomWeapon.upgrade();
                         
-                        // Pokaż komunikat o upgrade
+                        // Show upgrade notification
                         if (window.game && window.game.showNotification) {
                             window.game.showNotification(`⬆️ ${item.name} +${randomWeapon.level}`);
                         }
                     } else {
-                        // Nie ma broni tego typu - zwróć kasę (nie powinno się zdarzyć)
+                        // No weapon of this type - refund (shouldn't happen)
                         window.game.gold += price;
                         if (typeof audio !== 'undefined') audio.error();
                         return;
                     }
                 } else {
-                    // Dodaj nową broń
+                    // Add new weapon
                     player.addWeapon(item.weaponType);
                 }
                 break;
                 
             case 'weaponBonus':
-                // Bonus do losowej broni (np. multishot)
+                // Bonus to random weapon (e.g., multishot)
                 if (player.weapons.length === 0) {
                     window.game.gold += price;
                     if (typeof audio !== 'undefined') audio.error();
                     return;
                 }
-                // Dodaj przedmiot do inventory
+                // Add item to inventory
                 player.addItem(itemKey);
-                // Wybierz losową broń
+                // Pick random weapon
                 const randomWeapon = player.weapons[Math.floor(Math.random() * player.weapons.length)];
-                // Aplikuj bonus do broni
+                // Apply bonus to weapon
                 if (item.bonusType && randomWeapon[item.bonusType] !== undefined) {
                     randomWeapon[item.bonusType] += item.bonusValue;
                 }
-                // Pokaż komunikat
+                // Show notification
                 if (window.game && window.game.showNotification) {
                     window.game.showNotification(`🎯 ${randomWeapon.name} +${item.bonusValue} pocisk!`);
                 }
                 break;
                 
             case 'item':
-                // Dodaj przedmiot do inventory
+                // Add item to inventory
                 player.addItem(itemKey);
-                // Aplikuj efekty
+                // Apply effects
                 for (const [stat, value] of Object.entries(item.effect)) {
                     if (stat === 'maxHp') {
                         player.maxHp += value;
-                        player.hp += value; // Też lecz
+                        player.hp += value; // Also heal
                     } else if (player[stat] !== undefined) {
                         player[stat] += value;
                     }

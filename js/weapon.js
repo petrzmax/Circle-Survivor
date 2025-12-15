@@ -19,7 +19,7 @@ class Weapon {
         this.lastFired = 0;
         this.level = 1;
         
-        // Nowe właściwości
+        // New properties
         this.explosive = config.explosive || false;
         this.explosionRadius = config.explosionRadius || 0;
         this.bulletRadius = config.bulletRadius || 4;
@@ -35,11 +35,11 @@ class Weapon {
         // Fire offset for staggered shooting (set by player)
         this.fireOffset = 0;
         
-        // Bonus z przedmiotów (per-weapon)
-        this.extraProjectiles = 0;  // Dodatkowe pociski z multishot
+        // Bonus from items (per-weapon)
+        this.extraProjectiles = 0;  // Extra projectiles from multishot
         
-        // Specjalne efekty
-        this.chain = config.chain || false;      // Kusza łańcuchowa
+        // Special effects
+        this.chain = config.chain || false;      // Crossbow chain
         this.chainCount = config.chainCount || 0;
         this.isScythe = config.isScythe || false; // Kosa
         this.isSword = config.isSword || false;   // Miecz
@@ -57,7 +57,7 @@ class Weapon {
         this.fireOffset = 0;
     }
     
-    // Ulepsz broń
+    // Upgrade weapon
     upgrade() {
         this.level++;
         this.damage = this.baseDamage * (1 + (this.level - 1) * 0.3);
@@ -67,7 +67,7 @@ class Weapon {
         }
     }
     
-    // Dźwięk strzału w zależności od typu broni
+    // Shot sound depending on weapon type
     playShootSound() {
         if (typeof audio === 'undefined') return;
         
@@ -101,7 +101,7 @@ class Weapon {
             case 'mines':
             case 'holyGrenade':
             case 'banana':
-                // Eksplozja gra przy trafieniu, nie przy strzale
+                // Explosion plays on hit, not on shot
                 audio.shoot();
                 break;
             default:
@@ -112,14 +112,14 @@ class Weapon {
     fire(x, y, targetX, targetY, currentTime, damageMultiplier, attackSpeedMultiplier, critChance = 0, critDamage = 1.5, extraProjectiles = 0, extraPierce = 0) {
         if (!this.canFire(currentTime)) return [];
 
-        // Wyższy attackSpeedMultiplier = szybszy atak = krótszy cooldown
+        // Higher attackSpeedMultiplier = faster attack = shorter cooldown
         const effectiveFireRate = this.fireRate / attackSpeedMultiplier;
         this.lastFired = currentTime - (this.fireRate - effectiveFireRate);
         
         // Reset offset after first shot (staggering only applies to initial burst)
         this.fireOffset = 0;
         
-        // Dźwięk strzału
+        // Shot sound
         this.playShootSound();
         
         const bullets = [];
@@ -170,7 +170,7 @@ class Weapon {
             bullet.isCrit = isCrit;
             bullet.pierceCount = this.pierceCount + extraPierce;
             
-            // Specjalne efekty broni
+            // Special weapon effects
             bullet.chain = this.chain;
             bullet.chainCount = this.chainCount;
             bullet.isScythe = this.isScythe;

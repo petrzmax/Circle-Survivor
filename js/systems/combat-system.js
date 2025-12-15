@@ -16,28 +16,28 @@ const CombatSystem = {
      * @param {boolean} isMini - Is mini banana (no spawn)
      */
     handleExplosion(game, x, y, radius, damage, isNuke = false, isHolyGrenade = false, isBanana = false, currentTime, isMini = false) {
-        // Dźwięk eksplozji
+        // Explosion sound
         if (isNuke) {
             audio.nukeExplosion();
         } else {
             audio.explosion();
         }
         
-        // Wizualny efekt
+        // Visual effect
         EffectsSystem.createExplosion(game, x, y, radius, isNuke, isHolyGrenade, isBanana);
         
-        // Banan (nie mini) - spawn mini bananów
+        // Banana (not mini) - spawn mini bananas
         if (isBanana && !isMini) {
             this.spawnMiniBananas(game, x, y, 4 + Math.floor(Math.random() * 3));
         }
         
-        // Zadaj obrażenia wszystkim wrogom w zasięgu
+        // Deal damage to all enemies in range
         for (let i = game.enemies.length - 1; i >= 0; i--) {
             const enemy = game.enemies[i];
             const dist = distance({x, y}, enemy);
             
             if (dist < radius) {
-                // Obrażenia maleją z odległością
+                // Damage decreases with distance
                 const damageFalloff = 1 - (dist / radius) * 0.5;
                 const isDead = enemy.takeDamage(damage * damageFalloff, x, y, game.player.knockback * 1.5);
                 
@@ -66,7 +66,7 @@ const CombatSystem = {
             const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.5;
             const config = WEAPON_TYPES.minibanana;
             
-            // Losowa prędkość (6-10) i dystans (60-100px) dla każdego mini banana
+            // Random speed (6-10) and distance (60-100px) for each mini banana
             const randomSpeed = 6 + Math.random() * 4;
             const randomRange = 60 + Math.random() * 40;
             
@@ -115,7 +115,7 @@ const CombatSystem = {
         const chainRange = 150;
         
         for (let i = 0; i < chainCount; i++) {
-            // Znajdź najbliższego wroga, który nie jest już w łańcuchu
+            // Find nearest enemy not already in chain
             let nearestDist = Infinity;
             let nearestEnemy = null;
             
@@ -131,14 +131,14 @@ const CombatSystem = {
             
             if (!nearestEnemy) break;
             
-            // Zapisz pozycję PRZED wszystkim innym
+            // Save position BEFORE everything else
             const enemyX = nearestEnemy.x;
             const enemyY = nearestEnemy.y;
             
-            // Dodaj do łańcucha
+            // Add to chain
             chainedEnemyIds.add(nearestEnemy);
             
-            // Dodaj efekt wizualny
+            // Add visual effect
             game.chainEffects.push({
                 x1: currentX, y1: currentY,
                 x2: enemyX, y2: enemyY,
@@ -146,14 +146,14 @@ const CombatSystem = {
                 alpha: 1
             });
             
-            // Aktualizuj pozycję dla następnego łańcucha
+            // Update position for next chain
             currentX = enemyX;
             currentY = enemyY;
             
-            // Zadaj obrażenia
+            // Deal damage
             const isDead = nearestEnemy.takeDamage(damage, enemyX, enemyY, game.player.knockback);
             
-            // Lifesteal z łańcucha
+            // Lifesteal from chain
             if (game.player.lifesteal > 0) {
                 game.player.heal(damage * game.player.lifesteal);
             }

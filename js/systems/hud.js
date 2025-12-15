@@ -36,7 +36,7 @@ const HUD = {
         const timeRemaining = Math.ceil(waveManager.timeRemaining);
         timerElement.textContent = timeRemaining;
         
-        // Countdown warning - czerwony kolor przy ostatnich 3 sekundach
+        // Countdown warning - red color for last 3 seconds
         const timerContainer = document.getElementById('timer');
         if (timeRemaining <= 3 && timeRemaining > 0 && waveManager.isWaveActive) {
             timerContainer.classList.add('countdown-warning');
@@ -60,7 +60,7 @@ const HUD = {
      * @param {Player} player - Player instance
      */
     updateStatsPanel(player) {
-        // Armor używa formuły: reduction = armor / (armor + 100)
+        // Armor uses formula: reduction = armor / (armor + 100)
         const armorReduction = player.armor / (player.armor + 100);
         document.getElementById('stat-armor').textContent = `${Math.round(armorReduction * 100)}%`;
         document.getElementById('stat-damage').textContent = `+${Math.round((player.damageMultiplier - 1) * 100)}%`;
@@ -76,11 +76,11 @@ const HUD = {
      * @param {Array} enemies - Array of enemies
      */
     renderBossHealthBar(ctx, canvasWidth, enemies) {
-        // Znajdź aktywnego bossa
+        // Find active boss
         const boss = enemies.find(e => e.isBoss);
         if (!boss) return;
         
-        // Oznacz bossa, żeby nie rysować małego paska nad nim
+        // Mark boss so we don't draw small health bar above them
         boss.hasTopHealthBar = true;
         
         const barWidth = canvasWidth * 0.5;
@@ -97,7 +97,7 @@ const HUD = {
                          boss.type === 'bossExploder' ? '💥' :
                          boss.type === 'bossGhost' ? '👻' : '👹';
         
-        // Nazwa bossa - styl pasujący do gry
+        // Boss name - style matching the game
         ctx.save();
         ctx.font = 'bold 13px Arial';
         ctx.textAlign = 'center';
@@ -106,24 +106,24 @@ const HUD = {
         ctx.fillStyle = '#ff6b6b';
         ctx.fillText(`${bossEmoji} ${boss.bossName || 'BOSS'}`, canvasWidth / 2, barY - 7);
         
-        // Tło paska - ciemne z zaokrąglonymi rogami
+        // Bar background - dark with rounded corners
         ctx.beginPath();
         ctx.roundRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4, cornerRadius + 2);
         ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
         ctx.fill();
         
-        // Wewnętrzne tło paska
+        // Inner bar background
         ctx.beginPath();
         ctx.roundRect(barX, barY, barWidth, barHeight, cornerRadius);
         ctx.fillStyle = '#1a1a2e';
         ctx.fill();
         
-        // Wypełnienie paska HP
+        // HP bar fill
         const hpPercent = boss.hp / boss.maxHp;
         const fillWidth = Math.max(0, barWidth * hpPercent);
         
         if (fillWidth > 0) {
-            // Gradient bazujący na HP
+            // Gradient based on HP
             const gradient = ctx.createLinearGradient(barX, barY, barX + fillWidth, barY + barHeight);
             if (hpPercent > 0.5) {
                 gradient.addColorStop(0, '#00d26a');
@@ -141,7 +141,7 @@ const HUD = {
             ctx.fillStyle = gradient;
             ctx.fill();
             
-            // Efekt blasku na górze paska
+            // Shine effect on top of the bar
             const shineGradient = ctx.createLinearGradient(barX, barY, barX, barY + barHeight / 2);
             shineGradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
             shineGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
@@ -151,14 +151,14 @@ const HUD = {
             ctx.fill();
         }
         
-        // Delikatna ramka
+        // Subtle border
         ctx.beginPath();
         ctx.roundRect(barX, barY, barWidth, barHeight, cornerRadius);
         ctx.strokeStyle = 'rgba(255, 107, 107, 0.4)';
         ctx.lineWidth = 1;
         ctx.stroke();
         
-        // Tekst HP - mniejszy, po prawej stronie paska
+        // HP text - smaller, on the right side of the bar
         const percentText = Math.ceil(hpPercent * 100) + '%';
         ctx.font = 'bold 11px Arial';
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';

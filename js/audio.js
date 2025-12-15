@@ -1,4 +1,4 @@
-// Audio system - programatyczne generowanie dźwięków
+// Audio system - programmatic sound generation
 
 class AudioSystem {
     constructor() {
@@ -6,7 +6,7 @@ class AudioSystem {
         this.enabled = true;
         this.volume = 0.3;
         
-        // Inicjalizuj po interakcji użytkownika
+        // Initialize after user interaction
         this.initialized = false;
     }
     
@@ -21,7 +21,7 @@ class AudioSystem {
         }
     }
     
-    // Generyczny dźwięk
+    // Generic tone
     playTone(frequency, duration, type = 'square', volumeMod = 1) {
         if (!this.enabled || !this.ctx) return;
         
@@ -41,7 +41,7 @@ class AudioSystem {
         osc.stop(this.ctx.currentTime + duration);
     }
     
-    // Szum (dla eksplozji)
+    // Noise (for explosions)
     playNoise(duration, volumeMod = 1) {
         if (!this.enabled || !this.ctx) return;
         
@@ -71,20 +71,20 @@ class AudioSystem {
         noise.start();
     }
     
-    // === DŹWIĘKI GRY ===
+    // === GAME SOUNDS ===
     
-    // Strzał pistoletem
+    // Pistol shot
     shoot() {
         this.playTone(800, 0.05, 'square', 0.3);
     }
     
-    // Strzał shotgunem
+    // Shotgun shot
     shootShotgun() {
         this.playNoise(0.1, 0.4);
         this.playTone(200, 0.08, 'sawtooth', 0.3);
     }
     
-    // Strzał sniperem
+    // Sniper shot
     shootSniper() {
         this.playTone(150, 0.15, 'sawtooth', 0.5);
         this.playTone(100, 0.2, 'sine', 0.3);
@@ -100,7 +100,7 @@ class AudioSystem {
         this.playTone(600, 0.02, 'square', 0.15);
     }
     
-    // Eksplozja (bazooka, miny, granat)
+    // Explosion (bazooka, mines, grenade)
     explosion() {
         this.playNoise(0.3, 0.6);
         this.playTone(80, 0.3, 'sine', 0.5);
@@ -114,67 +114,67 @@ class AudioSystem {
         setTimeout(() => this.playTone(50, 0.3, 'sine', 0.3), 200);
     }
     
-    // Miotacz ognia
+    // Flamethrower
     flamethrower() {
         this.playNoise(0.05, 0.2);
     }
     
-    // Kosa (świst)
+    // Scythe (whoosh)
     scytheSwing() {
         this.playTone(400, 0.1, 'sine', 0.3);
         setTimeout(() => this.playTone(300, 0.1, 'sine', 0.2), 50);
     }
     
-    // Miecz (cięcie)
+    // Sword (slash)
     swordSlash() {
         this.playTone(500, 0.08, 'sawtooth', 0.4);
         this.playNoise(0.05, 0.2);
     }
     
-    // Kusza
+    // Crossbow
     crossbowShoot() {
         this.playTone(250, 0.1, 'triangle', 0.4);
     }
     
-    // Łańcuch kuszy
+    // Crossbow chain
     chainEffect() {
         this.playTone(1500, 0.1, 'sine', 0.2);
     }
     
-    // === ZBIERANIE ===
+    // === COLLECTION ===
     
-    // Zbieranie złota
+    // Collecting gold
     collectGold() {
         this.playTone(800, 0.05, 'sine', 0.3);
         this.playTone(1000, 0.05, 'sine', 0.3);
     }
     
-    // Zbieranie XP
+    // Collecting XP
     collectXP() {
         this.playTone(600, 0.08, 'triangle', 0.2);
     }
     
-    // Zbieranie zdrowia
+    // Collecting health
     collectHealth() {
         this.playTone(400, 0.1, 'sine', 0.3);
         this.playTone(600, 0.1, 'sine', 0.3);
         this.playTone(800, 0.15, 'sine', 0.3);
     }
     
-    // === OBRAŻENIA ===
+    // === DAMAGE ===
     
-    // Gracz otrzymuje obrażenia
+    // Player takes damage
     playerHit() {
         this.playTone(200, 0.1, 'sawtooth', 0.4);
         this.playTone(150, 0.15, 'square', 0.3);
     }
     
-    // Wróg otrzymuje obrażenia
+    // Enemy takes damage
     enemyHit() {
         this.playTone(300, 0.05, 'square', 0.2);
     }
     
-    // Śmierć wroga
+    // Enemy death
     enemyDeath() {
         this.playTone(200, 0.1, 'sawtooth', 0.3);
         this.playTone(100, 0.15, 'sawtooth', 0.2);
@@ -182,27 +182,27 @@ class AudioSystem {
     
     // === UI ===
     
-    // Kupno w sklepie
+    // Shop purchase
     purchase() {
         this.playTone(500, 0.05, 'sine', 0.3);
         this.playTone(700, 0.05, 'sine', 0.3);
         this.playTone(900, 0.1, 'sine', 0.4);
     }
     
-    // Brak złota
+    // Not enough gold
     error() {
         this.playTone(200, 0.1, 'square', 0.3);
         this.playTone(150, 0.15, 'square', 0.3);
     }
     
-    // Nowa fala
+    // New wave
     waveStart() {
         this.playTone(400, 0.1, 'triangle', 0.3);
         this.playTone(500, 0.1, 'triangle', 0.3);
         this.playTone(600, 0.15, 'triangle', 0.4);
     }
     
-    // Boss pojawia się!
+    // Boss spawns!
     bossSpawn() {
         this.playTone(100, 0.3, 'sawtooth', 0.5);
         this.playTone(80, 0.4, 'sawtooth', 0.4);
@@ -217,7 +217,7 @@ class AudioSystem {
         setTimeout(() => this.playTone(100, 0.5, 'sawtooth', 0.5), 450);
     }
     
-    // Unik!
+    // Dodge!
     dodge() {
         this.playTone(1000, 0.05, 'sine', 0.2);
         this.playTone(1200, 0.05, 'sine', 0.15);
@@ -228,14 +228,14 @@ class AudioSystem {
         this.playTone(800, 0.03, 'square', 0.2);
     }
     
-    // Countdown tick (ostatnie 3 sekundy fali)
+    // Countdown tick (last 3 seconds of wave)
     countdownTick(secondsLeft) {
         if (secondsLeft === 0) {
-            // Finalny dźwięk - wesoły, krótki "ding ding!"
+            // Final sound - happy, short "ding ding!"
             this.playTone(500, 0.08, 'triangle', 0.3);
             setTimeout(() => this.playTone(600, 0.1, 'triangle', 0.35), 100);
         } else {
-            // Ostrzegawczy "blip" - krótki, elektroniczny
+            // Warning "blip" - short, electronic
             this.playTone(300, 0.08, 'square', 0.25);
             this.playTone(350, 0.06, 'sawtooth', 0.15);
         }

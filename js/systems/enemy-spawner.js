@@ -11,14 +11,14 @@ const EnemySpawner = {
     handleEnemyDeath(game, enemy, currentTime) {
         const luck = game.player.luck;
         
-        // Dźwięk śmierci
+        // Death sound
         if (enemy.isBoss) {
             audio.nukeExplosion();
         } else {
             audio.enemyDeath();
         }
         
-        // XP - zbierane natychmiast
+        // XP - collected immediately
         const xpGained = Math.floor(enemy.xpValue * game.player.xpMultiplier);
         game.xp += xpGained;
         audio.collectXP();
@@ -36,7 +36,7 @@ const EnemySpawner = {
             ));
         }
         
-        // Efekt śmierci (particle burst)
+        // Death effect (particle burst)
         EffectsSystem.createDeathEffect(game, enemy);
         
         // Exploder - deals damage to player if close
@@ -58,7 +58,7 @@ const EnemySpawner = {
      */
     spawnGoldDrops(game, enemy, luck) {
         if (enemy.isBoss) {
-            // Jeden duży woreczek (50% wartości) w centrum
+            // One large bag (50% of value) in center
             game.pickups.push(new Pickup(
                 enemy.x,
                 enemy.y,
@@ -66,7 +66,7 @@ const EnemySpawner = {
                 Math.floor(enemy.goldValue * 0.5)
             ));
             
-            // 6-8 małych woreczków rozrzuconych dookoła
+            // 6-8 small bags scattered around
             const smallBags = 6 + Math.floor(Math.random() * 3);
             const smallValue = Math.floor((enemy.goldValue * 0.5) / smallBags);
             for (let i = 0; i < smallBags; i++) {
@@ -80,7 +80,7 @@ const EnemySpawner = {
                 ));
             }
         } else {
-            // Zwykły wróg - jeden woreczek
+            // Normal enemy - one bag
             game.pickups.push(new Pickup(
                 enemy.x + randomRange(-10, 10),
                 enemy.y + randomRange(-10, 10),

@@ -1,6 +1,6 @@
 // Enemy type definitions and boss name generator
 
-// Generator nazw bossów
+// Boss name generator arrays
 const BOSS_NAME_PREFIXES = [
     'Kieł', 'Opus', 'Miłośnik', 'Marcel', 'Władca', 'Pan', 'Pogromca',
     'Cień', 'Gniew', 'Strach', 'Żelazny', 'Krwawy', 'Złoty', 'Mroczny',
@@ -10,7 +10,7 @@ const BOSS_NAME_PREFIXES = [
 const BOSS_NAME_SUFFIXES = [
     'Beredy', 'Radzimirskiego', 'Biznesu', 'Kustosz', 'Nocy', 'Chaosu', 'Kubicy', 'Kamilka', 'Podróżnika',
     'Ciemności', 'Zniszczenia', 'Śmierci', 'Otchłani', 'Piekła', 'Zagłady',
-    'Burzy', 'Cieni', 'Krwi', 'Gromu', 'Wieczności', 'Pożogi', 'Zarazy', 'Koszmaru'
+    'Burzy', 'Cieni', 'Krwi', 'Gromu', 'Wieczności', 'Pożogi', 'Zarazy', 'Koszmaru', 'Kazika', "Baagera"
 ];
 
 function generateBossName() {
@@ -20,7 +20,7 @@ function generateBossName() {
 }
 
 const ENEMY_TYPES = {
-    // Podstawowe
+    // Basic enemies
     basic: {
         name: 'Basic',
         color: '#e94560',
@@ -67,7 +67,7 @@ const ENEMY_TYPES = {
         goldValue: 1
     },
     
-    // Nowe typy
+    // Advanced enemy types
     sprinter: {
         name: 'Sprinter',
         color: '#00ffff',
@@ -102,7 +102,7 @@ const ENEMY_TYPES = {
         damage: 20,
         xpValue: 25,
         goldValue: 6,
-        phasing: true // Może być półprzezroczysty
+        phasing: true // Can be semi-transparent
     },
     exploder: {
         name: 'Exploder',
@@ -141,7 +141,7 @@ const ENEMY_TYPES = {
         splitCount: 3
     },
     
-    // ============ BOSSY ============
+    // ============ BOSSES ============
     boss: {
         name: 'BOSS',
         color: '#ff0000',

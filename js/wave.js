@@ -7,10 +7,10 @@ class WaveManager {
         this.timeRemaining = this.waveTime;
         this.isWaveActive = false;
         this.spawnTimer = 0;
-        this.spawnInterval = 800; // ms between spawns - znacznie szybciej!
+        this.spawnInterval = 800; // ms between spawns - much faster!
         this.enemiesPerSpawn = 2;
         this.bossSpawned = false;
-        this.lastCountdownSecond = -1; // Do śledzenia countdown
+        this.lastCountdownSecond = -1; // For countdown tracking
     }
 
     startWave() {
@@ -34,13 +34,13 @@ class WaveManager {
     }
 
     updateSpawnSettings() {
-        // Zbalansowana ilość wrogów
+        // Balanced enemy count
         const wave = this.waveNumber;
         
-        // Wolniejszy spawn - co 1000-400ms
+        // Slower spawn - every 1000-400ms
         this.spawnInterval = Math.max(400, 1000 - wave * 50);
         
-        // Mniej wrogów na spawn: 1-4
+        // Less enemies per spawn: 1-4
         this.enemiesPerSpawn = Math.min(4, 1 + Math.floor(wave * 0.4));
         
         console.log(`Fala ${wave}: spawn co ${this.spawnInterval}ms, ${this.enemiesPerSpawn} wrogów/spawn`);
@@ -51,12 +51,12 @@ class WaveManager {
 
         const enemies = [];
 
-        // Gdy boss żyje - zatrzymaj timer i nie spawnuj nowych wrogów
+        // When boss is alive - stop timer and don't spawn new enemies
         if (bossAlive) {
             return { enemies: [], waveEnded: false, countdown: false };
         }
 
-        // Update timer (tylko gdy boss nie żyje)
+        // Update timer (only when boss is dead)
         this.timeRemaining -= deltaTime / 1000;
         
         // Countdown w ostatnich 3 sekundach
@@ -79,19 +79,19 @@ class WaveManager {
             const bossType = this.getBossType();
             const boss = new Enemy(spawn.x, spawn.y, bossType);
             
-            // Skalowanie 1: Z numerem fali bossowej (+50% HP, +25% DMG za każdą falę bossową)
+            // Scaling 1: With boss wave number (+50% HP, +25% DMG per boss wave)
             const bossWave = Math.floor(this.waveNumber / 3);
             const bossMultiplierHp = 1 + (bossWave - 1) * 0.5;
             const bossMultiplierDmg = 1 + (bossWave - 1) * 0.25;
             
-            // Skalowanie 2: Wykładnicze jak zwykli wrogowie (1.04^n od fali 3)
+            // Scaling 2: Exponential like regular enemies (1.04^n from wave 3)
             let expMultiplier = 1;
             if (this.waveNumber >= 3) {
                 const scalingWave = this.waveNumber - 3;
                 expMultiplier = Math.pow(1.04, scalingWave);
             }
             
-            // Łączne skalowanie
+            // Combined scaling
             boss.maxHp = Math.round(boss.maxHp * bossMultiplierHp * expMultiplier);
             boss.hp = boss.maxHp;
             boss.damage = Math.round(boss.damage * bossMultiplierDmg * expMultiplier);

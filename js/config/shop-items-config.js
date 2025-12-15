@@ -1,7 +1,7 @@
 // Shop items and character definitions
 
 const SHOP_ITEMS = {
-    // ============ BRONIE ============
+    // ============ WEAPONS ============
     pistol: {
         type: 'weapon',
         weaponType: 'pistol',
@@ -83,7 +83,7 @@ const SHOP_ITEMS = {
         emoji: '☢️',
         minWave: 5
     },
-    // Nowe bronie specjalne
+    // Special weapons
     scythe: {
         type: 'weapon',
         weaponType: 'scythe',
@@ -104,7 +104,7 @@ const SHOP_ITEMS = {
         type: 'weapon',
         weaponType: 'holyGrenade',
         name: 'Święty Granat',
-        description: 'Błogosławiona eksplozja!',
+        description: 'AAAlleelluujjaaa!',
         price: 250,
         emoji: '✝️'
     },
@@ -125,9 +125,9 @@ const SHOP_ITEMS = {
         emoji: '🏹'
     },
 
-    // ============ 20 PRZEDMIOTÓW ============
+    // ============ 20 ITEMS ============
     
-    // --- Defensywne ---
+    // --- Defensive ---
     ironArmor: {
         type: 'item',
         name: 'Żelazna Zbroja',
@@ -177,7 +177,7 @@ const SHOP_ITEMS = {
         effect: { regen: 1 }
     },
 
-    // --- Ofensywne ---
+    // --- Offensive ---
     damageGem: {
         type: 'item',
         name: 'Klejnot Mocy',
@@ -286,7 +286,7 @@ const SHOP_ITEMS = {
         effect: { attackSpeedMultiplier: 0.15 }
     },
     
-    // --- Zasięg broni ---
+    // --- Weapon range ---
     scope: {
         type: 'item',
         name: 'Luneta',
@@ -319,7 +319,7 @@ const SHOP_ITEMS = {
         }
     },
     
-    // === LEGENDARNE PRZEDMIOTY ===
+    // === LEGENDARY ITEMS ===
     bolidKubicy: {
         type: 'item',
         name: 'Bolid Kubicy',
@@ -378,7 +378,7 @@ const SHOP_ITEMS = {
         }
     },
     
-    // === NOWE PRZEDMIOTY ===
+    // === NEW ITEMS ===
     rekaMidasa: {
         type: 'item',
         name: 'Ręka Midasa',
@@ -411,7 +411,7 @@ const SHOP_ITEMS = {
     }
 };
 
-// Definicje postaci
+// Character definitions
 const CHARACTER_TYPES = {
     wypaleniec: {
         name: 'Wypaleniec',

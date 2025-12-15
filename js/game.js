@@ -83,13 +83,13 @@ class Game {
     selectCharacter(characterType) {
         this.selectedCharacter = characterType;
         
-        // Zaznacz wybraną kartę
+        // Mark selected card
         document.querySelectorAll('.character-card').forEach(card => {
             card.classList.remove('selected');
         });
         document.querySelector(`[data-character="${characterType}"]`).classList.add('selected');
         
-        // Rozpocznij grę po krótkim opóźnieniu
+        // Start game after short delay
         setTimeout(() => this.startGame(), 300);
     }
     
@@ -139,19 +139,19 @@ class Game {
 
     startGame() {
         if (!this.selectedCharacter) {
-            this.selectedCharacter = 'normik'; // Domyślna postać
+            this.selectedCharacter = 'normik'; // Default character
         }
         
-        // Inicjalizuj audio przy pierwszej interakcji
+        // Initialize audio on first interaction
         audio.init();
         
-        // Pobierz dane postaci
+        // Get character data
         const charData = CHARACTER_TYPES[this.selectedCharacter];
         
         // Reset everything
         this.player = new Player(this.canvas.width / 2, this.canvas.height / 2);
         
-        // Zastosuj statystyki postaci
+        // Apply character stats
         this.player.maxHp = charData.maxHp;
         this.player.hp = charData.maxHp;
         this.player.speed = charData.speed;
@@ -186,11 +186,11 @@ class Game {
     startNextWave() {
         this.shop.hideShop();
         this.state = 'playing';
-        // Odzyskaj pełne zdrowie na początku fali
+        // Recover full health at wave start
         this.player.hp = this.player.maxHp;
-        // Czyść pozostawione pickupy z poprzedniej fali
+        // Clear leftover pickups from previous wave
         this.pickups = [];
-        // Czyść wszystkie pociski (gracza i wrogów)
+        // Clear all bullets (player and enemy)
         this.bullets = [];
         this.enemyBullets = [];
         this.waveManager.startWave();
@@ -225,14 +225,14 @@ class Game {
             }
         }
         
-        // Sprawdź czy boss żyje
+        // Check if boss is alive
         const bossAlive = this.enemies.some(e => e.isBoss);
         
         // Update wave manager
         const waveResult = this.waveManager.update(deltaTime, this.canvas, bossAlive);
         this.enemies.push(...waveResult.enemies);
         
-        // Countdown sound i wizualizacja
+        // Countdown sound and visualization
         if (waveResult.countdown !== false) {
             audio.countdownTick(waveResult.countdown);
         }
@@ -242,10 +242,10 @@ class Game {
             return;
         }
         
-        // Find nearest enemy for auto-aim (główny cel dla renderowania)
+        // Find nearest enemy for auto-aim (main target for rendering)
         const nearestEnemy = this.findNearestEnemy();
         
-        // Fire weapons - każda broń celuje niezależnie
+        // Fire weapons - each weapon aims independently
         const newBullets = this.player.fireAllWeapons(nearestEnemy, currentTime, (x, y, maxRange) => this.findNearestEnemyFrom(x, y, maxRange));
         this.bullets.push(...newBullets);
         
@@ -263,7 +263,7 @@ class Game {
                     continue;
                 }
                 
-                // Boss zadaje x1.25 obrażenia przy dotknięciu
+                // Boss deals x1.25 contact damage
                 let damage = enemy.damage;
                 if (enemy.isBoss) {
                     damage *= 1.25;
@@ -293,10 +293,10 @@ class Game {
                 const attackResult = enemy.tryAttack(this.player, currentTime);
                 if (attackResult) {
                     if (attackResult.type === 'bullets') {
-                        // Zwykłe pociski lub spread
+                        // Regular bullets or spread
                         this.enemyBullets.push(...attackResult.bullets);
                     } else if (attackResult.type === 'shockwave') {
-                        // Shockwave - dodaj do efektów i sprawdź kolizję z graczem
+                        // Shockwave - add to effects and check player collision
                         this.handleShockwave(attackResult, currentTime);
                     }
                 }
@@ -347,7 +347,7 @@ class Game {
             
             // Remove short range bullets that expired OR grenades that should explode
             if (bullet.shouldExpire && bullet.shouldExpire()) {
-                // Granaty wybuchają po dystansie
+                // Grenades explode after distance
                 if (bullet.shouldExplodeOnExpire && bullet.explosive) {
                     const expRadius = bullet.explosionRadius * this.player.explosionRadius;
                     this.handleExplosion(bullet.x, bullet.y, expRadius, bullet.damage, bullet.isNuke, bullet.isHolyGrenade, bullet.isBanana, currentTime, bullet.isMini);
@@ -402,7 +402,7 @@ class Game {
                     
                     if (isDead) {
                         this.handleEnemyDeath(enemy, currentTime);
-                        // Sprawdź czy wróg jeszcze istnieje w tablicy (mógł być usunięty przez chain)
+                        // Check if enemy still exists in array (could be removed by chain)
                         const enemyIdx = this.enemies.indexOf(enemy);
                         if (enemyIdx !== -1) {
                             this.enemies.splice(enemyIdx, 1);
@@ -418,7 +418,7 @@ class Game {
         for (let i = this.pickups.length - 1; i >= 0; i--) {
             const pickup = this.pickups[i];
             
-            // Usuń wygasłe pickupy (złoto po 7 sekundach)
+            // Remove expired pickups (gold after 7 seconds)
             if (pickup.isExpired()) {
                 this.pickups.splice(i, 1);
                 continue;
@@ -444,7 +444,7 @@ class Game {
         this.updateHUD();
     }
     
-    // Aktualizacja shockwave'ów
+    // Shockwave update
     updateShockwaves(currentTime) {
         // Delegated to EffectsSystem (js/systems/effects-system.js)
         const playerDied = EffectsSystem.updateShockwaves(this, currentTime);
@@ -589,7 +589,7 @@ class Game {
         HUD.renderEnemyCount(this.ctx, this.enemies.length, this.canvas.height);
     }
     
-    // Duży pasek HP bossa na górze ekranu
+    // Big boss HP bar at top of screen
     renderBossHealthBar() {
         // Delegated to HUD system (js/systems/hud.js)
         HUD.renderBossHealthBar(this.ctx, this.canvas.width, this.enemies);
@@ -602,7 +602,7 @@ class Game {
 
     openShop() {
         this.state = 'shop';
-        this.waveManager.endWave(); // Zwiększ numer fali!
+        this.waveManager.endWave(); // Increase wave number!
         this.enemies = []; // Clear remaining enemies
         this.shop.resetReroll(); // Reset reroll count
         this.shop.generateItems(this.player);

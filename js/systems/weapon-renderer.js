@@ -32,7 +32,7 @@ const WeaponRenderer = {
     drawWeaponIcon(ctx, weapon, x, y, angle) {
         ctx.save();
         ctx.translate(x, y);
-        ctx.rotate(angle + Math.PI / 2); // Obrót w kierunku ruchu
+        ctx.rotate(angle + Math.PI / 2); // Rotation in movement direction
         
         switch (weapon.type) {
             case 'pistol':

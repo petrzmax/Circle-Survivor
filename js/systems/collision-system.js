@@ -120,7 +120,7 @@ const CollisionSystem = {
                     continue;
                 }
                 
-                // Boss zadaje x1.25 obrażenia przy dotknięciu
+                // Boss deals x1.25 contact damage
                 let damage = enemy.damage;
                 if (enemy.isBoss) {
                     damage *= 1.25;
@@ -155,7 +155,7 @@ const CollisionSystem = {
         for (let i = game.pickups.length - 1; i >= 0; i--) {
             const pickup = game.pickups[i];
             
-            // Usuń wygasłe pickupy (złoto po 7 sekundach)
+            // Remove expired pickups (gold after 7 seconds)
             if (pickup.isExpired()) {
                 game.pickups.splice(i, 1);
                 continue;

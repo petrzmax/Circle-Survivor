@@ -15,32 +15,32 @@ class Player {
         this.pickupRange = 50;
         
         // Combat Stats
-        this.armor = 0;              // Redukcja obrażeń w %
-        this.damageMultiplier = 1;   // Mnożnik obrażeń
-        this.attackSpeedMultiplier = 1; // Mnożnik szybkości ataku
-        this.critChance = 0;         // Szansa na krytyka (0-1)
-        this.critDamage = 1.5;       // Mnożnik krytyka
-        this.lifesteal = 0;          // % obrażeń jako leczenie
-        this.knockback = 1;          // Mnożnik odrzutu
-        this.explosionRadius = 1;    // Mnożnik zasięgu eksplozji
-        this.projectileCount = 0;    // Dodatkowe pociski
-        this.pierce = 0;             // Dodatkowe przebicia
-        this.attackRange = 1;        // Mnożnik zasięgu broni
+        this.armor = 0;              // Damage reduction in %
+        this.damageMultiplier = 1;   // Damage multiplier
+        this.attackSpeedMultiplier = 1; // Attack speed multiplier
+        this.critChance = 0;         // Crit chance (0-1)
+        this.critDamage = 1.5;       // Crit multiplier
+        this.lifesteal = 0;          // % of damage as healing
+        this.knockback = 1;          // Knockback multiplier
+        this.explosionRadius = 1;    // Explosion radius multiplier
+        this.projectileCount = 0;    // Extra projectiles
+        this.pierce = 0;             // Extra pierce
+        this.attackRange = 1;        // Weapon range multiplier
         
         // Utility Stats
-        this.luck = 0;               // Bonus do dropów
-        this.xpMultiplier = 1;       // Mnożnik XP
-        this.goldMultiplier = 1;     // Mnożnik złota
-        this.dodge = 0;              // Szansa na unik (0-1)
-        this.thorns = 0;             // Obrażenia zwrotne
-        this.regen = 0;              // HP/s regeneracja
+        this.luck = 0;               // Drop bonus
+        this.xpMultiplier = 1;       // XP multiplier
+        this.goldMultiplier = 1;     // Gold multiplier
+        this.dodge = 0;              // Dodge chance (0-1)
+        this.thorns = 0;             // Reflect damage
+        this.regen = 0;              // HP/s regeneration
         this.regenTimer = 0;
         
-        // Weapons (limit 6 slotów, można mieć wiele tej samej)
+        // Weapons (limit 6 slots, can have multiple of same type)
         this.maxWeapons = 6;
         this.weapons = [new Weapon('pistol')];
         
-        // Przedmioty (inventory)
+        // Items (inventory)
         this.items = [];
         
         // Movement
@@ -53,7 +53,7 @@ class Player {
     }
 
     update(keys, canvas, currentTime) {
-        // Regeneracja HP
+        // HP regeneration
         if (this.regen > 0) {
             this.regenTimer += 16; // ~60fps
             if (this.regenTimer >= 1000) {
@@ -86,20 +86,20 @@ class Player {
         this.y = clamp(this.y, this.height / 2, canvas.height - this.height / 2);
     }
     
-    // Oblicz pozycję broni - rozłożone równomiernie wokół gracza
+    // Calculate weapon position - spread evenly around player
     getWeaponPosition(weaponIndex, currentTime, target = null) {
         const weaponRadius = 25;
         const weaponCount = this.weapons.length;
         
-        // Pozycja broni - rozłożone równomiernie wokół gracza
+        // Weapon position - spread evenly around player
         const spreadAngle = (Math.PI * 2 / weaponCount) * weaponIndex;
         
-        // Pozycja broni względem gracza (orbit wokół gracza)
+        // Weapon position relative to player (orbit around player)
         const posX = this.x + Math.cos(spreadAngle) * weaponRadius;
         const posY = this.y + Math.sin(spreadAngle) * weaponRadius;
         
-        // Kąt celowania - zawsze na wroga (niezależnie od pozycji broni)
-        let aimAngle = spreadAngle; // domyślnie w kierunku pozycji
+        // Aim angle - always at enemy (regardless of weapon position)
+        let aimAngle = spreadAngle; // default in position direction
         if (target) {
             aimAngle = Math.atan2(target.y - posY, target.x - posX);
         }
@@ -107,11 +107,11 @@ class Player {
         return {
             x: posX,
             y: posY,
-            angle: aimAngle  // kąt celowania, nie pozycji!
+            angle: aimAngle  // aim angle, not position!
         };
     }
     
-    // Zapisz ostatni cel do renderowania
+    // Save last target for rendering
     setTarget(target) {
         this.currentTarget = target;
     }
@@ -119,7 +119,7 @@ class Player {
     fireAllWeapons(mainTarget, currentTime, findEnemyFromFn) {
         if (!mainTarget && this.enemies?.length === 0) return [];
         
-        // Zapisz główny cel do renderowania
+        // Save main target for rendering
         this.currentTarget = mainTarget;
         
         const allBullets = [];
@@ -128,10 +128,10 @@ class Player {
         for (let i = 0; i < weaponCount; i++) {
             const weapon = this.weapons[i];
             
-            // Oblicz pozycję broni
+            // Calculate weapon position
             const weaponPos = this.getWeaponPosition(i, currentTime, mainTarget);
             
-            // Znajdź najbliższego wroga od pozycji tej broni (z limitem zasięgu)
+            // Find nearest enemy from this weapon position (with range limit)
             let target = null;
             if (findEnemyFromFn) {
                 const nearestToWeapon = findEnemyFromFn(weaponPos.x, weaponPos.y, weapon.range);
@@ -187,7 +187,7 @@ class Player {
         return this.hp <= 0;
     }
     
-    // Zwróć obrażenia thorns
+    // Return thorns damage
     getThorns() {
         return this.thorns;
     }
@@ -197,9 +197,9 @@ class Player {
     }
 
     addWeapon(type) {
-        // Sprawdź limit broni
+        // Check weapon limit
         if (this.weapons.length >= this.maxWeapons) {
-            return false; // Brak miejsca na nową broń
+            return false; // No room for new weapon
         }
         
         const weapon = new Weapon(type);
@@ -211,7 +211,7 @@ class Player {
         return true;
     }
     
-    // Rozłóż strzały równomiernie dla broni tego samego typu
+    // Spread shots evenly for weapons of the same type
     recalculateFireOffsets() {
         // Group weapons by type
         const weaponsByType = {};
@@ -234,7 +234,7 @@ class Player {
     }
 
     render(ctx, currentTime, target = null) {
-        // Zapisz cel jeśli przekazany
+        // Save target if passed
         if (target) {
             this.currentTarget = target;
         }
@@ -278,24 +278,24 @@ class Player {
         ctx.arc(this.x + eyeOffset, this.y - 3, 4, 0, Math.PI * 2);
         ctx.fill();
         
-        // Renderuj bronie wokół gracza
+        // Render weapons around player
         this.renderWeapons(ctx, currentTime);
         
         ctx.globalAlpha = 1;
     }
     
-    // Renderowanie broni wokół gracza
+    // Rendering weapons around player
     renderWeapons(ctx, currentTime) {
         // Delegated to WeaponRenderer (js/systems/weapon-renderer.js)
         WeaponRenderer.renderWeapons(ctx, this, currentTime);
     }
     
-    // Dodaj przedmiot
+    // Add item
     addItem(itemId) {
         this.items.push(itemId);
     }
     
-    // Policz ile masz danego przedmiotu
+    // Count how many of given item you have
     countItem(itemId) {
         return this.items.filter(i => i === itemId).length;
     }

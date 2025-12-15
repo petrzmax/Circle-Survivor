@@ -15,7 +15,7 @@ class Bullet {
         // Knockback multiplier from weapon
         this.knockbackMultiplier = 1;
         
-        // Specjalne właściwości (ustawiane przez Weapon)
+        // Special properties (set by Weapon)
         this.explosive = false;
         this.explosionRadius = 0;
         this.isMine = false;
@@ -53,7 +53,7 @@ class Bullet {
             (this.y - this.startY) ** 2
         );
         
-        // Granaty (weaponCategory === 'grenade') - płynne hamowanie
+        // Grenades (weaponCategory === 'grenade') - smooth slowdown
         if (this.weaponCategory === 'grenade' && this.explosiveRange > 0) {
             const progress = this.distanceTraveled / this.explosiveRange;
             

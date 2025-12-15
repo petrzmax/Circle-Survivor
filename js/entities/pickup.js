@@ -5,13 +5,13 @@ class Pickup {
     constructor(x, y, type, value) {
         this.x = x;
         this.y = y;
-        this.baseY = y; // Bazowa pozycja Y dla animacji
+        this.baseY = y; // Base Y position for animation
         this.type = type; // 'xp', 'gold', or 'health'
         this.value = value;
         this.radius = 8;
         this.magnetSpeed = 5;
         this.beingCollected = false;
-        this.animationOffset = Math.random() * Math.PI * 2; // Losowy offset animacji
+        this.animationOffset = Math.random() * Math.PI * 2; // Random animation offset
         this.spawnTime = Date.now();
         this.lifetime = this.type === 'gold' ? 3000 : 15000; // 3s dla złota, 15s dla health
         this.shrinkDuration = 1000; // Ostatnia 1 sekunda - kurczenie
@@ -24,7 +24,7 @@ class Pickup {
         return Date.now() - this.spawnTime > this.lifetime;
     }
     
-    // Zwraca skalę od 0 do 1 (1 = pełny rozmiar, 0 = zniknięty)
+    // Returns scale from 0 to 1 (1 = full size, 0 = disappeared)
     getScale() {
         if (this.type !== 'gold' && this.type !== 'health') return 1;
         if (this.beingCollected) return 1;
@@ -34,7 +34,7 @@ class Pickup {
         
         if (age < shrinkStart) return 1;
         
-        // Płynne kurczenie w ostatniej sekundzie
+        // Smooth shrinking in the last second
         const shrinkProgress = (age - shrinkStart) / this.shrinkDuration;
         return Math.max(0, 1 - shrinkProgress);
     }
@@ -42,7 +42,7 @@ class Pickup {
     update(player) {
         const dist = distance(this, player);
         
-        // Animacja góra-dół (tylko gdy nie jest zbierane)
+        // Up-down animation (only when not being collected)
         if (!this.beingCollected) {
             const time = (Date.now() - this.spawnTime) / 1000;
             this.y = this.baseY + Math.sin(time * 3 + this.animationOffset) * 1.5;
@@ -56,7 +56,7 @@ class Pickup {
             const norm = normalize({ x: dx, y: dy });
             this.x += norm.x * this.magnetSpeed;
             this.y += norm.y * this.magnetSpeed;
-            this.baseY = this.y; // Aktualizuj bazową pozycję
+            this.baseY = this.y; // Update base position
         }
         
         // Collect
@@ -69,10 +69,10 @@ class Pickup {
     render(ctx) {
         ctx.save();
         
-        // Zastosuj skalę (animacja kurczenia dla złota)
+        // Apply scale (shrinking animation for gold)
         const scale = this.getScale();
         if (scale < 1) {
-            ctx.globalAlpha = scale; // Też dodaj zanikanie przezroczystości
+            ctx.globalAlpha = scale; // Also add fade transparency
         }
         
         if (this.type === 'xp') {
@@ -82,7 +82,7 @@ class Pickup {
             ctx.rotate(Math.PI / 4);
             ctx.fillRect(-this.radius / 2, -this.radius / 2, this.radius, this.radius);
         } else if (this.type === 'gold') {
-            // Delikatna poświata złota (tylko pod spodem)
+            // Subtle gold glow (only underneath)
             ctx.shadowColor = 'rgba(255, 215, 0, 0.6)';
             ctx.shadowBlur = 8 * scale;
             ctx.shadowOffsetY = 2;

@@ -30,7 +30,7 @@ class Enemy {
         // Boss name
         if (this.isBoss) {
             this.bossName = generateBossName();
-            // Dźwięk pojawienia się bossa
+            // Boss spawn sound
             if (typeof audio !== 'undefined') {
                 audio.bossSpawn();
             }
@@ -52,7 +52,7 @@ class Enemy {
         this.zigzagTimer = 0;
         this.zigzagDir = 1;
         
-        // Flaga - czy wróg już wszedł na planszę (spawn jest poza ekranem)
+        // Flag - whether enemy has entered arena (spawn is off-screen)
         this.hasEnteredArena = false;
     }
 
@@ -86,7 +86,7 @@ class Enemy {
         this.knockbackX *= 0.8;
         this.knockbackY *= 0.8;
         
-        // Sprawdź czy wróg wszedł na planszę (cały jest wewnątrz)
+        // Check if enemy entered arena (fully inside)
         const isFullyInside = this.x > this.radius && this.x < canvasWidth - this.radius &&
                               this.y > this.radius && this.y < canvasHeight - this.radius;
         
@@ -94,24 +94,24 @@ class Enemy {
             this.hasEnteredArena = true;
         }
         
-        // Ogranicz pozycję tylko jeśli wróg już wszedł na planszę
+        // Limit position only if enemy has entered arena
         if (this.hasEnteredArena) {
             this.x = Math.max(this.radius, Math.min(canvasWidth - this.radius, this.x));
             this.y = Math.max(this.radius, Math.min(canvasHeight - this.radius, this.y));
         }
     }
     
-    // Strzelanie bossa do gracza - różne wzorce ataków
+    // Boss shooting at player - different attack patterns
     tryAttack(player, currentTime) {
         if (!this.canShoot) return null;
         if (currentTime - this.lastFireTime < this.fireRate) return null;
         
         this.lastFireTime = currentTime;
         
-        // Losuj wzorzec ataku
+        // Random attack pattern
         const pattern = this.attackPatterns[Math.floor(Math.random() * this.attackPatterns.length)];
         
-        // Kierunek do gracza
+        // Direction to player
         const dx = player.x - this.x;
         const dy = player.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -122,7 +122,7 @@ class Enemy {
         
         switch (pattern) {
             case 'spread':
-                // Strzał wachlarzowy - 5 pocisków w łuku 60°
+                // Fan shot - 5 bullets in 60° arc
                 const spreadBullets = [];
                 const spreadCount = 5;
                 const spreadAngle = Math.PI / 3; // 60 stopni
@@ -136,7 +136,7 @@ class Enemy {
                 return { type: 'bullets', bullets: spreadBullets };
                 
             case 'shockwave':
-                // Fala uderzeniowa - atak obszarowy
+                // Shockwave - area attack
                 return { 
                     type: 'shockwave', 
                     x: this.x, 
@@ -148,14 +148,14 @@ class Enemy {
                 
             case 'single':
             default:
-                // Pojedynczy strzał
+                // Single shot
                 const vx = (dx / dist) * this.bulletSpeed;
                 const vy = (dy / dist) * this.bulletSpeed;
                 return { type: 'bullets', bullets: [new EnemyBullet(this.x, this.y, vx, vy, this.bulletDamage, this.color)] };
         }
     }
     
-    // Zachowaj starą metodę dla kompatybilności
+    // Keep old method for compatibility
     tryShoot(player, currentTime) {
         const result = this.tryAttack(player, currentTime);
         if (!result) return null;
@@ -244,7 +244,7 @@ class Enemy {
             ctx.closePath();
             ctx.fill();
             
-            // Nazwa bossa
+            // Boss name
             ctx.font = 'bold 14px Arial';
             ctx.textAlign = 'center';
             ctx.fillStyle = '#ff0000';

@@ -74,7 +74,7 @@ const LeaderboardUI = {
         
         // Disable button and show loading
         submitBtn.disabled = true;
-        submitBtn.textContent = '⏳ Zapisywanie...';
+        submitBtn.textContent = '⏳ Saving...';
         
         try {
             await leaderboard.submitScore(
@@ -92,7 +92,7 @@ const LeaderboardUI = {
             localStorage.setItem('circle_survivor_player_name', name);
         } catch (e) {
             console.error('Error submitting score:', e);
-            submitBtn.textContent = '❌ Błąd - spróbuj ponownie';
+            submitBtn.textContent = '❌ Error - try again';
             submitBtn.disabled = false;
         }
     },

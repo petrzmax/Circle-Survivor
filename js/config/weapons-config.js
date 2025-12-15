@@ -69,11 +69,11 @@ const WEAPON_TYPES = {
         weaponCategory: 'gun',
         knockbackMultiplier: 0.15
     },
-    // NOWE BRONIE
+    // ADVANCED WEAPONS
     minigun: {
         name: 'Minigun',
         emoji: '🔥',
-        fireRate: 50,       // Super szybki!
+        fireRate: 50,       // Super fast!
         damage: 2,          // Nerfed from 4
         bulletSpeed: 12,
         bulletCount: 1,
@@ -152,7 +152,7 @@ const WEAPON_TYPES = {
         weaponCategory: 'rocket'
     },
     
-    // === NOWE BRONIE ===
+    // === SPECIAL WEAPONS ===
     scythe: {
         name: 'Kosa Kubusia',
         emoji: '🌙',
@@ -166,7 +166,7 @@ const WEAPON_TYPES = {
         price: 200,
         color: '#9932cc',
         bulletRadius: 20,
-        isScythe: true,  // Obraca się!
+        isScythe: true,  // Rotates!
         range: 230,
         weaponCategory: 'melee'
     },
@@ -201,7 +201,7 @@ const WEAPON_TYPES = {
         price: 250,
         color: '#ffd700',
         bulletRadius: 12,
-        isHolyGrenade: true,  // Specjalna eksplozja!
+        isHolyGrenade: true,  // Special explosion!
         range: 275,
         weaponCategory: 'grenade',
         explosiveRange: 275
@@ -219,7 +219,7 @@ const WEAPON_TYPES = {
         price: 220,
         color: '#ffff00',
         bulletRadius: 10,
-        isBanana: true,  // Dzieli się na mniejsze!
+        isBanana: true,  // Splits into smaller ones!
         range: 235,
         weaponCategory: 'grenade',
         explosiveRange: 235
@@ -241,7 +241,7 @@ const WEAPON_TYPES = {
         weaponCategory: 'gun'
     },
     
-    // === WEWNĘTRZNY TYP - mini banan ===
+    // === INTERNAL TYPE - mini banana ===
     minibanana: {
         name: 'Mini Banan',
         emoji: '🍌',

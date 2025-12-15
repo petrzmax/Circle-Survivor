@@ -16,15 +16,15 @@ const EffectsSystem = {
             const age = Date.now() - sw.created;
             const duration = 400; // ms
             
-            // Rozszerzaj okrąg
+            // Expand ring
             sw.currentRadius = sw.maxRadius * Math.min(1, age / (duration * 0.7));
             sw.alpha = 1 - (age / duration);
             
-            // Zadaj obrażenia graczowi gdy fala go dotrze (tylko raz)
+            // Deal damage to player when wave reaches them (only once)
             if (!sw.damageDealt) {
                 const distToPlayer = distance({x: sw.x, y: sw.y}, game.player);
                 if (distToPlayer <= sw.currentRadius && distToPlayer >= sw.currentRadius - 30) {
-                    // Gracz w zasięgu fali
+                    // Player in wave range
                     if (game.player.dodge > 0 && Math.random() < game.player.dodge) {
                         audio.dodge();
                     } else {
@@ -35,7 +35,7 @@ const EffectsSystem = {
                 }
             }
             
-            // Usuń zakończone
+            // Remove finished ones
             if (sw.alpha <= 0) {
                 game.shockwaves.splice(i, 1);
             }
@@ -68,7 +68,7 @@ const EffectsSystem = {
             ctx.arc(exp.x, exp.y, exp.radius * (1 - exp.alpha * 0.3), 0, Math.PI * 2);
             
             if (exp.isNuke) {
-                // Nuke - zielona eksplozja z wieloma pierścieniami
+                // Nuke - green explosion with multiple rings
                 const gradient = ctx.createRadialGradient(exp.x, exp.y, 0, exp.x, exp.y, exp.radius);
                 gradient.addColorStop(0, '#ffffff');
                 gradient.addColorStop(0.3, '#00ff00');
@@ -76,14 +76,14 @@ const EffectsSystem = {
                 gradient.addColorStop(1, 'rgba(0, 50, 0, 0)');
                 ctx.fillStyle = gradient;
                 ctx.fill();
-                // Drugi pierścień
+                // Second ring
                 ctx.beginPath();
                 ctx.arc(exp.x, exp.y, exp.radius * 0.6 * (1 - exp.alpha * 0.5), 0, Math.PI * 2);
                 ctx.strokeStyle = '#00ff00';
                 ctx.lineWidth = 5;
                 ctx.stroke();
             } else if (exp.isHolyGrenade) {
-                // Holy Grenade - złota święta eksplozja
+                // Holy Grenade - golden holy explosion
                 const gradient = ctx.createRadialGradient(exp.x, exp.y, 0, exp.x, exp.y, exp.radius);
                 gradient.addColorStop(0, '#ffffff');
                 gradient.addColorStop(0.3, '#ffdd00');
@@ -91,7 +91,7 @@ const EffectsSystem = {
                 gradient.addColorStop(1, 'rgba(255, 200, 0, 0)');
                 ctx.fillStyle = gradient;
                 ctx.fill();
-                // Świetlisty krzyż
+                // Luminous cross
                 ctx.strokeStyle = '#ffffff';
                 ctx.lineWidth = 4;
                 ctx.beginPath();
@@ -101,7 +101,7 @@ const EffectsSystem = {
                 ctx.lineTo(exp.x + exp.radius * 0.4, exp.y);
                 ctx.stroke();
             } else if (exp.isBanana) {
-                // Banana bomb - żółta eksplozja
+                // Banana bomb - yellow explosion
                 const gradient = ctx.createRadialGradient(exp.x, exp.y, 0, exp.x, exp.y, exp.radius);
                 gradient.addColorStop(0, '#ffff00');
                 gradient.addColorStop(0.4, '#ffcc00');
@@ -110,7 +110,7 @@ const EffectsSystem = {
                 ctx.fillStyle = gradient;
                 ctx.fill();
             } else {
-                // Zwykła eksplozja
+                // Normal explosion
                 ctx.fillStyle = '#ffff00';
                 ctx.fill();
                 ctx.strokeStyle = '#ff8800';
@@ -165,10 +165,10 @@ const EffectsSystem = {
         for (let i = deathEffects.length - 1; i >= 0; i--) {
             const p = deathEffects[i];
             
-            // Aktualizacja pozycji i życia
+            // Update position and life
             p.x += p.vx;
             p.y += p.vy;
-            p.vx *= 0.95; // Tarcie
+            p.vx *= 0.95; // Friction
             p.vy *= 0.95;
             p.life -= p.decay;
             p.alpha = p.life;
@@ -183,7 +183,7 @@ const EffectsSystem = {
             ctx.fillStyle = p.color;
             
             if (p.isBoss) {
-                // Bossowe cząsteczki z poświatą
+                // Boss particles with glow
                 ctx.shadowColor = p.color;
                 ctx.shadowBlur = 10;
             }
@@ -209,7 +209,7 @@ const EffectsSystem = {
             ctx.save();
             ctx.globalAlpha = sw.alpha * 0.6;
             
-            // Zewnętrzny pierścień (rozszerzający się)
+            // Outer ring (expanding)
             ctx.beginPath();
             ctx.arc(sw.x, sw.y, sw.currentRadius, 0, Math.PI * 2);
             ctx.strokeStyle = sw.color || '#ff4444';
@@ -218,7 +218,7 @@ const EffectsSystem = {
             ctx.shadowBlur = 20;
             ctx.stroke();
             
-            // Wewnętrzny pierścień
+            // Inner ring
             ctx.beginPath();
             ctx.arc(sw.x, sw.y, sw.currentRadius * 0.7, 0, Math.PI * 2);
             ctx.lineWidth = 4;
@@ -236,7 +236,7 @@ const EffectsSystem = {
     createDeathEffect(game, enemy) {
         if (!game.deathEffects) game.deathEffects = [];
         
-        // Liczba cząsteczek zależna od typu wroga
+        // Particle count depends on enemy type
         let particleCount = 8;
         let particleSize = 4;
         let particleColor = enemy.color;
@@ -252,7 +252,7 @@ const EffectsSystem = {
             particleSize = 3;
         }
         
-        // Tworzenie cząsteczek
+        // Creating particles
         for (let i = 0; i < particleCount; i++) {
             const angle = (Math.PI * 2 / particleCount) * i + Math.random() * 0.5;
             const speed = 2 + Math.random() * 4;
@@ -271,7 +271,7 @@ const EffectsSystem = {
             });
         }
         
-        // Dodatkowy efekt dla bossa - druga fala większych cząsteczek
+        // Additional effect for boss - second wave of larger particles
         if (enemy.isBoss) {
             for (let i = 0; i < 20; i++) {
                 const angle = Math.random() * Math.PI * 2;
@@ -283,7 +283,7 @@ const EffectsSystem = {
                     vx: Math.cos(angle) * speed,
                     vy: Math.sin(angle) * speed,
                     size: 10 + Math.random() * 10,
-                    color: '#FFD700', // Złoty kolor
+                    color: '#FFD700', // Golden color
                     alpha: 1,
                     life: 1,
                     decay: 0.01,
@@ -324,7 +324,7 @@ const EffectsSystem = {
     createShockwave(game, shockwave) {
         if (!game.shockwaves) game.shockwaves = [];
         
-        // Dźwięk
+        // Sound
         audio.explosion();
         
         game.shockwaves.push({

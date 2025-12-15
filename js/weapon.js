@@ -374,7 +374,9 @@ class Weapon {
     fire(x, y, targetX, targetY, currentTime, damageMultiplier, attackSpeedMultiplier, critChance = 0, critDamage = 1.5, extraProjectiles = 0, extraPierce = 0) {
         if (!this.canFire(currentTime)) return [];
 
-        this.lastFired = currentTime - (this.fireRate * (1 - attackSpeedMultiplier));
+        // Wyższy attackSpeedMultiplier = szybszy atak = krótszy cooldown
+        const effectiveFireRate = this.fireRate / attackSpeedMultiplier;
+        this.lastFired = currentTime - (this.fireRate - effectiveFireRate);
         
         // Reset offset after first shot (staggering only applies to initial burst)
         this.fireOffset = 0;

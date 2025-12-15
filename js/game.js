@@ -41,52 +41,8 @@ class Game {
     }
 
     setupEventListeners() {
-        // Keyboard
-        window.addEventListener('keydown', (e) => {
-            this.keys[e.key.toLowerCase()] = true;
-            
-            // Pause toggle
-            if (e.key === 'Escape') {
-                if (this.state === 'playing') {
-                    this.pauseGame();
-                } else if (this.state === 'paused') {
-                    this.resumeGame();
-                }
-            }
-        });
-        window.addEventListener('keyup', (e) => {
-            this.keys[e.key.toLowerCase()] = false;
-        });
-        
-        // Character selection
-        document.querySelectorAll('.character-card').forEach(card => {
-            card.onclick = () => this.selectCharacter(card.dataset.character);
-        });
-        
-        // Buttons
-        document.getElementById('restart-btn').onclick = () => this.showCharacterSelect();
-        document.getElementById('start-wave-btn').onclick = () => this.startNextWave();
-        document.getElementById('resume-btn').onclick = () => this.resumeGame();
-        document.getElementById('quit-btn').onclick = () => this.quitToMenu();
-        document.getElementById('sound-toggle').onclick = () => this.toggleSound();
-        
-        // Leaderboard
-        document.getElementById('submit-score-btn').onclick = () => this.submitScore();
-        document.getElementById('player-name').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.submitScore();
-        });
-        
-        // Leaderboard tabs
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.onclick = () => this.switchLeaderboardTab(btn.dataset.tab);
-        });
-        
-        // Menu leaderboard
-        document.getElementById('menu-leaderboard-btn').onclick = () => this.openMenuLeaderboard();
-        document.getElementById('menu-leaderboard-close').onclick = () => this.closeMenuLeaderboard();
-        document.querySelectorAll('.menu-tab-btn').forEach(btn => {
-            btn.onclick = () => this.switchMenuLeaderboardTab(btn.dataset.tab);
-        });
+        // Delegated to InputHandler (js/systems/input-handler.js)
+        InputHandler.setup(this);
     }
     
     // Open leaderboard from menu

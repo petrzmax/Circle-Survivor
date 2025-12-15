@@ -16,7 +16,7 @@ const WEAPON_TYPES = {
     },
     smg: {
         name: 'SMG',
-        emoji: '🔫',
+        emoji: '�',
         fireRate: 150,
         damage: 5,
         bulletSpeed: 10,

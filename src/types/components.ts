@@ -32,7 +32,7 @@ export interface ICircleCollider {
  * Can be rendered to canvas
  */
 export interface IRenderable {
-  render(ctx: CanvasRenderingContext2D): void;
+  draw(ctx: CanvasRenderingContext2D): void;
 }
 
 /**
@@ -50,8 +50,8 @@ export interface IUpdatable {
 export interface IHealth {
   hp: number;
   maxHp: number;
-  takeDamage(amount: number): boolean; // Returns true if dead
   heal(amount: number): void;
+  isDead(): boolean;
 }
 
 /**
@@ -70,13 +70,35 @@ export interface IKnockbackable {
   applyKnockback(forceX: number, forceY: number): void;
 }
 
+/**
+ * Explosive component data
+ */
+export interface IExplosive {
+  explosionRadius: number;
+  explosionDamage: number;
+}
+
+/**
+ * Pierce component data
+ */
+export interface IPierce {
+  pierceCount: number;
+}
+
+/**
+ * Chain component data
+ */
+export interface IChain {
+  chainCount: number;
+  chainRange: number;
+}
+
 // ============ UTILITY COMPONENTS ============
 
 /**
  * Has a limited lifetime and expires
  */
 export interface IExpirable {
-  spawnTime: number;
   lifetime: number;
   isExpired(): boolean;
 }
@@ -85,5 +107,6 @@ export interface IExpirable {
  * Can be collected by player
  */
 export interface ICollectible {
-  onCollect(collector: unknown): void;
+  value: number;
+  collect(): number;
 }

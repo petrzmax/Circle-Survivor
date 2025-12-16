@@ -70,12 +70,15 @@ export interface IKnockbackable {
   applyKnockback(forceX: number, forceY: number): void;
 }
 
+import { VisualEffect } from './enums';
+
 /**
  * Explosive component data
  */
 export interface IExplosive {
   explosionRadius: number;
   explosionDamage: number;
+  visualEffect?: VisualEffect;
 }
 
 /**

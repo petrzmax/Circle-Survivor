@@ -96,6 +96,9 @@ export class Enemy extends Entity implements IHealth {
   /** Boss name (generated) */
   public bossName: string | null = null;
 
+  /** Has top health bar (boss HP bar at top of screen) */
+  public hasTopHealthBar: boolean = false;
+
   /** Ghost phasing effect */
   public phasing: boolean;
 

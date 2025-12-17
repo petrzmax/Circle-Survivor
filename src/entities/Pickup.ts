@@ -48,14 +48,23 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
   /** Remaining lifetime in seconds */
   public lifetime: number;
 
+  /** Shrink duration in seconds */
+  private readonly shrinkDuration: number = 1;
+
   /** Whether pickup is being attracted to player */
   public isAttracted: boolean = false;
 
   /** Attraction speed multiplier */
-  private attractionSpeed: number = 8;
+  private attractionSpeed: number = 5; // magnetSpeed in original
 
-  /** Animation bobbing */
-  private bobTimer: number = 0;
+  /** Spawn time for animation */
+  private spawnTime: number = Date.now();
+
+  /** Animation offset */
+  private animationOffset: number = Math.random() * Math.PI * 2;
+
+  /** Base Y position for animation */
+  private baseY: number;
 
   constructor(config: PickupConfig) {
     super({
@@ -66,7 +75,10 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
 
     this.type = config.type;
     this.value = config.value;
-    this.lifetime = config.lifetime ?? 30;
+
+    // Gold: 3s, Health: 15s (matching original)
+    this.lifetime = config.lifetime ?? (this.type === PickupType.GOLD ? 3 : 15);
+    this.baseY = config.y;
 
     const appearance = PICKUP_APPEARANCE[this.type];
     this.color = appearance.color;
@@ -79,7 +91,23 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
    * Checks if pickup has expired
    */
   public isExpired(): boolean {
+    if (this.isAttracted) return false; // Don't expire while being collected
     return this.lifetime <= 0;
+  }
+
+  /**
+   * Returns scale from 0 to 1 (1 = full size, 0 = disappeared)
+   * For shrinking animation in last second
+   */
+  public getScale(): number {
+    if (this.isAttracted) return 1;
+
+    const shrinkStart = this.shrinkDuration;
+    if (this.lifetime > shrinkStart) return 1;
+
+    // Smooth shrinking in the last second
+    const shrinkProgress = 1 - (this.lifetime / this.shrinkDuration);
+    return Math.max(0, 1 - shrinkProgress);
   }
 
   // ============ ICollectible ============
@@ -108,7 +136,12 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
    */
   public update(deltaTime: number): void {
     this.lifetime -= deltaTime;
-    this.bobTimer += deltaTime;
+
+    // Up-down animation (only when not being collected)
+    if (!this.isAttracted) {
+      const time = (Date.now() - this.spawnTime) / 1000;
+      this.y = this.baseY + Math.sin(time * 3 + this.animationOffset) * 1.5;
+    }
 
     if (this.isExpired()) {
       this.destroy();
@@ -124,27 +157,21 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
   public updateAttraction(
     player: Vector2,
     pickupRange: number,
-    deltaTime: number
+    _deltaTime: number
   ): void {
     const dist = distance(player, this);
 
-    if (dist <= pickupRange) {
+    if (dist <= pickupRange || this.isAttracted) {
       this.isAttracted = true;
 
       // Move towards player
-      const direction = normalize({
-        x: player.x - this.x,
-        y: player.y - this.y,
-      });
+      const dx = player.x - this.x;
+      const dy = player.y - this.y;
+      const norm = normalize({ x: dx, y: dy });
 
-      // Speed increases as pickup gets closer
-      const speedMultiplier = 1 + (pickupRange - dist) / pickupRange;
-      const speed = this.attractionSpeed * speedMultiplier;
-
-      this.x += direction.x * speed * deltaTime * 60;
-      this.y += direction.y * speed * deltaTime * 60;
-    } else {
-      this.isAttracted = false;
+      this.x += norm.x * this.attractionSpeed;
+      this.y += norm.y * this.attractionSpeed;
+      this.baseY = this.y; // Update base position
     }
   }
 
@@ -156,8 +183,9 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
   public draw(ctx: CanvasRenderingContext2D): void {
     ctx.save();
 
-    // Bobbing animation
-    const bobOffset = Math.sin(this.bobTimer * 4) * 2;
+    // Bobbing animation (using sin of time)
+    const time = (Date.now() - this.spawnTime) / 1000;
+    const bobOffset = Math.sin(time * 3 + this.animationOffset) * 1.5;
 
     // Fade out when about to expire
     if (this.lifetime < 5) {

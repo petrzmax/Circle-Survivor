@@ -119,6 +119,8 @@ export enum WeaponType {
  */
 export enum WeaponCategory {
   GUN = 'gun',
+  ROCKET = 'rocket',
+  SPECIAL = 'special',
   MELEE = 'melee',
   GRENADE = 'grenade',
   DEPLOYABLE = 'deployable',

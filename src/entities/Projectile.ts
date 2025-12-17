@@ -84,6 +84,18 @@ export class Projectile extends Entity implements IExpirable {
   /** Remaining lifetime in seconds (Infinity = no limit) */
   public lifetime: number;
 
+  /** Whether this was a critical hit */
+  public isCrit: boolean = false;
+
+  /** Knockback multiplier */
+  public knockbackMultiplier: number = 1;
+
+  /** Weapon category this projectile came from */
+  public weaponCategory: string = 'gun';
+
+  /** Explosive range for grenades */
+  public explosiveRange: number = 0;
+
   /** Spawn position for distance calculation */
   public readonly spawnPosition: Vector2;
 

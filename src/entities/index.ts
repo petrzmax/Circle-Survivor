@@ -37,3 +37,9 @@ export {
   createGoldPickup,
   createHealthPickup,
 } from './Pickup';
+
+export {
+  Weapon,
+  type WeaponEntityConfig,
+  type FireResult,
+} from './Weapon';

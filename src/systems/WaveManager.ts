@@ -7,6 +7,7 @@
 import { GAME_BALANCE } from '@/config/balance.config';
 import { EnemyType } from '@/types/enums';
 import { Enemy } from '@/entities/Enemy';
+import { EventBus } from '@/core/EventBus';
 import { getSpawnPoint, CanvasBounds } from '@/utils/random';
 
 // ============ Types ============
@@ -133,6 +134,9 @@ export class WaveManager {
 
       enemies.push(boss);
       this.bossSpawned = true;
+      
+      // Emit boss spawned event for sound
+      EventBus.emit('bossSpawned', { enemy: boss, bossName: boss.bossName || 'Boss' });
     }
 
     // Spawn enemies (only when boss is dead)

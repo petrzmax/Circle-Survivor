@@ -248,6 +248,7 @@ export class Game {
 
     // Initialize audio
     this.audio.init();
+    this.audio.connectToEventBus();
 
     // Get character config
     const charConfig = CHARACTER_TYPES[this.selectedCharacter];
@@ -303,6 +304,9 @@ export class Game {
     const player = this.entityManager.getPlayer();
     if (player) {
       player.hp = player.maxHp;
+      // Reset player position to center
+      player.x = this.canvas.width / 2;
+      player.y = this.canvas.height / 2;
     }
 
     // Clear entities except player
@@ -335,7 +339,7 @@ export class Game {
       config,
       level: 1,
       lastFireTime: 0,
-      multishot: config.bulletCount ?? 1,
+      multishot: 0, // Extra projectiles from items (not base bulletCount)
       name: config.name,
     });
   }
@@ -365,12 +369,13 @@ export class Game {
 
     const deltaSeconds = deltaTime / 1000;
 
-    // Get input state
+    // Get input state from InputHandler
+    const keys = this.inputHandler.getKeys();
     const input: InputState = {
-      up: this.keys['w'] || this.keys['ArrowUp'] || false,
-      down: this.keys['s'] || this.keys['ArrowDown'] || false,
-      left: this.keys['a'] || this.keys['ArrowLeft'] || false,
-      right: this.keys['d'] || this.keys['ArrowRight'] || false,
+      up: keys['w'] || keys['arrowup'] || false,
+      down: keys['s'] || keys['arrowdown'] || false,
+      left: keys['a'] || keys['arrowleft'] || false,
+      right: keys['d'] || keys['arrowright'] || false,
     };
 
     // Update player movement
@@ -588,20 +593,23 @@ export class Game {
 
       if (!pickup.isActive) continue;
 
-      // Check collection
+      // Check collection (magnet effect)
       const distToPlayer = distance(pickup, player);
-      if (distToPlayer < player.pickupRange) {
-        // Move towards player (magnet effect)
+      if (distToPlayer < player.pickupRange || pickup.isAttracted) {
+        pickup.isAttracted = true;
+        // Move towards player
         const dx = player.x - pickup.x;
         const dy = player.y - pickup.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist > 0) {
-          pickup.x += (dx / dist) * 5;
-          pickup.y += (dy / dist) * 5;
+          const magnetSpeed = 5;
+          pickup.x += (dx / dist) * magnetSpeed;
+          pickup.y += (dy / dist) * magnetSpeed;
         }
       }
 
-      if (circleCollision(pickup, player)) {
+      // Collect when touching player
+      if (distToPlayer < player.radius) {
         if (pickup.type === PickupType.GOLD) {
           this.gold += Math.floor(pickup.value * player.goldMultiplier);
           this.audio.collectGold();
@@ -635,10 +643,23 @@ export class Game {
 
       if (currentTime - weapon.lastFireTime < fireRate) continue;
 
-      // Find target for this weapon
+      // Get weapon position (use currentTarget for positioning only)
       const weaponPos = player.getWeaponPosition(i, player.currentTarget);
-      const maxRange = config.range * player.attackRange;
-      const target = this.entityManager.getNearestEnemy(weaponPos.x, weaponPos.y, maxRange);
+      const maxRange = (config.range ?? 300) * player.attackRange;
+      
+      // Find nearest enemy from weapon position
+      let target = this.entityManager.getNearestEnemy(weaponPos.x, weaponPos.y, maxRange);
+      
+      // Fallback to main target if within range
+      if (!target && player.currentTarget) {
+        const dx = player.currentTarget.x - weaponPos.x;
+        const dy = player.currentTarget.y - weaponPos.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist <= maxRange) {
+          // Find the actual enemy at currentTarget position
+          target = this.entityManager.getNearestEnemy(player.currentTarget.x, player.currentTarget.y, 50);
+        }
+      }
 
       if (!target) continue;
 
@@ -647,10 +668,10 @@ export class Game {
       // Calculate damage with level
       const baseDamage = config.damage * (1 + (weapon.level - 1) * 0.15);
 
-      // Calculate projectile count
+      // Calculate projectile count (bulletCount is base, multishot and projectileCount are bonuses)
       const projectileCount = (config.bulletCount ?? 1) + weapon.multishot + player.projectileCount;
 
-      // Fire based on weapon type
+      // Fire based on weapon type - pass target position for correct aiming
       this.fireWeaponProjectiles(weapon, weaponPos, target, baseDamage, projectileCount, player);
     }
   }
@@ -658,25 +679,31 @@ export class Game {
   fireWeaponProjectiles(
     weapon: WeaponInstance,
     pos: { x: number; y: number; angle: number },
-    target: Enemy | null,
+    target: Enemy,
     damage: number,
     projectileCount: number,
     player: Player
   ): void {
     const config = weapon.config;
-    const targetAngle = target ? Math.atan2(target.y - pos.y, target.x - pos.x) : pos.angle;
+    // Always calculate angle to target - not using pos.angle fallback
+    const targetAngle = Math.atan2(target.y - pos.y, target.x - pos.x);
 
     // Critical hit check
     const isCrit = Math.random() < player.critChance;
     const finalDamage = isCrit ? damage * player.critDamage : damage;
 
     for (let i = 0; i < projectileCount; i++) {
-      // Spread angle for multiple projectiles
+      // Spread angle for multiple projectiles (spread is in degrees)
       let angle = targetAngle;
       if (projectileCount > 1) {
-        const spreadAngle = config.spread ?? 0.2;
-        const offset = (i - (projectileCount - 1) / 2) * spreadAngle;
-        angle += offset;
+        // Convert spread from degrees to radians
+        const spreadRad = ((config.spread ?? 0) * Math.PI) / 180;
+        // Distribute bullets evenly across spread
+        angle = targetAngle - spreadRad / 2 + (spreadRad / (projectileCount - 1)) * i;
+      } else if ((config.spread ?? 0) > 0) {
+        // Random spread for single bullet
+        const spreadRad = ((Math.random() - 0.5) * (config.spread ?? 0) * Math.PI) / 180;
+        angle += spreadRad;
       }
 
       const speed = config.bulletSpeed ?? 10;
@@ -808,14 +835,21 @@ export class Game {
     const goldPickup = createGoldPickup(enemy.x, enemy.y, enemy.goldValue);
     this.entityManager.addPickup(goldPickup);
 
-    // Chance for health drop
-    if (Math.random() < 0.05) {
-      const healthPickup = createHealthPickup(enemy.x + 20, enemy.y, 10);
+    // Chance for health drop (15% base + luck bonus)
+    const player = this.entityManager.getPlayer();
+    const luck = player?.luck ?? 0;
+    const healthDropChance = GAME_BALANCE.drops.healthDropChance + luck * GAME_BALANCE.drops.healthDropLuckMultiplier;
+    if (Math.random() < healthDropChance) {
+      const healthPickup = createHealthPickup(enemy.x + 20, enemy.y, GAME_BALANCE.drops.healthDropValue);
       this.entityManager.addPickup(healthPickup);
     }
 
-    // Play sound
-    this.audio.enemyDeath();
+    // Play sound - boss uses nuke explosion, regular enemies use death sound
+    if (enemy.isBoss) {
+      this.audio.nukeExplosion();
+    } else {
+      this.audio.enemyDeath();
+    }
 
     // Handle special death effects
     if (enemy.explodeOnDeath) {

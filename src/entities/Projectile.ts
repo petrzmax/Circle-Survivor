@@ -273,6 +273,9 @@ export class Projectile extends Entity implements IExpirable {
 
     // Draw based on projectile type
     switch (this.type) {
+      case ProjectileType.ENEMY_BULLET:
+        this.drawEnemyBullet(ctx);
+        break;
       case ProjectileType.SCYTHE:
         this.drawScythe(ctx);
         break;
@@ -299,6 +302,25 @@ export class Projectile extends Entity implements IExpirable {
     ctx.beginPath();
     ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
     ctx.fillStyle = this.color;
+    ctx.fill();
+  }
+
+  private drawEnemyBullet(ctx: CanvasRenderingContext2D): void {
+    // Glow effect
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 10;
+
+    // Main bullet
+    ctx.beginPath();
+    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+
+    // Darker center
+    ctx.shadowBlur = 0;
+    ctx.beginPath();
+    ctx.arc(0, 0, this.radius * 0.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#000';
     ctx.fill();
   }
 

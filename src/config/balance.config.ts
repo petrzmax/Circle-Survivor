@@ -134,6 +134,19 @@ export const GAME_BALANCE = {
       explosionPerLevel: 1.15,
     },
   },
+
+  /**
+   * Drop rates for pickups.
+   * Controls loot from enemy deaths.
+   */
+  drops: {
+    /** Base health drop chance (0.15 = 15%). Affected by luck stat. */
+    healthDropChance: 0.15,
+    /** Luck bonus multiplier for health drops. Final chance = base + luck * this. */
+    healthDropLuckMultiplier: 0.2,
+    /** Health pickup heal amount. */
+    healthDropValue: 10,
+  },
 } as const;
 
 /** Type for the game balance configuration */

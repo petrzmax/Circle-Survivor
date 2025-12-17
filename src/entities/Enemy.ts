@@ -185,6 +185,7 @@ export class Enemy extends Entity implements IHealth {
     // Boss name
     if (this.isBoss) {
       this.bossName = generateBossName();
+      this.hasTopHealthBar = true; // Boss uses top screen HP bar, not mini bar
     }
   }
 
@@ -397,8 +398,8 @@ export class Enemy extends Entity implements IHealth {
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // HP bar (only if damaged)
-    if (this.hp < this.maxHp) {
+    // HP bar (only if damaged, and not for bosses with top health bar)
+    if (this.hp < this.maxHp && !this.hasTopHealthBar) {
       this.drawHealthBar(ctx);
     }
 

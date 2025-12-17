@@ -178,45 +178,46 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
   // ============ Rendering ============
 
   /**
-   * Draws pickup
+   * Draws pickup - matches original js/entities/pickup.js
    */
   public draw(ctx: CanvasRenderingContext2D): void {
     ctx.save();
 
-    // Bobbing animation (using sin of time)
-    const time = (Date.now() - this.spawnTime) / 1000;
-    const bobOffset = Math.sin(time * 3 + this.animationOffset) * 1.5;
-
-    // Fade out when about to expire
-    if (this.lifetime < 5) {
-      ctx.globalAlpha = 0.5 + (this.lifetime / 5) * 0.5;
+    // Get scale (shrinking animation in last second)
+    const scale = this.getScale();
+    
+    // Apply fade transparency when shrinking
+    if (scale < 1) {
+      ctx.globalAlpha = scale;
     }
 
-    // Glow when attracted
-    if (this.isAttracted) {
-      ctx.shadowColor = this.color;
+    if (this.type === PickupType.GOLD) {
+      // Subtle gold glow (only underneath)
+      ctx.shadowColor = 'rgba(255, 215, 0, 0.6)';
+      ctx.shadowBlur = 8 * scale;
+      ctx.shadowOffsetY = 2;
+      // Money bag emoji - with shrinking animation
+      ctx.font = `${16 * scale}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('💰', this.x, this.y);
+    } else if (this.type === PickupType.HEALTH) {
+      // Red heart shape with glow - matching original
+      // Shadow must be set BEFORE drawing
+      ctx.shadowColor = 'rgba(255, 0, 0, 0.6)';
       ctx.shadowBlur = 10;
+      ctx.shadowOffsetY = 2;
+      
+      ctx.fillStyle = '#ff4444';
+      // Draw a heart shape with bezier curves
+      ctx.translate(this.x, this.y);
+      ctx.scale(scale, scale);
+      ctx.beginPath();
+      ctx.moveTo(0, -this.radius * 0.3);
+      ctx.bezierCurveTo(-this.radius, -this.radius, -this.radius, this.radius * 0.5, 0, this.radius);
+      ctx.bezierCurveTo(this.radius, this.radius * 0.5, this.radius, -this.radius, 0, -this.radius * 0.3);
+      ctx.fill();
     }
-
-    // Draw based on type
-    ctx.translate(this.x, this.y + bobOffset);
-
-    // Background circle
-    ctx.beginPath();
-    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-    ctx.fillStyle = this.color;
-    ctx.fill();
-
-    // Border
-    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Emoji (if supported)
-    ctx.font = `${this.radius * 1.2}px Arial`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(this.emoji, 0, 0);
 
     ctx.restore();
   }

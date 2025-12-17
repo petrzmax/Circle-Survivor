@@ -17,3 +17,19 @@ export type { WaveSystemConfig, WaveInfo } from './WaveSystem';
 export { AudioSystem, audio } from './AudioSystem';
 export type { OscillatorType, AudioSystemConfig } from './AudioSystem';
 export { SoundCategory } from './AudioSystem';
+
+// Phase 4 systems
+export { InputHandler } from './InputHandler';
+export type { KeyState, InputHandlerCallbacks } from './InputHandler';
+
+export { EffectsSystem, createEffectsState } from './EffectsSystem';
+export type { Explosion, ChainEffect, DeathParticle, Shockwave, EffectsState } from './EffectsSystem';
+
+export { HUD } from './HUD';
+export type { HUDPlayer, HUDWaveManager, HUDBoss } from './HUD';
+
+export { WeaponRenderer } from './WeaponRenderer';
+export type { RenderedWeapon, WeaponPosition, WeaponRenderPlayer } from './WeaponRenderer';
+
+export { WaveManager } from './WaveManager';
+export type { WaveUpdateResult } from './WaveManager';

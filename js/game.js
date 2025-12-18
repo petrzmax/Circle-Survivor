@@ -1,38 +1,8 @@
 // Main game controller
-
-// Definicje postaci
-const CHARACTER_TYPES = {
-    wypaleniec: {
-        name: 'Wypaleniec',
-        description: 'Były pracownik korpo. Wypalony, ale wściekły.',
-        color: '#ff6600',
-        maxHp: 80,
-        speed: 3.6,          // -10%
-        damageMultiplier: 1.25, // +25%
-        goldMultiplier: 1,
-        startingWeapon: 'shotgun'
-    },
-    cwaniak: {
-        name: 'Cwaniak',
-        description: 'Zawsze znajdzie lukę w systemie.',
-        color: '#00ff88',
-        maxHp: 70,
-        speed: 4.8,          // +20%
-        damageMultiplier: 1,
-        goldMultiplier: 1.3, // +30%
-        startingWeapon: 'smg'
-    },
-    normik: {
-        name: 'Normik',
-        description: 'Przeciętny Kowalski. Zbalansowany we wszystkim.',
-        color: '#4a9eff',
-        maxHp: 100,
-        speed: 4,
-        damageMultiplier: 1,
-        goldMultiplier: 1,
-        startingWeapon: 'pistol'
-    }
-};
+// CHARACTER_TYPES moved to js/config/shop-items-config.js
+// Collision logic -> js/systems/collision-system.js
+// Effects rendering -> js/systems/effects-system.js
+// HUD updates -> js/systems/hud.js
 
 class Game {
     constructor() {
@@ -71,166 +41,55 @@ class Game {
     }
 
     setupEventListeners() {
-        // Keyboard
-        window.addEventListener('keydown', (e) => {
-            this.keys[e.key.toLowerCase()] = true;
-            
-            // Pause toggle
-            if (e.key === 'Escape') {
-                if (this.state === 'playing') {
-                    this.pauseGame();
-                } else if (this.state === 'paused') {
-                    this.resumeGame();
-                }
-            }
-        });
-        window.addEventListener('keyup', (e) => {
-            this.keys[e.key.toLowerCase()] = false;
-        });
-        
-        // Character selection
-        document.querySelectorAll('.character-card').forEach(card => {
-            card.onclick = () => this.selectCharacter(card.dataset.character);
-        });
-        
-        // Buttons
-        document.getElementById('restart-btn').onclick = () => this.showCharacterSelect();
-        document.getElementById('start-wave-btn').onclick = () => this.startNextWave();
-        document.getElementById('resume-btn').onclick = () => this.resumeGame();
-        document.getElementById('quit-btn').onclick = () => this.quitToMenu();
-        document.getElementById('sound-toggle').onclick = () => this.toggleSound();
-        
-        // Leaderboard
-        document.getElementById('submit-score-btn').onclick = () => this.submitScore();
-        document.getElementById('player-name').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.submitScore();
-        });
-        
-        // Leaderboard tabs
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.onclick = () => this.switchLeaderboardTab(btn.dataset.tab);
-        });
-        
-        // Menu leaderboard
-        document.getElementById('menu-leaderboard-btn').onclick = () => this.openMenuLeaderboard();
-        document.getElementById('menu-leaderboard-close').onclick = () => this.closeMenuLeaderboard();
-        document.querySelectorAll('.menu-tab-btn').forEach(btn => {
-            btn.onclick = () => this.switchMenuLeaderboardTab(btn.dataset.tab);
-        });
+        // Delegated to InputHandler (js/systems/input-handler.js)
+        InputHandler.setup(this);
     }
     
     // Open leaderboard from menu
     async openMenuLeaderboard() {
-        document.getElementById('start-screen').classList.add('hidden');
-        document.getElementById('menu-leaderboard').classList.remove('hidden');
-        await this.showMenuLeaderboard('local');
+        await LeaderboardUI.openMenuLeaderboard(this);
     }
     
     // Close menu leaderboard
     closeMenuLeaderboard() {
-        document.getElementById('menu-leaderboard').classList.add('hidden');
-        document.getElementById('start-screen').classList.remove('hidden');
+        LeaderboardUI.closeMenuLeaderboard();
     }
     
     // Show menu leaderboard with specific tab
     async showMenuLeaderboard(tab = 'local') {
-        const listEl = document.getElementById('menu-leaderboard-list');
-        
-        // Pokaż loading dla globalnych wyników
-        if (tab === 'global') {
-            listEl.innerHTML = '<li style="text-align: center; color: #888; padding: 20px;">⏳ Ładowanie...</li>';
-        }
-        
-        // Update tab buttons
-        document.querySelectorAll('.menu-tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tab);
-        });
-        
-        const scores = await leaderboard.getScores(tab);
-        listEl.innerHTML = leaderboard.renderLeaderboard(scores);
-        
-        this.currentMenuLeaderboardTab = tab;
+        await LeaderboardUI.showMenuLeaderboard(tab);
     }
     
     // Switch menu leaderboard tab
     switchMenuLeaderboardTab(tab) {
-        this.showMenuLeaderboard(tab);
+        LeaderboardUI.switchMenuLeaderboardTab(tab);
     }
     
     // Submit score to leaderboard
     async submitScore() {
-        const nameInput = document.getElementById('player-name');
-        const submitBtn = document.getElementById('submit-score-btn');
-        const name = nameInput.value.trim();
-        
-        if (!name) {
-            nameInput.focus();
-            nameInput.style.borderColor = '#e94560';
-            setTimeout(() => nameInput.style.borderColor = '', 500);
-            return;
-        }
-        
-        // Disable button and show loading
-        submitBtn.disabled = true;
-        submitBtn.textContent = '⏳ Zapisywanie...';
-        
-        try {
-            await leaderboard.submitScore(
-                name, 
-                this.waveManager.waveNumber, 
-                this.xp, 
-                this.selectedCharacter
-            );
-            
-            // Hide submit form, show leaderboard
-            document.getElementById('score-submit').style.display = 'none';
-            this.showLeaderboard('local', name);
-            
-            // Save name for next time
-            localStorage.setItem('circle_survivor_player_name', name);
-        } catch (e) {
-            console.error('Error submitting score:', e);
-            submitBtn.textContent = '❌ Błąd - spróbuj ponownie';
-            submitBtn.disabled = false;
-        }
+        await LeaderboardUI.submitScore(this);
     }
     
     // Show leaderboard with specific tab
     async showLeaderboard(tab = 'local', highlightName = null) {
-        const listEl = document.getElementById('leaderboard-list');
-        
-        // Pokaż loading dla globalnych wyników
-        if (tab === 'global') {
-            listEl.innerHTML = '<li style="text-align: center; color: #888; padding: 20px;">⏳ Ładowanie...</li>';
-        }
-        
-        // Update tab buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tab);
-        });
-        
-        const scores = await leaderboard.getScores(tab);
-        listEl.innerHTML = leaderboard.renderLeaderboard(scores, highlightName);
-        
-        this.currentLeaderboardTab = tab;
-        this.highlightedName = highlightName;
+        await LeaderboardUI.showLeaderboard(tab, highlightName);
     }
     
     // Switch leaderboard tab
     switchLeaderboardTab(tab) {
-        this.showLeaderboard(tab, this.highlightedName);
+        LeaderboardUI.switchLeaderboardTab(tab);
     }
     
     selectCharacter(characterType) {
         this.selectedCharacter = characterType;
         
-        // Zaznacz wybraną kartę
+        // Mark selected card
         document.querySelectorAll('.character-card').forEach(card => {
             card.classList.remove('selected');
         });
         document.querySelector(`[data-character="${characterType}"]`).classList.add('selected');
         
-        // Rozpocznij grę po krótkim opóźnieniu
+        // Start game after short delay
         setTimeout(() => this.startGame(), 300);
     }
     
@@ -280,19 +139,19 @@ class Game {
 
     startGame() {
         if (!this.selectedCharacter) {
-            this.selectedCharacter = 'normik'; // Domyślna postać
+            this.selectedCharacter = 'normik'; // Default character
         }
         
-        // Inicjalizuj audio przy pierwszej interakcji
+        // Initialize audio on first interaction
         audio.init();
         
-        // Pobierz dane postaci
+        // Get character data
         const charData = CHARACTER_TYPES[this.selectedCharacter];
         
         // Reset everything
         this.player = new Player(this.canvas.width / 2, this.canvas.height / 2);
         
-        // Zastosuj statystyki postaci
+        // Apply character stats
         this.player.maxHp = charData.maxHp;
         this.player.hp = charData.maxHp;
         this.player.speed = charData.speed;
@@ -327,11 +186,11 @@ class Game {
     startNextWave() {
         this.shop.hideShop();
         this.state = 'playing';
-        // Odzyskaj pełne zdrowie na początku fali
+        // Recover full health at wave start
         this.player.hp = this.player.maxHp;
-        // Czyść pozostawione pickupy z poprzedniej fali
+        // Clear leftover pickups from previous wave
         this.pickups = [];
-        // Czyść wszystkie pociski (gracza i wrogów)
+        // Clear all bullets (player and enemy)
         this.bullets = [];
         this.enemyBullets = [];
         this.waveManager.startWave();
@@ -366,14 +225,14 @@ class Game {
             }
         }
         
-        // Sprawdź czy boss żyje
+        // Check if boss is alive
         const bossAlive = this.enemies.some(e => e.isBoss);
         
         // Update wave manager
         const waveResult = this.waveManager.update(deltaTime, this.canvas, bossAlive);
         this.enemies.push(...waveResult.enemies);
         
-        // Countdown sound i wizualizacja
+        // Countdown sound and visualization
         if (waveResult.countdown !== false) {
             audio.countdownTick(waveResult.countdown);
         }
@@ -383,10 +242,10 @@ class Game {
             return;
         }
         
-        // Find nearest enemy for auto-aim (główny cel dla renderowania)
+        // Find nearest enemy for auto-aim (main target for rendering)
         const nearestEnemy = this.findNearestEnemy();
         
-        // Fire weapons - każda broń celuje niezależnie
+        // Fire weapons - each weapon aims independently
         const newBullets = this.player.fireAllWeapons(nearestEnemy, currentTime, (x, y, maxRange) => this.findNearestEnemyFrom(x, y, maxRange));
         this.bullets.push(...newBullets);
         
@@ -404,10 +263,10 @@ class Game {
                     continue;
                 }
                 
-                // Boss zadaje x2 obrażenia przy dotknięciu
+                // Boss deals x1.25 contact damage
                 let damage = enemy.damage;
                 if (enemy.isBoss) {
-                    damage *= 2;
+                    damage *= GAME_BALANCE.boss.contactDamageMultiplier;
                 }
                 
                 const isDead = this.player.takeDamage(damage, currentTime);
@@ -434,10 +293,10 @@ class Game {
                 const attackResult = enemy.tryAttack(this.player, currentTime);
                 if (attackResult) {
                     if (attackResult.type === 'bullets') {
-                        // Zwykłe pociski lub spread
+                        // Regular bullets or spread
                         this.enemyBullets.push(...attackResult.bullets);
                     } else if (attackResult.type === 'shockwave') {
-                        // Shockwave - dodaj do efektów i sprawdź kolizję z graczem
+                        // Shockwave - add to effects and check player collision
                         this.handleShockwave(attackResult, currentTime);
                     }
                 }
@@ -488,7 +347,7 @@ class Game {
             
             // Remove short range bullets that expired OR grenades that should explode
             if (bullet.shouldExpire && bullet.shouldExpire()) {
-                // Granaty wybuchają po dystansie
+                // Grenades explode after distance
                 if (bullet.shouldExplodeOnExpire && bullet.explosive) {
                     const expRadius = bullet.explosionRadius * this.player.explosionRadius;
                     this.handleExplosion(bullet.x, bullet.y, expRadius, bullet.damage, bullet.isNuke, bullet.isHolyGrenade, bullet.isBanana, currentTime, bullet.isMini);
@@ -543,7 +402,7 @@ class Game {
                     
                     if (isDead) {
                         this.handleEnemyDeath(enemy, currentTime);
-                        // Sprawdź czy wróg jeszcze istnieje w tablicy (mógł być usunięty przez chain)
+                        // Check if enemy still exists in array (could be removed by chain)
                         const enemyIdx = this.enemies.indexOf(enemy);
                         if (enemyIdx !== -1) {
                             this.enemies.splice(enemyIdx, 1);
@@ -559,7 +418,7 @@ class Game {
         for (let i = this.pickups.length - 1; i >= 0; i--) {
             const pickup = this.pickups[i];
             
-            // Usuń wygasłe pickupy (złoto po 7 sekundach)
+            // Remove expired pickups (gold after 7 seconds)
             if (pickup.isExpired()) {
                 this.pickups.splice(i, 1);
                 continue;
@@ -585,364 +444,50 @@ class Game {
         this.updateHUD();
     }
     
-    // Aktualizacja shockwave'ów
+    // Shockwave update
     updateShockwaves(currentTime) {
-        if (!this.shockwaves) return;
-        
-        for (let i = this.shockwaves.length - 1; i >= 0; i--) {
-            const sw = this.shockwaves[i];
-            const age = Date.now() - sw.created;
-            const duration = 400; // ms
-            
-            // Rozszerzaj okrąg
-            sw.currentRadius = sw.maxRadius * Math.min(1, age / (duration * 0.7));
-            sw.alpha = 1 - (age / duration);
-            
-            // Zadaj obrażenia graczowi gdy fala go dotrze (tylko raz)
-            if (!sw.damageDealt) {
-                const distToPlayer = distance({x: sw.x, y: sw.y}, this.player);
-                if (distToPlayer <= sw.currentRadius && distToPlayer >= sw.currentRadius - 30) {
-                    // Gracz w zasięgu fali
-                    if (this.player.dodge > 0 && Math.random() < this.player.dodge) {
-                        audio.dodge();
-                    } else {
-                        const isDead = this.player.takeDamage(sw.damage, currentTime);
-                        if (isDead) this.gameOver();
-                    }
-                    sw.damageDealt = true;
-                }
-            }
-            
-            // Usuń zakończone
-            if (sw.alpha <= 0) {
-                this.shockwaves.splice(i, 1);
-            }
-        }
+        // Delegated to EffectsSystem (js/systems/effects-system.js)
+        const playerDied = EffectsSystem.updateShockwaves(this, currentTime);
+        if (playerDied) this.gameOver();
     }
     
     handleEnemyDeath(enemy, currentTime) {
-        const luck = this.player.luck;
-        
-        // Dźwięk śmierci
-        if (enemy.isBoss) {
-            audio.nukeExplosion();
-        } else {
-            audio.enemyDeath();
-        }
-        
-        // XP - zbierane natychmiast
-        const xpGained = Math.floor(enemy.xpValue * this.player.xpMultiplier);
-        this.xp += xpGained;
-        audio.collectXP();
-        
-        // Gold - boss dropuje więcej woreczków
-        if (enemy.isBoss) {
-            // Jeden duży woreczek (50% wartości) w centrum
-            this.pickups.push(new Pickup(
-                enemy.x,
-                enemy.y,
-                'gold',
-                Math.floor(enemy.goldValue * 0.5)
-            ));
-            
-            // 6-8 małych woreczków rozrzuconych dookoła
-            const smallBags = 6 + Math.floor(Math.random() * 3);
-            const smallValue = Math.floor((enemy.goldValue * 0.5) / smallBags);
-            for (let i = 0; i < smallBags; i++) {
-                const angle = (Math.PI * 2 / smallBags) * i;
-                const dist = 20 + Math.random() * 30;
-                this.pickups.push(new Pickup(
-                    enemy.x + Math.cos(angle) * dist,
-                    enemy.y + Math.sin(angle) * dist,
-                    'gold',
-                    smallValue
-                ));
-            }
-        } else {
-            // Zwykły wróg - jeden woreczek
-            this.pickups.push(new Pickup(
-                enemy.x + randomRange(-10, 10),
-                enemy.y + randomRange(-10, 10),
-                'gold',
-                enemy.goldValue
-            ));
-        }
-        
-        // Bonus gold z luck
-        if (luck > 0 && Math.random() < luck) {
-            this.pickups.push(new Pickup(
-                enemy.x + randomRange(-15, 15),
-                enemy.y + randomRange(-15, 15),
-                'gold',
-                Math.floor(enemy.goldValue * 0.5)
-            ));
-        }
-        
-        // Health drop chance (15% base + luck bonus)
-        if (Math.random() < (0.15 + luck * 0.2)) {
-            this.pickups.push(new Pickup(
-                enemy.x + randomRange(-10, 10),
-                enemy.y + randomRange(-10, 10),
-                'health',
-                10
-            ));
-        }
-        
-        // Efekt śmierci (particle burst)
-        this.createDeathEffect(enemy);
-        
-        // Exploder - deals damage to player if close
-        if (enemy.explodeOnDeath) {
-            const distToPlayer = distance(enemy, this.player);
-            if (distToPlayer < enemy.explosionRadius) {
-                const isDead = this.player.takeDamage(enemy.explosionDamage, currentTime);
-                if (isDead) this.gameOver();
-            }
-            // Visual explosion effect (add to effects array if we have one)
-            this.createExplosion(enemy.x, enemy.y, enemy.explosionRadius);
-        }
-        
-        // Splitter - spawns smaller enemies
-        if (enemy.splitOnDeath) {
-            for (let i = 0; i < enemy.splitCount; i++) {
-                const angle = (Math.PI * 2 / enemy.splitCount) * i;
-                const spawnX = enemy.x + Math.cos(angle) * 30;
-                const spawnY = enemy.y + Math.sin(angle) * 30;
-                this.enemies.push(new Enemy(spawnX, spawnY, 'swarm'));
-            }
-        }
+        // Delegated to EnemySpawner (js/systems/enemy-spawner.js)
+        EnemySpawner.handleEnemyDeath(this, enemy, currentTime);
     }
     
     // Obsługa eksplozji od broni (bazooka, miny, nuke, holyGrenade, banana)
     handleExplosion(x, y, radius, damage, isNuke = false, isHolyGrenade = false, isBanana = false, currentTime, isMini = false) {
-        // Dźwięk eksplozji
-        if (isNuke) {
-            audio.nukeExplosion();
-        } else {
-            audio.explosion();
-        }
-        
-        // Wizualny efekt
-        this.createExplosion(x, y, radius, isNuke, isHolyGrenade, isBanana);
-        
-        // Banan (nie mini) - spawn mini bananów
-        if (isBanana && !isMini) {
-            this.spawnMiniBananas(x, y, 4 + Math.floor(Math.random() * 3));
-        }
-        
-        // Zadaj obrażenia wszystkim wrogom w zasięgu
-        for (let i = this.enemies.length - 1; i >= 0; i--) {
-            const enemy = this.enemies[i];
-            const dist = distance({x, y}, enemy);
-            
-            if (dist < radius) {
-                // Obrażenia maleją z odległością
-                const damageFalloff = 1 - (dist / radius) * 0.5;
-                const isDead = enemy.takeDamage(damage * damageFalloff, x, y, this.player.knockback * 1.5);
-                
-                // Lifesteal from explosions
-                if (this.player.lifesteal > 0) {
-                    this.player.heal(damage * damageFalloff * this.player.lifesteal);
-                }
-                
-                if (isDead) {
-                    this.handleEnemyDeath(enemy, currentTime);
-                    this.enemies.splice(i, 1);
-                }
-            }
-        }
+        // Delegated to CombatSystem (js/systems/combat-system.js)
+        CombatSystem.handleExplosion(this, x, y, radius, damage, isNuke, isHolyGrenade, isBanana, currentTime, isMini);
     }
     
     // Spawn mini bananów po wybuchu głównego banana
     spawnMiniBananas(x, y, count) {
-        for (let i = 0; i < count; i++) {
-            const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.5;
-            const config = WEAPON_TYPES.minibanana;
-            
-            // Losowa prędkość (6-10) i dystans (60-100px) dla każdego mini banana
-            const randomSpeed = 6 + Math.random() * 4;
-            const randomRange = 60 + Math.random() * 40;
-            
-            const bullet = new Bullet(
-                x, y,
-                Math.cos(angle) * randomSpeed,
-                Math.sin(angle) * randomSpeed,
-                config.damage * this.player.damageMultiplier,
-                config.color,
-                false
-            );
-            
-            bullet.radius = config.bulletRadius;
-            bullet.explosive = config.explosive;
-            bullet.explosionRadius = config.explosionRadius * this.player.explosionRadius;
-            bullet.isBanana = config.isBanana;
-            bullet.isMini = true;
-            bullet.weaponCategory = config.weaponCategory;
-            bullet.explosiveRange = randomRange;
-            bullet.baseSpeed = randomSpeed;
-            bullet.startX = x;
-            bullet.startY = y;
-            bullet.distanceTraveled = 0;
-            
-            this.bullets.push(bullet);
-        }
+        // Delegated to CombatSystem (js/systems/combat-system.js)
+        CombatSystem.spawnMiniBananas(this, x, y, count);
     }
     
     // Chain effect - łączy wrogów i zadaje im obrażenia
     handleChainEffect(startX, startY, damage, chainCount, currentTime) {
-        if (!this.chainEffects) this.chainEffects = [];
-        
-        audio.chainEffect();
-        
-        const chainedEnemyIds = new Set(); // Używamy Set zamiast tablicy
-        let currentX = startX;
-        let currentY = startY;
-        const chainRange = 150;
-        
-        for (let i = 0; i < chainCount; i++) {
-            // Znajdź najbliższego wroga, który nie jest już w łańcuchu
-            let nearestDist = Infinity;
-            let nearestEnemy = null;
-            
-            for (const enemy of this.enemies) {
-                if (!enemy || chainedEnemyIds.has(enemy)) continue;
-                
-                const dist = distance({x: currentX, y: currentY}, enemy);
-                if (dist < chainRange && dist < nearestDist) {
-                    nearestDist = dist;
-                    nearestEnemy = enemy;
-                }
-            }
-            
-            if (!nearestEnemy) break;
-            
-            // Zapisz pozycję PRZED wszystkim innym
-            const enemyX = nearestEnemy.x;
-            const enemyY = nearestEnemy.y;
-            
-            // Dodaj do łańcucha
-            chainedEnemyIds.add(nearestEnemy);
-            
-            // Dodaj efekt wizualny
-            this.chainEffects.push({
-                x1: currentX, y1: currentY,
-                x2: enemyX, y2: enemyY,
-                created: Date.now(),
-                alpha: 1
-            });
-            
-            // Aktualizuj pozycję dla następnego łańcucha
-            currentX = enemyX;
-            currentY = enemyY;
-            
-            // Zadaj obrażenia
-            const isDead = nearestEnemy.takeDamage(damage, enemyX, enemyY, this.player.knockback);
-            
-            // Lifesteal z łańcucha
-            if (this.player.lifesteal > 0) {
-                this.player.heal(damage * this.player.lifesteal);
-            }
-            
-            if (isDead) {
-                this.handleEnemyDeath(nearestEnemy, currentTime);
-                const idx = this.enemies.indexOf(nearestEnemy);
-                if (idx !== -1) this.enemies.splice(idx, 1);
-            }
-        }
+        // Delegated to CombatSystem (js/systems/combat-system.js)
+        CombatSystem.handleChainEffect(this, startX, startY, damage, chainCount, currentTime);
     }
     
     createDeathEffect(enemy) {
-        if (!this.deathEffects) this.deathEffects = [];
-        
-        // Liczba cząsteczek zależna od typu wroga
-        let particleCount = 8;
-        let particleSize = 4;
-        let particleColor = enemy.color;
-        
-        if (enemy.isBoss) {
-            particleCount = 30;
-            particleSize = 8;
-        } else if (enemy.type === 'tank' || enemy.type === 'brute') {
-            particleCount = 15;
-            particleSize = 6;
-        } else if (enemy.type === 'swarm') {
-            particleCount = 5;
-            particleSize = 3;
-        }
-        
-        // Tworzenie cząsteczek
-        for (let i = 0; i < particleCount; i++) {
-            const angle = (Math.PI * 2 / particleCount) * i + Math.random() * 0.5;
-            const speed = 2 + Math.random() * 4;
-            
-            this.deathEffects.push({
-                x: enemy.x,
-                y: enemy.y,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                size: particleSize * (0.5 + Math.random() * 0.5),
-                color: particleColor,
-                alpha: 1,
-                life: 1,
-                decay: 0.02 + Math.random() * 0.02,
-                isBoss: enemy.isBoss
-            });
-        }
-        
-        // Dodatkowy efekt dla bossa - druga fala większych cząsteczek
-        if (enemy.isBoss) {
-            for (let i = 0; i < 20; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = 1 + Math.random() * 2;
-                
-                this.deathEffects.push({
-                    x: enemy.x,
-                    y: enemy.y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    size: 10 + Math.random() * 10,
-                    color: '#FFD700', // Złoty kolor
-                    alpha: 1,
-                    life: 1,
-                    decay: 0.01,
-                    isBoss: true
-                });
-            }
-        }
+        // Delegated to EffectsSystem (js/systems/effects-system.js)
+        EffectsSystem.createDeathEffect(this, enemy);
     }
     
     createExplosion(x, y, radius, isNuke = false, isHolyGrenade = false, isBanana = false) {
-        // Store explosion for rendering
-        if (!this.explosions) this.explosions = [];
-        this.explosions.push({
-            x, y, radius,
-            maxRadius: radius,
-            alpha: 1,
-            created: Date.now(),
-            isNuke: isNuke,
-            isHolyGrenade: isHolyGrenade,
-            isBanana: isBanana
-        });
+        // Delegated to EffectsSystem (js/systems/effects-system.js)
+        EffectsSystem.createExplosion(this, x, y, radius, isNuke, isHolyGrenade, isBanana);
     }
     
     // Obsługa shockwave od bossa
     handleShockwave(shockwave, currentTime) {
-        if (!this.shockwaves) this.shockwaves = [];
-        
-        // Dźwięk
-        audio.explosion();
-        
-        // Dodaj efekt wizualny
-        this.shockwaves.push({
-            x: shockwave.x,
-            y: shockwave.y,
-            maxRadius: shockwave.radius,
-            currentRadius: 0,
-            damage: shockwave.damage,
-            color: shockwave.color,
-            created: Date.now(),
-            damageDealt: false
-        });
+        // Delegated to EffectsSystem (js/systems/effects-system.js)
+        EffectsSystem.createShockwave(this, shockwave);
     }
 
     findNearestEnemy() {
@@ -1005,166 +550,8 @@ class Game {
             this.ctx.stroke();
         }
         
-        // Render explosions
-        if (this.explosions) {
-            for (let i = this.explosions.length - 1; i >= 0; i--) {
-                const exp = this.explosions[i];
-                const age = Date.now() - exp.created;
-                const duration = exp.isNuke ? 600 : 300;
-                exp.alpha = 1 - (age / duration);
-                
-                if (exp.alpha <= 0) {
-                    this.explosions.splice(i, 1);
-                    continue;
-                }
-                
-                this.ctx.save();
-                this.ctx.globalAlpha = exp.alpha;
-                this.ctx.beginPath();
-                this.ctx.arc(exp.x, exp.y, exp.radius * (1 - exp.alpha * 0.3), 0, Math.PI * 2);
-                
-                if (exp.isNuke) {
-                    // Nuke - zielona eksplozja z wieloma pierścieniami
-                    const gradient = this.ctx.createRadialGradient(exp.x, exp.y, 0, exp.x, exp.y, exp.radius);
-                    gradient.addColorStop(0, '#ffffff');
-                    gradient.addColorStop(0.3, '#00ff00');
-                    gradient.addColorStop(0.6, '#008800');
-                    gradient.addColorStop(1, 'rgba(0, 50, 0, 0)');
-                    this.ctx.fillStyle = gradient;
-                    this.ctx.fill();
-                    // Drugi pierścień
-                    this.ctx.beginPath();
-                    this.ctx.arc(exp.x, exp.y, exp.radius * 0.6 * (1 - exp.alpha * 0.5), 0, Math.PI * 2);
-                    this.ctx.strokeStyle = '#00ff00';
-                    this.ctx.lineWidth = 5;
-                    this.ctx.stroke();
-                } else if (exp.isHolyGrenade) {
-                    // Holy Grenade - złota święta eksplozja
-                    const gradient = this.ctx.createRadialGradient(exp.x, exp.y, 0, exp.x, exp.y, exp.radius);
-                    gradient.addColorStop(0, '#ffffff');
-                    gradient.addColorStop(0.3, '#ffdd00');
-                    gradient.addColorStop(0.6, '#ffaa00');
-                    gradient.addColorStop(1, 'rgba(255, 200, 0, 0)');
-                    this.ctx.fillStyle = gradient;
-                    this.ctx.fill();
-                    // Świetlisty krzyż
-                    this.ctx.strokeStyle = '#ffffff';
-                    this.ctx.lineWidth = 4;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(exp.x, exp.y - exp.radius * 0.5);
-                    this.ctx.lineTo(exp.x, exp.y + exp.radius * 0.5);
-                    this.ctx.moveTo(exp.x - exp.radius * 0.4, exp.y);
-                    this.ctx.lineTo(exp.x + exp.radius * 0.4, exp.y);
-                    this.ctx.stroke();
-                } else if (exp.isBanana) {
-                    // Banana bomb - żółta eksplozja
-                    const gradient = this.ctx.createRadialGradient(exp.x, exp.y, 0, exp.x, exp.y, exp.radius);
-                    gradient.addColorStop(0, '#ffff00');
-                    gradient.addColorStop(0.4, '#ffcc00');
-                    gradient.addColorStop(0.7, '#ff6600');
-                    gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
-                    this.ctx.fillStyle = gradient;
-                    this.ctx.fill();
-                } else {
-                    // Zwykła eksplozja
-                    this.ctx.fillStyle = '#ffff00';
-                    this.ctx.fill();
-                    this.ctx.strokeStyle = '#ff8800';
-                    this.ctx.lineWidth = 3;
-                    this.ctx.stroke();
-                }
-                this.ctx.restore();
-            }
-        }
-        
-        // Render chain effects
-        if (this.chainEffects) {
-            for (let i = this.chainEffects.length - 1; i >= 0; i--) {
-                const chain = this.chainEffects[i];
-                const age = Date.now() - chain.created;
-                const duration = 300;
-                chain.alpha = 1 - (age / duration);
-                
-                if (chain.alpha <= 0) {
-                    this.chainEffects.splice(i, 1);
-                    continue;
-                }
-                
-                this.ctx.save();
-                this.ctx.globalAlpha = chain.alpha;
-                this.ctx.strokeStyle = '#00ffff';
-                this.ctx.lineWidth = 3;
-                this.ctx.shadowColor = '#00ffff';
-                this.ctx.shadowBlur = 10;
-                this.ctx.beginPath();
-                this.ctx.moveTo(chain.x1, chain.y1);
-                this.ctx.lineTo(chain.x2, chain.y2);
-                this.ctx.stroke();
-                this.ctx.restore();
-            }
-        }
-        
-        // Render death effects (particle bursts)
-        if (this.deathEffects) {
-            for (let i = this.deathEffects.length - 1; i >= 0; i--) {
-                const p = this.deathEffects[i];
-                
-                // Aktualizacja pozycji i życia
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vx *= 0.95; // Tarcie
-                p.vy *= 0.95;
-                p.life -= p.decay;
-                p.alpha = p.life;
-                
-                if (p.life <= 0) {
-                    this.deathEffects.splice(i, 1);
-                    continue;
-                }
-                
-                this.ctx.save();
-                this.ctx.globalAlpha = p.alpha;
-                this.ctx.fillStyle = p.color;
-                
-                if (p.isBoss) {
-                    // Bossowe cząsteczki z poświatą
-                    this.ctx.shadowColor = p.color;
-                    this.ctx.shadowBlur = 10;
-                }
-                
-                this.ctx.beginPath();
-                this.ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-                this.ctx.fill();
-                this.ctx.restore();
-            }
-        }
-        
-        // Render shockwaves
-        if (this.shockwaves) {
-            for (const sw of this.shockwaves) {
-                if (sw.alpha <= 0) continue;
-                
-                this.ctx.save();
-                this.ctx.globalAlpha = sw.alpha * 0.6;
-                
-                // Zewnętrzny pierścień (rozszerzający się)
-                this.ctx.beginPath();
-                this.ctx.arc(sw.x, sw.y, sw.currentRadius, 0, Math.PI * 2);
-                this.ctx.strokeStyle = sw.color || '#ff4444';
-                this.ctx.lineWidth = 8;
-                this.ctx.shadowColor = sw.color || '#ff4444';
-                this.ctx.shadowBlur = 20;
-                this.ctx.stroke();
-                
-                // Wewnętrzny pierścień
-                this.ctx.beginPath();
-                this.ctx.arc(sw.x, sw.y, sw.currentRadius * 0.7, 0, Math.PI * 2);
-                this.ctx.lineWidth = 4;
-                this.ctx.stroke();
-                
-                this.ctx.restore();
-            }
-        }
+        // Render all effects (delegated to EffectsSystem)
+        EffectsSystem.renderAll(this.ctx, this);
         
         // Render pickups
         for (const pickup of this.pickups) {
@@ -1198,143 +585,24 @@ class Game {
         // Render boss health bar at top of screen
         this.renderBossHealthBar();
         
-        // Render enemy count
-        this.ctx.fillStyle = 'white';
-        this.ctx.font = '12px Arial';
-        this.ctx.fillText(`Wrogów: ${this.enemies.length}`, 10, this.canvas.height - 10);
+        // Render enemy count (delegated to HUD)
+        HUD.renderEnemyCount(this.ctx, this.enemies.length, this.canvas.height);
     }
     
-    // Duży pasek HP bossa na górze ekranu
+    // Big boss HP bar at top of screen
     renderBossHealthBar() {
-        // Znajdź aktywnego bossa
-        const boss = this.enemies.find(e => e.isBoss);
-        if (!boss) return;
-        
-        // Oznacz bossa, żeby nie rysować małego paska nad nim
-        boss.hasTopHealthBar = true;
-        
-        const barWidth = this.canvas.width * 0.5;
-        const barHeight = 18;
-        const barX = (this.canvas.width - barWidth) / 2;
-        const barY = 95; // Poniżej info o fali/czasie
-        const cornerRadius = 9;
-        
-        // Nazwa bossa z emoji
-        const bossEmoji = boss.type === 'boss' ? '👹' : 
-                         boss.type === 'bossSwarm' ? '🐝' :
-                         boss.type === 'bossTank' ? '🛡️' :
-                         boss.type === 'bossSpeed' ? '⚡' :
-                         boss.type === 'bossExploder' ? '💥' :
-                         boss.type === 'bossGhost' ? '👻' : '👹';
-        
-        // Nazwa bossa - styl pasujący do gry
-        this.ctx.save();
-        this.ctx.font = 'bold 13px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        this.ctx.fillText(`${bossEmoji} ${boss.bossName || 'BOSS'}`, this.canvas.width / 2 + 1, barY - 6);
-        this.ctx.fillStyle = '#ff6b6b';
-        this.ctx.fillText(`${bossEmoji} ${boss.bossName || 'BOSS'}`, this.canvas.width / 2, barY - 7);
-        
-        // Tło paska - ciemne z zaokrąglonymi rogami
-        this.ctx.beginPath();
-        this.ctx.roundRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4, cornerRadius + 2);
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-        this.ctx.fill();
-        
-        // Wewnętrzne tło paska
-        this.ctx.beginPath();
-        this.ctx.roundRect(barX, barY, barWidth, barHeight, cornerRadius);
-        this.ctx.fillStyle = '#1a1a2e';
-        this.ctx.fill();
-        
-        // Wypełnienie paska HP
-        const hpPercent = boss.hp / boss.maxHp;
-        const fillWidth = Math.max(0, barWidth * hpPercent);
-        
-        if (fillWidth > 0) {
-            // Gradient bazujący na HP
-            const gradient = this.ctx.createLinearGradient(barX, barY, barX + fillWidth, barY + barHeight);
-            if (hpPercent > 0.5) {
-                gradient.addColorStop(0, '#00d26a');
-                gradient.addColorStop(1, '#00b359');
-            } else if (hpPercent > 0.25) {
-                gradient.addColorStop(0, '#ffc107');
-                gradient.addColorStop(1, '#ff9800');
-            } else {
-                gradient.addColorStop(0, '#ff5252');
-                gradient.addColorStop(1, '#d32f2f');
-            }
-            
-            this.ctx.beginPath();
-            this.ctx.roundRect(barX, barY, fillWidth, barHeight, cornerRadius);
-            this.ctx.fillStyle = gradient;
-            this.ctx.fill();
-            
-            // Efekt blasku na górze paska
-            const shineGradient = this.ctx.createLinearGradient(barX, barY, barX, barY + barHeight / 2);
-            shineGradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
-            shineGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-            this.ctx.beginPath();
-            this.ctx.roundRect(barX, barY, fillWidth, barHeight / 2, [cornerRadius, cornerRadius, 0, 0]);
-            this.ctx.fillStyle = shineGradient;
-            this.ctx.fill();
-        }
-        
-        // Delikatna ramka
-        this.ctx.beginPath();
-        this.ctx.roundRect(barX, barY, barWidth, barHeight, cornerRadius);
-        this.ctx.strokeStyle = 'rgba(255, 107, 107, 0.4)';
-        this.ctx.lineWidth = 1;
-        this.ctx.stroke();
-        
-        // Tekst HP - mniejszy, po prawej stronie paska
-        const percentText = Math.ceil(hpPercent * 100) + '%';
-        this.ctx.font = 'bold 11px Arial';
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        this.ctx.textAlign = 'right';
-        this.ctx.fillText(percentText, barX + barWidth - 6, barY + 13);
-        
-        this.ctx.restore();
+        // Delegated to HUD system (js/systems/hud.js)
+        HUD.renderBossHealthBar(this.ctx, this.canvas.width, this.enemies);
     }
 
     updateHUD() {
-        // HP
-        const hpPercent = (this.player.hp / this.player.maxHp) * 100;
-        document.getElementById('hp-fill').style.width = `${hpPercent}%`;
-        document.getElementById('hp-text').textContent = `${Math.ceil(this.player.hp)}/${this.player.maxHp}`;
-        
-        // Wave info
-        document.getElementById('wave-num').textContent = this.waveManager.waveNumber;
-        const timerElement = document.getElementById('wave-timer');
-        const timeRemaining = Math.ceil(this.waveManager.timeRemaining);
-        timerElement.textContent = timeRemaining;
-        
-        // Countdown warning - czerwony kolor przy ostatnich 3 sekundach
-        const timerContainer = document.getElementById('timer');
-        if (timeRemaining <= 3 && timeRemaining > 0 && this.waveManager.isWaveActive) {
-            timerContainer.classList.add('countdown-warning');
-        } else {
-            timerContainer.classList.remove('countdown-warning');
-        }
-        
-        // Resources
-        document.getElementById('gold-amount').textContent = this.gold;
-        document.getElementById('xp-amount').textContent = this.xp;
-        
-        // Stats panel
-        // Armor używa formuły: reduction = armor / (armor + 100)
-        const armorReduction = this.player.armor / (this.player.armor + 100);
-        document.getElementById('stat-armor').textContent = `${Math.round(armorReduction * 100)}%`;
-        document.getElementById('stat-damage').textContent = `+${Math.round((this.player.damageMultiplier - 1) * 100)}%`;
-        document.getElementById('stat-crit').textContent = `${Math.round(this.player.critChance * 100)}%`;
-        document.getElementById('stat-dodge').textContent = `${Math.round(this.player.dodge * 100)}%`;
-        document.getElementById('stat-regen').textContent = this.player.regen.toFixed(1);
+        // Delegated to HUD system (js/systems/hud.js)
+        HUD.update(this.player, this.waveManager, this.gold, this.xp);
     }
 
     openShop() {
         this.state = 'shop';
-        this.waveManager.endWave(); // Zwiększ numer fali!
+        this.waveManager.endWave(); // Increase wave number!
         this.enemies = []; // Clear remaining enemies
         this.shop.resetReroll(); // Reset reroll count
         this.shop.generateItems(this.player);

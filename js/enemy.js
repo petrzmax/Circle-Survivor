@@ -1,251 +1,6 @@
 // Enemy classes
+// ENEMY_TYPES, BOSS_NAME_PREFIXES, BOSS_NAME_SUFFIXES, generateBossName() moved to js/config/enemies-config.js
 
-// Generator nazw bossów
-const BOSS_NAME_PREFIXES = [
-    'Kieł', 'Opus', 'Miłośnik', 'Marcel', 'Władca', 'Pan', 'Pogromca',
-    'Cień', 'Gniew', 'Strach', 'Żelazny', 'Krwawy', 'Złoty', 'Mroczny',
-    'Szalony', 'Bezlitosny', 'Potężny', 'Wielki', 'Starożytny', 'Niszczyciel', 'Ojciec', 'Matka'
-];
-
-const BOSS_NAME_SUFFIXES = [
-    'Beredy', 'Radzimirskiego', 'Biznesu', 'Kustosz', 'Nocy', 'Chaosu', 'Kubicy', 'Kamilka', 'Podróżnika',
-    'Ciemności', 'Zniszczenia', 'Śmierci', 'Otchłani', 'Piekła', 'Zagłady',
-    'Burzy', 'Cieni', 'Krwi', 'Gromu', 'Wieczności', 'Pożogi', 'Zarazy', 'Koszmaru'
-];
-
-function generateBossName() {
-    const prefix = BOSS_NAME_PREFIXES[Math.floor(Math.random() * BOSS_NAME_PREFIXES.length)];
-    const suffix = BOSS_NAME_SUFFIXES[Math.floor(Math.random() * BOSS_NAME_SUFFIXES.length)];
-    return `${prefix} ${suffix}`;
-}
-
-const ENEMY_TYPES = {
-    // Podstawowe
-    basic: {
-        name: 'Basic',
-        color: '#e94560',
-        radius: 15,
-        speed: 1.5,
-        hp: 20,
-        damage: 15,
-        xpValue: 10,
-        goldValue: 2
-    },
-    fast: {
-        name: 'Fast',
-        color: '#ff8c00',
-        radius: 10,
-        speed: 3.5,
-        hp: 10,
-        damage: 8,
-        xpValue: 15,
-        goldValue: 4
-    },
-    tank: {
-        name: 'Tank',
-        color: '#9b59b6',
-        radius: 28,
-        speed: 0.7,
-        hp: 100,
-        damage: 35,
-        xpValue: 35,
-        goldValue: 9,
-        canShoot: true,
-        fireRate: 3000,
-        bulletSpeed: 3,
-        bulletDamage: 15,
-        attackPatterns: ['single']
-    },
-    swarm: {
-        name: 'Swarm',
-        color: '#2ecc71',
-        radius: 7,
-        speed: 2.2,
-        hp: 5,
-        damage: 5,
-        xpValue: 5,
-        goldValue: 1
-    },
-    
-    // Nowe typy
-    sprinter: {
-        name: 'Sprinter',
-        color: '#00ffff',
-        radius: 9,
-        speed: 5,
-        hp: 8,
-        damage: 12,
-        xpValue: 20,
-        goldValue: 5
-    },
-    brute: {
-        name: 'Brute',
-        color: '#8b0000',
-        radius: 35,
-        speed: 0.5,
-        hp: 200,
-        damage: 60,
-        xpValue: 60,
-        goldValue: 15,
-        canShoot: true,
-        fireRate: 3000,
-        bulletSpeed: 3,
-        bulletDamage: 25,
-        attackPatterns: ['single']
-    },
-    ghost: {
-        name: 'Ghost',
-        color: 'rgba(255, 255, 255, 0.6)',
-        radius: 14,
-        speed: 2,
-        hp: 15,
-        damage: 20,
-        xpValue: 25,
-        goldValue: 6,
-        phasing: true // Może być półprzezroczysty
-    },
-    exploder: {
-        name: 'Exploder',
-        color: '#ffff00',
-        radius: 12,
-        speed: 1.8,
-        hp: 25,
-        damage: 5,
-        xpValue: 20,
-        goldValue: 5,
-        explodeOnDeath: true,
-        explosionRadius: 60,
-        explosionDamage: 15
-    },
-    zigzag: {
-        name: 'Zigzag',
-        color: '#ff69b4',
-        radius: 11,
-        speed: 2.5,
-        hp: 18,
-        damage: 8,
-        xpValue: 18,
-        goldValue: 4,
-        zigzag: true
-    },
-    splitter: {
-        name: 'Splitter',
-        color: '#7cfc00',
-        radius: 20,
-        speed: 1.2,
-        hp: 40,
-        damage: 12,
-        xpValue: 25,
-        goldValue: 7,
-        splitOnDeath: true,
-        splitCount: 3
-    },
-    
-    // ============ BOSSY ============
-    boss: {
-        name: 'BOSS',
-        color: '#ff0000',
-        radius: 50,
-        speed: 0.4,
-        hp: 750,
-        damage: 50,
-        xpValue: 200,
-        goldValue: 50,
-        isBoss: true,
-        canShoot: true,
-        fireRate: 1300,
-        bulletSpeed: 4,
-        bulletDamage: 20,
-        attackPatterns: ['single', 'spread']
-    },
-    bossSwarm: {
-        name: 'BOSS',
-        color: '#00ff00',
-        radius: 45,
-        speed: 0.6,
-        hp: 600,
-        damage: 30,
-        xpValue: 250,
-        goldValue: 60,
-        isBoss: true,
-        splitOnDeath: true,
-        splitCount: 8,
-        canShoot: true,
-        fireRate: 1000,
-        bulletSpeed: 5,
-        bulletDamage: 10,
-        attackPatterns: ['single', 'spread']
-    },
-    bossTank: {
-        name: 'BOSS',
-        color: '#8b00ff',
-        radius: 65,
-        speed: 0.25,
-        hp: 1500,
-        damage: 80,
-        xpValue: 300,
-        goldValue: 75,
-        isBoss: true,
-        canShoot: true,
-        fireRate: 2000,
-        bulletSpeed: 3,
-        bulletDamage: 35,
-        attackPatterns: ['single', 'shockwave']
-    },
-    bossSpeed: {
-        name: 'BOSS',
-        color: '#00ffff',
-        radius: 40,
-        speed: 1.2,
-        hp: 500,
-        damage: 35,
-        xpValue: 220,
-        goldValue: 55,
-        isBoss: true,
-        zigzag: true,
-        canShoot: true,
-        fireRate: 550,
-        bulletSpeed: 7,
-        bulletDamage: 12,
-        attackPatterns: ['single', 'spread']
-    },
-    bossExploder: {
-        name: 'BOSS',
-        color: '#ffff00',
-        radius: 55,
-        speed: 0.35,
-        hp: 900,
-        damage: 40,
-        xpValue: 280,
-        goldValue: 70,
-        isBoss: true,
-        explodeOnDeath: true,
-        explosionRadius: 150,
-        explosionDamage: 50,
-        canShoot: true,
-        fireRate: 1600,
-        bulletSpeed: 4,
-        bulletDamage: 25,
-        attackPatterns: ['spread', 'shockwave']
-    },
-    bossGhost: {
-        name: 'BOSS',
-        color: 'rgba(255, 255, 255, 0.7)',
-        radius: 48,
-        speed: 0.55,
-        hp: 700,
-        damage: 45,
-        xpValue: 260,
-        goldValue: 65,
-        isBoss: true,
-        phasing: true,
-        canShoot: true,
-        fireRate: 1200,
-        bulletSpeed: 5,
-        bulletDamage: 18,
-        attackPatterns: ['single', 'spread']
-    }
-};
 class Enemy {
     constructor(x, y, type = 'basic') {
         const config = ENEMY_TYPES[type];
@@ -275,7 +30,7 @@ class Enemy {
         // Boss name
         if (this.isBoss) {
             this.bossName = generateBossName();
-            // Dźwięk pojawienia się bossa
+            // Boss spawn sound
             if (typeof audio !== 'undefined') {
                 audio.bossSpawn();
             }
@@ -297,7 +52,7 @@ class Enemy {
         this.zigzagTimer = 0;
         this.zigzagDir = 1;
         
-        // Flaga - czy wróg już wszedł na planszę (spawn jest poza ekranem)
+        // Flag - whether enemy has entered arena (spawn is off-screen)
         this.hasEnteredArena = false;
     }
 
@@ -331,7 +86,7 @@ class Enemy {
         this.knockbackX *= 0.8;
         this.knockbackY *= 0.8;
         
-        // Sprawdź czy wróg wszedł na planszę (cały jest wewnątrz)
+        // Check if enemy entered arena (fully inside)
         const isFullyInside = this.x > this.radius && this.x < canvasWidth - this.radius &&
                               this.y > this.radius && this.y < canvasHeight - this.radius;
         
@@ -339,24 +94,24 @@ class Enemy {
             this.hasEnteredArena = true;
         }
         
-        // Ogranicz pozycję tylko jeśli wróg już wszedł na planszę
+        // Limit position only if enemy has entered arena
         if (this.hasEnteredArena) {
             this.x = Math.max(this.radius, Math.min(canvasWidth - this.radius, this.x));
             this.y = Math.max(this.radius, Math.min(canvasHeight - this.radius, this.y));
         }
     }
     
-    // Strzelanie bossa do gracza - różne wzorce ataków
+    // Boss shooting at player - different attack patterns
     tryAttack(player, currentTime) {
         if (!this.canShoot) return null;
         if (currentTime - this.lastFireTime < this.fireRate) return null;
         
         this.lastFireTime = currentTime;
         
-        // Losuj wzorzec ataku
+        // Random attack pattern
         const pattern = this.attackPatterns[Math.floor(Math.random() * this.attackPatterns.length)];
         
-        // Kierunek do gracza
+        // Direction to player
         const dx = player.x - this.x;
         const dy = player.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -367,7 +122,7 @@ class Enemy {
         
         switch (pattern) {
             case 'spread':
-                // Strzał wachlarzowy - 5 pocisków w łuku 60°
+                // Fan shot - 5 bullets in 60° arc
                 const spreadBullets = [];
                 const spreadCount = 5;
                 const spreadAngle = Math.PI / 3; // 60 stopni
@@ -381,7 +136,7 @@ class Enemy {
                 return { type: 'bullets', bullets: spreadBullets };
                 
             case 'shockwave':
-                // Fala uderzeniowa - atak obszarowy
+                // Shockwave - area attack
                 return { 
                     type: 'shockwave', 
                     x: this.x, 
@@ -393,14 +148,14 @@ class Enemy {
                 
             case 'single':
             default:
-                // Pojedynczy strzał
+                // Single shot
                 const vx = (dx / dist) * this.bulletSpeed;
                 const vy = (dy / dist) * this.bulletSpeed;
                 return { type: 'bullets', bullets: [new EnemyBullet(this.x, this.y, vx, vy, this.bulletDamage, this.color)] };
         }
     }
     
-    // Zachowaj starą metodę dla kompatybilności
+    // Keep old method for compatibility
     tryShoot(player, currentTime) {
         const result = this.tryAttack(player, currentTime);
         if (!result) return null;
@@ -414,7 +169,7 @@ class Enemy {
         this.hp -= amount;
         
         // Knockback (less for bosses)
-        const knockbackStrength = (this.isBoss ? 1 : 3) * knockbackMultiplier;
+        const knockbackStrength = (this.isBoss ? GAME_BALANCE.boss.knockbackResistance : GAME_BALANCE.enemy.knockbackMultiplier) * knockbackMultiplier;
         const dx = this.x - bulletX;
         const dy = this.y - bulletY;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -489,7 +244,7 @@ class Enemy {
             ctx.closePath();
             ctx.fill();
             
-            // Nazwa bossa
+            // Boss name
             ctx.font = 'bold 14px Arial';
             ctx.textAlign = 'center';
             ctx.fillStyle = '#ff0000';
@@ -510,164 +265,5 @@ class Enemy {
     }
 }
 
-// Klasa pocisku wroga (bossa)
-class EnemyBullet {
-    constructor(x, y, vx, vy, damage, color) {
-        this.x = x;
-        this.y = y;
-        this.vx = vx;
-        this.vy = vy;
-        this.damage = damage;
-        this.color = color;
-        this.radius = 6;
-    }
-    
-    update() {
-        this.x += this.vx;
-        this.y += this.vy;
-    }
-    
-    isOffScreen(canvas) {
-        return this.x < -50 || this.x > canvas.width + 50 ||
-               this.y < -50 || this.y > canvas.height + 50;
-    }
-    
-    render(ctx) {
-        ctx.save();
-        
-        // Poświata
-        ctx.shadowColor = this.color;
-        ctx.shadowBlur = 10;
-        
-        // Główny pocisk
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        
-        // Ciemniejszy środek
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius * 0.5, 0, Math.PI * 2);
-        ctx.fillStyle = '#000';
-        ctx.fill();
-        
-        ctx.restore();
-    }
-}
-// Pickup class (XP, Gold, Health)
-class Pickup {
-    constructor(x, y, type, value) {
-        this.x = x;
-        this.y = y;
-        this.baseY = y; // Bazowa pozycja Y dla animacji
-        this.type = type; // 'xp', 'gold', or 'health'
-        this.value = value;
-        this.radius = 8;
-        this.magnetSpeed = 5;
-        this.beingCollected = false;
-        this.animationOffset = Math.random() * Math.PI * 2; // Losowy offset animacji
-        this.spawnTime = Date.now();
-        this.lifetime = this.type === 'gold' ? 3000 : 15000; // 3s dla złota, 15s dla health
-        this.shrinkDuration = 1000; // Ostatnia 1 sekunda - kurczenie
-    }
-    
-    isExpired() {
-        // Health i gold znikają po czasie
-        if (this.type !== 'gold' && this.type !== 'health') return false;
-        if (this.beingCollected) return false; // Nie znikaj jak jest zbierane
-        return Date.now() - this.spawnTime > this.lifetime;
-    }
-    
-    // Zwraca skalę od 0 do 1 (1 = pełny rozmiar, 0 = zniknięty)
-    getScale() {
-        if (this.type !== 'gold' && this.type !== 'health') return 1;
-        if (this.beingCollected) return 1;
-        
-        const age = Date.now() - this.spawnTime;
-        const shrinkStart = this.lifetime - this.shrinkDuration;
-        
-        if (age < shrinkStart) return 1;
-        
-        // Płynne kurczenie w ostatniej sekundzie
-        const shrinkProgress = (age - shrinkStart) / this.shrinkDuration;
-        return Math.max(0, 1 - shrinkProgress);
-    }
-
-    update(player) {
-        const dist = distance(this, player);
-        
-        // Animacja góra-dół (tylko gdy nie jest zbierane)
-        if (!this.beingCollected) {
-            const time = (Date.now() - this.spawnTime) / 1000;
-            this.y = this.baseY + Math.sin(time * 3 + this.animationOffset) * 1.5;
-        }
-        
-        // Magnet effect
-        if (dist < player.pickupRange || this.beingCollected) {
-            this.beingCollected = true;
-            const dx = player.x - this.x;
-            const dy = player.y - this.y;
-            const norm = normalize({ x: dx, y: dy });
-            this.x += norm.x * this.magnetSpeed;
-            this.y += norm.y * this.magnetSpeed;
-            this.baseY = this.y; // Aktualizuj bazową pozycję
-        }
-        
-        // Collect
-        if (dist < player.radius) {
-            return true;
-        }
-        return false;
-    }
-
-    render(ctx) {
-        ctx.save();
-        
-        // Zastosuj skalę (animacja kurczenia dla złota)
-        const scale = this.getScale();
-        if (scale < 1) {
-            ctx.globalAlpha = scale; // Też dodaj zanikanie przezroczystości
-        }
-        
-        if (this.type === 'xp') {
-            // Green diamond (XP) - już nie używane, ale zostawiam na wszelki wypadek
-            ctx.fillStyle = '#2ecc71';
-            ctx.translate(this.x, this.y);
-            ctx.rotate(Math.PI / 4);
-            ctx.fillRect(-this.radius / 2, -this.radius / 2, this.radius, this.radius);
-        } else if (this.type === 'gold') {
-            // Delikatna poświata złota (tylko pod spodem)
-            ctx.shadowColor = 'rgba(255, 215, 0, 0.6)';
-            ctx.shadowBlur = 8 * scale;
-            ctx.shadowOffsetY = 2;
-            // Money bag emoji - z animacją kurczenia
-            ctx.font = `${16 * scale}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('💰', this.x, this.y);
-        } else if (this.type === 'health') {
-            // Zastosuj skalę dla health też
-            const healthScale = this.getScale();
-            if (healthScale < 1) {
-                ctx.globalAlpha = healthScale;
-            }
-            
-            // Red heart / cross for health - z poświatą
-            ctx.shadowColor = 'rgba(255, 0, 0, 0.6)';
-            ctx.shadowBlur = 10 * healthScale;
-            ctx.shadowOffsetY = 2;
-            
-            ctx.fillStyle = '#ff4444';
-            // Draw a heart shape
-            ctx.translate(this.x, this.y);
-            ctx.scale(healthScale, healthScale);
-            ctx.beginPath();
-            ctx.moveTo(0, -this.radius * 0.3);
-            ctx.bezierCurveTo(-this.radius, -this.radius, -this.radius, this.radius * 0.5, 0, this.radius);
-            ctx.bezierCurveTo(this.radius, this.radius * 0.5, this.radius, -this.radius, 0, -this.radius * 0.3);
-            ctx.fill();
-        }
-        
-        ctx.restore();
-    }
-}
+// EnemyBullet class moved to js/entities/enemy-bullet.js
+// Pickup class moved to js/entities/pickup.js

@@ -167,10 +167,7 @@ export class Player extends Entity implements IHealth {
     // Check invincibility
     if (currentTime < this.invincibleUntil) return false;
 
-    // Dodge chance
-    if (Math.random() < this.dodge) {
-      return false; // Dodged!
-    }
+    // Note: Dodge is checked in Game.ts before calling this method
 
     // Armor reduction (diminishing returns)
     const reduction =

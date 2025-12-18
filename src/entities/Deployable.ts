@@ -197,28 +197,22 @@ export class Deployable extends Entity implements IExpirable {
   // ============ Draw Helpers ============
 
   private drawMine(ctx: CanvasRenderingContext2D): void {
-    // Pulsing effect when armed
-    const pulse = this.isArmed ? 1 + Math.sin(this.animationTime * 4) * 0.1 : 0.8;
-
-    // Main body
+    // Mine - dark circle with blinking red light when armed (like original)
     ctx.beginPath();
-    ctx.arc(0, 0, this.radius * pulse, 0, Math.PI * 2);
-    ctx.fillStyle = this.isArmed ? this.color : '#666666';
+    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = '#333';
     ctx.fill();
-
-    // Warning indicator
+    ctx.strokeStyle = '#666';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Blinking red light when armed
     if (this.isArmed) {
       ctx.beginPath();
-      ctx.arc(0, 0, this.radius * 0.4, 0, Math.PI * 2);
-      ctx.fillStyle = '#ff0000';
+      ctx.arc(0, -3, 3, 0, Math.PI * 2);
+      ctx.fillStyle = Math.floor(Date.now() / 200) % 2 ? '#ff0000' : '#440000';
       ctx.fill();
     }
-
-    // Trigger radius indicator (debug)
-    // ctx.beginPath();
-    // ctx.arc(0, 0, this.triggerRadius, 0, Math.PI * 2);
-    // ctx.strokeStyle = 'rgba(255, 0, 0, 0.2)';
-    // ctx.stroke();
   }
 
   private drawTurret(ctx: CanvasRenderingContext2D): void {

@@ -299,9 +299,24 @@ export class Projectile extends Entity implements IExpirable {
   // ============ Draw Helpers ============
 
   private drawBullet(ctx: CanvasRenderingContext2D): void {
+    // Standard bullet with glow
     ctx.beginPath();
     ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
     ctx.fillStyle = this.color;
+    ctx.fill();
+
+    // Crit indicator - red glow
+    if (this.isCrit) {
+      ctx.shadowColor = '#ff0000';
+      ctx.shadowBlur = 15;
+      ctx.strokeStyle = '#ff0000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else {
+      // Normal glow matching bullet color
+      ctx.shadowColor = this.color;
+      ctx.shadowBlur = 10;
+    }
     ctx.fill();
   }
 
@@ -346,17 +361,30 @@ export class Projectile extends Entity implements IExpirable {
   }
 
   private drawRocket(ctx: CanvasRenderingContext2D): void {
-    // Rocket with trail
+    // Bazooka rocket with gradient and trail
+    // Note: We're already translated, so use 0,0 as center
+    // But for gradient we need actual position - restore and use this.x, this.y
+    ctx.restore();
+    ctx.save();
+    
+    // Radial gradient from yellow center to dark red edge
     ctx.beginPath();
-    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-    ctx.fillStyle = this.color;
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+    gradient.addColorStop(0, '#ffff00');
+    gradient.addColorStop(0.7, '#ff4400');
+    gradient.addColorStop(1, '#aa0000');
+    ctx.fillStyle = gradient;
     ctx.fill();
-
-    // Glow effect
+    
+    // Trail behind rocket (using velocity direction)
+    const vel = this.getVelocity();
     ctx.beginPath();
-    ctx.arc(0, 0, this.radius * 1.5, 0, Math.PI * 2);
-    ctx.fillStyle = `${this.color}44`;
-    ctx.fill();
+    ctx.moveTo(this.x - vel.vx * 2, this.y - vel.vy * 2);
+    ctx.lineTo(this.x - vel.vx * 4, this.y - vel.vy * 4);
+    ctx.strokeStyle = '#ff8800';
+    ctx.lineWidth = 4;
+    ctx.stroke();
   }
 
   private drawFlame(ctx: CanvasRenderingContext2D): void {

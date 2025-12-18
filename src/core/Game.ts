@@ -38,6 +38,7 @@ interface WeaponInstance {
   lastFireTime: number;
   multishot: number;
   name: string;
+  fireOffset: number; // Staggered shooting offset
 }
 
 // ============ Game Class ============
@@ -341,7 +342,36 @@ export class Game {
       lastFireTime: 0,
       multishot: 0, // Extra projectiles from items (not base bulletCount)
       name: config.name,
+      fireOffset: 0,
     });
+
+    // Recalculate fire offsets for staggered shooting
+    this.recalculateFireOffsets();
+  }
+
+  /**
+   * Spread shots evenly for weapons of the same type.
+   * Assigns staggered offsets so weapons don't all fire at once.
+   */
+  recalculateFireOffsets(): void {
+    // Group weapons by type
+    const weaponsByType: Record<string, WeaponInstance[]> = {};
+    for (const weapon of this.weapons) {
+      if (!weaponsByType[weapon.type]) {
+        weaponsByType[weapon.type] = [];
+      }
+      weaponsByType[weapon.type]!.push(weapon);
+    }
+
+    // Assign staggered offsets within each type group
+    for (const type in weaponsByType) {
+      const weapons = weaponsByType[type]!;
+      const count = weapons.length;
+      for (let i = 0; i < count; i++) {
+        // Offset each weapon by fraction of fire rate
+        weapons[i]!.fireOffset = (i / count) * weapons[i]!.config.fireRate;
+      }
+    }
   }
 
   // ============ Game Loop ============
@@ -641,7 +671,11 @@ export class Game {
       const levelMultiplier = 1 + (weapon.level - 1) * 0.1;
       const fireRate = config.fireRate / levelMultiplier / player.attackSpeedMultiplier;
 
-      if (currentTime - weapon.lastFireTime < fireRate) continue;
+      // Include fire offset for staggered shooting
+      if (currentTime - weapon.lastFireTime < fireRate + weapon.fireOffset) continue;
+
+      // Reset offset after first shot (staggering only applies to initial burst)
+      weapon.fireOffset = 0;
 
       // Get weapon position (use currentTarget for positioning only)
       const weaponPos = player.getWeaponPosition(i, player.currentTarget);
@@ -713,12 +747,12 @@ export class Game {
       const projectile = new Projectile({
         x: pos.x,
         y: pos.y,
-        radius: config.bulletRadius ?? 5,
+        radius: config.bulletRadius ?? 4, // Default 4 like original
         type: this.getProjectileType(weapon.type),
         damage: finalDamage,
         ownerId: player.id,
         color: config.color ?? '#ffff00',
-        maxDistance: config.range ?? 500,
+        maxDistance: config.shortRange ? (config.maxDistance ?? config.range ?? 500) : 0, // 0 = infinite
         pierce: config.pierce ? { pierceCount: (config.pierceCount ?? 1) + player.pierce, hitEnemies: new Set() } : undefined,
         chain: config.chain ? { chainCount: config.chainCount ?? 3, chainRange: 150, chainedEnemies: new Set() } : undefined,
         explosive: config.explosive
@@ -749,6 +783,9 @@ export class Game {
       [WeaponType.NUKE]: ProjectileType.NUKE,
       [WeaponType.FLAMETHROWER]: ProjectileType.FLAMETHROWER,
       [WeaponType.LASER]: ProjectileType.STANDARD, // Laser uses standard projectile type
+      [WeaponType.BANANA]: ProjectileType.BANANA,
+      [WeaponType.HOLY_GRENADE]: ProjectileType.HOLY_GRENADE,
+      [WeaponType.CROSSBOW]: ProjectileType.CROSSBOW_BOLT,
     };
     return mapping[weaponType] ?? ProjectileType.STANDARD;
   }
@@ -831,13 +868,49 @@ export class Game {
     // Award XP
     this.xp += enemy.xpValue;
 
-    // Drop gold
-    const goldPickup = createGoldPickup(enemy.x, enemy.y, enemy.goldValue);
-    this.entityManager.addPickup(goldPickup);
-
-    // Chance for health drop (15% base + luck bonus)
+    // Drop gold - bosses drop multiple bags for satisfying effect
     const player = this.entityManager.getPlayer();
     const luck = player?.luck ?? 0;
+    
+    if (enemy.isBoss) {
+      // One large bag (50% of value) in center
+      const bigPickup = createGoldPickup(enemy.x, enemy.y, Math.floor(enemy.goldValue * 0.5));
+      this.entityManager.addPickup(bigPickup);
+      
+      // 6-8 small bags scattered around
+      const smallBags = 6 + Math.floor(Math.random() * 3);
+      const smallValue = Math.floor((enemy.goldValue * 0.5) / smallBags);
+      for (let i = 0; i < smallBags; i++) {
+        const angle = (Math.PI * 2 / smallBags) * i;
+        const dist = 20 + Math.random() * 30;
+        const smallPickup = createGoldPickup(
+          enemy.x + Math.cos(angle) * dist,
+          enemy.y + Math.sin(angle) * dist,
+          smallValue
+        );
+        this.entityManager.addPickup(smallPickup);
+      }
+    } else {
+      // Normal enemy - one bag with random offset
+      const goldOffsetX = (Math.random() - 0.5) * 20;
+      const goldOffsetY = (Math.random() - 0.5) * 20;
+      const goldPickup = createGoldPickup(enemy.x + goldOffsetX, enemy.y + goldOffsetY, enemy.goldValue);
+      this.entityManager.addPickup(goldPickup);
+    }
+    
+    // Bonus gold from luck
+    if (luck > 0 && Math.random() < luck) {
+      const bonusOffsetX = (Math.random() - 0.5) * 30;
+      const bonusOffsetY = (Math.random() - 0.5) * 30;
+      const bonusPickup = createGoldPickup(
+        enemy.x + bonusOffsetX,
+        enemy.y + bonusOffsetY,
+        Math.floor(enemy.goldValue * 0.5)
+      );
+      this.entityManager.addPickup(bonusPickup);
+    }
+
+    // Chance for health drop (15% base + luck bonus)
     const healthDropChance = GAME_BALANCE.drops.healthDropChance + luck * GAME_BALANCE.drops.healthDropLuckMultiplier;
     if (Math.random() < healthDropChance) {
       const healthPickup = createHealthPickup(enemy.x + 20, enemy.y, GAME_BALANCE.drops.healthDropValue);

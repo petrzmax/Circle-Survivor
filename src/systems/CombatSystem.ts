@@ -9,23 +9,29 @@ import { CollisionResult } from './CollisionSystem';
 import { Enemy } from '@/entities/Enemy';
 import { Projectile } from '@/entities/Projectile';
 import { Pickup, createGoldPickup, createHealthPickup } from '@/entities/Pickup';
-import { VisualEffect, PickupType } from '@/types/enums';
+import { VisualEffect, PickupType, ProjectileType } from '@/types/enums';
+import { WEAPON_TYPES } from '@/config/weapons.config';
 
 /**
  * Explosion event data
  */
 export interface ExplosionEvent {
+  // TODO, use vector2
   x: number;
   y: number;
   radius: number;
   damage: number;
   visualEffect: VisualEffect;
   sourceId: number;
+  // TODO - some enum / type instead of booleans
+  isBanana?: boolean;
+  isMini?: boolean;
 }
 
 /**
  * Chain lightning event data
  */
+// TODO - remove everything related to chain
 export interface ChainEvent {
   targets: Array<{ enemy: Enemy; damage: number }>;
   sourceProjectile: Projectile;
@@ -77,6 +83,7 @@ export class CombatSystem {
     for (const enemy of collisions.playerEnemyCollisions) {
       const isDead = player.takeDamage(enemy.damage, currentTime);
       
+      // TODO - Event types should be enums / class with static strings
       EventBus.emit('playerHit', {
         player,
         damage: enemy.damage,
@@ -166,6 +173,8 @@ export class CombatSystem {
 
     // Handle explosive projectiles
     if (projectile.isExplosive() && projectile.explosive) {
+      const isBanana = projectile.type === ProjectileType.BANANA || projectile.type === ProjectileType.MINI_BANANA;
+      const isMini = projectile.type === ProjectileType.MINI_BANANA;
       this.queueExplosion({
         x: projectile.x,
         y: projectile.y,
@@ -173,6 +182,8 @@ export class CombatSystem {
         damage: projectile.explosive.explosionDamage * damageMultiplier,
         visualEffect: projectile.explosive.visualEffect ?? VisualEffect.STANDARD,
         sourceId: projectile.id,
+        isBanana,
+        isMini,
       });
     }
 
@@ -291,7 +302,7 @@ export class CombatSystem {
    * Process a single explosion
    */
   private processExplosion(explosion: ExplosionEvent, damageMultiplier: number): void {
-    const { x, y, radius, damage, visualEffect } = explosion;
+    const { x, y, radius, damage, visualEffect, isBanana, isMini } = explosion;
 
     // Find enemies in explosion radius
     const enemies = this.entityManager.getEnemiesInRadius(x, y, radius);
@@ -310,12 +321,18 @@ export class CombatSystem {
       }
     }
 
+    // Banana (not mini) - spawn mini bananas
+    if (isBanana && !isMini) {
+      this.spawnMiniBananas(x, y, 4 + Math.floor(Math.random() * 3), damageMultiplier);
+    }
+
     // Emit explosion event for visual effects
     EventBus.emit('explosionTriggered', {
       position: { x, y },
       radius,
       damage,
       visualEffect,
+      isBanana,
     });
   }
 
@@ -419,5 +436,41 @@ export class CombatSystem {
    */
   setHealthDropChance(chance: number): void {
     this.healthDropChance = Math.max(0, Math.min(1, chance));
+  }
+
+  /**
+   * Spawn mini bananas after main banana explosion
+   */
+  private spawnMiniBananas(x: number, y: number, count: number, damageMultiplier: number): void {
+    const config = WEAPON_TYPES.minibanana;
+    const player = this.entityManager.getPlayer();
+    const explosionRadiusMultiplier = player?.explosionRadius ?? 1;
+
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.5;
+      
+      // Random speed (6-10) and distance (60-100px) for each mini banana
+      const randomSpeed = 6 + Math.random() * 4;
+      const randomRange = 60 + Math.random() * 40;
+      
+      const projectile = new Projectile({
+        x,
+        y,
+        vx: Math.cos(angle) * randomSpeed,
+        vy: Math.sin(angle) * randomSpeed,
+        damage: config.damage * damageMultiplier,
+        radius: config.bulletRadius,
+        color: config.color,
+        type: ProjectileType.MINI_BANANA,
+        maxDistance: randomRange,
+        explosive: {
+          explosionRadius: config.explosionRadius * explosionRadiusMultiplier,
+          explosionDamage: config.damage * damageMultiplier,
+          visualEffect: VisualEffect.BANANA,
+        },
+      });
+
+      this.entityManager.addProjectile(projectile);
+    }
   }
 }

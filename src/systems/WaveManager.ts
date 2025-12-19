@@ -56,6 +56,23 @@ export class WaveManager {
   }
 
   /**
+   * Get current wave number (alias for compatibility with DevMenu)
+   */
+  get currentWave(): number {
+    return this.waveNumber;
+  }
+
+  /**
+   * Skip to a specific wave (dev tool)
+   */
+  skipToWave(targetWave: number): void {
+    this.waveNumber = Math.max(1, targetWave);
+    this.isWaveActive = false;
+    this.bossSpawned = false;
+    this.startWave();
+  }
+
+  /**
    * Get wave duration based on wave number
    */
   getWaveDuration(): number {

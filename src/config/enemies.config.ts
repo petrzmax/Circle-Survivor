@@ -110,6 +110,7 @@ export interface EnemyConfig {
 
 export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
   // ============ BASIC ENEMIES ============
+  // TODO hmm are names needed? if I already have EnemyType? It should be enough
   [EnemyType.BASIC]: {
     name: 'Basic',
     color: '#e94560',

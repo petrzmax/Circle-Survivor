@@ -7,6 +7,7 @@
 import { Player, InputState } from '@/entities/Player';
 import { Enemy } from '@/entities/Enemy';
 import { Projectile } from '@/entities/Projectile';
+import { Deployable, DeployableConfig } from '@/entities/Deployable';
 import { createGoldPickup, createHealthPickup } from '@/entities/Pickup';
 import { EntityManager } from '@/managers/EntityManager';
 import { CollisionSystem } from '@/systems/CollisionSystem';
@@ -23,7 +24,7 @@ import { EventBus } from '@/core/EventBus';
 import { CHARACTER_TYPES } from '@/config/characters.config';
 import { WEAPON_TYPES, WeaponConfig } from '@/config/weapons.config';
 import { GAME_BALANCE } from '@/config/balance.config';
-import { CharacterType, WeaponType, ProjectileType, EnemyType, PickupType, VisualEffect } from '@/types/enums';
+import { CharacterType, WeaponType, ProjectileType, EnemyType, PickupType, VisualEffect, DeployableType } from '@/types/enums';
 import { circleCollision, distance } from '@/utils';
 
 // ============ Types ============
@@ -81,6 +82,10 @@ export class Game {
   // Regeneration tracking
   private lastRegenTime: number = 0;
 
+  // Dev menu (development only) - stored for potential future use
+  // @ts-expect-error - stored for future use
+  private _devMenu?: InstanceType<typeof import('@/debug/DevMenu').DevMenu>;
+
   constructor() {
     // Get canvas
     this.canvas = document.getElementById('game') as HTMLCanvasElement;
@@ -133,6 +138,62 @@ export class Game {
     (window as unknown as { game: Game }).game = this;
 
     this.setupEventBusListeners();
+
+    // Initialize dev menu (development only)
+    if (import.meta.env.DEV) {
+      this.initDevMenu();
+    }
+  }
+
+  /**
+   * Initialize dev menu with dependency injection
+   */
+  private async initDevMenu(): Promise<void> {
+    const { DevMenu } = await import('@/debug/DevMenu');
+    this._devMenu = new DevMenu({
+      // State
+      getState: () => this.state,
+      getGold: () => this.gold,
+      setGold: (value) => { this.gold = value; },
+      getCanvasSize: () => ({ width: this.canvas.width, height: this.canvas.height }),
+      
+      // Game control
+      pauseGame: () => this.pauseGame(),
+      resumeGame: () => this.resumeGame(),
+      
+      // Wave control
+      getCurrentWave: () => this.waveManager.currentWave,
+      skipToWave: (wave) => this.waveManager.skipToWave(wave),
+      
+      // Player actions
+      getPlayer: () => {
+        const player = this.entityManager.getPlayer();
+        if (!player) return null;
+        return {
+          hp: player.hp,
+          maxHp: player.maxHp,
+          godMode: player.godMode,
+          heal: (amount) => player.heal(amount),
+          addItem: (itemId) => player.addItem(itemId),
+          applyStat: (stat, value) => player.applyStat(stat as keyof import('@/entities/Player').PlayerStats, value),
+        };
+      },
+      
+      // Entity actions
+      addWeapon: (type) => this.addWeapon(type),
+      spawnEnemy: (type, x, y) => this.spawnEnemy(type, x, y),
+      killAllEnemies: () => this.killAllEnemies(),
+    });
+  }
+
+  /**
+   * Kill all active enemies (dev tool)
+   */
+  private killAllEnemies(): void {
+    const enemies = this.entityManager.getActiveEnemies();
+    for (const enemy of enemies) {
+      enemy.destroy();
+    }
   }
 
   // ============ Setup ============
@@ -677,6 +738,13 @@ export class Game {
       // Reset offset after first shot (staggering only applies to initial burst)
       weapon.fireOffset = 0;
 
+      // Handle deployable weapons (mines) - they don't need a target
+      if (config.deployableType === DeployableType.MINE) {
+        weapon.lastFireTime = currentTime;
+        this.deployMine(config, player, weapon.level);
+        continue;
+      }
+
       // Get weapon position (use currentTarget for positioning only)
       const weaponPos = player.getWeaponPosition(i, player.currentTarget);
       const maxRange = (config.range ?? 300) * player.attackRange;
@@ -831,6 +899,51 @@ export class Game {
         break;
       default:
         this.audio.shoot();
+    }
+  }
+
+  /**
+   * Deploy a mine at the player's position
+   */
+  deployMine(config: WeaponConfig, player: Player, level: number): void {
+    // Calculate damage with level
+    const levelMultiplier = 1 + (level - 1) * 0.15;
+    const damage = config.damage * levelMultiplier * player.damageMultiplier;
+
+    // Create deployable config
+    const deployableConfig: DeployableConfig = {
+      x: player.x,
+      y: player.y,
+      radius: config.bulletRadius ?? 12,
+      type: DeployableType.MINE,
+      damage: damage,
+      ownerId: player.id,
+      color: config.color ?? '#333333',
+      explosionRadius: (config.explosionRadius ?? 70) * player.explosionRadius,
+      explosionDamage: damage,
+      visualEffect: VisualEffect.STANDARD,
+      armingTime: 0.5, // 500ms arming time like original
+    };
+
+    const mine = new Deployable(deployableConfig);
+    this.entityManager.addDeployable(mine);
+
+    // Play mine deploy sound (reuse bomb sound)
+    this.audio.explosion(); // TODO: Add proper mine deploy sound
+  }
+
+  // ============ Dev Tools ============
+
+  /**
+   * Spawn enemy at position (used by DevMenu)
+   * TODO: When SpawnSystem is fully integrated, delegate to SpawnSystem.spawnEnemyAt()
+   */
+  spawnEnemy(type: EnemyType, x: number, y: number): void {
+    const enemy = new Enemy({ x, y, type });
+    this.entityManager.addEnemy(enemy);
+    
+    if (enemy.isBoss) {
+      EventBus.emit('bossSpawned', { enemy, bossName: enemy.bossName || 'Boss' });
     }
   }
 

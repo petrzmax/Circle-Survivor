@@ -445,6 +445,7 @@ export class CombatSystem {
     const config = WEAPON_TYPES.minibanana;
     const player = this.entityManager.getPlayer();
     const explosionRadiusMultiplier = player?.explosionRadius ?? 1;
+    const playerId = player?.id ?? -1;
 
     for (let i = 0; i < count; i++) {
       const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.5;
@@ -459,12 +460,13 @@ export class CombatSystem {
         vx: Math.cos(angle) * randomSpeed,
         vy: Math.sin(angle) * randomSpeed,
         damage: config.damage * damageMultiplier,
-        radius: config.bulletRadius,
+        radius: config.bulletRadius ?? 6,
         color: config.color,
         type: ProjectileType.MINI_BANANA,
+        ownerId: playerId,
         maxDistance: randomRange,
         explosive: {
-          explosionRadius: config.explosionRadius * explosionRadiusMultiplier,
+          explosionRadius: (config.explosionRadius ?? 45) * explosionRadiusMultiplier,
           explosionDamage: config.damage * damageMultiplier,
           visualEffect: VisualEffect.BANANA,
         },

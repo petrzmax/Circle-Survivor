@@ -19,7 +19,7 @@ export interface GameEvents {
   // Projectile events
   projectileHit: { projectile: Projectile; target: Enemy };
   projectileExpired: { projectile: Projectile };
-  explosionTriggered: { position: Vector2; radius: number; damage: number; visualEffect: string };
+  explosionTriggered: { position: Vector2; radius: number; damage: number; visualEffect: string; isBanana?: boolean };
   
   // Pickup events
   goldCollected: { amount: number; position: Vector2 };

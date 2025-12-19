@@ -108,6 +108,9 @@ export class Player extends Entity implements IHealth {
   public thorns: number = 0;
   public regen: number = 0;
 
+  // Debug
+  public godMode: boolean = false;
+
   // ============ Weapons & Items ============
 
   /** Maximum weapon slots */
@@ -164,6 +167,9 @@ export class Player extends Entity implements IHealth {
    * @returns true if player died
    */
   public takeDamage(amount: number, currentTime: number): boolean {
+    // God mode - no damage
+    if (this.godMode) return false;
+
     // Check invincibility
     if (currentTime < this.invincibleUntil) return false;
 

@@ -173,6 +173,7 @@ export class Game {
           hp: player.hp,
           maxHp: player.maxHp,
           godMode: player.godMode,
+          setGodMode: (enabled) => { player.godMode = enabled; },
           heal: (amount) => player.heal(amount),
           addItem: (itemId) => player.addItem(itemId),
           applyStat: (stat, value) => player.applyStat(stat as keyof import('@/entities/Player').PlayerStats, value),
@@ -626,7 +627,13 @@ export class Game {
             // Explosive
             if (projectile.isExplosive() && projectile.explosive) {
               const expRadius = projectile.explosive.explosionRadius * player.explosionRadius;
-              this.handleExplosion(projectile.x, projectile.y, expRadius, projectile.damage * player.damageMultiplier);
+              this.handleExplosion(
+                projectile.x,
+                projectile.y,
+                expRadius,
+                projectile.damage * player.damageMultiplier,
+                projectile.explosive.visualEffect
+              );
               projectile.destroy();
               break;
             }
@@ -671,7 +678,13 @@ export class Game {
         if (nearbyEnemies.length > 0) {
           const explosionData = deployable.trigger();
           if (explosionData) {
-            this.handleExplosion(deployable.x, deployable.y, explosionData.explosionRadius, explosionData.explosionDamage);
+            this.handleExplosion(
+              deployable.x,
+              deployable.y,
+              explosionData.explosionRadius,
+              explosionData.explosionDamage,
+              deployable.visualEffect
+            );
           }
         }
       }
@@ -895,7 +908,8 @@ export class Game {
       case WeaponType.NUKE:
       case WeaponType.HOLY_GRENADE:
       case WeaponType.BANANA:
-        this.audio.explosion();
+        // Explosion plays on hit, not on shot
+        this.audio.shoot();
         break;
       default:
         this.audio.shoot();
@@ -1068,12 +1082,23 @@ export class Game {
     }
   }
 
-  handleExplosion(x: number, y: number, radius: number, damage: number): void {
+  handleExplosion(
+    x: number,
+    y: number,
+    radius: number,
+    damage: number,
+    visualEffect: VisualEffect = VisualEffect.STANDARD
+  ): void {
     const player = this.entityManager.getPlayer();
     const damageMultiplier = player?.damageMultiplier ?? 1;
 
-    // Create visual
-    EffectsSystem.createExplosion(this.effects, x, y, radius);
+    // Determine explosion type flags
+    const isNuke = visualEffect === VisualEffect.NUKE;
+    const isHolyGrenade = visualEffect === VisualEffect.HOLY;
+    const isBanana = visualEffect === VisualEffect.BANANA;
+
+    // Create visual with correct type
+    EffectsSystem.createExplosion(this.effects, x, y, radius, isNuke, isHolyGrenade, isBanana);
 
     // Damage enemies in radius
     const enemies = this.entityManager.getEnemiesInRadius(x, y, radius);
@@ -1084,7 +1109,14 @@ export class Game {
       }
     }
 
-    this.audio.explosion();
+    // Play correct explosion sound
+    if (isNuke) {
+      this.audio.nukeExplosion();
+    } else if (isHolyGrenade) {
+      this.audio.holyExplosion();
+    } else {
+      this.audio.explosion();
+    }
   }
 
   handleChainEffect(startX: number, startY: number, damage: number, chainCount: number): void {

@@ -159,6 +159,7 @@
 }
 
 .dev-menu button {
+  margin: 0;
   padding: 0 6px;
   height: 26px;
   background: rgba(74, 158, 255, 0.2);
@@ -210,6 +211,7 @@
   align-items: center;
   gap: 10px;
   cursor: pointer;
+  flex: 1;
 }
 
 .dev-menu-checkbox input[type="checkbox"] {

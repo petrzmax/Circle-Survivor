@@ -34,6 +34,7 @@ export interface DevMenuDependencies {
     hp: number;
     maxHp: number;
     godMode: boolean;
+    setGodMode: (enabled: boolean) => void;
     heal: (amount: number) => void;
     addItem: (itemId: string) => void;
     applyStat: (stat: string, value: number) => void;
@@ -89,7 +90,7 @@ export class DevMenu {
     // Items dropdown
     const itemSelect = document.getElementById('dev-item-select') as HTMLSelectElement;
     if (itemSelect) {
-      itemSelect.innerHTML = '<option value="">Select Item...</option>';
+      itemSelect.innerHTML = '';
       for (const [id, item] of Object.entries(SHOP_ITEMS)) {
         if (item.type === 'item') {
           const option = document.createElement('option');
@@ -103,7 +104,7 @@ export class DevMenu {
     // Weapons dropdown
     const weaponSelect = document.getElementById('dev-weapon-select') as HTMLSelectElement;
     if (weaponSelect) {
-      weaponSelect.innerHTML = '<option value="">Select Weapon...</option>';
+      weaponSelect.innerHTML = '';
       for (const [type, config] of Object.entries(WEAPON_TYPES)) {
         if (type === 'minibanana') continue; // Skip internal type
         const option = document.createElement('option');
@@ -116,7 +117,7 @@ export class DevMenu {
     // Boss dropdown - use formatted type name since config.name is generic 'BOSS'
     const bossSelect = document.getElementById('dev-boss-select') as HTMLSelectElement;
     if (bossSelect) {
-      bossSelect.innerHTML = '<option value="">Select Boss...</option>';
+      bossSelect.innerHTML = '';
       const bossLabels: Record<string, string> = {
         boss: '👹 Standard Boss',
         boss_swarm: '🐝 Swarm Boss',
@@ -138,7 +139,7 @@ export class DevMenu {
     // Enemy dropdown
     const enemySelect = document.getElementById('dev-enemy-select') as HTMLSelectElement;
     if (enemySelect) {
-      enemySelect.innerHTML = '<option value="">Select Enemy...</option>';
+      enemySelect.innerHTML = '';
       for (const [type, config] of Object.entries(ENEMY_TYPES)) {
         if (!config.isBoss) {
           const option = document.createElement('option');
@@ -433,7 +434,7 @@ export class DevMenu {
   private toggleGodMode(enabled: boolean): void {
     const player = this.deps.getPlayer();
     if (player) {
-      player.godMode = enabled;
+      player.setGodMode(enabled);
       console.log(`[DevMenu] God mode: ${enabled ? 'ON' : 'OFF'}`);
     }
   }

@@ -95,6 +95,7 @@ function renderNuke(ctx: CanvasRenderingContext2D, p: Projectile): void {
  */
 function renderScythe(ctx: CanvasRenderingContext2D, p: Projectile): void {
   ctx.translate(p.x, p.y);
+  // TODO Does it rotate? Was it rotating in original code?
   ctx.rotate(Date.now() / 100);
 
   ctx.beginPath();

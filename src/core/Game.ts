@@ -582,8 +582,19 @@ export class Game {
     for (const projectile of projectiles) {
       projectile.update(deltaSeconds);
 
-      // Remove expired
+      // Remove expired - but check if grenade should explode first
       if (!projectile.isActive) {
+        // Grenades explode when they reach their target distance
+        if (projectile.shouldExplodeOnExpire && projectile.isExplosive() && projectile.explosive) {
+          const expRadius = projectile.explosive.explosionRadius * player.explosionRadius;
+          this.handleExplosion(
+            projectile.x,
+            projectile.y,
+            expRadius,
+            projectile.damage * player.damageMultiplier,
+            projectile.explosive.visualEffect
+          );
+        }
         this.entityManager.removeProjectile(projectile.id);
         continue;
       }
@@ -843,6 +854,10 @@ export class Game {
               visualEffect: this.getExplosionEffect(weapon.type),
             }
           : undefined,
+        // Grenade properties for slowdown/explosion behavior
+        weaponCategory: config.weaponCategory,
+        explosiveRange: config.explosiveRange,
+        bulletSpeed: speed,
       });
 
       projectile.setVelocity(vx, vy);

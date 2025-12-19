@@ -56,6 +56,11 @@ export interface ProjectileConfig extends EntityConfig {
   // Special behaviors
   rotationSpeed?: number;
   returnToOwner?: boolean;
+
+  // Grenade behavior
+  weaponCategory?: string;
+  explosiveRange?: number;
+  bulletSpeed?: number;
 }
 
 /**
@@ -93,8 +98,14 @@ export class Projectile extends Entity implements IExpirable {
   /** Weapon category this projectile came from */
   public weaponCategory: string = 'gun';
 
-  /** Explosive range for grenades */
+  /** Explosive range for grenades (distance at which they explode) */
   public explosiveRange: number = 0;
+
+  /** Base speed for grenade slowdown calculation */
+  public baseSpeed: number = 0;
+
+  /** Whether grenade should explode when it expires (reached target distance) */
+  public shouldExplodeOnExpire: boolean = false;
 
   /** Spawn position for distance calculation */
   public readonly spawnPosition: Vector2;
@@ -134,6 +145,12 @@ export class Projectile extends Entity implements IExpirable {
     this.maxDistance = config.maxDistance ?? 0;
     this.lifetime = config.lifetime ?? Infinity;
     this.spawnPosition = { x: config.x, y: config.y };
+
+    // Grenade behavior
+    this.weaponCategory = config.weaponCategory ?? 'gun';
+    this.explosiveRange = config.explosiveRange ?? 0;
+    // Base speed for grenade slowdown calculation
+    this.baseSpeed = config.bulletSpeed ?? 0;
 
     // Initialize optional components
     if (config.explosive) {
@@ -225,6 +242,10 @@ export class Projectile extends Entity implements IExpirable {
     if (this.maxDistance > 0 && this.distanceTraveled >= this.maxDistance) {
       return true;
     }
+    // Grenades expire when they reach their explosive range
+    if (this.shouldExplodeOnExpire) {
+      return true;
+    }
     return false;
   }
 
@@ -243,15 +264,42 @@ export class Projectile extends Entity implements IExpirable {
       this.rotation += this.rotationSpeed * deltaTime;
     }
 
-    // Store old position for distance calculation
+    // Store old position for distance calculation (for non-grenades)
     const oldX = this.x;
     const oldY = this.y;
 
-    // Apply velocity
+    // Apply velocity first
     this.applyVelocity(deltaTime);
 
     // Calculate distance traveled
-    this.distanceTraveled += distance({ x: oldX, y: oldY }, { x: this.x, y: this.y });
+    if (this.weaponCategory === 'grenade' && this.explosiveRange > 0) {
+      // Grenades: distance from spawn point (like original)
+      this.distanceTraveled = distance(this.spawnPosition, { x: this.x, y: this.y });
+
+      const progress = this.distanceTraveled / this.explosiveRange;
+
+      if (progress > 0.7 && progress < 1) {
+        // Ease-out: speed decreases from 100% to ~10% in last 30%
+        const slowdownProgress = (progress - 0.7) / 0.3;
+        const speedMultiplier = Math.max(0.1, 1 - slowdownProgress * 0.9);
+
+        // Get current velocity and apply slowdown
+        const vel = this.getVelocity();
+        const currentSpeed = Math.sqrt(vel.vx * vel.vx + vel.vy * vel.vy);
+        if (currentSpeed > 0.1) {
+          const targetSpeed = this.baseSpeed * speedMultiplier;
+          const scale = targetSpeed / currentSpeed;
+          this.setVelocity(vel.vx * scale, vel.vy * scale);
+        }
+      }
+
+      if (progress >= 1) {
+        this.shouldExplodeOnExpire = true;
+      }
+    } else {
+      // Other projectiles: accumulated distance
+      this.distanceTraveled += distance({ x: oldX, y: oldY }, { x: this.x, y: this.y });
+    }
 
     // Check expiration
     if (this.isExpired()) {
@@ -288,6 +336,17 @@ export class Projectile extends Entity implements IExpirable {
         break;
       case ProjectileType.FLAMETHROWER:
         this.drawFlame(ctx);
+        break;
+      case ProjectileType.HOLY_GRENADE:
+        this.drawHolyGrenade(ctx);
+        break;
+      case ProjectileType.BANANA:
+        // TODO mini banana was different
+      case ProjectileType.MINI_BANANA:
+        this.drawBanana(ctx);
+        break;
+      case ProjectileType.CROSSBOW_BOLT:
+        this.drawCrossbowBolt(ctx);
         break;
       default:
         this.drawBullet(ctx);
@@ -393,6 +452,74 @@ export class Projectile extends Entity implements IExpirable {
     ctx.beginPath();
     ctx.arc(0, 0, this.radius * flicker, 0, Math.PI * 2);
     ctx.fillStyle = this.color;
+    ctx.fill();
+  }
+
+  private drawHolyGrenade(ctx: CanvasRenderingContext2D): void {
+    // Reset translation for gradient (needs absolute coords)
+    ctx.restore();
+    ctx.save();
+
+    // Golden ball with gradient
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+    gradient.addColorStop(0, '#ffffff');
+    gradient.addColorStop(0.5, '#ffd700');
+    gradient.addColorStop(1, '#b8860b');
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // Cross
+    ctx.strokeStyle = '#8b0000';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y - 5);
+    ctx.lineTo(this.x, this.y + 5);
+    ctx.moveTo(this.x - 4, this.y - 1);
+    ctx.lineTo(this.x + 4, this.y - 1);
+    ctx.stroke();
+
+    // Glow
+    ctx.shadowColor = '#ffd700';
+    ctx.shadowBlur = 15;
+  }
+
+  private drawBanana(ctx: CanvasRenderingContext2D): void {
+    // Rotating banana - use Date.now for continuous rotation
+    ctx.rotate(Date.now() / 150);
+
+    // Banana crescent shape
+    ctx.beginPath();
+    ctx.arc(0, -5, this.radius, 0.2 * Math.PI, 0.8 * Math.PI);
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = '#ffff00';
+    ctx.stroke();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#cccc00';
+    ctx.stroke();
+  }
+
+  private drawCrossbowBolt(ctx: CanvasRenderingContext2D): void {
+    // Rotate to face direction of travel
+    const vel = this.getVelocity();
+    ctx.rotate(Math.atan2(vel.vy, vel.vx));
+
+    // Arrow shaft
+    ctx.beginPath();
+    ctx.moveTo(-this.radius, 0);
+    ctx.lineTo(this.radius, 0);
+    ctx.lineTo(this.radius + 4, -2);
+    ctx.moveTo(this.radius, 0);
+    ctx.lineTo(this.radius + 4, 2);
+    ctx.strokeStyle = '#8b4513';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Glowing hook (cyan)
+    ctx.fillStyle = '#00ffff';
+    ctx.beginPath();
+    ctx.arc(this.radius, 0, 3, 0, Math.PI * 2);
     ctx.fill();
   }
 }

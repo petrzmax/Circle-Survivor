@@ -3,8 +3,7 @@
 .dev-menu {
   position: fixed;
   left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 100px;
   width: 260px;
   background: rgba(16, 18, 27, 0.97);
   border: 1px solid rgba(74, 158, 255, 0.4);
@@ -33,6 +32,21 @@
   font-weight: 600;
   font-size: 13px;
   letter-spacing: 0.5px;
+  cursor: grab;
+  user-select: none;
+}
+
+.dev-menu-header:active {
+  cursor: grabbing;
+}
+
+.dev-menu.dragging {
+  opacity: 0.9;
+  transition: none;
+}
+
+.dev-menu.dragging .dev-menu-header {
+  cursor: grabbing;
 }
 
 .dev-menu-header span:first-child {

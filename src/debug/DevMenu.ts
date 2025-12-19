@@ -50,6 +50,11 @@ export class DevMenu {
   private isVisible: boolean = false;
   private deps: DevMenuDependencies;
   private previousState: string = 'playing';
+  
+  // Drag state
+  private isDragging: boolean = false;
+  private dragOffsetX: number = 0;
+  private dragOffsetY: number = 0;
 
   constructor(deps: DevMenuDependencies) {
     this.deps = deps;
@@ -62,6 +67,7 @@ export class DevMenu {
   private init(): void {
     this.createHTML();
     this.setupEventListeners();
+    this.setupDragListeners();
   }
 
   /**
@@ -216,6 +222,61 @@ export class DevMenu {
       }
     });
   }
+
+  // ============ Drag & Drop ============
+
+  /**
+   * Setup drag listeners for the header
+   */
+  private setupDragListeners(): void {
+    const header = this.container?.querySelector('.dev-menu-header') as HTMLElement;
+    if (!header) return;
+
+    header.addEventListener('mousedown', (e) => this.onDragStart(e));
+    document.addEventListener('mousemove', (e) => this.onDragMove(e));
+    document.addEventListener('mouseup', () => this.onDragEnd());
+  }
+
+  private onDragStart(e: MouseEvent): void {
+    if (!this.container) return;
+    
+    this.isDragging = true;
+    this.container.classList.add('dragging');
+    
+    const rect = this.container.getBoundingClientRect();
+    this.dragOffsetX = e.clientX - rect.left;
+    this.dragOffsetY = e.clientY - rect.top;
+  }
+
+  private onDragMove(e: MouseEvent): void {
+    if (!this.isDragging || !this.container) return;
+    
+    e.preventDefault();
+    
+    // Calculate new position
+    let newX = e.clientX - this.dragOffsetX;
+    let newY = e.clientY - this.dragOffsetY;
+    
+    // Constrain to viewport
+    const rect = this.container.getBoundingClientRect();
+    const maxX = window.innerWidth - rect.width;
+    const maxY = window.innerHeight - rect.height;
+    
+    newX = Math.max(0, Math.min(newX, maxX));
+    newY = Math.max(0, Math.min(newY, maxY));
+    
+    // Apply position
+    this.container.style.left = `${newX}px`;
+    this.container.style.top = `${newY}px`;
+  }
+
+  private onDragEnd(): void {
+    if (!this.isDragging) return;
+    
+    this.isDragging = false;
+    this.container?.classList.remove('dragging');
+  }
+
 
   // ============ Visibility Control ============
 

@@ -82,6 +82,9 @@ export class Game {
   // Regeneration tracking
   private lastRegenTime: number = 0;
 
+  // Debug display options
+  private showEnemyCount: boolean = false;
+
   // Dev menu (development only) - stored for potential future use
   // @ts-expect-error - stored for future use
   private _devMenu?: InstanceType<typeof import('@/debug/DevMenu').DevMenu>;
@@ -156,6 +159,9 @@ export class Game {
       getGold: () => this.gold,
       setGold: (value) => { this.gold = value; },
       getCanvasSize: () => ({ width: this.canvas.width, height: this.canvas.height }),
+      
+      // Debug display options
+      setShowEnemyCount: (show) => { this.showEnemyCount = show; },
       
       // Game control
       pauseGame: () => this.pauseGame(),
@@ -1295,8 +1301,10 @@ export class Game {
     // Render boss health bar
     this.renderBossHealthBar();
 
-    // Render enemy count
-    HUD.renderEnemyCount(this.ctx, this.entityManager.getActiveEnemyCount(), this.canvas.height);
+    // Render enemy count (dev mode only, when enabled)
+    if (this.showEnemyCount) {
+      HUD.renderEnemyCount(this.ctx, this.entityManager.getActiveEnemyCount(), this.canvas.height);
+    }
   }
 
   renderWeaponsAroundPlayer(player: Player): void {

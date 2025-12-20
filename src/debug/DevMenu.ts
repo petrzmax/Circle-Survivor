@@ -21,6 +21,9 @@ export interface DevMenuDependencies {
   setGold: (value: number) => void;
   getCanvasSize: () => { width: number; height: number };
   
+  // Debug display options
+  setShowEnemyCount: (show: boolean) => void;
+  
   // Game control
   pauseGame: () => void;
   resumeGame: () => void;
@@ -213,6 +216,12 @@ export class DevMenu {
 
     document.getElementById('dev-fullheal')?.addEventListener('click', () => {
       this.fullHeal();
+    });
+
+    // Debug display options
+    document.getElementById('dev-show-enemy-count')?.addEventListener('change', (e) => {
+      const checkbox = e.target as HTMLInputElement;
+      this.deps.setShowEnemyCount(checkbox.checked);
     });
 
     // Keyboard shortcut (F1)

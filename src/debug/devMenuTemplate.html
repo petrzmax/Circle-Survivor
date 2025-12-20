@@ -1,0 +1,75 @@
+<div class="dev-menu-header">
+  <span>🔧 DEV MENU</span>
+  <span class="dev-menu-hint">F1</span>
+</div>
+<div class="dev-menu-content">
+  <!-- Wave Control -->
+  <div class="dev-menu-section">
+    <div class="dev-menu-section-title">Wave Control</div>
+    <div class="dev-menu-row">
+      <span class="dev-menu-label">Wave:</span>
+      <input type="number" id="dev-wave-input" min="1" value="1" />
+      <button id="dev-wave-go">Go</button>
+      <button id="dev-wave-kill" class="danger">Kill All</button>
+    </div>
+  </div>
+
+  <!-- Items -->
+  <div class="dev-menu-section">
+    <div class="dev-menu-section-title">Items</div>
+    <div class="dev-menu-row">
+      <select id="dev-item-select"></select>
+      <button id="dev-item-add">Add</button>
+    </div>
+    <div class="dev-menu-row">
+      <select id="dev-weapon-select"></select>
+      <button id="dev-weapon-add">Add</button>
+    </div>
+    <div class="dev-menu-row">
+      <span class="dev-menu-label">Gold:</span>
+      <button id="dev-gold-1000">+1000</button>
+    </div>
+  </div>
+
+  <!-- Spawning -->
+  <div class="dev-menu-section">
+    <div class="dev-menu-section-title">Spawn</div>
+    <div class="dev-menu-row">
+      <select id="dev-boss-select"></select>
+      <button id="dev-boss-spawn" class="danger">Spawn</button>
+    </div>
+    <div class="dev-menu-row">
+      <select id="dev-enemy-select"></select>
+      <span class="dev-menu-x">x</span>
+      <input type="number" id="dev-enemy-count" min="1" max="50" value="1" />
+      <button id="dev-enemy-spawn">Spawn</button>
+    </div>
+  </div>
+
+  <!-- Player -->
+  <div class="dev-menu-section">
+    <div class="dev-menu-section-title">Player</div>
+    <div class="dev-menu-row">
+      <div class="dev-menu-checkbox">
+        <input type="checkbox" id="dev-godmode" />
+        <label for="dev-godmode">God Mode</label>
+      </div>
+      <button id="dev-fullheal" class="success">Full Heal</button>
+    </div>
+  </div>
+
+  <!-- Debug Display -->
+  <div class="dev-menu-section">
+    <div class="dev-menu-section-title">Display</div>
+    <div class="dev-menu-row">
+      <div class="dev-menu-checkbox">
+        <input type="checkbox" id="dev-show-enemy-count" />
+        <label for="dev-show-enemy-count">Enemy Count</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="dev-menu-info">
+    Press F1 to toggle
+  </div>
+</div>

@@ -68,6 +68,11 @@ export default [
     },
   },
   {
+    // Disable type-checked rules for config files
+    files: ['*.config.js', '*.config.ts', 'vite.config.ts'],
+    extends: [tseslint.configs.disableTypeChecked],
+  },
+  {
     ignores: ['dist/**', 'node_modules/**', 'js/**'],
   },
 ];

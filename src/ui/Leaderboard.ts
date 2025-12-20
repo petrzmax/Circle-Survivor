@@ -16,9 +16,9 @@ export interface LeaderboardEntry {
 // ============ Leaderboard Class ============
 
 export class Leaderboard {
-  // JSONBin.io configuration
-  private JSONBIN_BIN_ID: string | null = null;
-  private JSONBIN_API_KEY: string | null = null;
+  // JSONBin.io configuration - injected by Vite at build time
+  private JSONBIN_BIN_ID = __JSONBIN_BIN_ID__ || null;
+  private JSONBIN_API_KEY = __JSONBIN_API_KEY__ || null;
 
   // Local storage key
   private LOCAL_STORAGE_KEY = 'circle_survivor_leaderboard';

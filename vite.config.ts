@@ -18,7 +18,7 @@ export default defineConfig({
   },
   // Define environment variables to replace at build time
   define: {
-    __GAME_VERSION__: JSON.stringify(process.env.VITE_GAME_VERSION || '0.0.0-dev'),
+    __GAME_VERSION__: JSON.stringify(process.env.VITE_GAME_VERSION || 'dev'),
     __JSONBIN_BIN_ID__: JSON.stringify(process.env.VITE_JSONBIN_BIN_ID || ''),
     __JSONBIN_API_KEY__: JSON.stringify(process.env.VITE_JSONBIN_API_KEY || ''),
   },

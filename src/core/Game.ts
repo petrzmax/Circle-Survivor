@@ -587,12 +587,14 @@ export class Game {
         // Grenades explode when they reach their target distance
         if (projectile.shouldExplodeOnExpire && projectile.isExplosive() && projectile.explosive) {
           const expRadius = projectile.explosive.explosionRadius * player.explosionRadius;
+          const isMini = projectile.type === ProjectileType.MINI_BANANA;
           this.handleExplosion(
             projectile.x,
             projectile.y,
             expRadius,
             projectile.damage * player.damageMultiplier,
-            projectile.explosive.visualEffect
+            projectile.explosive.visualEffect,
+            isMini
           );
         }
         this.entityManager.removeProjectile(projectile.id);
@@ -638,12 +640,14 @@ export class Game {
             // Explosive
             if (projectile.isExplosive() && projectile.explosive) {
               const expRadius = projectile.explosive.explosionRadius * player.explosionRadius;
+              const isMini = projectile.type === ProjectileType.MINI_BANANA;
               this.handleExplosion(
                 projectile.x,
                 projectile.y,
                 expRadius,
                 projectile.damage * player.damageMultiplier,
-                projectile.explosive.visualEffect
+                projectile.explosive.visualEffect,
+                isMini
               );
               projectile.destroy();
               break;
@@ -1102,7 +1106,8 @@ export class Game {
     y: number,
     radius: number,
     damage: number,
-    visualEffect: VisualEffect = VisualEffect.STANDARD
+    visualEffect: VisualEffect = VisualEffect.STANDARD,
+    isMini: boolean = false
   ): void {
     const player = this.entityManager.getPlayer();
     const damageMultiplier = player?.damageMultiplier ?? 1;
@@ -1114,6 +1119,11 @@ export class Game {
 
     // Create visual with correct type
     EffectsSystem.createExplosion(this.effects, x, y, radius, isNuke, isHolyGrenade, isBanana);
+
+    // Banana (not mini) spawns mini bananas
+    if (isBanana && !isMini && player) {
+      this.spawnMiniBananas(x, y, 4 + Math.floor(Math.random() * 3), player);
+    }
 
     // Damage enemies in radius
     const enemies = this.entityManager.getEnemiesInRadius(x, y, radius);
@@ -1131,6 +1141,47 @@ export class Game {
       this.audio.holyExplosion();
     } else {
       this.audio.explosion();
+    }
+  }
+
+  /**
+   * Spawn mini bananas after main banana explosion
+   */
+  spawnMiniBananas(x: number, y: number, count: number, player: Player): void {
+    const config = WEAPON_TYPES.minibanana;
+
+    for (let i = 0; i < count; i++) {
+      // Spread evenly with some randomness
+      const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.5;
+
+      // Random speed (6-10) and range (60-100px) for each mini banana
+      const randomSpeed = 6 + Math.random() * 4;
+      const randomRange = 60 + Math.random() * 40;
+
+      const vx = Math.cos(angle) * randomSpeed;
+      const vy = Math.sin(angle) * randomSpeed;
+
+      const projectile = new Projectile({
+        x,
+        y,
+        radius: config.bulletRadius ?? 6,
+        type: ProjectileType.MINI_BANANA,
+        damage: config.damage * player.damageMultiplier,
+        ownerId: player.id,
+        color: config.color ?? '#ffff00',
+        explosive: {
+          explosionRadius: (config.explosionRadius ?? 45) * player.explosionRadius,
+          explosionDamage: config.damage * player.damageMultiplier,
+          visualEffect: VisualEffect.BANANA,
+        },
+        weaponCategory: config.weaponCategory,
+        explosiveRange: randomRange,
+        bulletSpeed: randomSpeed,
+      });
+
+      projectile.setVelocity(vx, vy);
+
+      this.entityManager.addProjectile(projectile);
     }
   }
 

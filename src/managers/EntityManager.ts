@@ -1,7 +1,7 @@
 /**
  * EntityManager - Centralized entity lifecycle management.
  * Handles adding, removing, and querying game entities.
- * 
+ *
  * Future: Object pooling can be added here to reduce GC pressure.
  */
 
@@ -28,22 +28,22 @@ export interface EntityManagerConfig {
 /**
  * Manages all game entities with typed collections.
  * Provides efficient add/remove/query operations.
- * 
+ *
  * @example
  * ```typescript
  * const manager = new EntityManager();
- * 
+ *
  * // Add entities
  * manager.addEnemy(enemy);
  * manager.addProjectile(projectile);
- * 
+ *
  * // Query entities
  * const enemies = manager.getEnemies();
  * const activeProjectiles = manager.getProjectiles().filter(p => p.isActive);
- * 
+ *
  * // Update all
  * manager.updateAll(deltaTime);
- * 
+ *
  * // Cleanup dead entities
  * manager.removeInactive();
  * ```
@@ -51,19 +51,19 @@ export interface EntityManagerConfig {
 export class EntityManager {
   /** Current player (single instance) */
   private player: Player | null = null;
-  
+
   /** Active enemies */
   private enemies: Map<number, Enemy> = new Map();
-  
+
   /** Active projectiles (player and enemy) */
   private projectiles: Map<number, Projectile> = new Map();
-  
+
   /** Active deployables (mines, turrets) */
   private deployables: Map<number, Deployable> = new Map();
-  
+
   /** Active pickups */
   private pickups: Map<number, Pickup> = new Map();
-  
+
   /** Debug mode */
   private debug: boolean;
 
@@ -117,7 +117,7 @@ export class EntityManager {
    * Get active enemies only
    */
   getActiveEnemies(): Enemy[] {
-    return this.getEnemies().filter(e => e.isActive && !e.isDead());
+    return this.getEnemies().filter((e) => e.isActive && !e.isDead());
   }
 
   /**
@@ -164,7 +164,7 @@ export class EntityManager {
    * Add multiple projectiles at once
    */
   addProjectiles(projectiles: Projectile[]): void {
-    projectiles.forEach(p => this.addProjectile(p));
+    projectiles.forEach((p) => this.addProjectile(p));
   }
 
   /**
@@ -178,7 +178,7 @@ export class EntityManager {
    * Get active projectiles only
    */
   getActiveProjectiles(): Projectile[] {
-    return this.getProjectiles().filter(p => p.isActive);
+    return this.getProjectiles().filter((p) => p.isActive);
   }
 
   /**
@@ -187,7 +187,7 @@ export class EntityManager {
   getPlayerProjectiles(): Projectile[] {
     const playerId = this.player?.id;
     if (playerId === undefined) return [];
-    return this.getActiveProjectiles().filter(p => p.ownerId === playerId);
+    return this.getActiveProjectiles().filter((p) => p.ownerId === playerId);
   }
 
   /**
@@ -195,7 +195,7 @@ export class EntityManager {
    */
   getEnemyProjectiles(): Projectile[] {
     const playerId = this.player?.id;
-    return this.getActiveProjectiles().filter(p => p.ownerId !== playerId);
+    return this.getActiveProjectiles().filter((p) => p.ownerId !== playerId);
   }
 
   /**
@@ -228,14 +228,14 @@ export class EntityManager {
    * Get active deployables only
    */
   getActiveDeployables(): Deployable[] {
-    return this.getDeployables().filter(d => d.isActive);
+    return this.getDeployables().filter((d) => d.isActive);
   }
 
   /**
    * Get armed deployables (ready to trigger)
    */
   getArmedDeployables(): Deployable[] {
-    return this.getActiveDeployables().filter(d => d.isArmed);
+    return this.getActiveDeployables().filter((d) => d.isArmed);
   }
 
   /**
@@ -268,7 +268,7 @@ export class EntityManager {
    * Get active pickups only
    */
   getActivePickups(): Pickup[] {
-    return this.getPickups().filter(p => p.isActive);
+    return this.getPickups().filter((p) => p.isActive);
   }
 
   /**
@@ -290,28 +290,28 @@ export class EntityManager {
     // Note: Player movement is handled separately with input
 
     // Update enemies
-    this.enemies.forEach(enemy => {
+    this.enemies.forEach((enemy) => {
       if (enemy.isActive) {
         enemy.update(deltaTime);
       }
     });
 
     // Update projectiles
-    this.projectiles.forEach(projectile => {
+    this.projectiles.forEach((projectile) => {
       if (projectile.isActive) {
         projectile.update(deltaTime);
       }
     });
 
     // Update deployables
-    this.deployables.forEach(deployable => {
+    this.deployables.forEach((deployable) => {
       if (deployable.isActive) {
         deployable.update(deltaTime);
       }
     });
 
     // Update pickups
-    this.pickups.forEach(pickup => {
+    this.pickups.forEach((pickup) => {
       if (pickup.isActive) {
         pickup.update(deltaTime);
       }
@@ -395,16 +395,16 @@ export class EntityManager {
    */
   getAllEntities(): Entity[] {
     const entities: Entity[] = [];
-    
+
     if (this.player) {
       entities.push(this.player);
     }
-    
-    this.enemies.forEach(e => entities.push(e));
-    this.projectiles.forEach(p => entities.push(p));
-    this.deployables.forEach(d => entities.push(d));
-    this.pickups.forEach(p => entities.push(p));
-    
+
+    this.enemies.forEach((e) => entities.push(e));
+    this.projectiles.forEach((p) => entities.push(p));
+    this.deployables.forEach((d) => entities.push(d));
+    this.pickups.forEach((p) => entities.push(p));
+
     return entities;
   }
 
@@ -438,7 +438,7 @@ export class EntityManager {
    */
   getEnemiesInRadius(x: number, y: number, radius: number): Enemy[] {
     const radiusSq = radius * radius;
-    return this.getActiveEnemies().filter(enemy => {
+    return this.getActiveEnemies().filter((enemy) => {
       const dx = enemy.x - x;
       const dy = enemy.y - y;
       return dx * dx + dy * dy <= radiusSq;
@@ -452,11 +452,11 @@ export class EntityManager {
     let nearest: Enemy | null = null;
     let nearestDistSq = maxDistance ? maxDistance * maxDistance : Infinity;
 
-    this.getActiveEnemies().forEach(enemy => {
+    this.getActiveEnemies().forEach((enemy) => {
       const dx = enemy.x - x;
       const dy = enemy.y - y;
       const distSq = dx * dx + dy * dy;
-      
+
       if (distSq < nearestDistSq) {
         nearestDistSq = distSq;
         nearest = enemy;
@@ -471,7 +471,7 @@ export class EntityManager {
    */
   getPickupsInRadius(x: number, y: number, radius: number): Pickup[] {
     const radiusSq = radius * radius;
-    return this.getActivePickups().filter(pickup => {
+    return this.getActivePickups().filter((pickup) => {
       const dx = pickup.x - x;
       const dy = pickup.y - y;
       return dx * dx + dy * dy <= radiusSq;

@@ -55,17 +55,17 @@ export interface WaveInfo {
 
 /**
  * Manages wave progression and enemy spawning configuration.
- * 
+ *
  * @example
  * ```typescript
  * const waveSystem = new WaveSystem(entityManager, spawnSystem);
- * 
+ *
  * // Start first wave
  * waveSystem.startWave(1);
- * 
+ *
  * // In game loop
  * waveSystem.update(deltaTime, playerX, playerY);
- * 
+ *
  * // Check if wave complete
  * if (waveSystem.isWaveComplete()) {
  *   // Open shop, then start next wave
@@ -94,7 +94,7 @@ export class WaveSystem {
   constructor(
     entityManager: EntityManager,
     spawnSystem: SpawnSystem,
-    config: WaveSystemConfig = {}
+    config: WaveSystemConfig = {},
   ) {
     this.entityManager = entityManager;
     this.spawnSystem = spawnSystem;
@@ -109,9 +109,11 @@ export class WaveSystem {
 
     // Listen for enemy death events
     EventBus.on('enemyDeath', () => {
-      if (this.state === WaveState.ACTIVE || 
-          this.state === WaveState.SPAWNING_COMPLETE ||
-          this.state === WaveState.BOSS) {
+      if (
+        this.state === WaveState.ACTIVE ||
+        this.state === WaveState.SPAWNING_COMPLETE ||
+        this.state === WaveState.BOSS
+      ) {
         this.enemiesKilled++;
         this.checkWaveCompletion();
       }
@@ -300,9 +302,11 @@ export class WaveSystem {
    * Check if wave is active
    */
   isWaveActive(): boolean {
-    return this.state === WaveState.ACTIVE || 
-           this.state === WaveState.SPAWNING_COMPLETE ||
-           this.state === WaveState.BOSS;
+    return (
+      this.state === WaveState.ACTIVE ||
+      this.state === WaveState.SPAWNING_COMPLETE ||
+      this.state === WaveState.BOSS
+    );
   }
 
   /**
@@ -354,7 +358,7 @@ export class WaveSystem {
    */
   skipWave(): void {
     // Kill all enemies
-    this.entityManager.getActiveEnemies().forEach(enemy => {
+    this.entityManager.getActiveEnemies().forEach((enemy) => {
       enemy.destroy();
     });
 

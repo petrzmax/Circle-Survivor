@@ -15,36 +15,42 @@ export interface GameEvents {
   enemyDamaged: { enemy: Enemy; damage: number; source: Vector2 };
   playerHit: { player: Player; damage: number; source: Enemy | Projectile };
   playerDeath: { player: Player; killedBy: Enemy | null };
-  
+
   // Projectile events
   projectileHit: { projectile: Projectile; target: Enemy };
   projectileExpired: { projectile: Projectile };
-  explosionTriggered: { position: Vector2; radius: number; damage: number; visualEffect: string; isBanana?: boolean };
-  
+  explosionTriggered: {
+    position: Vector2;
+    radius: number;
+    damage: number;
+    visualEffect: string;
+    isBanana?: boolean;
+  };
+
   // Pickup events
   goldCollected: { amount: number; position: Vector2 };
   healthCollected: { amount: number; position: Vector2 };
   pickupSpawned: { pickup: Pickup };
   pickupExpired: { pickup: Pickup };
-  
+
   // Wave events
   waveStart: { waveNumber: number; enemyCount: number };
   waveEnd: { waveNumber: number; enemiesKilled: number };
   bossSpawned: { enemy: Enemy; bossName: string };
   bossDefeated: { enemy: Enemy; bossName: string };
-  
+
   // Shop events
   shopOpened: { gold: number };
   shopClosed: void;
   itemPurchased: { itemId: string; cost: number };
   weaponPurchased: { weaponType: string; cost: number };
-  
+
   // Game state events
   gameStart: { characterType: string };
   gamePause: void;
   gameResume: void;
   gameOver: { score: number; wave: number; time: number };
-  
+
   // UI events
   scoreChanged: { score: number; delta: number };
   goldChanged: { gold: number; delta: number };
@@ -66,17 +72,17 @@ export interface Subscription {
 /**
  * EventBus singleton for global event management.
  * Uses typed events for compile-time safety.
- * 
+ *
  * @example
  * ```typescript
  * // Subscribe to event
  * const sub = EventBus.on('enemyDeath', (data) => {
  *   console.log(`Enemy killed at ${data.position.x}, ${data.position.y}`);
  * });
- * 
+ *
  * // Emit event
  * EventBus.emit('enemyDeath', { enemy, killer: 'player', position: { x: 100, y: 200 } });
- * 
+ *
  * // Cleanup
  * sub.unsubscribe();
  * ```
@@ -91,14 +97,11 @@ class EventBusImpl {
    * @param callback Callback function
    * @returns Subscription handle for unsubscribing
    */
-  on<K extends keyof GameEvents>(
-    event: K,
-    callback: EventCallback<GameEvents[K]>
-  ): Subscription {
+  on<K extends keyof GameEvents>(event: K, callback: EventCallback<GameEvents[K]>): Subscription {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
-    
+
     const listeners = this.listeners.get(event)!;
     listeners.add(callback as EventCallback<unknown>);
 
@@ -115,14 +118,11 @@ class EventBusImpl {
    * @param callback Callback function
    * @returns Subscription handle for unsubscribing
    */
-  once<K extends keyof GameEvents>(
-    event: K,
-    callback: EventCallback<GameEvents[K]>
-  ): Subscription {
+  once<K extends keyof GameEvents>(event: K, callback: EventCallback<GameEvents[K]>): Subscription {
     if (!this.onceListeners.has(event)) {
       this.onceListeners.set(event, new Set());
     }
-    
+
     const listeners = this.onceListeners.get(event)!;
     listeners.add(callback as EventCallback<unknown>);
 
@@ -156,7 +156,7 @@ class EventBusImpl {
     if (onceListeners && onceListeners.size > 0) {
       const callbacks = Array.from(onceListeners);
       onceListeners.clear();
-      
+
       callbacks.forEach((callback) => {
         try {
           callback(data);

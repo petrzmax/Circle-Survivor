@@ -176,8 +176,7 @@ export class Player extends Entity implements IHealth {
     // Note: Dodge is checked in Game.ts before calling this method
 
     // Armor reduction (diminishing returns)
-    const reduction =
-      this.armor / (this.armor + GAME_BALANCE.player.armorDiminishingFactor);
+    const reduction = this.armor / (this.armor + GAME_BALANCE.player.armorDiminishingFactor);
     const finalDamage = amount * (1 - reduction);
 
     this.hp = Math.max(0, this.hp - finalDamage);
@@ -227,7 +226,7 @@ export class Player extends Entity implements IHealth {
     input: InputState,
     canvasWidth: number,
     canvasHeight: number,
-    deltaTime: number
+    deltaTime: number,
   ): void {
     // HP regeneration
     if (this.regen > 0) {
@@ -307,7 +306,7 @@ export class Player extends Entity implements IHealth {
    */
   public getWeaponPosition(
     index: number,
-    target: Vector2 | null = null
+    target: Vector2 | null = null,
   ): { x: number; y: number; angle: number } {
     const weaponRadius = 25;
     const weaponCount = this.weaponTypes.length || 1;
@@ -448,12 +447,7 @@ export class Player extends Entity implements IHealth {
 
     // Body
     ctx.fillStyle = this.color;
-    ctx.fillRect(
-      this.x - this.width / 2,
-      this.y - this.height / 2,
-      this.width,
-      this.height
-    );
+    ctx.fillRect(this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
 
     // Armor visual
     if (this.armor > 0) {
@@ -463,12 +457,7 @@ export class Player extends Entity implements IHealth {
       ctx.strokeStyle = '#2a7fff';
       ctx.lineWidth = 2;
     }
-    ctx.strokeRect(
-      this.x - this.width / 2,
-      this.y - this.height / 2,
-      this.width,
-      this.height
-    );
+    ctx.strokeRect(this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
 
     // Eyes
     ctx.fillStyle = 'white';

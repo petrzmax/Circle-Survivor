@@ -4,7 +4,12 @@
  * Matches original js/shop.js exactly.
  */
 
-import { SHOP_ITEMS, WeaponShopItem, StatShopItem, WeaponBonusShopItem } from '@/config/shop.config';
+import {
+  SHOP_ITEMS,
+  WeaponShopItem,
+  StatShopItem,
+  WeaponBonusShopItem,
+} from '@/config/shop.config';
 import { GAME_BALANCE } from '@/config/balance.config';
 
 // ============ Types ============
@@ -98,7 +103,10 @@ export class Shop {
     // Scaling with wave number (after startWave, +perWave% per wave)
     let waveMultiplier = 1;
     if (waveNumber > GAME_BALANCE.economy.priceScale.startWave) {
-      waveMultiplier = 1 + (waveNumber - GAME_BALANCE.economy.priceScale.startWave) * GAME_BALANCE.economy.priceScale.perWave;
+      waveMultiplier =
+        1 +
+        (waveNumber - GAME_BALANCE.economy.priceScale.startWave) *
+          GAME_BALANCE.economy.priceScale.perWave;
     }
 
     // Scaling with owned items (+perItem% per item)
@@ -158,7 +166,8 @@ export class Shop {
     // 1 random from: additional item/weapon
     const extras: string[] = [];
     if (weapons.length > weaponCount && weapons[weaponCount]) extras.push(weapons[weaponCount]!);
-    if (items.length > itemCountInShop && items[itemCountInShop]) extras.push(items[itemCountInShop]!);
+    if (items.length > itemCountInShop && items[itemCountInShop])
+      extras.push(items[itemCountInShop]!);
     shuffle(extras);
     if (extras.length > 0 && extras[0]) {
       this.availableItems.push(extras[0]);
@@ -295,7 +304,8 @@ export class Shop {
           const sameTypeWeapons = player.weapons.filter((w) => w.type === weaponItem.weaponType);
           if (sameTypeWeapons.length > 0) {
             // Pick random weapon of this type
-            const randomWeapon = sameTypeWeapons[Math.floor(Math.random() * sameTypeWeapons.length)];
+            const randomWeapon =
+              sameTypeWeapons[Math.floor(Math.random() * sameTypeWeapons.length)];
             if (randomWeapon) {
               randomWeapon.upgrade();
               // Show upgrade notification
@@ -325,14 +335,17 @@ export class Shop {
         // Add item to inventory
         player.addItem(itemKey);
         // Pick random weapon
-        const randomWeaponForBonus = player.weapons[Math.floor(Math.random() * player.weapons.length)];
+        const randomWeaponForBonus =
+          player.weapons[Math.floor(Math.random() * player.weapons.length)];
         if (randomWeaponForBonus) {
           // Apply bonus to weapon
           if (bonusItem.bonusType && randomWeaponForBonus[bonusItem.bonusType] !== undefined) {
             (randomWeaponForBonus[bonusItem.bonusType] as number) += bonusItem.bonusValue;
           }
           // Show notification
-          this.callbacks.showNotification(`🎯 ${randomWeaponForBonus.name} +${bonusItem.bonusValue} pocisk!`);
+          this.callbacks.showNotification(
+            `🎯 ${randomWeaponForBonus.name} +${bonusItem.bonusValue} pocisk!`,
+          );
         }
         break;
       }

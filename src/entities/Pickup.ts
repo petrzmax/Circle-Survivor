@@ -106,7 +106,7 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
     if (this.lifetime > shrinkStart) return 1;
 
     // Smooth shrinking in the last second
-    const shrinkProgress = 1 - (this.lifetime / this.shrinkDuration);
+    const shrinkProgress = 1 - this.lifetime / this.shrinkDuration;
     return Math.max(0, 1 - shrinkProgress);
   }
 
@@ -154,11 +154,7 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
    * @param pickupRange Player's pickup range
    * @param deltaTime Delta time in seconds
    */
-  public updateAttraction(
-    player: Vector2,
-    pickupRange: number,
-    _deltaTime: number
-  ): void {
+  public updateAttraction(player: Vector2, pickupRange: number, _deltaTime: number): void {
     const dist = distance(player, this);
 
     if (dist <= pickupRange || this.isAttracted) {
@@ -185,7 +181,7 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
 
     // Get scale (shrinking animation in last second)
     const scale = this.getScale();
-    
+
     // Apply fade transparency when shrinking
     if (scale < 1) {
       ctx.globalAlpha = scale;
@@ -207,15 +203,29 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
       ctx.shadowColor = 'rgba(255, 0, 0, 0.6)';
       ctx.shadowBlur = 10;
       ctx.shadowOffsetY = 2;
-      
+
       ctx.fillStyle = '#ff4444';
       // Draw a heart shape with bezier curves
       ctx.translate(this.x, this.y);
       ctx.scale(scale, scale);
       ctx.beginPath();
       ctx.moveTo(0, -this.radius * 0.3);
-      ctx.bezierCurveTo(-this.radius, -this.radius, -this.radius, this.radius * 0.5, 0, this.radius);
-      ctx.bezierCurveTo(this.radius, this.radius * 0.5, this.radius, -this.radius, 0, -this.radius * 0.3);
+      ctx.bezierCurveTo(
+        -this.radius,
+        -this.radius,
+        -this.radius,
+        this.radius * 0.5,
+        0,
+        this.radius,
+      );
+      ctx.bezierCurveTo(
+        this.radius,
+        this.radius * 0.5,
+        this.radius,
+        -this.radius,
+        0,
+        -this.radius * 0.3,
+      );
       ctx.fill();
     }
 

@@ -3,7 +3,13 @@
  * Handles weapon stats, firing logic, and projectile creation.
  */
 
-import { WeaponType, WeaponCategory, ProjectileType, DeployableType, VisualEffect } from '@/types/enums';
+import {
+  WeaponType,
+  WeaponCategory,
+  ProjectileType,
+  DeployableType,
+  VisualEffect,
+} from '@/types/enums';
 import { WEAPON_TYPES, GAME_BALANCE } from '@/config';
 import { Projectile, ProjectileConfig } from './Projectile';
 import { Deployable, DeployableConfig } from './Deployable';
@@ -240,7 +246,7 @@ export class Weapon {
       extraProjectiles?: number;
       extraPierce?: number;
       explosionRadiusMultiplier?: number;
-    } = {}
+    } = {},
   ): FireResult {
     const result: FireResult = {
       projectiles: [],
@@ -270,7 +276,13 @@ export class Weapon {
 
     // Handle deployables (mines)
     if (this.deployableType === DeployableType.MINE) {
-      const deployable = this.createDeployable(x, y, ownerId, damageMultiplier, explosionRadiusMultiplier);
+      const deployable = this.createDeployable(
+        x,
+        y,
+        ownerId,
+        damageMultiplier,
+        explosionRadiusMultiplier,
+      );
       result.deployables.push(deployable);
       return result;
     }
@@ -308,7 +320,7 @@ export class Weapon {
         finalDamage,
         isCrit,
         extraPierce,
-        explosionRadiusMultiplier
+        explosionRadiusMultiplier,
       );
 
       result.projectiles.push(projectile);
@@ -328,7 +340,7 @@ export class Weapon {
     damage: number,
     isCrit: boolean,
     extraPierce: number,
-    explosionRadiusMultiplier: number
+    explosionRadiusMultiplier: number,
   ): Projectile {
     const config: ProjectileConfig = {
       x,
@@ -393,7 +405,7 @@ export class Weapon {
     y: number,
     ownerId: number,
     damageMultiplier: number,
-    explosionRadiusMultiplier: number
+    explosionRadiusMultiplier: number,
   ): Deployable {
     const config: DeployableConfig = {
       x,

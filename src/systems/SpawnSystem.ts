@@ -42,14 +42,14 @@ export interface SpawnSystemConfig {
 /**
  * Handles all entity spawning logic.
  * Creates enemies based on wave configuration.
- * 
+ *
  * @example
  * ```typescript
  * const spawnSystem = new SpawnSystem(entityManager, {
  *   canvasWidth: 900,
  *   canvasHeight: 700
  * });
- * 
+ *
  * // Start a wave
  * spawnSystem.setWaveConfig({
  *   enemyWeights: new Map([[EnemyType.BASIC, 1]]),
@@ -57,7 +57,7 @@ export interface SpawnSystemConfig {
  *   spawnRate: 2,
  *   hasBoss: false
  * });
- * 
+ *
  * // In game loop
  * spawnSystem.update(deltaTime, playerPosition);
  * ```
@@ -70,19 +70,19 @@ export class SpawnSystem {
 
   /** Current wave spawn configuration */
   private waveConfig: WaveSpawnConfig | null = null;
-  
+
   /** Enemies remaining to spawn in current wave */
   private enemiesRemaining: number = 0;
-  
+
   /** Time accumulator for spawn rate */
   private spawnAccumulator: number = 0;
-  
+
   /** Whether boss has been spawned for current wave */
   private bossSpawned: boolean = false;
-  
+
   /** Scale multiplier for spawned enemies */
   private enemyScaleMultiplier: number = 1;
-  
+
   /** HP multiplier for spawned enemies */
   private enemyHpMultiplier: number = 1;
 
@@ -148,11 +148,11 @@ export class SpawnSystem {
 
     // Select enemy type based on weights
     const enemyType = this.selectEnemyType(this.waveConfig.enemyWeights);
-    
+
     // Get spawn position
     const spawnPos = getSpawnPoint(
       { width: this.canvasWidth, height: this.canvasHeight },
-      this.maxEdgeDistance
+      this.maxEdgeDistance,
     );
 
     // Create enemy
@@ -178,16 +178,16 @@ export class SpawnSystem {
   private selectEnemyType(weights: Map<EnemyType, number>): EnemyType {
     const entries = Array.from(weights.entries());
     const totalWeight = entries.reduce((sum, [, weight]) => sum + weight, 0);
-    
+
     let random = Math.random() * totalWeight;
-    
+
     for (const [type, weight] of entries) {
       random -= weight;
       if (random <= 0) {
         return type;
       }
     }
-    
+
     // Fallback to first type
     return entries[0]?.[0] ?? EnemyType.BASIC;
   }
@@ -200,7 +200,7 @@ export class SpawnSystem {
 
     const spawnPos = getSpawnPoint(
       { width: this.canvasWidth, height: this.canvasHeight },
-      this.maxEdgeDistance
+      this.maxEdgeDistance,
     );
 
     const boss = new Enemy({
@@ -236,7 +236,7 @@ export class SpawnSystem {
       // Spawn in a circle around parent position
       const angle = (i / splitCount) * Math.PI * 2;
       const distance = parent.radius * 2;
-      
+
       const x = parent.x + Math.cos(angle) * distance;
       const y = parent.y + Math.sin(angle) * distance;
 
@@ -285,12 +285,12 @@ export class SpawnSystem {
     _playerY: number,
     type: EnemyType,
     count: number,
-    scale: number = 1
+    scale: number = 1,
   ): void {
     for (let i = 0; i < count; i++) {
       const spawnPos = getSpawnPoint(
         { width: this.canvasWidth, height: this.canvasHeight },
-        this.maxEdgeDistance
+        this.maxEdgeDistance,
       );
 
       const enemy = new Enemy({

@@ -21,7 +21,11 @@ export interface WeaponPosition {
 export interface WeaponRenderPlayer {
   weapons: RenderedWeapon[];
   currentTarget: { x: number; y: number } | null;
-  getWeaponPosition(index: number, currentTime: number, target: { x: number; y: number } | null): WeaponPosition;
+  getWeaponPosition(
+    index: number,
+    currentTime: number,
+    target: { x: number; y: number } | null,
+  ): WeaponPosition;
 }
 
 // ============ Weapon Renderer ============
@@ -30,7 +34,11 @@ export const WeaponRenderer = {
   /**
    * Draw all weapons around the player
    */
-  renderWeapons(ctx: CanvasRenderingContext2D, player: WeaponRenderPlayer, currentTime: number): void {
+  renderWeapons(
+    ctx: CanvasRenderingContext2D,
+    player: WeaponRenderPlayer,
+    currentTime: number,
+  ): void {
     const weaponCount = player.weapons.length;
     if (weaponCount === 0) return;
 
@@ -46,7 +54,13 @@ export const WeaponRenderer = {
   /**
    * Draw a single weapon icon
    */
-  drawWeaponIcon(ctx: CanvasRenderingContext2D, weapon: RenderedWeapon, x: number, y: number, angle: number): void {
+  drawWeaponIcon(
+    ctx: CanvasRenderingContext2D,
+    weapon: RenderedWeapon,
+    x: number,
+    y: number,
+    angle: number,
+  ): void {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle + Math.PI / 2); // Rotation in movement direction

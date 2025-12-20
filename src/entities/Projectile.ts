@@ -343,7 +343,7 @@ export class Projectile extends Entity implements IExpirable {
         this.drawHolyGrenade(ctx);
         break;
       case ProjectileType.BANANA:
-        // TODO mini banana was different?
+      // TODO mini banana was different?
       case ProjectileType.MINI_BANANA:
         this.drawBanana(ctx);
         break;
@@ -427,7 +427,7 @@ export class Projectile extends Entity implements IExpirable {
     // But for gradient we need actual position - restore and use this.x, this.y
     ctx.restore();
     ctx.save();
-    
+
     // Radial gradient from yellow center to dark red edge
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
@@ -437,7 +437,7 @@ export class Projectile extends Entity implements IExpirable {
     gradient.addColorStop(1, '#aa0000');
     ctx.fillStyle = gradient;
     ctx.fill();
-    
+
     // Trail behind rocket (using velocity direction)
     const vel = this.getVelocity();
     ctx.beginPath();

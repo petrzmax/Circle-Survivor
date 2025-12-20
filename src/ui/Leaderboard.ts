@@ -152,7 +152,12 @@ export class Leaderboard {
 
   // ============ COMBINED API ============
 
-  async submitScore(playerName: string, wave: number, xp: number, character: string): Promise<LeaderboardEntry[]> {
+  async submitScore(
+    playerName: string,
+    wave: number,
+    xp: number,
+    character: string,
+  ): Promise<LeaderboardEntry[]> {
     const entry: LeaderboardEntry = {
       name: playerName.substring(0, 20), // Limit name length
       wave: wave,
@@ -222,7 +227,8 @@ export class Leaderboard {
 
     return scores
       .map((score, index) => {
-        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+        const medal =
+          index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
         const isHighlighted = highlightName && score.name === highlightName;
         const charEmoji = this.getCharacterEmoji(score.character);
 

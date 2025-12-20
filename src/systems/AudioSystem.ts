@@ -34,14 +34,14 @@ export interface AudioSystemConfig {
 /**
  * Handles all game audio using Web Audio API.
  * Generates sounds procedurally (no external files needed).
- * 
+ *
  * @example
  * ```typescript
  * const audioSystem = new AudioSystem({ volume: 0.5 });
- * 
+ *
  * // Initialize after user interaction (required by browsers)
  * audioSystem.init();
- * 
+ *
  * // Play sounds
  * audioSystem.shoot();
  * audioSystem.explosion();
@@ -67,7 +67,7 @@ export class AudioSystem {
    */
   init(): boolean {
     if (this.initialized) return true;
-    
+
     try {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioContextClass) {
@@ -75,7 +75,7 @@ export class AudioSystem {
         this.enabled = false;
         return false;
       }
-      
+
       this.ctx = new AudioContextClass();
       this.initialized = true;
       return true;
@@ -104,7 +104,7 @@ export class AudioSystem {
     frequency: number,
     duration: number,
     type: OscillatorType = 'square',
-    volumeMod: number = 1
+    volumeMod: number = 1,
   ): void {
     if (!this.enabled) return;
     if (!this.ctx && this.autoInit) this.init();
@@ -171,7 +171,7 @@ export class AudioSystem {
     duration: number,
     delay: number,
     type: OscillatorType = 'square',
-    volumeMod: number = 1
+    volumeMod: number = 1,
   ): void {
     setTimeout(() => {
       this.playTone(frequency, duration, type, volumeMod);

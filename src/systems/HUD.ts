@@ -111,7 +111,11 @@ export const HUD = {
   /**
    * Render boss health bar at top of screen
    */
-  renderBossHealthBar(ctx: CanvasRenderingContext2D, canvasWidth: number, enemies: HUDBoss[]): void {
+  renderBossHealthBar(
+    ctx: CanvasRenderingContext2D,
+    canvasWidth: number,
+    enemies: HUDBoss[],
+  ): void {
     // Find active boss
     const boss = enemies.find((e) => e.isBoss);
     if (!boss) return;

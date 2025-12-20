@@ -8,7 +8,11 @@ import { Player } from '@/entities/Player';
 /**
  * Renders the player to the canvas.
  */
-export function renderPlayer(ctx: CanvasRenderingContext2D, player: Player, currentTime: number): void {
+export function renderPlayer(
+  ctx: CanvasRenderingContext2D,
+  player: Player,
+  currentTime: number,
+): void {
   // Flash when invincible
   if (currentTime < player.invincibleUntil) {
     if (Math.floor(currentTime / 100) % 2 === 0) {
@@ -22,7 +26,7 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: Player, curr
     player.x - player.width / 2,
     player.y - player.height / 2,
     player.width,
-    player.height
+    player.height,
   );
 
   // Armor visual (blue border if has armor)
@@ -37,7 +41,7 @@ export function renderPlayer(ctx: CanvasRenderingContext2D, player: Player, curr
     player.x - player.width / 2,
     player.y - player.height / 2,
     player.width,
-    player.height
+    player.height,
   );
 
   // Eyes (direction indicator)
@@ -60,7 +64,7 @@ export function renderPlayerHealthBar(
   x: number,
   y: number,
   width: number,
-  height: number
+  height: number,
 ): void {
   ctx.save();
 
@@ -70,7 +74,8 @@ export function renderPlayerHealthBar(
 
   // Health fill
   const healthPercent = player.hp / player.maxHp;
-  const healthColor = healthPercent > 0.5 ? '#00ff00' : healthPercent > 0.25 ? '#ffff00' : '#ff0000';
+  const healthColor =
+    healthPercent > 0.5 ? '#00ff00' : healthPercent > 0.25 ? '#ffff00' : '#ff0000';
   ctx.fillStyle = healthColor;
   ctx.fillRect(x, y, width * healthPercent, height);
 

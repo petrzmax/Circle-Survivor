@@ -24,7 +24,15 @@ import { EventBus } from '@/core/EventBus';
 import { CHARACTER_TYPES } from '@/config/characters.config';
 import { WEAPON_TYPES, WeaponConfig } from '@/config/weapons.config';
 import { GAME_BALANCE } from '@/config/balance.config';
-import { CharacterType, WeaponType, ProjectileType, EnemyType, PickupType, VisualEffect, DeployableType } from '@/types/enums';
+import {
+  CharacterType,
+  WeaponType,
+  ProjectileType,
+  EnemyType,
+  PickupType,
+  VisualEffect,
+  DeployableType,
+} from '@/types/enums';
 import { circleCollision, distance } from '@/utils';
 
 // ============ Types ============
@@ -157,20 +165,24 @@ export class Game {
       // State
       getState: () => this.state,
       getGold: () => this.gold,
-      setGold: (value) => { this.gold = value; },
+      setGold: (value) => {
+        this.gold = value;
+      },
       getCanvasSize: () => ({ width: this.canvas.width, height: this.canvas.height }),
-      
+
       // Debug display options
-      setShowEnemyCount: (show) => { this.showEnemyCount = show; },
-      
+      setShowEnemyCount: (show) => {
+        this.showEnemyCount = show;
+      },
+
       // Game control
       pauseGame: () => this.pauseGame(),
       resumeGame: () => this.resumeGame(),
-      
+
       // Wave control
       getCurrentWave: () => this.waveManager.currentWave,
       skipToWave: (wave) => this.waveManager.skipToWave(wave),
-      
+
       // Player actions
       getPlayer: () => {
         const player = this.entityManager.getPlayer();
@@ -179,13 +191,16 @@ export class Game {
           hp: player.hp,
           maxHp: player.maxHp,
           godMode: player.godMode,
-          setGodMode: (enabled) => { player.godMode = enabled; },
+          setGodMode: (enabled) => {
+            player.godMode = enabled;
+          },
           heal: (amount) => player.heal(amount),
           addItem: (itemId) => player.addItem(itemId),
-          applyStat: (stat, value) => player.applyStat(stat as keyof import('@/entities/Player').PlayerStats, value),
+          applyStat: (stat, value) =>
+            player.applyStat(stat as keyof import('@/entities/Player').PlayerStats, value),
         };
       },
-      
+
       // Entity actions
       addWeapon: (type) => this.addWeapon(type),
       spawnEnemy: (type, x, y) => this.spawnEnemy(type, x, y),
@@ -235,7 +250,11 @@ export class Game {
   }
 
   async submitScore(): Promise<void> {
-    await this.leaderboardUI.submitScore(this.waveManager.waveNumber, this.xp, this.selectedCharacter);
+    await this.leaderboardUI.submitScore(
+      this.waveManager.waveNumber,
+      this.xp,
+      this.selectedCharacter,
+    );
   }
 
   async showLeaderboard(tab: string = 'local', highlightName: string | null = null): Promise<void> {
@@ -600,7 +619,7 @@ export class Game {
             expRadius,
             projectile.damage * player.damageMultiplier,
             projectile.explosive.visualEffect,
-            isMini
+            isMini,
           );
         }
         this.entityManager.removeProjectile(projectile.id);
@@ -653,18 +672,28 @@ export class Game {
                 expRadius,
                 projectile.damage * player.damageMultiplier,
                 projectile.explosive.visualEffect,
-                isMini
+                isMini,
               );
               projectile.destroy();
               break;
             }
 
             const finalDamage = projectile.damage * player.damageMultiplier;
-            const isDead = enemy.takeDamage(finalDamage, projectile.x, projectile.y, player.knockback * projectile.knockbackMultiplier);
+            const isDead = enemy.takeDamage(
+              finalDamage,
+              projectile.x,
+              projectile.y,
+              player.knockback * projectile.knockbackMultiplier,
+            );
 
             // Chain effect
             if (projectile.canChain() && projectile.chain) {
-              this.handleChainEffect(enemy.x, enemy.y, finalDamage * 0.5, projectile.chain.chainCount);
+              this.handleChainEffect(
+                enemy.x,
+                enemy.y,
+                finalDamage * 0.5,
+                projectile.chain.chainCount,
+              );
             }
 
             // Lifesteal
@@ -695,7 +724,11 @@ export class Game {
 
       if (deployable.isArmed) {
         // Check for enemies in trigger radius
-        const nearbyEnemies = this.entityManager.getEnemiesInRadius(deployable.x, deployable.y, deployable.triggerRadius);
+        const nearbyEnemies = this.entityManager.getEnemiesInRadius(
+          deployable.x,
+          deployable.y,
+          deployable.triggerRadius,
+        );
         if (nearbyEnemies.length > 0) {
           const explosionData = deployable.trigger();
           if (explosionData) {
@@ -704,7 +737,7 @@ export class Game {
               deployable.y,
               explosionData.explosionRadius,
               explosionData.explosionDamage,
-              deployable.visualEffect
+              deployable.visualEffect,
             );
           }
         }
@@ -782,10 +815,10 @@ export class Game {
       // Get weapon position (use currentTarget for positioning only)
       const weaponPos = player.getWeaponPosition(i, player.currentTarget);
       const maxRange = (config.range ?? 300) * player.attackRange;
-      
+
       // Find nearest enemy from weapon position
       let target = this.entityManager.getNearestEnemy(weaponPos.x, weaponPos.y, maxRange);
-      
+
       // Fallback to main target if within range
       if (!target && player.currentTarget) {
         const dx = player.currentTarget.x - weaponPos.x;
@@ -793,7 +826,11 @@ export class Game {
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist <= maxRange) {
           // Find the actual enemy at currentTarget position
-          target = this.entityManager.getNearestEnemy(player.currentTarget.x, player.currentTarget.y, 50);
+          target = this.entityManager.getNearestEnemy(
+            player.currentTarget.x,
+            player.currentTarget.y,
+            50,
+          );
         }
       }
 
@@ -818,7 +855,7 @@ export class Game {
     target: Enemy,
     damage: number,
     projectileCount: number,
-    player: Player
+    player: Player,
   ): void {
     const config = weapon.config;
     // Always calculate angle to target - not using pos.angle fallback
@@ -855,8 +892,12 @@ export class Game {
         ownerId: player.id,
         color: config.color ?? '#ffff00',
         maxDistance: config.shortRange ? (config.maxDistance ?? config.range ?? 500) : 0, // 0 = infinite
-        pierce: config.pierce ? { pierceCount: (config.pierceCount ?? 1) + player.pierce, hitEnemies: new Set() } : undefined,
-        chain: config.chain ? { chainCount: config.chainCount ?? 3, chainRange: 150, chainedEnemies: new Set() } : undefined,
+        pierce: config.pierce
+          ? { pierceCount: (config.pierceCount ?? 1) + player.pierce, hitEnemies: new Set() }
+          : undefined,
+        chain: config.chain
+          ? { chainCount: config.chainCount ?? 3, chainRange: 150, chainedEnemies: new Set() }
+          : undefined,
         explosive: config.explosive
           ? {
               explosionRadius: config.explosionRadius ?? 50,
@@ -982,7 +1023,7 @@ export class Game {
   spawnEnemy(type: EnemyType, x: number, y: number): void {
     const enemy = new Enemy({ x, y, type });
     this.entityManager.addEnemy(enemy);
-    
+
     if (enemy.isBoss) {
       EventBus.emit('bossSpawned', { enemy, bossName: enemy.bossName || 'Boss' });
     }
@@ -1003,7 +1044,7 @@ export class Game {
         takeDamage: (damage: number, time: number) => player.takeDamage(damage, time),
       },
       currentTime,
-      () => this.audio.dodge()
+      () => this.audio.dodge(),
     );
 
     if (playerDied) this.gameOver();
@@ -1025,22 +1066,22 @@ export class Game {
     // Drop gold - bosses drop multiple bags for satisfying effect
     const player = this.entityManager.getPlayer();
     const luck = player?.luck ?? 0;
-    
+
     if (enemy.isBoss) {
       // One large bag (50% of value) in center
       const bigPickup = createGoldPickup(enemy.x, enemy.y, Math.floor(enemy.goldValue * 0.5));
       this.entityManager.addPickup(bigPickup);
-      
+
       // 6-8 small bags scattered around
       const smallBags = 6 + Math.floor(Math.random() * 3);
       const smallValue = Math.floor((enemy.goldValue * 0.5) / smallBags);
       for (let i = 0; i < smallBags; i++) {
-        const angle = (Math.PI * 2 / smallBags) * i;
+        const angle = ((Math.PI * 2) / smallBags) * i;
         const dist = 20 + Math.random() * 30;
         const smallPickup = createGoldPickup(
           enemy.x + Math.cos(angle) * dist,
           enemy.y + Math.sin(angle) * dist,
-          smallValue
+          smallValue,
         );
         this.entityManager.addPickup(smallPickup);
       }
@@ -1048,10 +1089,14 @@ export class Game {
       // Normal enemy - one bag with random offset
       const goldOffsetX = (Math.random() - 0.5) * 20;
       const goldOffsetY = (Math.random() - 0.5) * 20;
-      const goldPickup = createGoldPickup(enemy.x + goldOffsetX, enemy.y + goldOffsetY, enemy.goldValue);
+      const goldPickup = createGoldPickup(
+        enemy.x + goldOffsetX,
+        enemy.y + goldOffsetY,
+        enemy.goldValue,
+      );
       this.entityManager.addPickup(goldPickup);
     }
-    
+
     // Bonus gold from luck
     if (luck > 0 && Math.random() < luck) {
       const bonusOffsetX = (Math.random() - 0.5) * 30;
@@ -1059,15 +1104,20 @@ export class Game {
       const bonusPickup = createGoldPickup(
         enemy.x + bonusOffsetX,
         enemy.y + bonusOffsetY,
-        Math.floor(enemy.goldValue * 0.5)
+        Math.floor(enemy.goldValue * 0.5),
       );
       this.entityManager.addPickup(bonusPickup);
     }
 
     // Chance for health drop (15% base + luck bonus)
-    const healthDropChance = GAME_BALANCE.drops.healthDropChance + luck * GAME_BALANCE.drops.healthDropLuckMultiplier;
+    const healthDropChance =
+      GAME_BALANCE.drops.healthDropChance + luck * GAME_BALANCE.drops.healthDropLuckMultiplier;
     if (Math.random() < healthDropChance) {
-      const healthPickup = createHealthPickup(enemy.x + 20, enemy.y, GAME_BALANCE.drops.healthDropValue);
+      const healthPickup = createHealthPickup(
+        enemy.x + 20,
+        enemy.y,
+        GAME_BALANCE.drops.healthDropValue,
+      );
       this.entityManager.addPickup(healthPickup);
     }
 
@@ -1115,7 +1165,7 @@ export class Game {
     radius: number,
     damage: number,
     visualEffect: VisualEffect = VisualEffect.STANDARD,
-    isMini: boolean = false
+    isMini: boolean = false,
   ): void {
     const player = this.entityManager.getPlayer();
     const damageMultiplier = player?.damageMultiplier ?? 1;
@@ -1160,7 +1210,7 @@ export class Game {
 
     for (let i = 0; i < count; i++) {
       // Spread evenly with some randomness
-      const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.5;
+      const angle = ((Math.PI * 2) / count) * i + (Math.random() - 0.5) * 0.5;
 
       // Random speed (6-10) and range (60-100px) for each mini banana
       const randomSpeed = 6 + Math.random() * 4;
@@ -1324,7 +1374,7 @@ export class Game {
         },
         pos.x,
         pos.y,
-        pos.angle
+        pos.angle,
       );
     }
   }

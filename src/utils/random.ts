@@ -180,7 +180,7 @@ export function getSpawnPoint(canvas: CanvasBounds, margin: number = 50): Vector
 export function getSpawnPointOnSide(
   canvas: CanvasBounds,
   side: ScreenSide,
-  margin: number = 50
+  margin: number = 50,
 ): Vector2 {
   switch (side) {
     case ScreenSide.TOP:
@@ -202,12 +202,7 @@ export function getSpawnPointOnSide(
  * @param height Height of rectangle
  * @returns Random point inside rectangle
  */
-export function randomPointInRect(
-  x: number,
-  y: number,
-  width: number,
-  height: number
-): Vector2 {
+export function randomPointInRect(x: number, y: number, width: number, height: number): Vector2 {
   return {
     x: randomRange(x, x + width),
     y: randomRange(y, y + height),

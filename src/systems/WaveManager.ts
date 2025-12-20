@@ -93,7 +93,9 @@ export class WaveManager {
     // Less enemies per spawn: 1-4
     this.enemiesPerSpawn = Math.min(4, 1 + Math.floor(wave * 0.4));
 
-    console.log(`Fala ${wave}: spawn co ${this.spawnInterval}ms, ${this.enemiesPerSpawn} wrogów/spawn`);
+    console.log(
+      `Fala ${wave}: spawn co ${this.spawnInterval}ms, ${this.enemiesPerSpawn} wrogów/spawn`,
+    );
   }
 
   /**
@@ -151,7 +153,7 @@ export class WaveManager {
 
       enemies.push(boss);
       this.bossSpawned = true;
-      
+
       // Emit boss spawned event for sound
       EventBus.emit('bossSpawned', { enemy: boss, bossName: boss.bossName || 'Boss' });
     }

@@ -211,7 +211,7 @@ export class Deployable extends Entity implements IExpirable {
     ctx.strokeStyle = '#666';
     ctx.lineWidth = 2;
     ctx.stroke();
-    
+
     // Blinking red light when armed (with offset for staggered blinking)
     if (this.isArmed) {
       ctx.beginPath();

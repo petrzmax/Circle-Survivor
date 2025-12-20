@@ -39,14 +39,14 @@ export interface CollisionSystemConfig {
 /**
  * Handles all collision detection in the game.
  * Uses spatial queries from EntityManager for efficiency.
- * 
+ *
  * @example
  * ```typescript
  * const collisionSystem = new CollisionSystem(entityManager, {
  *   pickupRadius: 25,
  *   attractionRadius: 100
  * });
- * 
+ *
  * // In game loop
  * const collisions = collisionSystem.checkAll();
  * // Handle collisions or let other systems handle via events
@@ -245,14 +245,8 @@ export class CollisionSystem {
   /**
    * Find nearest enemy for chain effects
    */
-  findChainTarget(
-    x: number,
-    y: number,
-    range: number,
-    excludeIds: Set<number>
-  ): Enemy | null {
-    const enemies = this.entityManager.getActiveEnemies()
-      .filter(e => !excludeIds.has(e.id));
+  findChainTarget(x: number, y: number, range: number, excludeIds: Set<number>): Enemy | null {
+    const enemies = this.entityManager.getActiveEnemies().filter((e) => !excludeIds.has(e.id));
 
     let nearest: Enemy | null = null;
     let nearestDistSq = range * range;

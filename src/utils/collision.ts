@@ -47,7 +47,7 @@ export function entityCollision(
   aPos: Vector2,
   aCollider: ICircleCollider,
   bPos: Vector2,
-  bCollider: ICircleCollider
+  bCollider: ICircleCollider,
 ): boolean {
   const combinedRadius = aCollider.radius + bCollider.radius;
   return distanceSquared(aPos, bPos) < combinedRadius * combinedRadius;
@@ -134,12 +134,7 @@ export function circleOutsideRect(circle: Circle, rect: Rectangle): boolean {
  * @returns True if rectangles overlap
  */
 export function rectCollision(a: Rectangle, b: Rectangle): boolean {
-  return (
-    a.x < b.x + b.width &&
-    a.x + a.width > b.x &&
-    a.y < b.y + b.height &&
-    a.y + a.height > b.y
-  );
+  return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
 }
 
 /**

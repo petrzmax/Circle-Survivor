@@ -37,14 +37,31 @@ export function renderEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
     ctx.fillRect(enemy.x - barWidth / 2, enemy.y - enemy.radius - 10, barWidth, barHeight);
 
     ctx.fillStyle = hpPercent > 0.5 ? '#2ecc71' : hpPercent > 0.25 ? '#f39c12' : '#e74c3c';
-    ctx.fillRect(enemy.x - barWidth / 2, enemy.y - enemy.radius - 10, barWidth * hpPercent, barHeight);
+    ctx.fillRect(
+      enemy.x - barWidth / 2,
+      enemy.y - enemy.radius - 10,
+      barWidth * hpPercent,
+      barHeight,
+    );
   }
 
   // Eyes
   ctx.fillStyle = 'white';
   ctx.beginPath();
-  ctx.arc(enemy.x - enemy.radius * 0.3, enemy.y - enemy.radius * 0.2, enemy.radius * 0.2, 0, Math.PI * 2);
-  ctx.arc(enemy.x + enemy.radius * 0.3, enemy.y - enemy.radius * 0.2, enemy.radius * 0.2, 0, Math.PI * 2);
+  ctx.arc(
+    enemy.x - enemy.radius * 0.3,
+    enemy.y - enemy.radius * 0.2,
+    enemy.radius * 0.2,
+    0,
+    Math.PI * 2,
+  );
+  ctx.arc(
+    enemy.x + enemy.radius * 0.3,
+    enemy.y - enemy.radius * 0.2,
+    enemy.radius * 0.2,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Angry eyebrows

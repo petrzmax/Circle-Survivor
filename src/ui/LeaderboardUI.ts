@@ -43,7 +43,8 @@ export class LeaderboardUI {
 
     // Show loading for global scores
     if (tab === 'global') {
-      listEl.innerHTML = '<li style="text-align: center; color: #888; padding: 20px;">⏳ Ładowanie...</li>';
+      listEl.innerHTML =
+        '<li style="text-align: center; color: #888; padding: 20px;">⏳ Ładowanie...</li>';
     }
 
     // Update tab buttons
@@ -113,7 +114,8 @@ export class LeaderboardUI {
 
     // Show loading for global scores
     if (tab === 'global') {
-      listEl.innerHTML = '<li style="text-align: center; color: #888; padding: 20px;">⏳ Ładowanie...</li>';
+      listEl.innerHTML =
+        '<li style="text-align: center; color: #888; padding: 20px;">⏳ Ładowanie...</li>';
     }
 
     // Update tab buttons

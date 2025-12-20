@@ -91,12 +91,11 @@ function renderNuke(ctx: CanvasRenderingContext2D, p: Projectile): void {
 }
 
 /**
- * Scythe - rotating crescent (uses Date.now for rotation)
+ * Scythe - rotating crescent (uses projectile's rotation property)
  */
 function renderScythe(ctx: CanvasRenderingContext2D, p: Projectile): void {
   ctx.translate(p.x, p.y);
-  // TODO Does it rotate? Was it rotating in original code?
-  ctx.rotate(Date.now() / 100);
+  ctx.rotate(p.rotation);
 
   ctx.beginPath();
   ctx.arc(0, 0, p.radius, 0, Math.PI * 1.5);

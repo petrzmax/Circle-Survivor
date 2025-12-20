@@ -37,6 +37,9 @@ export interface WeaponConfig {
   projectileType?: ProjectileType;
   deployableType?: DeployableType;
   explosiveRange?: number;
+
+  // Projectile behavior
+  rotationSpeed?: number; // radians per second
 }
 
 export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
@@ -213,6 +216,8 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     range: 230,
     weaponCategory: WeaponCategory.MELEE,
     projectileType: ProjectileType.SCYTHE,
+    // TODO projecttile section?
+    rotationSpeed: 4, // ~0.6 rotations per second
   },
   [WeaponType.SWORD]: {
     name: 'Miecz Kamilka',

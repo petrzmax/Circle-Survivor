@@ -868,6 +868,8 @@ export class Game {
         weaponCategory: config.weaponCategory,
         explosiveRange: config.explosiveRange,
         bulletSpeed: speed,
+        // Projectile rotation (e.g., scythe)
+        rotationSpeed: config.rotationSpeed,
       });
 
       projectile.setVelocity(vx, vy);

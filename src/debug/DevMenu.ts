@@ -121,6 +121,7 @@ export class DevMenu {
     const bossSelect = document.getElementById('dev-boss-select') as HTMLSelectElement;
     if (bossSelect) {
       bossSelect.innerHTML = '';
+      // TODO, why not use boss type enum instead of a map??
       const bossLabels: Record<string, string> = {
         boss: '👹 Standard Boss',
         boss_swarm: '🐝 Swarm Boss',

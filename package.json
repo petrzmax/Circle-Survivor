@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/petrzmax/Circle-Survivor#readme",
   "devDependencies": {
+    "@types/node": "^25.0.3",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
     "@typescript-eslint/parser": "^8.50.0",
     "@vitest/ui": "^4.0.15",

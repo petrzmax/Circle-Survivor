@@ -239,6 +239,7 @@ export class Leaderboard {
 
   getCharacterEmoji(character: string): string {
     const emojis: Record<string, string> = {
+      // TODO hmm there are no characters like janusz and grazyna... but maybe they should?
       janusz: '💼',
       wypaleniec: '🔥',
       cwaniak: '😎',

@@ -65,10 +65,8 @@ export const BOSS_NAME_SUFFIXES: readonly string[] = [
  * Generates a random boss name from prefix and suffix arrays
  */
 export function generateBossName(): string {
-  const prefix =
-    BOSS_NAME_PREFIXES[Math.floor(Math.random() * BOSS_NAME_PREFIXES.length)];
-  const suffix =
-    BOSS_NAME_SUFFIXES[Math.floor(Math.random() * BOSS_NAME_SUFFIXES.length)];
+  const prefix = BOSS_NAME_PREFIXES[Math.floor(Math.random() * BOSS_NAME_PREFIXES.length)];
+  const suffix = BOSS_NAME_SUFFIXES[Math.floor(Math.random() * BOSS_NAME_SUFFIXES.length)];
   return `${prefix} ${suffix}`;
 }
 

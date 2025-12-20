@@ -65,6 +65,15 @@ export default [
       // ✅ Keep disabled - needed for game dev patterns
       '@typescript-eslint/no-inferrable-types': 'off',
       '@typescript-eslint/no-invalid-void-type': 'off',
+
+      // ✅ Allow numbers/booleans in template literals (for logs, HUD, etc.)
+      '@typescript-eslint/restrict-template-expressions': [
+        'error',
+        {
+          allowNumber: true,
+          allowBoolean: true,
+        },
+      ],
     },
   },
   {

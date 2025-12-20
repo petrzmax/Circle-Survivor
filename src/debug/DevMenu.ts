@@ -190,7 +190,7 @@ export class DevMenu {
     });
 
     // Gold button
-    document.getElementById('dev-gold-1000')?.addEventListener('click', () => this.addGold(1000));
+    document.getElementById('dev-gold-1000')?.addEventListener('click', () => { this.addGold(1000); });
 
     // Spawning
     document.getElementById('dev-boss-spawn')?.addEventListener('click', () => {
@@ -240,12 +240,12 @@ export class DevMenu {
    * Setup drag listeners for the header
    */
   private setupDragListeners(): void {
-    const header = this.container?.querySelector('.dev-menu-header') as HTMLElement;
+    const header = this.container?.querySelector('.dev-menu-header')!;
     if (!header) return;
 
-    header.addEventListener('mousedown', (e) => this.onDragStart(e));
-    document.addEventListener('mousemove', (e) => this.onDragMove(e));
-    document.addEventListener('mouseup', () => this.onDragEnd());
+    header.addEventListener('mousedown', (e) => { this.onDragStart(e); });
+    document.addEventListener('mousemove', (e) => { this.onDragMove(e); });
+    document.addEventListener('mouseup', () => { this.onDragEnd(); });
   }
 
   private onDragStart(e: MouseEvent): void {
@@ -373,7 +373,7 @@ export class DevMenu {
     const player = this.deps.getPlayer();
     if (player) {
       const item = SHOP_ITEMS[itemId];
-      if (item && item.type === 'item') {
+      if (item?.type === 'item') {
         player.addItem(itemId);
         // Apply stat bonuses from effect - iterate all effect properties
         const effect = item.effect;

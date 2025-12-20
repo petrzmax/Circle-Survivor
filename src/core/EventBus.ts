@@ -88,8 +88,8 @@ export interface Subscription {
  * ```
  */
 class EventBusImpl {
-  private listeners: Map<keyof GameEvents, Set<EventCallback<unknown>>> = new Map();
-  private onceListeners: Map<keyof GameEvents, Set<EventCallback<unknown>>> = new Map();
+  private listeners = new Map<keyof GameEvents, Set<EventCallback<unknown>>>();
+  private onceListeners = new Map<keyof GameEvents, Set<EventCallback<unknown>>>();
 
   /**
    * Subscribe to an event

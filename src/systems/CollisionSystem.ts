@@ -76,7 +76,7 @@ export class CollisionSystem {
     };
 
     const player = this.entityManager.getPlayer();
-    if (!player || !player.isActive) {
+    if (!player?.isActive) {
       return result;
     }
 

@@ -90,7 +90,7 @@ export class AudioSystem {
    * Resume audio context (required after page becomes visible)
    */
   async resume(): Promise<void> {
-    if (this.ctx && this.ctx.state === 'suspended') {
+    if (this.ctx?.state === 'suspended') {
       await this.ctx.resume();
     }
   }
@@ -439,16 +439,16 @@ export class AudioSystem {
    * Connect to EventBus for automatic sound playback
    */
   connectToEventBus(): void {
-    EventBus.on('goldCollected', () => this.collectGold());
-    EventBus.on('healthCollected', () => this.collectHealth());
-    EventBus.on('playerHit', () => this.playerHit());
-    EventBus.on('enemyDamaged', () => this.enemyHit());
-    EventBus.on('enemyDeath', () => this.enemyDeath());
-    EventBus.on('waveStart', () => this.waveStart());
-    EventBus.on('bossSpawned', () => this.bossSpawn());
-    EventBus.on('itemPurchased', () => this.purchase());
-    EventBus.on('weaponPurchased', () => this.purchase());
-    EventBus.on('gameOver', () => this.gameOver());
+    EventBus.on('goldCollected', () => { this.collectGold(); });
+    EventBus.on('healthCollected', () => { this.collectHealth(); });
+    EventBus.on('playerHit', () => { this.playerHit(); });
+    EventBus.on('enemyDamaged', () => { this.enemyHit(); });
+    EventBus.on('enemyDeath', () => { this.enemyDeath(); });
+    EventBus.on('waveStart', () => { this.waveStart(); });
+    EventBus.on('bossSpawned', () => { this.bossSpawn(); });
+    EventBus.on('itemPurchased', () => { this.purchase(); });
+    EventBus.on('weaponPurchased', () => { this.purchase(); });
+    EventBus.on('gameOver', () => { this.gameOver(); });
     EventBus.on('explosionTriggered', (data) => {
       if (data.visualEffect === 'nuke') {
         this.nukeExplosion();

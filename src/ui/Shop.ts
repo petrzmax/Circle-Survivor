@@ -165,9 +165,9 @@ export class Shop {
 
     // 1 random from: additional item/weapon
     const extras: string[] = [];
-    if (weapons.length > weaponCount && weapons[weaponCount]) extras.push(weapons[weaponCount]!);
+    if (weapons.length > weaponCount && weapons[weaponCount]) extras.push(weapons[weaponCount]);
     if (items.length > itemCountInShop && items[itemCountInShop])
-      extras.push(items[itemCountInShop]!);
+      extras.push(items[itemCountInShop]);
     shuffle(extras);
     if (extras.length > 0 && extras[0]) {
       this.availableItems.push(extras[0]);
@@ -212,7 +212,7 @@ export class Shop {
       // Check if weapon is locked (full slots and don't have this weapon)
       let isWeaponLocked = false;
       if (item.type === 'weapon') {
-        const weaponItem = item as WeaponShopItem;
+        const weaponItem = item;
         const hasThisWeapon = player.weapons.some((w) => w.type === weaponItem.weaponType);
         if (player.weapons.length >= player.maxWeapons && !hasThisWeapon) {
           isWeaponLocked = true;
@@ -229,7 +229,7 @@ export class Shop {
       if (isWeaponLocked) {
         extraInfo = '<div style="color: #ff6b6b; font-size: 10px">🔒 Pełne sloty</div>';
       } else if (item.type === 'weapon') {
-        const weaponItem = item as WeaponShopItem;
+        const weaponItem = item;
         if (
           player.weapons.length >= player.maxWeapons &&
           player.weapons.some((w) => w.type === weaponItem.weaponType)
@@ -248,7 +248,7 @@ export class Shop {
             `;
 
       if (canBuy) {
-        itemEl.onclick = () => this.buyItem(itemKey, player, currentPrice);
+        itemEl.onclick = () => { this.buyItem(itemKey, player, currentPrice); };
       }
 
       itemsEl.appendChild(itemEl);
@@ -268,7 +268,7 @@ export class Shop {
         `;
 
     if (canReroll) {
-      rerollEl.onclick = () => this.rerollItems(player);
+      rerollEl.onclick = () => { this.rerollItems(player); };
     }
 
     itemsEl.appendChild(rerollEl);
@@ -297,7 +297,7 @@ export class Shop {
 
     switch (item.type) {
       case 'weapon': {
-        const weaponItem = item as WeaponShopItem;
+        const weaponItem = item;
         // Check if player has full slots
         if (player.weapons.length >= player.maxWeapons) {
           // Upgrade random weapon of the same type
@@ -325,7 +325,7 @@ export class Shop {
       }
 
       case 'weaponBonus': {
-        const bonusItem = item as WeaponBonusShopItem;
+        const bonusItem = item;
         // Bonus to random weapon (e.g., multishot)
         if (player.weapons.length === 0) {
           this.callbacks.setGold(this.callbacks.getGold() + price);
@@ -351,7 +351,7 @@ export class Shop {
       }
 
       case 'item': {
-        const statItem = item as StatShopItem;
+        const statItem = item;
         // Add item to inventory
         player.addItem(itemKey);
         // Apply effects

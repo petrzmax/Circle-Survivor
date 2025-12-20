@@ -53,16 +53,16 @@ export class EntityManager {
   private player: Player | null = null;
 
   /** Active enemies */
-  private enemies: Map<number, Enemy> = new Map();
+  private enemies = new Map<number, Enemy>();
 
   /** Active projectiles (player and enemy) */
-  private projectiles: Map<number, Projectile> = new Map();
+  private projectiles = new Map<number, Projectile>();
 
   /** Active deployables (mines, turrets) */
-  private deployables: Map<number, Deployable> = new Map();
+  private deployables = new Map<number, Deployable>();
 
   /** Active pickups */
-  private pickups: Map<number, Pickup> = new Map();
+  private pickups = new Map<number, Pickup>();
 
   /** Debug mode */
   private debug: boolean;
@@ -164,7 +164,7 @@ export class EntityManager {
    * Add multiple projectiles at once
    */
   addProjectiles(projectiles: Projectile[]): void {
-    projectiles.forEach((p) => this.addProjectile(p));
+    projectiles.forEach((p) => { this.addProjectile(p); });
   }
 
   /**

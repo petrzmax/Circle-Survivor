@@ -17,10 +17,10 @@ import { Deployable, DeployableConfig } from './Deployable';
 /**
  * Fire result - can be projectiles or deployables
  */
-export type FireResult = {
+export interface FireResult {
   projectiles: Projectile[];
   deployables: Deployable[];
-};
+}
 
 /**
  * Weapon configuration for constructor

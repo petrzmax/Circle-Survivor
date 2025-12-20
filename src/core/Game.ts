@@ -113,18 +113,18 @@ export class Game {
     this.leaderboard = new Leaderboard();
     this.leaderboardUI = new LeaderboardUI(this.leaderboard);
     this.inputHandler = new InputHandler({
-      onPause: () => this.pauseGame(),
-      onResume: () => this.resumeGame(),
-      onSelectCharacter: (type: string) => this.selectCharacter(type as CharacterType),
-      onRestart: () => this.showCharacterSelect(),
-      onStartWave: () => this.startNextWave(),
-      onQuitToMenu: () => this.quitToMenu(),
-      onToggleSound: () => this.toggleSound(),
+      onPause: () => { this.pauseGame(); },
+      onResume: () => { this.resumeGame(); },
+      onSelectCharacter: (type: string) => { this.selectCharacter(type as CharacterType); },
+      onRestart: () => { this.showCharacterSelect(); },
+      onStartWave: () => { this.startNextWave(); },
+      onQuitToMenu: () => { this.quitToMenu(); },
+      onToggleSound: () => { this.toggleSound(); },
       onSubmitScore: () => this.submitScore(),
-      onSwitchLeaderboardTab: (tab: string) => this.switchLeaderboardTab(tab),
+      onSwitchLeaderboardTab: (tab: string) => { this.switchLeaderboardTab(tab); },
       onOpenMenuLeaderboard: () => this.openMenuLeaderboard(),
-      onCloseMenuLeaderboard: () => this.closeMenuLeaderboard(),
-      onSwitchMenuLeaderboardTab: (tab: string) => this.switchMenuLeaderboardTab(tab),
+      onCloseMenuLeaderboard: () => { this.closeMenuLeaderboard(); },
+      onSwitchMenuLeaderboardTab: (tab: string) => { this.switchMenuLeaderboardTab(tab); },
       getState: () => this.state,
     });
     this.effects = createEffectsState();
@@ -139,10 +139,10 @@ export class Game {
         this.gold = value;
       },
       getWaveNumber: () => this.waveManager.waveNumber,
-      playPurchaseSound: () => this.audio.purchase(),
-      playErrorSound: () => this.audio.error(),
-      showNotification: (message: string) => this.showNotification(message),
-      updateHUD: () => this.updateHUD(),
+      playPurchaseSound: () => { this.audio.purchase(); },
+      playErrorSound: () => { this.audio.error(); },
+      showNotification: (message: string) => { this.showNotification(message); },
+      updateHUD: () => { this.updateHUD(); },
     });
 
     // Bind to window for global access
@@ -176,12 +176,12 @@ export class Game {
       },
 
       // Game control
-      pauseGame: () => this.pauseGame(),
-      resumeGame: () => this.resumeGame(),
+      pauseGame: () => { this.pauseGame(); },
+      resumeGame: () => { this.resumeGame(); },
 
       // Wave control
       getCurrentWave: () => this.waveManager.currentWave,
-      skipToWave: (wave) => this.waveManager.skipToWave(wave),
+      skipToWave: (wave) => { this.waveManager.skipToWave(wave); },
 
       // Player actions
       getPlayer: () => {
@@ -194,17 +194,17 @@ export class Game {
           setGodMode: (enabled) => {
             player.godMode = enabled;
           },
-          heal: (amount) => player.heal(amount),
-          addItem: (itemId) => player.addItem(itemId),
+          heal: (amount) => { player.heal(amount); },
+          addItem: (itemId) => { player.addItem(itemId); },
           applyStat: (stat, value) =>
-            player.applyStat(stat as keyof import('@/entities/Player').PlayerStats, value),
+            { player.applyStat(stat as keyof import('@/entities/Player').PlayerStats, value); },
         };
       },
 
       // Entity actions
-      addWeapon: (type) => this.addWeapon(type),
-      spawnEnemy: (type, x, y) => this.spawnEnemy(type, x, y),
-      killAllEnemies: () => this.killAllEnemies(),
+      addWeapon: (type) => { this.addWeapon(type); },
+      spawnEnemy: (type, x, y) => { this.spawnEnemy(type, x, y); },
+      killAllEnemies: () => { this.killAllEnemies(); },
     });
   }
 
@@ -222,7 +222,7 @@ export class Game {
 
   setupEventBusListeners(): void {
     EventBus.on('enemyDeath', ({ enemy }) => {
-      this.handleEnemyDeath(enemy as Enemy);
+      this.handleEnemyDeath(enemy);
     });
   }
 
@@ -278,7 +278,7 @@ export class Game {
     if (selectedCard) selectedCard.classList.add('selected');
 
     // Start game after short delay
-    setTimeout(() => this.startGame(), 300);
+    setTimeout(() => { this.startGame(); }, 300);
   }
 
   showCharacterSelect(): void {
@@ -318,7 +318,7 @@ export class Game {
     this.state = 'playing';
     document.getElementById('pause-menu')?.classList.add('hidden');
     this.lastTime = performance.now();
-    requestAnimationFrame((t) => this.gameLoop(t));
+    requestAnimationFrame((t) => { this.gameLoop(t); });
   }
 
   quitToMenu(): void {
@@ -362,7 +362,7 @@ export class Game {
 
     // Initialize weapons
     this.weapons = [];
-    this.addWeapon(charConfig.startingWeapon as WeaponType);
+    this.addWeapon(charConfig.startingWeapon);
 
     // Reset game state
     this.gold = 0;
@@ -382,7 +382,7 @@ export class Game {
 
     // Start game loop
     this.lastTime = performance.now();
-    requestAnimationFrame((t) => this.gameLoop(t));
+    requestAnimationFrame((t) => { this.gameLoop(t); });
   }
 
   startNextWave(): void {
@@ -474,7 +474,7 @@ export class Game {
     this.render();
 
     if (this.state !== 'gameover' && this.state !== 'paused') {
-      requestAnimationFrame((t) => this.gameLoop(t));
+      requestAnimationFrame((t) => { this.gameLoop(t); });
     }
   }
 
@@ -489,10 +489,10 @@ export class Game {
     // Get input state from InputHandler
     const keys = this.inputHandler.getKeys();
     const input: InputState = {
-      up: keys['w'] || keys['arrowup'] || false,
-      down: keys['s'] || keys['arrowdown'] || false,
-      left: keys['a'] || keys['arrowleft'] || false,
-      right: keys['d'] || keys['arrowright'] || false,
+      up: keys.w || keys.arrowup || false,
+      down: keys.s || keys.arrowdown || false,
+      left: keys.a || keys.arrowleft || false,
+      right: keys.d || keys.arrowright || false,
     };
 
     // Update player movement
@@ -1044,7 +1044,7 @@ export class Game {
         takeDamage: (damage: number, time: number) => player.takeDamage(damage, time),
       },
       currentTime,
-      () => this.audio.dodge(),
+      () => { this.audio.dodge(); },
     );
 
     if (playerDied) this.gameOver();
@@ -1425,9 +1425,9 @@ export class Game {
       items: player.items,
       maxHp: player.maxHp,
       hp: player.hp,
-      addWeapon: (type: string) => this.addWeapon(type as WeaponType),
-      addItem: (itemKey: string) => player.addItem(itemKey),
-      heal: (amount: number) => player.heal(amount),
+      addWeapon: (type: string) => { this.addWeapon(type as WeaponType); },
+      addItem: (itemKey: string) => { player.addItem(itemKey); },
+      heal: (amount: number) => { player.heal(amount); },
       // Stats for shop item effects
       armor: player.armor,
       damageMultiplier: player.damageMultiplier,

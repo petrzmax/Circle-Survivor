@@ -331,8 +331,10 @@ export class Projectile extends Entity implements IExpirable {
         this.drawSword(ctx);
         break;
       case ProjectileType.ROCKET:
-      case ProjectileType.NUKE:
         this.drawRocket(ctx);
+        break;
+      case ProjectileType.NUKE:
+        this.drawNuke(ctx);
         break;
       case ProjectileType.FLAMETHROWER:
         this.drawFlame(ctx);
@@ -444,6 +446,26 @@ export class Projectile extends Entity implements IExpirable {
     ctx.strokeStyle = '#ff8800';
     ctx.lineWidth = 4;
     ctx.stroke();
+  }
+
+  private drawNuke(ctx: CanvasRenderingContext2D): void {
+    // Nuke - large glowing green ball (like original)
+    ctx.restore();
+    ctx.save();
+
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+    gradient.addColorStop(0, '#ffffff');
+    gradient.addColorStop(0.5, '#00ff00');
+    gradient.addColorStop(1, '#004400');
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // Green glow
+    ctx.shadowColor = '#00ff00';
+    ctx.shadowBlur = 20;
+    ctx.fill();
   }
 
   private drawFlame(ctx: CanvasRenderingContext2D): void {

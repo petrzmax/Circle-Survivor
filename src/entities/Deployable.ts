@@ -75,6 +75,9 @@ export class Deployable extends Entity implements IExpirable {
   /** Animation state */
   public animationTime: number = 0;
 
+  /** Blink offset for staggered blinking (based on creation time) */
+  private readonly blinkOffset: number;
+
   constructor(config: DeployableConfig) {
     // Deployables don't have velocity
     super({ ...config, vx: undefined, vy: undefined });
@@ -96,6 +99,9 @@ export class Deployable extends Entity implements IExpirable {
 
     // Start unarmed if arming time > 0
     this.isArmed = this.armingTime <= 0;
+
+    // Random offset for staggered blinking
+    this.blinkOffset = Math.random() * 1000;
   }
 
   // ============ State Helpers ============
@@ -206,11 +212,11 @@ export class Deployable extends Entity implements IExpirable {
     ctx.lineWidth = 2;
     ctx.stroke();
     
-    // Blinking red light when armed
+    // Blinking red light when armed (with offset for staggered blinking)
     if (this.isArmed) {
       ctx.beginPath();
       ctx.arc(0, -3, 3, 0, Math.PI * 2);
-      ctx.fillStyle = Math.floor(Date.now() / 200) % 2 ? '#ff0000' : '#440000';
+      ctx.fillStyle = Math.floor((Date.now() + this.blinkOffset) / 200) % 2 ? '#ff0000' : '#440000';
       ctx.fill();
     }
   }

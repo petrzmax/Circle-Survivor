@@ -69,7 +69,9 @@ export class Game {
   private weapons: WeaponInstance[] = [];
 
   // Systems
-  private collisionSystem: CollisionSystem;
+  // TODO: remove if not needed
+  // @ts-expect-error - prepared for CombatSystem refactor
+  private _collisionSystem: CollisionSystem;
   private waveManager: WaveManager;
   private shop: Shop;
   private audio: AudioSystem;
@@ -103,7 +105,8 @@ export class Game {
 
     // Initialize systems
     this.entityManager = new EntityManager();
-    this.collisionSystem = new CollisionSystem(this.entityManager);
+    // TODO: refactor to CombatSystem, remove _ after
+    this._collisionSystem = new CollisionSystem(this.entityManager);
     this.waveManager = new WaveManager();
     this.shop = new Shop();
     this.audio = new AudioSystem();
@@ -238,7 +241,9 @@ export class Game {
     this.leaderboardUI.closeMenuLeaderboard();
   }
 
-  private async showMenuLeaderboard(tab: string = 'local'): Promise<void> {
+  // TODO: remove if not needed
+  // @ts-expect-error - kept for potential future use
+  private async _showMenuLeaderboard(tab: string = 'local'): Promise<void> {
     await this.leaderboardUI.showMenuLeaderboard(tab);
   }
 
@@ -328,10 +333,6 @@ export class Game {
 
   private startGame(): void {
     this.selectedCharacter ??= CharacterType.NORMIK;
-
-    // Initialize audio
-    this.audio.init();
-    this.audio.connectToEventBus();
 
     // Get character config
     const charConfig = CHARACTER_TYPES[this.selectedCharacter];
@@ -1281,7 +1282,9 @@ export class Game {
 
   // ============ Enemy Finding ============
 
-   private findNearestEnemy(): Enemy | null {
+  // TODO: Remove if not needed
+  // @ts-expect-error - kept for potential future use
+  private _findNearestEnemy(): Enemy | null {
     const player = this.entityManager.getPlayer();
     if (!player) return null;
     return this.entityManager.getNearestEnemy(player.x, player.y);

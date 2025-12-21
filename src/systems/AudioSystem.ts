@@ -276,20 +276,20 @@ export class AudioSystem {
   }
 
   /** Player dodges */
-  private dodge(): void {
+  public dodge(): void {
     this.playTone(1000, 0.05, 'sine', 0.2);
     this.playTone(1200, 0.05, 'sine', 0.15);
   }
 
   /** Thorns damage */
-  private thorns(): void {
+  public thorns(): void {
     this.playTone(800, 0.03, 'square', 0.2);
   }
 
   // ========== UI Sounds ==========
 
   /** Shop purchase */
-  private purchase(): void {
+  public purchase(): void {
     this.playTone(500, 0.05, 'sine', 0.3);
     this.playTone(700, 0.05, 'sine', 0.3);
     this.playTone(900, 0.1, 'sine', 0.4);
@@ -303,7 +303,7 @@ export class AudioSystem {
   }
 
   /** Wave start */
-  private waveStart(): void {
+  public waveStart(): void {
     this.playTone(400, 0.1, 'triangle', 0.3);
     this.playTone(500, 0.1, 'triangle', 0.3);
     this.playTone(600, 0.15, 'triangle', 0.4);
@@ -317,7 +317,7 @@ export class AudioSystem {
   }
 
   /** Game over */
-  private gameOver(): void {
+  public gameOver(): void {
     this.playTone(400, 0.2, 'sawtooth', 0.4);
     this.playToneDelayed(300, 0.2, 150, 'sawtooth', 0.4);
     this.playToneDelayed(200, 0.3, 300, 'sawtooth', 0.4);
@@ -358,7 +358,7 @@ export class AudioSystem {
   /**
    * Connect to EventBus for automatic sound playback
    */
-  private connectToEventBus(): void {
+  public connectToEventBus(): void {
     EventBus.on('goldCollected', () => { this.collectGold(); });
     EventBus.on('healthCollected', () => { this.collectHealth(); });
     EventBus.on('playerHit', () => { this.playerHit(); });

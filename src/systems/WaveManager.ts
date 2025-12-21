@@ -21,10 +21,10 @@ export interface WaveUpdateResult {
 // ============ Wave Manager Class ============
 
 export class WaveManager {
-  private waveNumber: number = 1;
+  public waveNumber: number = 1;
   private waveTime: number = 30; // seconds
-  private timeRemaining: number = 30;
-  private isWaveActive: boolean = false;
+  public timeRemaining: number = 30;
+  public isWaveActive: boolean = false;
   private spawnTimer: number = 0;
   private spawnInterval: number = 800; // ms between spawns
   private enemiesPerSpawn: number = 2;

@@ -235,10 +235,10 @@ export class DevMenu {
    * Setup drag listeners for the header
    */
   private setupDragListeners(): void {
-    const header = this.container?.querySelector('.dev-menu-header');
+    const header = this.container?.querySelector('.dev-menu-header') as HTMLElement | null;
     if (!header) return;
 
-    header.addEventListener('mousedown', (e) => { this.onDragStart(e); });
+    header.addEventListener('mousedown', (e: MouseEvent) => { this.onDragStart(e); });
     document.addEventListener('mousemove', (e) => { this.onDragMove(e); });
     document.addEventListener('mouseup', () => { this.onDragEnd(); });
   }

@@ -267,6 +267,10 @@ export class Game {
   // ============ Character Selection ============
 
   private selectCharacter(characterType: CharacterType): void {
+    // Prevent multiple game starts from rapid clicking
+    if (this.state !== 'start') return;
+    this.state = 'playing';
+    
     this.selectedCharacter = characterType;
 
     // Mark selected card
@@ -276,8 +280,7 @@ export class Game {
     const selectedCard = document.querySelector(`[data-character="${characterType}"]`);
     if (selectedCard) selectedCard.classList.add('selected');
 
-    // Start game after short delay
-    setTimeout(() => { this.startGame(); }, 300);
+    this.startGame();
   }
 
   private showCharacterSelect(): void {

@@ -18,7 +18,7 @@ jobs:
       new_version: ${{ steps.version.outputs.NEW_VERSION }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: develop
           fetch-depth: 0
@@ -82,9 +82,8 @@ jobs:
           LAST_TAG=${{ steps.version.outputs.LAST_TAG }}
           NEW_VERSION=${{ steps.version.outputs.NEW_VERSION }}
 
-          # Start changelog
-          echo "## $NEW_VERSION ($(date +%Y-%m-%d))" > CHANGELOG_ENTRY.md
-          echo "" >> CHANGELOG_ENTRY.md
+          # Initialize empty changelog
+          > CHANGELOG_ENTRY.md
 
           # Get commits and categorize
           FEATURES=""
@@ -93,7 +92,7 @@ jobs:
           REFACTOR=""
           OTHER=""
 
-          while IFS= read -r line; do
+          while IFS= read -r line || [[ -n "$line" ]]; do
             HASH=$(echo "$line" | cut -d'|' -f1)
             MSG=$(echo "$line" | cut -d'|' -f2-)
             SHORT_HASH=${HASH:0:7}
@@ -186,4 +185,6 @@ jobs:
           # Merge PR
           gh pr merge $PR_NUMBER --merge
           echo "PR #$PR_NUMBER merged to master"
-          echo "Deploy will be triggered automatically by push to master"
+
+          # Trigger deploy workflow (GITHUB_TOKEN doesn't trigger workflows on push)
+          gh workflow run deploy.yml --ref master

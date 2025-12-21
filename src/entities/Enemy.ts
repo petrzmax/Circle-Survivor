@@ -140,7 +140,7 @@ export class Enemy extends Entity implements IHealth {
   /** Scale multiplier (for split enemies) */
   public readonly scale: number;
 
-  constructor(entityConfig: EnemyEntityConfig) {
+  public constructor(entityConfig: EnemyEntityConfig) {
     const config = ENEMY_TYPES[entityConfig.type];
     const scale = entityConfig.scale ?? 1;
 

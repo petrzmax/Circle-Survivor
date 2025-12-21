@@ -97,12 +97,16 @@ class EventBusImpl {
    * @param callback Callback function
    * @returns Subscription handle for unsubscribing
    */
-  on<K extends keyof GameEvents>(event: K, callback: EventCallback<GameEvents[K]>): Subscription {
+  public on<K extends keyof GameEvents>(event: K, callback: EventCallback<GameEvents[K]>): Subscription {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
 
-    const listeners = this.listeners.get(event)!;
+    const listeners = this.listeners.get(event);
+    if (!listeners) {
+      throw new Error(`Failed to get listeners for event: ${event}`);
+    }
+
     listeners.add(callback as EventCallback<unknown>);
 
     return {
@@ -118,12 +122,16 @@ class EventBusImpl {
    * @param callback Callback function
    * @returns Subscription handle for unsubscribing
    */
-  once<K extends keyof GameEvents>(event: K, callback: EventCallback<GameEvents[K]>): Subscription {
+  public once<K extends keyof GameEvents>(event: K, callback: EventCallback<GameEvents[K]>): Subscription {
     if (!this.onceListeners.has(event)) {
       this.onceListeners.set(event, new Set());
     }
 
-    const listeners = this.onceListeners.get(event)!;
+    const listeners = this.onceListeners.get(event);
+    if (!listeners) {
+      throw new Error(`Failed to get once listeners for event: ${event}`);
+    }
+
     listeners.add(callback as EventCallback<unknown>);
 
     return {
@@ -138,7 +146,7 @@ class EventBusImpl {
    * @param event Event name
    * @param data Event payload
    */
-  emit<K extends keyof GameEvents>(event: K, data: GameEvents[K]): void {
+  public emit<K extends keyof GameEvents>(event: K, data: GameEvents[K]): void {
     // Regular listeners
     const listeners = this.listeners.get(event);
     if (listeners) {
@@ -171,7 +179,7 @@ class EventBusImpl {
    * Remove all listeners for a specific event
    * @param event Event name (optional, removes all if not provided)
    */
-  off<K extends keyof GameEvents>(event?: K): void {
+  public off(event?: keyof GameEvents): void {
     if (event) {
       this.listeners.delete(event);
       this.onceListeners.delete(event);
@@ -186,7 +194,7 @@ class EventBusImpl {
    * @param event Event name
    * @returns Number of listeners
    */
-  listenerCount<K extends keyof GameEvents>(event: K): number {
+  public listenerCount(event: keyof GameEvents): number {
     const regular = this.listeners.get(event)?.size ?? 0;
     const once = this.onceListeners.get(event)?.size ?? 0;
     return regular + once;
@@ -197,14 +205,14 @@ class EventBusImpl {
    * @param event Event name
    * @returns True if event has listeners
    */
-  hasListeners<K extends keyof GameEvents>(event: K): boolean {
+  public hasListeners(event: keyof GameEvents): boolean {
     return this.listenerCount(event) > 0;
   }
 
   /**
    * Clear all event listeners (useful for cleanup/reset)
    */
-  clear(): void {
+  public clear(): void {
     this.listeners.clear();
     this.onceListeners.clear();
   }

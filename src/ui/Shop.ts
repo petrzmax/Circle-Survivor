@@ -4,12 +4,7 @@
  * Matches original js/shop.js exactly.
  */
 
-import {
-  SHOP_ITEMS,
-  WeaponShopItem,
-  StatShopItem,
-  WeaponBonusShopItem,
-} from '@/config/shop.config';
+import { SHOP_ITEMS } from '@/config/shop.config';
 import { GAME_BALANCE } from '@/config/balance.config';
 
 // ============ Types ============
@@ -61,7 +56,7 @@ export class Shop {
   /**
    * Calculate reroll price
    */
-  getRerollPrice(): number {
+  private getRerollPrice(): number {
     const waveNumber = this.callbacks?.getWaveNumber() ?? 1;
     const basePrice = GAME_BALANCE.economy.reroll.baseCost;
     // Price = base * (1 + wave*perWave) * (1 + reroll*perReroll)
@@ -97,7 +92,7 @@ export class Shop {
   /**
    * Dynamic price scaling
    */
-  calculatePrice(basePrice: number, player: ShopPlayer): number {
+  private calculatePrice(basePrice: number, player: ShopPlayer): number {
     const waveNumber = this.callbacks?.getWaveNumber() ?? 1;
 
     // Scaling with wave number (after startWave, +perWave% per wave)
@@ -187,7 +182,7 @@ export class Shop {
   /**
    * Render shop UI
    */
-  renderShop(gold: number, player: ShopPlayer): void {
+  public renderShop(gold: number, player: ShopPlayer): void {
     const shopEl = document.getElementById('shop');
     const itemsEl = document.getElementById('shop-items');
 
@@ -279,7 +274,7 @@ export class Shop {
   /**
    * Buy item from shop
    */
-  buyItem(itemKey: string, player: ShopPlayer, currentPrice: number | null = null): void {
+  private buyItem(itemKey: string, player: ShopPlayer, currentPrice: number | null = null): void {
     if (!this.callbacks) return;
 
     const item = SHOP_ITEMS[itemKey];
@@ -378,7 +373,7 @@ export class Shop {
   /**
    * Hide shop UI
    */
-  hideShop(): void {
+  public hideShop(): void {
     const shopEl = document.getElementById('shop');
     if (shopEl) shopEl.classList.add('hidden');
   }

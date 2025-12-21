@@ -343,7 +343,7 @@ export class Projectile extends Entity implements IExpirable {
         this.drawHolyGrenade(ctx);
         break;
       case ProjectileType.BANANA:
-      // TODO mini banana was different?
+      // falls through - mini banana uses same draw method
       case ProjectileType.MINI_BANANA:
         this.drawBanana(ctx);
         break;

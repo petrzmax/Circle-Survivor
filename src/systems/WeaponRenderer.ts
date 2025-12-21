@@ -228,7 +228,7 @@ export const WeaponRenderer = {
 
       default:
         // Default icon
-        ctx.fillStyle = weapon.color || '#fff';
+        ctx.fillStyle = weapon.color ?? '#fff';
         ctx.beginPath();
         ctx.arc(0, 0, 6, 0, Math.PI * 2);
         ctx.fill();

@@ -54,38 +54,35 @@ interface WeaponInstance {
 
 export class Game {
   // Canvas
-  canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D;
+  private canvas: HTMLCanvasElement;
+  private ctx: CanvasRenderingContext2D;
 
   // Game state
-  state: GameState = 'start';
-  lastTime: number = 0;
-  selectedCharacter: CharacterType | null = null;
+  private state: GameState = 'start';
+  private lastTime: number = 0;
+  private selectedCharacter: CharacterType | null = null;
 
   // Entity Manager
-  entityManager: EntityManager;
+  private entityManager: EntityManager;
 
   // Weapon instances (runtime state)
-  weapons: WeaponInstance[] = [];
+  private weapons: WeaponInstance[] = [];
 
   // Systems
-  collisionSystem: CollisionSystem;
-  waveManager: WaveManager;
-  shop: Shop;
-  audio: AudioSystem;
-  leaderboard: Leaderboard;
-  leaderboardUI: LeaderboardUI;
-  inputHandler: InputHandler;
+  private collisionSystem: CollisionSystem;
+  private waveManager: WaveManager;
+  private shop: Shop;
+  private audio: AudioSystem;
+  private leaderboard: Leaderboard;
+  private leaderboardUI: LeaderboardUI;
+  private inputHandler: InputHandler;
 
   // Effects
-  effects: EffectsState;
+  private effects: EffectsState;
 
   // Resources
-  gold: number = 0;
-  xp: number = 0;
-
-  // Input
-  keys: KeyState = {};
+  private gold: number = 0;
+  private xp: number = 0;
 
   // Regeneration tracking
   private lastRegenTime: number = 0;
@@ -97,7 +94,7 @@ export class Game {
   // @ts-expect-error - stored for future use
   private _devMenu?: InstanceType<typeof import('@/debug/DevMenu').DevMenu>;
 
-  constructor() {
+  public constructor() {
     // Get canvas
     this.canvas = document.getElementById('game') as HTMLCanvasElement;
     this.ctx = this.canvas.getContext('2d')!;
@@ -120,9 +117,9 @@ export class Game {
       onStartWave: () => { this.startNextWave(); },
       onQuitToMenu: () => { this.quitToMenu(); },
       onToggleSound: () => { this.toggleSound(); },
-      onSubmitScore: () => this.submitScore(),
+      onSubmitScore: () => { void this.submitScore(); },
       onSwitchLeaderboardTab: (tab: string) => { this.switchLeaderboardTab(tab); },
-      onOpenMenuLeaderboard: () => this.openMenuLeaderboard(),
+      onOpenMenuLeaderboard: () => { void this.openMenuLeaderboard(); },
       onCloseMenuLeaderboard: () => { this.closeMenuLeaderboard(); },
       onSwitchMenuLeaderboardTab: (tab: string) => { this.switchMenuLeaderboardTab(tab); },
       getState: () => this.state,
@@ -267,7 +264,7 @@ export class Game {
 
   // ============ Character Selection ============
 
-  selectCharacter(characterType: CharacterType): void {
+  private selectCharacter(characterType: CharacterType): void {
     this.selectedCharacter = characterType;
 
     // Mark selected card
@@ -281,7 +278,7 @@ export class Game {
     setTimeout(() => { this.startGame(); }, 300);
   }
 
-  showCharacterSelect(): void {
+  private showCharacterSelect(): void {
     document.getElementById('game-over')?.classList.add('hidden');
     document.getElementById('start-screen')?.classList.remove('hidden');
     document.querySelectorAll('.character-card').forEach((card) => {
@@ -299,7 +296,7 @@ export class Game {
     }
   }
 
-  toggleSound(): void {
+  private toggleSound(): void {
     this.audio.toggle();
     const btn = document.getElementById('sound-toggle');
     if (btn) {
@@ -309,19 +306,19 @@ export class Game {
 
   // ============ Pause Menu ============
 
-  pauseGame(): void {
+  private pauseGame(): void {
     this.state = 'paused';
     document.getElementById('pause-menu')?.classList.remove('hidden');
   }
 
-  resumeGame(): void {
+  private resumeGame(): void {
     this.state = 'playing';
     document.getElementById('pause-menu')?.classList.add('hidden');
     this.lastTime = performance.now();
     requestAnimationFrame((t) => { this.gameLoop(t); });
   }
 
-  quitToMenu(): void {
+  private quitToMenu(): void {
     this.state = 'start';
     document.getElementById('pause-menu')?.classList.add('hidden');
     this.showCharacterSelect();
@@ -329,10 +326,8 @@ export class Game {
 
   // ============ Game Start ============
 
-  startGame(): void {
-    if (!this.selectedCharacter) {
-      this.selectedCharacter = CharacterType.NORMIK;
-    }
+  private startGame(): void {
+    this.selectedCharacter ??= CharacterType.NORMIK;
 
     // Initialize audio
     this.audio.init();
@@ -385,7 +380,7 @@ export class Game {
     requestAnimationFrame((t) => { this.gameLoop(t); });
   }
 
-  startNextWave(): void {
+  private startNextWave(): void {
     this.shop.hideShop();
     this.state = 'playing';
 
@@ -406,7 +401,7 @@ export class Game {
 
   // ============ Weapon Management ============
 
-  addWeapon(type: WeaponType): void {
+  private addWeapon(type: WeaponType): void {
     const config = WEAPON_TYPES[type];
     if (!config) return;
 
@@ -440,14 +435,12 @@ export class Game {
    * Spread shots evenly for weapons of the same type.
    * Assigns staggered offsets so weapons don't all fire at once.
    */
-  recalculateFireOffsets(): void {
+  private recalculateFireOffsets(): void {
     // Group weapons by type
     const weaponsByType: Record<string, WeaponInstance[]> = {};
     for (const weapon of this.weapons) {
-      if (!weaponsByType[weapon.type]) {
-        weaponsByType[weapon.type] = [];
-      }
-      weaponsByType[weapon.type]!.push(weapon);
+      weaponsByType[weapon.type] ??= [];
+      weaponsByType[weapon.type]?.push(weapon);
     }
 
     // Assign staggered offsets within each type group
@@ -463,7 +456,7 @@ export class Game {
 
   // ============ Game Loop ============
 
-  gameLoop(timestamp: number): void {
+  private gameLoop(timestamp: number): void {
     const deltaTime = timestamp - this.lastTime;
     this.lastTime = timestamp;
 
@@ -480,7 +473,7 @@ export class Game {
 
   // ============ Update ============
 
-  update(deltaTime: number, currentTime: number): void {
+  private update(deltaTime: number, currentTime: number): void {
     const player = this.entityManager.getPlayer();
     if (!player) return;
 
@@ -489,10 +482,10 @@ export class Game {
     // Get input state from InputHandler
     const keys = this.inputHandler.getKeys();
     const input: InputState = {
-      up: keys.w || keys.arrowup || false,
-      down: keys.s || keys.arrowdown || false,
-      left: keys.a || keys.arrowleft || false,
-      right: keys.d || keys.arrowright || false,
+      up: (keys.w ?? keys.arrowup) ?? false,
+      down: (keys.s ?? keys.arrowdown) ?? false,
+      left: (keys.a ?? keys.arrowleft) ?? false,
+      right: (keys.d ?? keys.arrowright) ?? false,
     };
 
     // Update player movement
@@ -790,7 +783,7 @@ export class Game {
 
   // ============ Weapon Firing ============
 
-  fireWeapons(currentTime: number, player: Player): void {
+  private fireWeapons(currentTime: number, player: Player): void {
     for (let i = 0; i < this.weapons.length; i++) {
       const weapon = this.weapons[i]!;
       const config = weapon.config;
@@ -849,7 +842,7 @@ export class Game {
     }
   }
 
-  fireWeaponProjectiles(
+  private fireWeaponProjectiles(
     weapon: WeaponInstance,
     pos: { x: number; y: number; angle: number },
     target: Enemy,
@@ -924,7 +917,7 @@ export class Game {
     this.playWeaponSound(weapon.type);
   }
 
-  getProjectileType(weaponType: WeaponType): ProjectileType {
+  private getProjectileType(weaponType: WeaponType): ProjectileType {
     const mapping: Partial<Record<WeaponType, ProjectileType>> = {
       [WeaponType.SCYTHE]: ProjectileType.SCYTHE,
       [WeaponType.SWORD]: ProjectileType.SWORD,
@@ -939,14 +932,14 @@ export class Game {
     return mapping[weaponType] ?? ProjectileType.STANDARD;
   }
 
-  getExplosionEffect(weaponType: WeaponType): VisualEffect {
+  private getExplosionEffect(weaponType: WeaponType): VisualEffect {
     if (weaponType === WeaponType.NUKE) return VisualEffect.NUKE;
     if (weaponType === WeaponType.HOLY_GRENADE) return VisualEffect.HOLY;
     if (weaponType === WeaponType.BANANA) return VisualEffect.BANANA;
     return VisualEffect.STANDARD;
   }
 
-  playWeaponSound(type: WeaponType): void {
+  private playWeaponSound(type: WeaponType): void {
     switch (type) {
       case WeaponType.SHOTGUN:
         this.audio.shootShotgun();
@@ -987,7 +980,7 @@ export class Game {
   /**
    * Deploy a mine at the player's position
    */
-  deployMine(config: WeaponConfig, player: Player, level: number): void {
+  private deployMine(config: WeaponConfig, player: Player, level: number): void {
     // Calculate damage with level
     const levelMultiplier = 1 + (level - 1) * 0.15;
     const damage = config.damage * levelMultiplier * player.damageMultiplier;
@@ -1020,18 +1013,18 @@ export class Game {
    * Spawn enemy at position (used by DevMenu)
    * TODO: When SpawnSystem is fully integrated, delegate to SpawnSystem.spawnEnemyAt()
    */
-  spawnEnemy(type: EnemyType, x: number, y: number): void {
+  private spawnEnemy(type: EnemyType, x: number, y: number): void {
     const enemy = new Enemy({ x, y, type });
     this.entityManager.addEnemy(enemy);
 
     if (enemy.isBoss) {
-      EventBus.emit('bossSpawned', { enemy, bossName: enemy.bossName || 'Boss' });
+      EventBus.emit('bossSpawned', { enemy, bossName: enemy.bossName ?? 'Boss' });
     }
   }
 
   // ============ Combat Effects ============
 
-  updateShockwaves(currentTime: number): void {
+  private updateShockwaves(currentTime: number): void {
     const player = this.entityManager.getPlayer();
     if (!player) return;
 
@@ -1050,7 +1043,7 @@ export class Game {
     if (playerDied) this.gameOver();
   }
 
-  handleEnemyDeath(enemy: Enemy): void {
+  private handleEnemyDeath(enemy: Enemy): void {
     // Create death effect
     EffectsSystem.createDeathEffect(this.effects, {
       x: enemy.x,
@@ -1141,8 +1134,8 @@ export class Game {
     enemy.destroy();
   }
 
-  spawnSplitEnemies(enemy: Enemy): void {
-    const splitType = enemy.type === 'splitter' ? 'swarm' : 'basic';
+  private spawnSplitEnemies(enemy: Enemy): void {
+    const splitType = enemy.type === EnemyType.SPLITTER ? 'swarm' : 'basic';
     for (let i = 0; i < enemy.splitCount; i++) {
       const angle = (Math.PI * 2 * i) / enemy.splitCount;
       const offsetX = Math.cos(angle) * 30;
@@ -1159,7 +1152,7 @@ export class Game {
     }
   }
 
-  handleExplosion(
+  private handleExplosion(
     x: number,
     y: number,
     radius: number,
@@ -1205,7 +1198,7 @@ export class Game {
   /**
    * Spawn mini bananas after main banana explosion
    */
-  spawnMiniBananas(x: number, y: number, count: number, player: Player): void {
+  private spawnMiniBananas(x: number, y: number, count: number, player: Player): void {
     const config = WEAPON_TYPES.minibanana;
 
     for (let i = 0; i < count; i++) {
@@ -1243,7 +1236,7 @@ export class Game {
     }
   }
 
-  handleChainEffect(startX: number, startY: number, damage: number, chainCount: number): void {
+  private handleChainEffect(startX: number, startY: number, damage: number, chainCount: number): void {
     let currentX = startX;
     let currentY = startY;
     let remainingChains = chainCount;
@@ -1288,7 +1281,7 @@ export class Game {
 
   // ============ Enemy Finding ============
 
-  findNearestEnemy(): Enemy | null {
+   private findNearestEnemy(): Enemy | null {
     const player = this.entityManager.getPlayer();
     if (!player) return null;
     return this.entityManager.getNearestEnemy(player.x, player.y);
@@ -1296,7 +1289,7 @@ export class Game {
 
   // ============ Render ============
 
-  render(): void {
+  private render(): void {
     // Clear
     this.ctx.fillStyle = '#16213e';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -1359,7 +1352,7 @@ export class Game {
     }
   }
 
-  renderWeaponsAroundPlayer(player: Player): void {
+  private renderWeaponsAroundPlayer(player: Player): void {
     for (let i = 0; i < this.weapons.length; i++) {
       const weapon = this.weapons[i]!;
       const pos = player.getWeaponPosition(i, player.currentTarget);
@@ -1379,7 +1372,7 @@ export class Game {
     }
   }
 
-  renderBossHealthBar(): void {
+  private renderBossHealthBar(): void {
     const enemies = this.entityManager.getActiveEnemies();
     // Map enemies to HUDBoss format
     const hudbosses = enemies.map((e) => ({
@@ -1395,7 +1388,7 @@ export class Game {
 
   // ============ HUD ============
 
-  updateHUD(): void {
+  private updateHUD(): void {
     const player = this.entityManager.getPlayer();
     if (!player) return;
     HUD.update(player, this.waveManager, this.gold, this.xp);
@@ -1403,7 +1396,7 @@ export class Game {
 
   // ============ Shop ============
 
-  openShop(): void {
+  private openShop(): void {
     this.state = 'shop';
     this.waveManager.endWave();
     this.entityManager.clearExceptPlayer();
@@ -1418,7 +1411,7 @@ export class Game {
     }
   }
 
-  createShopPlayer(player: Player): ShopPlayer {
+  private createShopPlayer(player: Player): ShopPlayer {
     return {
       weapons: this.weapons.map((w) => this.createShopWeapon(w)),
       maxWeapons: player.maxWeapons,
@@ -1442,7 +1435,7 @@ export class Game {
     };
   }
 
-  createShopWeapon(weapon: WeaponInstance): ShopWeapon {
+  private createShopWeapon(weapon: WeaponInstance): ShopWeapon {
     return {
       type: weapon.type,
       name: weapon.name,
@@ -1456,7 +1449,7 @@ export class Game {
 
   // ============ Game Over ============
 
-  gameOver(): void {
+  private gameOver(): void {
     this.state = 'gameover';
     this.audio.gameOver();
 
@@ -1467,11 +1460,11 @@ export class Game {
     document.getElementById('game-over')?.classList.remove('hidden');
 
     // Load saved player name
-    const savedName = localStorage.getItem('circle_survivor_player_name') || '';
+    const savedName = localStorage.getItem('circle_survivor_player_name') ?? '';
     const playerNameInput = document.getElementById('player-name') as HTMLInputElement;
     if (playerNameInput) playerNameInput.value = savedName;
 
     // Show leaderboard
-    this.showLeaderboard('local');
+    void this.showLeaderboard('local');
   }
 }

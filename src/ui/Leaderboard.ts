@@ -97,7 +97,7 @@ export class Leaderboard {
       }
 
       const data = await response.json();
-      this.globalScores = data.record?.scores || [];
+      this.globalScores = data.record?.scores ?? [];
       this.lastFetch = Date.now();
 
       return this.globalScores;
@@ -107,7 +107,7 @@ export class Leaderboard {
     }
   }
 
-  async saveGlobalScore(entry: LeaderboardEntry): Promise<LeaderboardEntry[] | null> {
+  private async saveGlobalScore(entry: LeaderboardEntry): Promise<LeaderboardEntry[] | null> {
     if (!this.isGlobalEnabled()) return null;
 
     try {

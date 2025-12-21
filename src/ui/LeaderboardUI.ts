@@ -13,7 +13,7 @@ export class LeaderboardUI {
   public currentMenuLeaderboardTab: string = 'local';
   private highlightedName: string | null = null;
 
-  constructor(leaderboard: Leaderboard) {
+  public constructor(leaderboard: Leaderboard) {
     this.leaderboard = leaderboard;
   }
 
@@ -29,7 +29,7 @@ export class LeaderboardUI {
   /**
    * Close menu leaderboard
    */
-  closeMenuLeaderboard(): void {
+  public closeMenuLeaderboard(): void {
     document.getElementById('menu-leaderboard')?.classList.add('hidden');
     document.getElementById('start-screen')?.classList.remove('hidden');
   }
@@ -62,14 +62,14 @@ export class LeaderboardUI {
   /**
    * Switch menu leaderboard tab
    */
-  switchMenuLeaderboardTab(tab: string): void {
-    this.showMenuLeaderboard(tab);
+  public switchMenuLeaderboardTab(tab: string): void {
+    void this.showMenuLeaderboard(tab);
   }
 
   /**
    * Submit score to leaderboard
    */
-  async submitScore(wave: number, xp: number, character: string | null): Promise<void> {
+  public async submitScore(wave: number, xp: number, character: string | null): Promise<void> {
     const nameInput = document.getElementById('player-name') as HTMLInputElement;
     const submitBtn = document.getElementById('submit-score-btn') as HTMLButtonElement;
 
@@ -89,12 +89,12 @@ export class LeaderboardUI {
     submitBtn.textContent = '⏳ Saving...';
 
     try {
-      await this.leaderboard.submitScore(name, wave, xp, character || 'normik');
+      await this.leaderboard.submitScore(name, wave, xp, character ?? 'normik');
 
       // Hide submit form, show leaderboard
       const scoreSubmit = document.getElementById('score-submit');
       if (scoreSubmit) scoreSubmit.style.display = 'none';
-      this.showLeaderboard('local', name);
+      void this.showLeaderboard('local', name);
 
       // Save name for next time
       localStorage.setItem('circle_survivor_player_name', name);
@@ -108,7 +108,7 @@ export class LeaderboardUI {
   /**
    * Show leaderboard with specific tab
    */
-  async showLeaderboard(tab: string = 'local', highlightName: string | null = null): Promise<void> {
+  public async showLeaderboard(tab: string = 'local', highlightName: string | null = null): Promise<void> {
     const listEl = document.getElementById('leaderboard-list');
     if (!listEl) return;
 
@@ -134,7 +134,7 @@ export class LeaderboardUI {
   /**
    * Switch leaderboard tab
    */
-  switchLeaderboardTab(tab: string): void {
-    this.showLeaderboard(tab, this.highlightedName);
+  public switchLeaderboardTab(tab: string): void {
+    void this.showLeaderboard(tab, this.highlightedName);
   }
 }

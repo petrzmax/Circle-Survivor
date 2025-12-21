@@ -150,9 +150,9 @@ export const HUD = {
     ctx.font = 'bold 13px Arial';
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillText(`${bossEmoji} ${boss.bossName || 'BOSS'}`, canvasWidth / 2 + 1, barY - 6);
+    ctx.fillText(`${bossEmoji} ${boss.bossName ?? 'BOSS'}`, canvasWidth / 2 + 1, barY - 6);
     ctx.fillStyle = '#ff6b6b';
-    ctx.fillText(`${bossEmoji} ${boss.bossName || 'BOSS'}`, canvasWidth / 2, barY - 7);
+    ctx.fillText(`${bossEmoji} ${boss.bossName ?? 'BOSS'}`, canvasWidth / 2, barY - 7);
 
     // Bar background - dark with rounded corners
     ctx.beginPath();
@@ -207,7 +207,7 @@ export const HUD = {
     ctx.stroke();
 
     // HP text - smaller, on the right side of the bar
-    const percentText = Math.ceil(hpPercent * 100) + '%';
+    const percentText = `${Math.ceil(hpPercent * 100)}%`;
     ctx.font = 'bold 11px Arial';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.textAlign = 'right';

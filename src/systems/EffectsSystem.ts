@@ -396,7 +396,7 @@ export const EffectsSystem = {
       maxRadius: shockwave.radius,
       currentRadius: 0,
       damage: shockwave.damage,
-      color: shockwave.color || '#ff4444',
+      color: shockwave.color ?? '#ff4444',
       created: Date.now(),
       damageDealt: false,
       alpha: 1,

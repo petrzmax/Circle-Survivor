@@ -60,7 +60,7 @@ export class DevMenu {
   private dragOffsetX: number = 0;
   private dragOffsetY: number = 0;
 
-  constructor(deps: DevMenuDependencies) {
+  public constructor(deps: DevMenuDependencies) {
     this.deps = deps;
     this.init();
   }
@@ -92,7 +92,6 @@ export class DevMenu {
   private populateDropdowns(): void {
     // Items dropdown
     const itemSelect = document.getElementById('dev-item-select') as HTMLSelectElement;
-    if (itemSelect) {
       itemSelect.innerHTML = '';
       for (const [id, item] of Object.entries(SHOP_ITEMS)) {
         if (item.type === 'item') {
@@ -102,11 +101,10 @@ export class DevMenu {
           itemSelect.appendChild(option);
         }
       }
-    }
+    
 
     // Weapons dropdown
     const weaponSelect = document.getElementById('dev-weapon-select') as HTMLSelectElement;
-    if (weaponSelect) {
       weaponSelect.innerHTML = '';
       for (const [type, config] of Object.entries(WEAPON_TYPES)) {
         if (type === 'minibanana') continue; // Skip internal type
@@ -115,11 +113,9 @@ export class DevMenu {
         option.textContent = `${config.emoji || ''} ${config.name}`;
         weaponSelect.appendChild(option);
       }
-    }
 
     // Boss dropdown - use formatted type name since config.name is generic 'BOSS'
     const bossSelect = document.getElementById('dev-boss-select') as HTMLSelectElement;
-    if (bossSelect) {
       bossSelect.innerHTML = '';
       // TODO, why not use boss type enum instead of a map??
       const bossLabels: Record<string, string> = {
@@ -134,15 +130,14 @@ export class DevMenu {
         if (config.isBoss) {
           const option = document.createElement('option');
           option.value = type;
-          option.textContent = bossLabels[type] || type;
+          option.textContent = bossLabels[type] ?? type;
           bossSelect.appendChild(option);
         }
       }
-    }
+    
 
     // Enemy dropdown
     const enemySelect = document.getElementById('dev-enemy-select') as HTMLSelectElement;
-    if (enemySelect) {
       enemySelect.innerHTML = '';
       for (const [type, config] of Object.entries(ENEMY_TYPES)) {
         if (!config.isBoss) {
@@ -152,7 +147,7 @@ export class DevMenu {
           enemySelect.appendChild(option);
         }
       }
-    }
+    
   }
 
   /**
@@ -240,7 +235,7 @@ export class DevMenu {
    * Setup drag listeners for the header
    */
   private setupDragListeners(): void {
-    const header = this.container?.querySelector('.dev-menu-header')!;
+    const header = this.container?.querySelector('.dev-menu-header');
     if (!header) return;
 
     header.addEventListener('mousedown', (e) => { this.onDragStart(e); });
@@ -310,15 +305,13 @@ export class DevMenu {
 
     // Update wave input to current wave
     const waveInput = document.getElementById('dev-wave-input') as HTMLInputElement;
-    if (waveInput) {
       waveInput.value = String(this.deps.getCurrentWave());
-    }
 
     // Update god mode checkbox
     const godmodeCheckbox = document.getElementById('dev-godmode') as HTMLInputElement;
     const player = this.deps.getPlayer();
-    if (godmodeCheckbox && player) {
-      godmodeCheckbox.checked = player.godMode ?? false;
+    if (player) {
+      godmodeCheckbox.checked = player.godMode;
     }
   }
 

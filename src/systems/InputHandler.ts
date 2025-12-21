@@ -29,7 +29,7 @@ export class InputHandler {
   private keys: KeyState = {};
   private callbacks: InputHandlerCallbacks;
 
-  constructor(callbacks: InputHandlerCallbacks) {
+  public constructor(callbacks: InputHandlerCallbacks) {
     this.callbacks = callbacks;
   }
 

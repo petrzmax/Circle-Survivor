@@ -6,70 +6,38 @@
 import { EventBus } from '@/core/EventBus';
 
 /**
+ * Extend Window interface to include webkit prefixed AudioContext
+ */
+interface WindowWithWebkit extends Window {
+  webkitAudioContext?: typeof AudioContext;
+}
+
+/**
  * Oscillator types for tone generation
  */
 export type OscillatorType = 'sine' | 'square' | 'sawtooth' | 'triangle';
 
 /**
- * Sound categories for volume control
- */
-export enum SoundCategory {
-  SFX = 'sfx',
-  UI = 'ui',
-  MUSIC = 'music',
-}
-
-/**
- * AudioSystem configuration
- */
-export interface AudioSystemConfig {
-  /** Master volume (0-1) */
-  volume?: number;
-  /** Whether audio is enabled */
-  enabled?: boolean;
-  /** Auto-initialize on first sound */
-  autoInit?: boolean;
-}
-
-/**
  * Handles all game audio using Web Audio API.
  * Generates sounds procedurally (no external files needed).
  *
- * @example
- * ```typescript
- * const audioSystem = new AudioSystem({ volume: 0.5 });
- *
- * // Initialize after user interaction (required by browsers)
- * audioSystem.init();
- *
- * // Play sounds
- * audioSystem.shoot();
- * audioSystem.explosion();
- * audioSystem.collectGold();
- * ```
  */
 export class AudioSystem {
   private ctx: AudioContext | null = null;
-  private enabled: boolean;
-  private volume: number;
-  private initialized: boolean = false;
-  private autoInit: boolean;
+  private enabled: boolean = true;
 
-  constructor(config: AudioSystemConfig = {}) {
-    this.volume = config.volume ?? 0.3;
-    this.enabled = config.enabled ?? true;
-    this.autoInit = config.autoInit ?? true;
+  public constructor() {
+    this.init()
+    this.connectToEventBus();
   }
 
   /**
    * Initialize the audio context.
    * Must be called after user interaction (browser requirement).
    */
-  init(): boolean {
-    if (this.initialized) return true;
-
+  private init(): boolean {
     try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContextClass = window.AudioContext || (window as WindowWithWebkit).webkitAudioContext;
       if (!AudioContextClass) {
         console.warn('[AudioSystem] Web Audio API not supported');
         this.enabled = false;
@@ -77,7 +45,6 @@ export class AudioSystem {
       }
 
       this.ctx = new AudioContextClass();
-      this.initialized = true;
       return true;
     } catch (e) {
       console.warn('[AudioSystem] Failed to initialize:', e);
@@ -86,28 +53,18 @@ export class AudioSystem {
     }
   }
 
-  /**
-   * Resume audio context (required after page becomes visible)
-   */
-  async resume(): Promise<void> {
-    if (this.ctx?.state === 'suspended') {
-      await this.ctx.resume();
-    }
-  }
-
   // ========== Core Sound Generation ==========
 
   /**
    * Play a tone with specified parameters
    */
-  playTone(
+  private playTone(
     frequency: number,
     duration: number,
     type: OscillatorType = 'square',
     volumeMod: number = 1,
   ): void {
     if (!this.enabled) return;
-    if (!this.ctx && this.autoInit) this.init();
     if (!this.ctx) return;
 
     const osc = this.ctx.createOscillator();
@@ -117,7 +74,7 @@ export class AudioSystem {
     osc.frequency.value = frequency;
 
     const now = this.ctx.currentTime;
-    gain.gain.setValueAtTime(this.volume * volumeMod, now);
+    gain.gain.setValueAtTime(volumeMod, now);
     gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
 
     osc.connect(gain);
@@ -130,9 +87,8 @@ export class AudioSystem {
   /**
    * Play white noise (for explosions, etc.)
    */
-  playNoise(duration: number, volumeMod: number = 1): void {
+  private playNoise(duration: number, volumeMod: number = 1): void {
     if (!this.enabled) return;
-    if (!this.ctx && this.autoInit) this.init();
     if (!this.ctx) return;
 
     const bufferSize = Math.floor(this.ctx.sampleRate * duration);
@@ -153,7 +109,7 @@ export class AudioSystem {
     filter.frequency.value = 1000;
 
     const now = this.ctx.currentTime;
-    gain.gain.setValueAtTime(this.volume * volumeMod, now);
+    gain.gain.setValueAtTime(volumeMod, now);
     gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
 
     noise.connect(filter);
@@ -320,55 +276,57 @@ export class AudioSystem {
   }
 
   /** Player dodges */
-  dodge(): void {
+  private dodge(): void {
     this.playTone(1000, 0.05, 'sine', 0.2);
     this.playTone(1200, 0.05, 'sine', 0.15);
   }
 
   /** Thorns damage */
-  thorns(): void {
+  private thorns(): void {
     this.playTone(800, 0.03, 'square', 0.2);
   }
 
   // ========== UI Sounds ==========
 
   /** Shop purchase */
-  purchase(): void {
+  private purchase(): void {
     this.playTone(500, 0.05, 'sine', 0.3);
     this.playTone(700, 0.05, 'sine', 0.3);
     this.playTone(900, 0.1, 'sine', 0.4);
   }
-
+  
+  // TODO - make private, use through event bus
   /** Error (not enough gold, etc.) */
-  error(): void {
+  public error(): void {
     this.playTone(200, 0.1, 'square', 0.3);
     this.playTone(150, 0.15, 'square', 0.3);
   }
 
   /** Wave start */
-  waveStart(): void {
+  private waveStart(): void {
     this.playTone(400, 0.1, 'triangle', 0.3);
     this.playTone(500, 0.1, 'triangle', 0.3);
     this.playTone(600, 0.15, 'triangle', 0.4);
   }
 
   /** Boss spawn */
-  bossSpawn(): void {
+  private bossSpawn(): void {
     this.playTone(100, 0.3, 'sawtooth', 0.5);
     this.playTone(80, 0.4, 'sawtooth', 0.4);
     this.playTone(60, 0.5, 'sawtooth', 0.3);
   }
 
   /** Game over */
-  gameOver(): void {
+  private gameOver(): void {
     this.playTone(400, 0.2, 'sawtooth', 0.4);
     this.playToneDelayed(300, 0.2, 150, 'sawtooth', 0.4);
     this.playToneDelayed(200, 0.3, 300, 'sawtooth', 0.4);
     this.playToneDelayed(100, 0.5, 450, 'sawtooth', 0.5);
   }
 
+  // TODO - make private, use through event bus
   /** Countdown tick */
-  countdownTick(secondsLeft: number): void {
+  public countdownTick(secondsLeft: number): void {
     if (secondsLeft === 0) {
       // Final sound - happy "ding ding!"
       this.playTone(500, 0.08, 'triangle', 0.3);
@@ -380,57 +338,19 @@ export class AudioSystem {
     }
   }
 
-  /** Button hover */
-  buttonHover(): void {
-    this.playTone(400, 0.02, 'sine', 0.1);
-  }
-
-  /** Button click */
-  buttonClick(): void {
-    this.playTone(500, 0.03, 'sine', 0.2);
-  }
-
   // ========== Settings ==========
-
-  /**
-   * Set master volume
-   */
-  setVolume(volume: number): void {
-    this.volume = Math.max(0, Math.min(1, volume));
-  }
-
-  /**
-   * Get master volume
-   */
-  getVolume(): number {
-    return this.volume;
-  }
-
-  /**
-   * Enable/disable audio
-   */
-  setEnabled(enabled: boolean): void {
-    this.enabled = enabled;
-  }
 
   /**
    * Check if audio is enabled
    */
-  isEnabled(): boolean {
+  public isEnabled(): boolean {
     return this.enabled;
-  }
-
-  /**
-   * Check if audio is initialized
-   */
-  isInitialized(): boolean {
-    return this.initialized;
   }
 
   /**
    * Toggle audio on/off
    */
-  toggle(): boolean {
+  public toggle(): boolean {
     this.enabled = !this.enabled;
     return this.enabled;
   }
@@ -438,7 +358,7 @@ export class AudioSystem {
   /**
    * Connect to EventBus for automatic sound playback
    */
-  connectToEventBus(): void {
+  private connectToEventBus(): void {
     EventBus.on('goldCollected', () => { this.collectGold(); });
     EventBus.on('healthCollected', () => { this.collectHealth(); });
     EventBus.on('playerHit', () => { this.playerHit(); });
@@ -460,8 +380,3 @@ export class AudioSystem {
     });
   }
 }
-
-/**
- * Global audio system instance (for backwards compatibility)
- */
-export const audio = new AudioSystem();

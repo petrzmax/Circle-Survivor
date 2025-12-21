@@ -6,38 +6,14 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  pages: write
-  id-token: write
 
 concurrency:
   group: 'release'
   cancel-in-progress: false
 
 jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: develop
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
   release:
     runs-on: ubuntu-latest
-    needs: check
     outputs:
       new_version: ${{ steps.version.outputs.NEW_VERSION }}
     steps:
@@ -210,57 +186,4 @@ jobs:
           # Merge PR
           gh pr merge $PR_NUMBER --merge
           echo "PR #$PR_NUMBER merged to master"
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: release
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: master
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Get version
-        id: version
-        run: |
-          VERSION=${{ needs.release.outputs.new_version }}
-          VERSION=${VERSION#v}
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Deploying version: $VERSION"
-
-      - name: Build
-        env:
-          VITE_GAME_VERSION: ${{ steps.version.outputs.VERSION }}
-          VITE_JSONBIN_BIN_ID: ${{ secrets.JSONBIN_BIN_ID }}
-          VITE_JSONBIN_API_KEY: ${{ secrets.JSONBIN_API_KEY }}
-        run: npm run build
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: './dist'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-      - name: Summary
-        run: |
-          echo "✅ Release ${{ needs.release.outputs.new_version }} deployed!"
-          echo "🌐 URL: ${{ steps.deployment.outputs.page_url }}"
+          echo "Deploy will be triggered automatically by push to master"

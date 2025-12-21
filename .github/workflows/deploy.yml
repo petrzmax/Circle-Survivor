@@ -1,7 +1,14 @@
 name: Deploy to GitHub Pages
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag version to deploy (e.g. v1.2.3). Leave empty for latest.'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -9,7 +16,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: 'pages'
   cancel-in-progress: false
 
 jobs:
@@ -19,6 +26,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.tag || github.event.release.tag_name || 'master' }}
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -33,12 +41,18 @@ jobs:
       - name: Get version from git tag
         id: version
         run: |
-          # Get latest tag or default to v0.0.0
-          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          # Use input tag, release tag, or get latest tag
+          if [ -n "${{ inputs.tag }}" ]; then
+            TAG="${{ inputs.tag }}"
+          elif [ -n "${{ github.event.release.tag_name }}" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+          else
+            TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          fi
           # Remove 'v' prefix for display
           VERSION=${TAG#v}
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Using version: $VERSION"
+          echo "Deploying version: $VERSION"
 
       - name: Build with Vite
         env:

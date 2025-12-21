@@ -124,7 +124,7 @@ export class Weapon {
   /** Extra projectiles from items (multishot) */
   public extraProjectiles: number = 0;
 
-  constructor(entityConfig: WeaponEntityConfig) {
+  public constructor(entityConfig: WeaponEntityConfig) {
     const config = WEAPON_TYPES[entityConfig.type];
     this.type = entityConfig.type;
 

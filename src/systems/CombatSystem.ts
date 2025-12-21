@@ -67,7 +67,7 @@ export class CombatSystem {
   /** Pending explosions to process */
   private pendingExplosions: ExplosionEvent[] = [];
 
-  constructor(entityManager: EntityManager, config: CombatSystemConfig = {}) {
+  public constructor(entityManager: EntityManager, config: CombatSystemConfig = {}) {
     this.entityManager = entityManager;
     this.healthDropChance = config.healthDropChance ?? 0.05;
   }
@@ -75,7 +75,7 @@ export class CombatSystem {
   /**
    * Process all collisions from CollisionSystem
    */
-  processCollisions(collisions: CollisionResult, currentTime: number): void {
+  public processCollisions(collisions: CollisionResult, currentTime: number): void {
     const player = this.entityManager.getPlayer();
     if (!player) return;
 
@@ -277,7 +277,7 @@ export class CombatSystem {
   /**
    * Queue an explosion for processing
    */
-  queueExplosion(explosion: ExplosionEvent): void {
+  public queueExplosion(explosion: ExplosionEvent): void {
     this.pendingExplosions.push(explosion);
   }
 
@@ -401,7 +401,7 @@ export class CombatSystem {
   /**
    * Apply damage to player directly (for special cases)
    */
-  applyDamageToPlayer(damage: number, currentTime: number): boolean {
+  public applyDamageToPlayer(damage: number, currentTime: number): boolean {
     const player = this.entityManager.getPlayer();
     if (!player) return false;
 
@@ -411,7 +411,7 @@ export class CombatSystem {
   /**
    * Apply damage to all enemies in area
    */
-  applyAreaDamage(
+  public applyAreaDamage(
     x: number,
     y: number,
     radius: number,
@@ -432,7 +432,7 @@ export class CombatSystem {
   /**
    * Set health drop chance
    */
-  setHealthDropChance(chance: number): void {
+  public setHealthDropChance(chance: number): void {
     this.healthDropChance = Math.max(0, Math.min(1, chance));
   }
 

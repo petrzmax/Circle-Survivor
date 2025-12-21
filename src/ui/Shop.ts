@@ -49,7 +49,7 @@ export class Shop {
   /**
    * Set callbacks for game integration
    */
-  setCallbacks(callbacks: ShopCallbacks): void {
+  public setCallbacks(callbacks: ShopCallbacks): void {
     this.callbacks = callbacks;
   }
 
@@ -68,7 +68,7 @@ export class Shop {
   /**
    * Reroll items in shop
    */
-  rerollItems(player: ShopPlayer): void {
+  public rerollItems(player: ShopPlayer): void {
     if (!this.callbacks) return;
 
     const price = this.getRerollPrice();
@@ -120,7 +120,7 @@ export class Shop {
   /**
    * Generate items for shop
    */
-  generateItems(player: ShopPlayer): void {
+  public generateItems(player: ShopPlayer): void {
     // Item categorization
     const weapons: string[] = [];
     const items: string[] = [];
@@ -175,7 +175,7 @@ export class Shop {
   /**
    * Reset reroll on shop open
    */
-  resetReroll(): void {
+  public resetReroll(): void {
     this.rerollCount = 0;
   }
 

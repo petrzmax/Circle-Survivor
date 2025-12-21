@@ -217,36 +217,36 @@ export class Game {
 
   // ============ Setup ============
 
-  setupEventBusListeners(): void {
+  private setupEventBusListeners(): void {
     EventBus.on('enemyDeath', ({ enemy }) => {
       this.handleEnemyDeath(enemy);
     });
   }
 
-  showNotification(message: string): void {
+  private showNotification(message: string): void {
     console.log('Notification:', message);
     // TODO: Implement visual notification
   }
 
   // ============ Leaderboard Methods ============
 
-  async openMenuLeaderboard(): Promise<void> {
+  private async openMenuLeaderboard(): Promise<void> {
     await this.leaderboardUI.openMenuLeaderboard();
   }
 
-  closeMenuLeaderboard(): void {
+  private closeMenuLeaderboard(): void {
     this.leaderboardUI.closeMenuLeaderboard();
   }
 
-  async showMenuLeaderboard(tab: string = 'local'): Promise<void> {
+  private async showMenuLeaderboard(tab: string = 'local'): Promise<void> {
     await this.leaderboardUI.showMenuLeaderboard(tab);
   }
 
-  switchMenuLeaderboardTab(tab: string): void {
+  private switchMenuLeaderboardTab(tab: string): void {
     this.leaderboardUI.switchMenuLeaderboardTab(tab);
   }
 
-  async submitScore(): Promise<void> {
+  private async submitScore(): Promise<void> {
     await this.leaderboardUI.submitScore(
       this.waveManager.waveNumber,
       this.xp,
@@ -254,11 +254,11 @@ export class Game {
     );
   }
 
-  async showLeaderboard(tab: string = 'local', highlightName: string | null = null): Promise<void> {
+  private async showLeaderboard(tab: string = 'local', highlightName: string | null = null): Promise<void> {
     await this.leaderboardUI.showLeaderboard(tab, highlightName);
   }
 
-  switchLeaderboardTab(tab: string): void {
+  private switchLeaderboardTab(tab: string): void {
     this.leaderboardUI.switchLeaderboardTab(tab);
   }
 

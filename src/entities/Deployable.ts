@@ -78,7 +78,7 @@ export class Deployable extends Entity implements IExpirable {
   /** Blink offset for staggered blinking (based on creation time) */
   private readonly blinkOffset: number;
 
-  constructor(config: DeployableConfig) {
+  public constructor(config: DeployableConfig) {
     // Deployables don't have velocity
     super({ ...config, vx: undefined, vy: undefined });
 

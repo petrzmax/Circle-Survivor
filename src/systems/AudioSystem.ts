@@ -137,72 +137,72 @@ export class AudioSystem {
   // ========== Weapon Sounds ==========
 
   /** Pistol shot */
-  shoot(): void {
+  public shoot(): void {
     this.playTone(800, 0.05, 'square', 0.3);
   }
 
   /** Shotgun blast */
-  shootShotgun(): void {
+  public shootShotgun(): void {
     this.playNoise(0.1, 0.4);
     this.playTone(200, 0.08, 'sawtooth', 0.3);
   }
 
   /** Sniper shot */
-  shootSniper(): void {
+  public shootSniper(): void {
     this.playTone(150, 0.15, 'sawtooth', 0.5);
     this.playTone(100, 0.2, 'sine', 0.3);
   }
 
   /** Laser shot */
-  shootLaser(): void {
+  public shootLaser(): void {
     this.playTone(1200, 0.03, 'sine', 0.2);
   }
 
   /** Minigun shot */
-  shootMinigun(): void {
+  public shootMinigun(): void {
     this.playTone(600, 0.02, 'square', 0.15);
   }
 
   /** SMG shot */
-  shootSMG(): void {
+  public shootSMG(): void {
     this.playTone(700, 0.03, 'square', 0.2);
   }
 
   /** Bazooka shot */
-  shootBazooka(): void {
+  public shootBazooka(): void {
     this.playNoise(0.15, 0.3);
     this.playTone(100, 0.2, 'sawtooth', 0.4);
   }
 
   /** Crossbow shot */
-  crossbowShoot(): void {
+  public crossbowShoot(): void {
     this.playTone(250, 0.1, 'triangle', 0.4);
   }
 
   /** Chain lightning effect */
-  chainEffect(): void {
+  public chainEffect(): void {
     this.playTone(1500, 0.1, 'sine', 0.2);
   }
 
   /** Scythe swing */
-  scytheSwing(): void {
+  public scytheSwing(): void {
     this.playTone(400, 0.1, 'sine', 0.3);
     this.playToneDelayed(300, 0.1, 50, 'sine', 0.2);
   }
 
   /** Sword slash */
-  swordSlash(): void {
+  public swordSlash(): void {
     this.playTone(500, 0.08, 'sawtooth', 0.4);
     this.playNoise(0.05, 0.2);
   }
 
   /** Flamethrower */
-  flamethrower(): void {
+  public flamethrower(): void {
     this.playNoise(0.05, 0.2);
   }
 
   /** Boomerang throw */
-  boomerangThrow(): void {
+  public boomerangThrow(): void {
     this.playTone(500, 0.1, 'sine', 0.25);
     this.playToneDelayed(450, 0.08, 80, 'sine', 0.2);
   }
@@ -210,13 +210,13 @@ export class AudioSystem {
   // ========== Explosion Sounds ==========
 
   /** Standard explosion */
-  explosion(): void {
+  public explosion(): void {
     this.playNoise(0.3, 0.6);
     this.playTone(80, 0.3, 'sine', 0.5);
   }
 
   /** Nuke explosion (bigger) */
-  nukeExplosion(): void {
+  public nukeExplosion(): void {
     this.playNoise(0.8, 1);
     this.playTone(40, 0.5, 'sine', 0.8);
     this.playToneDelayed(60, 0.4, 100, 'sine', 0.5);
@@ -224,14 +224,14 @@ export class AudioSystem {
   }
 
   /** Holy grenade explosion */
-  holyExplosion(): void {
+  public holyExplosion(): void {
     this.playTone(600, 0.2, 'sine', 0.4);
     this.playNoise(0.4, 0.5);
     this.playToneDelayed(800, 0.15, 100, 'sine', 0.3);
   }
 
   /** Mine explosion */
-  mineExplosion(): void {
+  public mineExplosion(): void {
     this.playNoise(0.25, 0.5);
     this.playTone(100, 0.25, 'sine', 0.4);
   }
@@ -239,18 +239,18 @@ export class AudioSystem {
   // ========== Collection Sounds ==========
 
   /** Collect gold */
-  collectGold(): void {
+  public collectGold(): void {
     this.playTone(800, 0.05, 'sine', 0.3);
     this.playTone(1000, 0.05, 'sine', 0.3);
   }
 
   /** Collect XP */
-  collectXP(): void {
+  public collectXP(): void {
     this.playTone(600, 0.08, 'triangle', 0.2);
   }
 
   /** Collect health */
-  collectHealth(): void {
+  public collectHealth(): void {
     this.playTone(400, 0.1, 'sine', 0.3);
     this.playTone(600, 0.1, 'sine', 0.3);
     this.playTone(800, 0.15, 'sine', 0.3);
@@ -259,18 +259,18 @@ export class AudioSystem {
   // ========== Combat Sounds ==========
 
   /** Player takes damage */
-  playerHit(): void {
+  public playerHit(): void {
     this.playTone(200, 0.1, 'sawtooth', 0.4);
     this.playTone(150, 0.15, 'square', 0.3);
   }
 
   /** Enemy takes damage */
-  enemyHit(): void {
+  public enemyHit(): void {
     this.playTone(300, 0.05, 'square', 0.2);
   }
 
   /** Enemy death */
-  enemyDeath(): void {
+  public enemyDeath(): void {
     this.playTone(200, 0.1, 'sawtooth', 0.3);
     this.playTone(100, 0.15, 'sawtooth', 0.2);
   }

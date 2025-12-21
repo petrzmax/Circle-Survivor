@@ -136,7 +136,7 @@ export class Player extends Entity implements IHealth {
   /** Current target for weapon aiming */
   public currentTarget: Vector2 | null = null;
 
-  constructor(config: PlayerConfig) {
+  public constructor(config: PlayerConfig) {
     super({
       x: config.x,
       y: config.y,

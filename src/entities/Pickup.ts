@@ -66,7 +66,7 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
   /** Base Y position for animation */
   private baseY: number;
 
-  constructor(config: PickupConfig) {
+  public constructor(config: PickupConfig) {
     super({
       x: config.x,
       y: config.y,

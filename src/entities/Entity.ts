@@ -60,7 +60,7 @@ export abstract class Entity implements ITransform, ICircleCollider {
   /** Optional velocity component */
   protected velocity: IVelocity | null = null;
 
-  constructor(config: EntityConfig) {
+  public constructor(config: EntityConfig) {
     this.id = generateEntityId();
     this.x = config.x;
     this.y = config.y;

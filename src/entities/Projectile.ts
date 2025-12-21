@@ -135,7 +135,7 @@ export class Projectile extends Entity implements IExpirable {
   /** Whether projectile is returning */
   public isReturning: boolean = false;
 
-  constructor(config: ProjectileConfig) {
+  public constructor(config: ProjectileConfig) {
     super(config);
 
     this.type = config.type;

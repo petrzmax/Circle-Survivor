@@ -67,7 +67,7 @@ export class EntityManager {
   /** Debug mode */
   private debug: boolean;
 
-  constructor(config: EntityManagerConfig = {}) {
+  public constructor(config: EntityManagerConfig = {}) {
     this.debug = config.debug ?? false;
   }
 
@@ -76,7 +76,7 @@ export class EntityManager {
   /**
    * Set the player entity
    */
-  setPlayer(player: Player): void {
+  public setPlayer(player: Player): void {
     this.player = player;
     this.log('Player set');
   }
@@ -84,14 +84,14 @@ export class EntityManager {
   /**
    * Get the current player
    */
-  getPlayer(): Player | null {
+  public getPlayer(): Player | null {
     return this.player;
   }
 
   /**
    * Remove the player
    */
-  removePlayer(): void {
+  public removePlayer(): void {
     this.player = null;
     this.log('Player removed');
   }
@@ -101,7 +101,7 @@ export class EntityManager {
   /**
    * Add an enemy
    */
-  addEnemy(enemy: Enemy): void {
+  public addEnemy(enemy: Enemy): void {
     this.enemies.set(enemy.id, enemy);
     this.log(`Enemy added: ${enemy.id} (type: ${enemy.type})`);
   }
@@ -109,28 +109,28 @@ export class EntityManager {
   /**
    * Get all enemies
    */
-  getEnemies(): Enemy[] {
+  public getEnemies(): Enemy[] {
     return Array.from(this.enemies.values());
   }
 
   /**
    * Get active enemies only
    */
-  getActiveEnemies(): Enemy[] {
+  public getActiveEnemies(): Enemy[] {
     return this.getEnemies().filter((e) => e.isActive && !e.isDead());
   }
 
   /**
    * Get enemy by ID
    */
-  getEnemy(id: number): Enemy | undefined {
+  public getEnemy(id: number): Enemy | undefined {
     return this.enemies.get(id);
   }
 
   /**
    * Remove an enemy
    */
-  removeEnemy(id: number): boolean {
+  public removeEnemy(id: number): boolean {
     const removed = this.enemies.delete(id);
     if (removed) this.log(`Enemy removed: ${id}`);
     return removed;
@@ -139,14 +139,14 @@ export class EntityManager {
   /**
    * Get enemy count
    */
-  getEnemyCount(): number {
+  public getEnemyCount(): number {
     return this.enemies.size;
   }
 
   /**
    * Get active enemy count
    */
-  getActiveEnemyCount(): number {
+  public getActiveEnemyCount(): number {
     return this.getActiveEnemies().length;
   }
 
@@ -155,7 +155,7 @@ export class EntityManager {
   /**
    * Add a projectile
    */
-  addProjectile(projectile: Projectile): void {
+  public addProjectile(projectile: Projectile): void {
     this.projectiles.set(projectile.id, projectile);
     this.log(`Projectile added: ${projectile.id} (type: ${projectile.type})`);
   }
@@ -163,28 +163,28 @@ export class EntityManager {
   /**
    * Add multiple projectiles at once
    */
-  addProjectiles(projectiles: Projectile[]): void {
+  public addProjectiles(projectiles: Projectile[]): void {
     projectiles.forEach((p) => { this.addProjectile(p); });
   }
 
   /**
    * Get all projectiles
    */
-  getProjectiles(): Projectile[] {
+  public getProjectiles(): Projectile[] {
     return Array.from(this.projectiles.values());
   }
 
   /**
    * Get active projectiles only
    */
-  getActiveProjectiles(): Projectile[] {
+  public getActiveProjectiles(): Projectile[] {
     return this.getProjectiles().filter((p) => p.isActive);
   }
 
   /**
    * Get player projectiles (ownerId matches player)
    */
-  getPlayerProjectiles(): Projectile[] {
+  public getPlayerProjectiles(): Projectile[] {
     const playerId = this.player?.id;
     if (playerId === undefined) return [];
     return this.getActiveProjectiles().filter((p) => p.ownerId === playerId);
@@ -193,7 +193,7 @@ export class EntityManager {
   /**
    * Get enemy projectiles
    */
-  getEnemyProjectiles(): Projectile[] {
+  public getEnemyProjectiles(): Projectile[] {
     const playerId = this.player?.id;
     return this.getActiveProjectiles().filter((p) => p.ownerId !== playerId);
   }
@@ -201,7 +201,7 @@ export class EntityManager {
   /**
    * Remove a projectile
    */
-  removeProjectile(id: number): boolean {
+  public removeProjectile(id: number): boolean {
     const removed = this.projectiles.delete(id);
     if (removed) this.log(`Projectile removed: ${id}`);
     return removed;
@@ -212,7 +212,7 @@ export class EntityManager {
   /**
    * Add a deployable
    */
-  addDeployable(deployable: Deployable): void {
+  public addDeployable(deployable: Deployable): void {
     this.deployables.set(deployable.id, deployable);
     this.log(`Deployable added: ${deployable.id} (type: ${deployable.type})`);
   }
@@ -220,28 +220,28 @@ export class EntityManager {
   /**
    * Get all deployables
    */
-  getDeployables(): Deployable[] {
+  public getDeployables(): Deployable[] {
     return Array.from(this.deployables.values());
   }
 
   /**
    * Get active deployables only
    */
-  getActiveDeployables(): Deployable[] {
+  public getActiveDeployables(): Deployable[] {
     return this.getDeployables().filter((d) => d.isActive);
   }
 
   /**
    * Get armed deployables (ready to trigger)
    */
-  getArmedDeployables(): Deployable[] {
+  public getArmedDeployables(): Deployable[] {
     return this.getActiveDeployables().filter((d) => d.isArmed);
   }
 
   /**
    * Remove a deployable
    */
-  removeDeployable(id: number): boolean {
+  public removeDeployable(id: number): boolean {
     const removed = this.deployables.delete(id);
     if (removed) this.log(`Deployable removed: ${id}`);
     return removed;
@@ -252,7 +252,7 @@ export class EntityManager {
   /**
    * Add a pickup
    */
-  addPickup(pickup: Pickup): void {
+  public addPickup(pickup: Pickup): void {
     this.pickups.set(pickup.id, pickup);
     this.log(`Pickup added: ${pickup.id} (type: ${pickup.type})`);
   }
@@ -260,21 +260,21 @@ export class EntityManager {
   /**
    * Get all pickups
    */
-  getPickups(): Pickup[] {
+  public getPickups(): Pickup[] {
     return Array.from(this.pickups.values());
   }
 
   /**
    * Get active pickups only
    */
-  getActivePickups(): Pickup[] {
+  public getActivePickups(): Pickup[] {
     return this.getPickups().filter((p) => p.isActive);
   }
 
   /**
    * Remove a pickup
    */
-  removePickup(id: number): boolean {
+  public removePickup(id: number): boolean {
     const removed = this.pickups.delete(id);
     if (removed) this.log(`Pickup removed: ${id}`);
     return removed;
@@ -285,7 +285,7 @@ export class EntityManager {
   /**
    * Update all entities
    */
-  updateAll(deltaTime: number): void {
+  public updateAll(deltaTime: number): void {
     // Update player
     // Note: Player movement is handled separately with input
 
@@ -322,7 +322,7 @@ export class EntityManager {
    * Remove all inactive entities (cleanup)
    * @returns Number of entities removed
    */
-  removeInactive(): number {
+  public removeInactive(): number {
     let removed = 0;
 
     // Cleanup enemies
@@ -367,7 +367,7 @@ export class EntityManager {
   /**
    * Get total entity count
    */
-  getTotalCount(): number {
+  public getTotalCount(): number {
     return (
       (this.player ? 1 : 0) +
       this.enemies.size +
@@ -380,7 +380,7 @@ export class EntityManager {
   /**
    * Get entity counts by category
    */
-  getCounts(): Record<EntityCategory, number> {
+  public getCounts(): Record<EntityCategory, number> {
     return {
       player: this.player ? 1 : 0,
       enemy: this.enemies.size,
@@ -393,7 +393,7 @@ export class EntityManager {
   /**
    * Get all entities as flat array
    */
-  getAllEntities(): Entity[] {
+  public getAllEntities(): Entity[] {
     const entities: Entity[] = [];
 
     if (this.player) {
@@ -411,7 +411,7 @@ export class EntityManager {
   /**
    * Clear all entities (reset game)
    */
-  clear(): void {
+  public clear(): void {
     this.player = null;
     this.enemies.clear();
     this.projectiles.clear();
@@ -423,7 +423,7 @@ export class EntityManager {
   /**
    * Clear all except player
    */
-  clearExceptPlayer(): void {
+  public clearExceptPlayer(): void {
     this.enemies.clear();
     this.projectiles.clear();
     this.deployables.clear();
@@ -436,7 +436,7 @@ export class EntityManager {
   /**
    * Find enemies within radius of a point
    */
-  getEnemiesInRadius(x: number, y: number, radius: number): Enemy[] {
+  public getEnemiesInRadius(x: number, y: number, radius: number): Enemy[] {
     const radiusSq = radius * radius;
     return this.getActiveEnemies().filter((enemy) => {
       const dx = enemy.x - x;
@@ -448,7 +448,7 @@ export class EntityManager {
   /**
    * Find nearest enemy to a point
    */
-  getNearestEnemy(x: number, y: number, maxDistance?: number): Enemy | null {
+  public getNearestEnemy(x: number, y: number, maxDistance?: number): Enemy | null {
     let nearest: Enemy | null = null;
     let nearestDistSq = maxDistance ? maxDistance * maxDistance : Infinity;
 
@@ -469,7 +469,7 @@ export class EntityManager {
   /**
    * Find pickups within radius of a point
    */
-  getPickupsInRadius(x: number, y: number, radius: number): Pickup[] {
+  public getPickupsInRadius(x: number, y: number, radius: number): Pickup[] {
     const radiusSq = radius * radius;
     return this.getActivePickups().filter((pickup) => {
       const dx = pickup.x - x;

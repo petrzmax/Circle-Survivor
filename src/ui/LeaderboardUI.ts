@@ -20,7 +20,7 @@ export class LeaderboardUI {
   /**
    * Open leaderboard from menu
    */
-  async openMenuLeaderboard(): Promise<void> {
+  public async openMenuLeaderboard(): Promise<void> {
     document.getElementById('start-screen')?.classList.add('hidden');
     document.getElementById('menu-leaderboard')?.classList.remove('hidden');
     await this.showMenuLeaderboard('local');
@@ -37,7 +37,7 @@ export class LeaderboardUI {
   /**
    * Show menu leaderboard with specific tab
    */
-  async showMenuLeaderboard(tab: string = 'local'): Promise<void> {
+  public async showMenuLeaderboard(tab: string = 'local'): Promise<void> {
     const listEl = document.getElementById('menu-leaderboard-list');
     if (!listEl) return;
 

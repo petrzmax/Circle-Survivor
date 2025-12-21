@@ -372,7 +372,7 @@ export class DevMenu {
         const effect = item.effect;
         for (const [stat, value] of Object.entries(effect)) {
           if (value !== undefined) {
-            player.applyStat(stat as keyof typeof effect, value);
+            player.applyStat(stat as keyof typeof effect, value as number);
           }
         }
         console.log(`[DevMenu] Added item: ${item.name}`);

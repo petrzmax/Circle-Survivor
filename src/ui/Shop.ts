@@ -6,6 +6,7 @@
 
 import { SHOP_ITEMS } from '@/config/shop.config';
 import { GAME_BALANCE } from '@/config/balance.config';
+import { WeaponType } from '@/types';
 
 // ============ Types ============
 
@@ -208,7 +209,7 @@ export class Shop {
       let isWeaponLocked = false;
       if (item.type === 'weapon') {
         const weaponItem = item;
-        const hasThisWeapon = player.weapons.some((w) => w.type === weaponItem.weaponType);
+        const hasThisWeapon = player.weapons.some((w) => w.type === (weaponItem.weaponType as WeaponType));
         if (player.weapons.length >= player.maxWeapons && !hasThisWeapon) {
           isWeaponLocked = true;
         }
@@ -227,7 +228,7 @@ export class Shop {
         const weaponItem = item;
         if (
           player.weapons.length >= player.maxWeapons &&
-          player.weapons.some((w) => w.type === weaponItem.weaponType)
+          player.weapons.some((w) => w.type === (weaponItem.weaponType as WeaponType))
         ) {
           // Upgrade only when you have full slots AND already have this weapon
           extraInfo = '<div style="color: #4ecdc4; font-size: 10px">⬆️ Upgrade</div>';
@@ -296,7 +297,7 @@ export class Shop {
         // Check if player has full slots
         if (player.weapons.length >= player.maxWeapons) {
           // Upgrade random weapon of the same type
-          const sameTypeWeapons = player.weapons.filter((w) => w.type === weaponItem.weaponType);
+          const sameTypeWeapons = player.weapons.filter((w) => w.type === (weaponItem.weaponType as WeaponType));
           if (sameTypeWeapons.length > 0) {
             // Pick random weapon of this type
             const randomWeapon =
@@ -351,7 +352,8 @@ export class Shop {
         player.addItem(itemKey);
         // Apply effects
         if (statItem.effect) {
-          for (const [stat, value] of Object.entries(statItem.effect)) {
+          for (const [stat, valueRaw] of Object.entries(statItem.effect)) {
+            const value = valueRaw as number;
             if (stat === 'maxHp') {
               player.maxHp += value;
               player.hp += value; // Also heal

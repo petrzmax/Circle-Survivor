@@ -78,9 +78,7 @@ export abstract class Entity implements ITransform, ICircleCollider {
    * Gets velocity component (creates if needed)
    */
   public getVelocity(): IVelocity {
-    if (!this.velocity) {
-      this.velocity = { vx: 0, vy: 0 };
-    }
+    this.velocity ??= { vx: 0, vy: 0 };
     return this.velocity;
   }
 

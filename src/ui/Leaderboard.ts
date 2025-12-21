@@ -251,7 +251,7 @@ export class Leaderboard {
       cwaniak: '😎',
       grazyna: '👩',
     };
-    return emojis[character] || '🎮';
+    return emojis[character] ?? '🎮';
   }
 
   public escapeHtml(text: string): string {

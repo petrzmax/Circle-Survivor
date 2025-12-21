@@ -13,7 +13,7 @@ import { EntityManager } from '@/managers/EntityManager';
 import { CollisionSystem } from '@/systems/CollisionSystem';
 import { WaveManager } from '@/systems/WaveManager';
 import { Shop, ShopPlayer, ShopWeapon } from '@/ui/Shop';
-import { InputHandler, KeyState } from '@/systems/InputHandler';
+import { InputHandler } from '@/systems/InputHandler';
 import { HUD } from '@/systems/HUD';
 import { EffectsSystem, EffectsState, createEffectsState } from '@/systems/EffectsSystem';
 import { WeaponRenderer } from '@/systems/WeaponRenderer';
@@ -149,7 +149,7 @@ export class Game {
 
     // Initialize dev menu (development only)
     if (import.meta.env.DEV) {
-      this.initDevMenu();
+      void this.initDevMenu();
     }
   }
 

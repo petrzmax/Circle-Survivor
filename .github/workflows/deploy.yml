@@ -1,8 +1,9 @@
 name: Deploy to GitHub Pages
 
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - master
   workflow_dispatch:
     inputs:
       tag:
@@ -26,7 +27,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.tag || github.event.release.tag_name || 'master' }}
+          ref: ${{ inputs.tag || 'master' }}
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -41,11 +42,9 @@ jobs:
       - name: Get version from git tag
         id: version
         run: |
-          # Use input tag, release tag, or get latest tag
+          # Use input tag or get latest tag from master
           if [ -n "${{ inputs.tag }}" ]; then
             TAG="${{ inputs.tag }}"
-          elif [ -n "${{ github.event.release.tag_name }}" ]; then
-            TAG="${{ github.event.release.tag_name }}"
           else
             TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           fi

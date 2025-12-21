@@ -1,9 +1,7 @@
 /**
  * Main Game Controller
  * Uses new TypeScript architecture with EntityManager and Systems.
- * Preserves all game mechanics, values and visual appearance from original.
  */
-
 import { Player, InputState } from '@/entities/Player';
 import { Enemy } from '@/entities/Enemy';
 import { Projectile } from '@/entities/Projectile';
@@ -36,7 +34,6 @@ import {
 import { circleCollision, distance } from '@/utils';
 
 // ============ Types ============
-
 export type GameState = 'start' | 'playing' | 'shop' | 'gameover' | 'paused';
 
 // Weapon runtime instance (tracks cooldowns, levels)
@@ -1415,27 +1412,26 @@ export class Game {
   }
 
   private createShopPlayer(player: Player): ShopPlayer {
-    return {
-      weapons: this.weapons.map((w) => this.createShopWeapon(w)),
-      maxWeapons: player.maxWeapons,
-      items: player.items,
-      maxHp: player.maxHp,
-      hp: player.hp,
-      addWeapon: (type: string) => { this.addWeapon(type as WeaponType); },
-      addItem: (itemKey: string) => { player.addItem(itemKey); },
-      heal: (amount: number) => { player.heal(amount); },
-      // Stats for shop item effects
-      armor: player.armor,
-      damageMultiplier: player.damageMultiplier,
-      critChance: player.critChance,
-      dodge: player.dodge,
-      regen: player.regen,
-      lifesteal: player.lifesteal,
-      speed: player.speed,
-      thorns: player.thorns,
-      attackRange: player.attackRange,
-      explosionRadius: player.explosionRadius,
-    };
+    // Use a Proxy on the real player, only overriding what's needed for Shop
+    return new Proxy(player as unknown as ShopPlayer, {
+      get: (target, prop) => {
+        // Override weapons to use ShopWeapon format with upgrade()
+        if (prop === 'weapons') {
+          return this.weapons.map((w) => this.createShopWeapon(w));
+        }
+        // Override addWeapon to call Game.addWeapon
+        if (prop === 'addWeapon') {
+          return (type: string) => { this.addWeapon(type as WeaponType); };
+        }
+        // Everything else comes from the real player
+        return target[prop as keyof ShopPlayer];
+      },
+      set: (target, prop, value) => {
+        // Forward all property sets directly to the real player
+        (target as Record<string, unknown>)[prop as string] = value;
+        return true;
+      },
+    });
   }
 
   private createShopWeapon(weapon: WeaponInstance): ShopWeapon {

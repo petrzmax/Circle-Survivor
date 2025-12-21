@@ -11,7 +11,6 @@ export type { ExplosionEvent, ChainEvent, CombatSystemConfig } from './CombatSys
 export { AudioSystem } from './AudioSystem';
 export type { OscillatorType } from './AudioSystem';
 
-// Phase 4 systems
 export { InputHandler } from './InputHandler';
 export type { KeyState, InputHandlerCallbacks } from './InputHandler';
 

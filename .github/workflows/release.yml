@@ -185,4 +185,6 @@ jobs:
           # Merge PR
           gh pr merge $PR_NUMBER --merge
           echo "PR #$PR_NUMBER merged to master"
-          echo "Deploy will be triggered automatically by push to master"
+
+          # Trigger deploy workflow (GITHUB_TOKEN doesn't trigger workflows on push)
+          gh workflow run deploy.yml --ref master

@@ -39,14 +39,14 @@ export interface CollisionSystemConfig {
 /**
  * Handles all collision detection in the game.
  * Uses spatial queries from EntityManager for efficiency.
- * 
+ *
  * @example
  * ```typescript
  * const collisionSystem = new CollisionSystem(entityManager, {
  *   pickupRadius: 25,
  *   attractionRadius: 100
  * });
- * 
+ *
  * // In game loop
  * const collisions = collisionSystem.checkAll();
  * // Handle collisions or let other systems handle via events
@@ -57,7 +57,7 @@ export class CollisionSystem {
   private pickupRadius: number;
   private attractionRadius: number;
 
-  constructor(entityManager: EntityManager, config: CollisionSystemConfig = {}) {
+  public constructor(entityManager: EntityManager, config: CollisionSystemConfig = {}) {
     this.entityManager = entityManager;
     this.pickupRadius = config.pickupRadius ?? 25;
     this.attractionRadius = config.attractionRadius ?? 100;
@@ -66,7 +66,7 @@ export class CollisionSystem {
   /**
    * Check all collisions and return results
    */
-  checkAll(): CollisionResult {
+  public checkAll(): CollisionResult {
     const result: CollisionResult = {
       playerEnemyCollisions: [],
       playerProjectileCollisions: [],
@@ -76,7 +76,7 @@ export class CollisionSystem {
     };
 
     const player = this.entityManager.getPlayer();
-    if (!player || !player.isActive) {
+    if (!player?.isActive) {
       return result;
     }
 
@@ -223,7 +223,7 @@ export class CollisionSystem {
   /**
    * Update pickup attraction (moves pickups toward player)
    */
-  updatePickupAttraction(deltaTime: number): void {
+  public updatePickupAttraction(deltaTime: number): void {
     const player = this.entityManager.getPlayer();
     if (!player) return;
 
@@ -238,21 +238,15 @@ export class CollisionSystem {
   /**
    * Find enemies in explosion radius
    */
-  getEnemiesInExplosion(x: number, y: number, radius: number): Enemy[] {
+  public getEnemiesInExplosion(x: number, y: number, radius: number): Enemy[] {
     return this.entityManager.getEnemiesInRadius(x, y, radius);
   }
 
   /**
    * Find nearest enemy for chain effects
    */
-  findChainTarget(
-    x: number,
-    y: number,
-    range: number,
-    excludeIds: Set<number>
-  ): Enemy | null {
-    const enemies = this.entityManager.getActiveEnemies()
-      .filter(e => !excludeIds.has(e.id));
+  public findChainTarget(x: number, y: number, range: number, excludeIds: Set<number>): Enemy | null {
+    const enemies = this.entityManager.getActiveEnemies().filter((e) => !excludeIds.has(e.id));
 
     let nearest: Enemy | null = null;
     let nearestDistSq = range * range;
@@ -274,7 +268,7 @@ export class CollisionSystem {
   /**
    * Check if point is inside any enemy
    */
-  isPointInEnemy(x: number, y: number): Enemy | null {
+  public isPointInEnemy(x: number, y: number): Enemy | null {
     const enemies = this.entityManager.getActiveEnemies();
 
     for (const enemy of enemies) {
@@ -291,14 +285,14 @@ export class CollisionSystem {
   /**
    * Set pickup collection radius
    */
-  setPickupRadius(radius: number): void {
+  public setPickupRadius(radius: number): void {
     this.pickupRadius = radius;
   }
 
   /**
    * Set pickup attraction radius
    */
-  setAttractionRadius(radius: number): void {
+  public setAttractionRadius(radius: number): void {
     this.attractionRadius = radius;
   }
 }

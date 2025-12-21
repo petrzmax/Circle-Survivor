@@ -140,7 +140,7 @@ export class Enemy extends Entity implements IHealth {
   /** Scale multiplier (for split enemies) */
   public readonly scale: number;
 
-  constructor(entityConfig: EnemyEntityConfig) {
+  public constructor(entityConfig: EnemyEntityConfig) {
     const config = ENEMY_TYPES[entityConfig.type];
     const scale = entityConfig.scale ?? 1;
 
@@ -199,7 +199,7 @@ export class Enemy extends Entity implements IHealth {
     amount: number,
     sourceX: number,
     sourceY: number,
-    knockbackMultiplier: number = 1
+    knockbackMultiplier: number = 1,
   ): boolean {
     this.hp -= amount;
 
@@ -263,7 +263,7 @@ export class Enemy extends Entity implements IHealth {
     target: Vector2,
     _deltaTime: number,
     canvasWidth: number,
-    canvasHeight: number
+    canvasHeight: number,
   ): void {
     const dx = target.x - this.x;
     const dy = target.y - this.y;
@@ -314,8 +314,7 @@ export class Enemy extends Entity implements IHealth {
     this.lastFireTime = currentTime;
 
     // Random pattern
-    const pattern =
-      this.attackPatterns[Math.floor(Math.random() * this.attackPatterns.length)];
+    const pattern = this.attackPatterns[Math.floor(Math.random() * this.attackPatterns.length)];
 
     const dx = target.x - this.x;
     const dy = target.y - this.y;
@@ -332,8 +331,7 @@ export class Enemy extends Entity implements IHealth {
         const spreadAngle = Math.PI / 3; // 60 degrees
 
         for (let i = 0; i < spreadCount; i++) {
-          const angle =
-            baseAngle - spreadAngle / 2 + (spreadAngle / (spreadCount - 1)) * i;
+          const angle = baseAngle - spreadAngle / 2 + (spreadAngle / (spreadCount - 1)) * i;
           bullets.push({
             x: this.x,
             y: this.y,
@@ -426,21 +424,10 @@ export class Enemy extends Entity implements IHealth {
     const hpPercent = this.hp / this.maxHp;
 
     ctx.fillStyle = '#333';
-    ctx.fillRect(
-      this.x - barWidth / 2,
-      this.y - this.radius - 10,
-      barWidth,
-      barHeight
-    );
+    ctx.fillRect(this.x - barWidth / 2, this.y - this.radius - 10, barWidth, barHeight);
 
-    ctx.fillStyle =
-      hpPercent > 0.5 ? '#2ecc71' : hpPercent > 0.25 ? '#f39c12' : '#e74c3c';
-    ctx.fillRect(
-      this.x - barWidth / 2,
-      this.y - this.radius - 10,
-      barWidth * hpPercent,
-      barHeight
-    );
+    ctx.fillStyle = hpPercent > 0.5 ? '#2ecc71' : hpPercent > 0.25 ? '#f39c12' : '#e74c3c';
+    ctx.fillRect(this.x - barWidth / 2, this.y - this.radius - 10, barWidth * hpPercent, barHeight);
   }
 
   private drawEyes(ctx: CanvasRenderingContext2D): void {
@@ -451,14 +438,14 @@ export class Enemy extends Entity implements IHealth {
       this.y - this.radius * 0.2,
       this.radius * 0.2,
       0,
-      Math.PI * 2
+      Math.PI * 2,
     );
     ctx.arc(
       this.x + this.radius * 0.3,
       this.y - this.radius * 0.2,
       this.radius * 0.2,
       0,
-      Math.PI * 2
+      Math.PI * 2,
     );
     ctx.fill();
 

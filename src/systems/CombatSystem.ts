@@ -50,11 +50,11 @@ export interface CombatSystemConfig {
 /**
  * Handles all combat-related logic.
  * Processes damage, spawns pickups, handles explosions and chains.
- * 
+ *
  * @example
  * ```typescript
  * const combatSystem = new CombatSystem(entityManager, collisionSystem);
- * 
+ *
  * // In game loop
  * const collisions = collisionSystem.checkAll();
  * combatSystem.processCollisions(collisions, currentTime);
@@ -63,11 +63,11 @@ export interface CombatSystemConfig {
 export class CombatSystem {
   private entityManager: EntityManager;
   private healthDropChance: number;
-  
+
   /** Pending explosions to process */
   private pendingExplosions: ExplosionEvent[] = [];
 
-  constructor(entityManager: EntityManager, config: CombatSystemConfig = {}) {
+  public constructor(entityManager: EntityManager, config: CombatSystemConfig = {}) {
     this.entityManager = entityManager;
     this.healthDropChance = config.healthDropChance ?? 0.05;
   }
@@ -75,14 +75,14 @@ export class CombatSystem {
   /**
    * Process all collisions from CollisionSystem
    */
-  processCollisions(collisions: CollisionResult, currentTime: number): void {
+  public processCollisions(collisions: CollisionResult, currentTime: number): void {
     const player = this.entityManager.getPlayer();
     if (!player) return;
 
     // Process player-enemy collisions
     for (const enemy of collisions.playerEnemyCollisions) {
       const isDead = player.takeDamage(enemy.damage, currentTime);
-      
+
       // TODO - Event types should be enums / class with static strings
       EventBus.emit('playerHit', {
         player,
@@ -146,7 +146,7 @@ export class CombatSystem {
   private processProjectileHit(
     projectile: Projectile,
     enemy: Enemy,
-    damageMultiplier: number
+    damageMultiplier: number,
   ): void {
     const player = this.entityManager.getPlayer();
     const finalDamage = projectile.damage * damageMultiplier;
@@ -173,7 +173,8 @@ export class CombatSystem {
 
     // Handle explosive projectiles
     if (projectile.isExplosive() && projectile.explosive) {
-      const isBanana = projectile.type === ProjectileType.BANANA || projectile.type === ProjectileType.MINI_BANANA;
+      const isBanana =
+        projectile.type === ProjectileType.BANANA || projectile.type === ProjectileType.MINI_BANANA;
       const isMini = projectile.type === ProjectileType.MINI_BANANA;
       this.queueExplosion({
         x: projectile.x,
@@ -208,7 +209,7 @@ export class CombatSystem {
   private processChainEffect(
     projectile: Projectile,
     initialTarget: Enemy,
-    damageMultiplier: number
+    damageMultiplier: number,
   ): void {
     if (!projectile.chain) return;
 
@@ -224,7 +225,7 @@ export class CombatSystem {
         currentTarget.x,
         currentTarget.y,
         chainRange,
-        chainedEnemies
+        chainedEnemies,
       );
 
       if (!nextTarget) break;
@@ -234,11 +235,7 @@ export class CombatSystem {
 
       // Apply damage
       currentDamage *= damageDecay;
-      const isDead = nextTarget.takeDamage(
-        currentDamage,
-        currentTarget.x,
-        currentTarget.y
-      );
+      const isDead = nextTarget.takeDamage(currentDamage, currentTarget.x, currentTarget.y);
 
       if (isDead) {
         this.handleEnemyDeath(nextTarget, 'chain');
@@ -256,10 +253,9 @@ export class CombatSystem {
     x: number,
     y: number,
     range: number,
-    excludeIds: Set<number>
+    excludeIds: Set<number>,
   ): Enemy | null {
-    const enemies = this.entityManager.getActiveEnemies()
-      .filter(e => !excludeIds.has(e.id));
+    const enemies = this.entityManager.getActiveEnemies().filter((e) => !excludeIds.has(e.id));
 
     let nearest: Enemy | null = null;
     let nearestDistSq = range * range;
@@ -281,7 +277,7 @@ export class CombatSystem {
   /**
    * Queue an explosion for processing
    */
-  queueExplosion(explosion: ExplosionEvent): void {
+  public queueExplosion(explosion: ExplosionEvent): void {
     this.pendingExplosions.push(explosion);
   }
 
@@ -343,7 +339,9 @@ export class CombatSystem {
     enemy.destroy();
 
     // Spawn gold pickup
-    const goldValue = Math.floor(enemy.goldValue * (this.entityManager.getPlayer()?.goldMultiplier ?? 1));
+    const goldValue = Math.floor(
+      enemy.goldValue * (this.entityManager.getPlayer()?.goldMultiplier ?? 1),
+    );
     if (goldValue > 0) {
       const goldPickup = createGoldPickup(enemy.x, enemy.y, goldValue);
       this.entityManager.addPickup(goldPickup);
@@ -403,7 +401,7 @@ export class CombatSystem {
   /**
    * Apply damage to player directly (for special cases)
    */
-  applyDamageToPlayer(damage: number, currentTime: number): boolean {
+  public applyDamageToPlayer(damage: number, currentTime: number): boolean {
     const player = this.entityManager.getPlayer();
     if (!player) return false;
 
@@ -413,12 +411,12 @@ export class CombatSystem {
   /**
    * Apply damage to all enemies in area
    */
-  applyAreaDamage(
+  public applyAreaDamage(
     x: number,
     y: number,
     radius: number,
     damage: number,
-    visualEffect: VisualEffect = VisualEffect.STANDARD
+    visualEffect: VisualEffect = VisualEffect.STANDARD,
   ): void {
     this.queueExplosion({
       x,
@@ -434,7 +432,7 @@ export class CombatSystem {
   /**
    * Set health drop chance
    */
-  setHealthDropChance(chance: number): void {
+  public setHealthDropChance(chance: number): void {
     this.healthDropChance = Math.max(0, Math.min(1, chance));
   }
 
@@ -448,12 +446,12 @@ export class CombatSystem {
     const playerId = player?.id ?? -1;
 
     for (let i = 0; i < count; i++) {
-      const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.5;
-      
+      const angle = ((Math.PI * 2) / count) * i + (Math.random() - 0.5) * 0.5;
+
       // Random speed (6-10) and distance (60-100px) for each mini banana
       const randomSpeed = 6 + Math.random() * 4;
       const randomRange = 60 + Math.random() * 40;
-      
+
       const projectile = new Projectile({
         x,
         y,

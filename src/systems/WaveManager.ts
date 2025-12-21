@@ -21,24 +21,24 @@ export interface WaveUpdateResult {
 // ============ Wave Manager Class ============
 
 export class WaveManager {
-  waveNumber: number = 1;
-  waveTime: number = 30; // seconds
-  timeRemaining: number = 30;
-  isWaveActive: boolean = false;
-  spawnTimer: number = 0;
-  spawnInterval: number = 800; // ms between spawns
-  enemiesPerSpawn: number = 2;
-  bossSpawned: boolean = false;
+  public waveNumber: number = 1;
+  private waveTime: number = 30; // seconds
+  public timeRemaining: number = 30;
+  public isWaveActive: boolean = false;
+  private spawnTimer: number = 0;
+  private spawnInterval: number = 800; // ms between spawns
+  private enemiesPerSpawn: number = 2;
+  private bossSpawned: boolean = false;
   private lastCountdownSecond: number = -1;
 
-  constructor() {
+  public constructor() {
     this.timeRemaining = this.waveTime;
   }
 
   /**
    * Start a new wave
    */
-  startWave(): void {
+  public startWave(): void {
     this.isWaveActive = true;
     this.timeRemaining = this.getWaveDuration();
     this.spawnTimer = 0;
@@ -50,7 +50,7 @@ export class WaveManager {
   /**
    * End current wave
    */
-  endWave(): void {
+  public endWave(): void {
     this.isWaveActive = false;
     this.waveNumber++;
   }
@@ -58,14 +58,14 @@ export class WaveManager {
   /**
    * Get current wave number (alias for compatibility with DevMenu)
    */
-  get currentWave(): number {
+  public get currentWave(): number {
     return this.waveNumber;
   }
 
   /**
    * Skip to a specific wave (dev tool)
    */
-  skipToWave(targetWave: number): void {
+  public skipToWave(targetWave: number): void {
     this.waveNumber = Math.max(1, targetWave);
     this.isWaveActive = false;
     this.bossSpawned = false;
@@ -75,7 +75,7 @@ export class WaveManager {
   /**
    * Get wave duration based on wave number
    */
-  getWaveDuration(): number {
+  private getWaveDuration(): number {
     if (this.waveNumber <= 2) return GAME_BALANCE.wave.duration.early;
     if (this.waveNumber <= 4) return GAME_BALANCE.wave.duration.mid;
     return GAME_BALANCE.wave.duration.late;
@@ -84,7 +84,7 @@ export class WaveManager {
   /**
    * Update spawn settings based on current wave
    */
-  updateSpawnSettings(): void {
+  private updateSpawnSettings(): void {
     const wave = this.waveNumber;
 
     // Slower spawn - every 1000-400ms
@@ -93,13 +93,15 @@ export class WaveManager {
     // Less enemies per spawn: 1-4
     this.enemiesPerSpawn = Math.min(4, 1 + Math.floor(wave * 0.4));
 
-    console.log(`Fala ${wave}: spawn co ${this.spawnInterval}ms, ${this.enemiesPerSpawn} wrogów/spawn`);
+    console.log(
+      `Wave ${wave}: spawn every ${this.spawnInterval}ms, ${this.enemiesPerSpawn} enemies/spawn`,
+    );
   }
 
   /**
    * Update wave state
    */
-  update(deltaTime: number, canvas: CanvasBounds, bossAlive: boolean = false): WaveUpdateResult {
+  public update(deltaTime: number, canvas: CanvasBounds, bossAlive: boolean = false): WaveUpdateResult {
     if (!this.isWaveActive) return { enemies: [], waveEnded: false, countdown: false };
 
     const enemies: Enemy[] = [];
@@ -151,9 +153,9 @@ export class WaveManager {
 
       enemies.push(boss);
       this.bossSpawned = true;
-      
+
       // Emit boss spawned event for sound
-      EventBus.emit('bossSpawned', { enemy: boss, bossName: boss.bossName || 'Boss' });
+      EventBus.emit('bossSpawned', { enemy: boss, bossName: boss.bossName ?? 'Boss' });
     }
 
     // Spawn enemies (only when boss is dead)
@@ -185,7 +187,7 @@ export class WaveManager {
   /**
    * Get random enemy type based on current wave
    */
-  getRandomEnemyType(): EnemyType {
+  private getRandomEnemyType(): EnemyType {
     const wave = this.waveNumber;
     const rand = Math.random();
 
@@ -286,16 +288,18 @@ export class WaveManager {
   /**
    * Check if boss should spawn
    */
-  shouldSpawnBoss(): boolean {
+  private shouldSpawnBoss(): boolean {
+    // TODO change bossSpawned to boss is alive
     return this.waveNumber % 3 === 0 && !this.bossSpawned && this.timeRemaining < 20;
   }
 
   /**
    * Get boss type based on wave number
    */
-  getBossType(): EnemyType {
+  private getBossType(): EnemyType {
     const bossWave = Math.floor(this.waveNumber / 3); // 1, 2, 3, 4...
 
+    // TODO remove, after splicing enemies from bosses
     const bossTypes: EnemyType[] = [
       EnemyType.BOSS, // Wave 3 - basic
       EnemyType.BOSS_SWARM, // Wave 6 - splits into swarms
@@ -308,12 +312,5 @@ export class WaveManager {
     // Cyclically select boss, but each next one has +50% HP
     const bossIndex = (bossWave - 1) % bossTypes.length;
     return bossTypes[bossIndex]!;
-  }
-
-  /**
-   * Render wave info (deprecated - HUD handles this now)
-   */
-  render(_ctx: CanvasRenderingContext2D): void {
-    // Bar removed - there's a counter in HUD
   }
 }

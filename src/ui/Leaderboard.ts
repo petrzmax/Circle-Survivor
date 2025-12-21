@@ -36,7 +36,7 @@ export class Leaderboard {
 
   // ============ LOCAL LEADERBOARD ============
 
-  getLocalScores(): LeaderboardEntry[] {
+  public getLocalScores(): LeaderboardEntry[] {
     try {
       const data = localStorage.getItem(this.LOCAL_STORAGE_KEY);
       return data ? JSON.parse(data) : [];
@@ -46,7 +46,7 @@ export class Leaderboard {
     }
   }
 
-  saveLocalScore(entry: LeaderboardEntry): LeaderboardEntry[] {
+  public saveLocalScore(entry: LeaderboardEntry): LeaderboardEntry[] {
     try {
       const scores = this.getLocalScores();
       scores.push(entry);
@@ -71,11 +71,11 @@ export class Leaderboard {
 
   // ============ GLOBAL LEADERBOARD (JSONBin.io) ============
 
-  isGlobalEnabled(): boolean {
+  public isGlobalEnabled(): boolean {
     return !!(this.JSONBIN_BIN_ID && this.JSONBIN_API_KEY);
   }
 
-  async fetchGlobalScores(): Promise<LeaderboardEntry[]> {
+  public async fetchGlobalScores(): Promise<LeaderboardEntry[]> {
     if (!this.isGlobalEnabled()) return [];
 
     // Use cache if fresh
@@ -97,7 +97,7 @@ export class Leaderboard {
       }
 
       const data = await response.json();
-      this.globalScores = data.record?.scores || [];
+      this.globalScores = data.record?.scores ?? [];
       this.lastFetch = Date.now();
 
       return this.globalScores;
@@ -107,7 +107,7 @@ export class Leaderboard {
     }
   }
 
-  async saveGlobalScore(entry: LeaderboardEntry): Promise<LeaderboardEntry[] | null> {
+  private async saveGlobalScore(entry: LeaderboardEntry): Promise<LeaderboardEntry[] | null> {
     if (!this.isGlobalEnabled()) return null;
 
     try {
@@ -152,7 +152,12 @@ export class Leaderboard {
 
   // ============ COMBINED API ============
 
-  async submitScore(playerName: string, wave: number, xp: number, character: string): Promise<LeaderboardEntry[]> {
+  public async submitScore(
+    playerName: string,
+    wave: number,
+    xp: number,
+    character: string,
+  ): Promise<LeaderboardEntry[]> {
     const entry: LeaderboardEntry = {
       name: playerName.substring(0, 20), // Limit name length
       wave: wave,
@@ -172,7 +177,7 @@ export class Leaderboard {
     return localScores;
   }
 
-  async getScores(type: string = 'local'): Promise<LeaderboardEntry[]> {
+  public async getScores(type: string = 'local'): Promise<LeaderboardEntry[]> {
     if (type === 'global' && this.isGlobalEnabled()) {
       return await this.fetchGlobalScores();
     }
@@ -180,7 +185,7 @@ export class Leaderboard {
   }
 
   // Check if score qualifies for leaderboard
-  qualifiesForLeaderboard(wave: number, xp: number): boolean {
+  public qualifiesForLeaderboard(wave: number, xp: number): boolean {
     const scores = this.getLocalScores();
     if (scores.length < this.MAX_ENTRIES) return true;
 
@@ -190,7 +195,7 @@ export class Leaderboard {
   }
 
   // Get player's rank for a score
-  getRank(wave: number, xp: number): number {
+  public getRank(wave: number, xp: number): number {
     const scores = this.getLocalScores();
     let rank = 1;
     for (const score of scores) {
@@ -204,7 +209,7 @@ export class Leaderboard {
   }
 
   // Format date for display
-  formatDate(dateString: string): string {
+  public formatDate(dateString: string): string {
     const date = new Date(dateString);
     return date.toLocaleDateString('pl-PL', {
       day: '2-digit',
@@ -215,14 +220,15 @@ export class Leaderboard {
   }
 
   // Render leaderboard HTML
-  renderLeaderboard(scores: LeaderboardEntry[], highlightName: string | null = null): string {
+  public renderLeaderboard(scores: LeaderboardEntry[], highlightName: string | null = null): string {
     if (!scores || scores.length === 0) {
       return '<li class="no-scores">Brak wyników - bądź pierwszy!</li>';
     }
 
     return scores
       .map((score, index) => {
-        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+        const medal =
+          index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
         const isHighlighted = highlightName && score.name === highlightName;
         const charEmoji = this.getCharacterEmoji(score.character);
 
@@ -237,7 +243,7 @@ export class Leaderboard {
       .join('');
   }
 
-  getCharacterEmoji(character: string): string {
+  public getCharacterEmoji(character: string): string {
     const emojis: Record<string, string> = {
       // TODO hmm there are no characters like janusz and grazyna... but maybe they should?
       janusz: '💼',
@@ -245,10 +251,10 @@ export class Leaderboard {
       cwaniak: '😎',
       grazyna: '👩',
     };
-    return emojis[character] || '🎮';
+    return emojis[character] ?? '🎮';
   }
 
-  escapeHtml(text: string): string {
+  public escapeHtml(text: string): string {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;

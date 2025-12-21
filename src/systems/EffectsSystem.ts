@@ -84,9 +84,14 @@ export const EffectsSystem = {
    */
   updateShockwaves(
     effects: EffectsState,
-    player: { x: number; y: number; dodge: number; takeDamage: (damage: number, time: number) => boolean },
+    player: {
+      x: number;
+      y: number;
+      dodge: number;
+      takeDamage: (damage: number, time: number) => boolean;
+    },
     currentTime: number,
-    onDodge: () => void
+    onDodge: () => void,
   ): boolean {
     for (let i = effects.shockwaves.length - 1; i >= 0; i--) {
       const sw = effects.shockwaves[i]!;
@@ -292,7 +297,10 @@ export const EffectsSystem = {
   /**
    * Create death particle effect for enemy
    */
-  createDeathEffect(effects: EffectsState, enemy: { x: number; y: number; color: string; isBoss: boolean; type: string }): void {
+  createDeathEffect(
+    effects: EffectsState,
+    enemy: { x: number; y: number; color: string; isBoss: boolean; type: string },
+  ): void {
     // Particle count depends on enemy type
     let particleCount = 8;
     let particleSize = 4;
@@ -360,7 +368,7 @@ export const EffectsSystem = {
     radius: number,
     isNuke: boolean = false,
     isHolyGrenade: boolean = false,
-    isBanana: boolean = false
+    isBanana: boolean = false,
   ): void {
     effects.explosions.push({
       x,
@@ -378,14 +386,17 @@ export const EffectsSystem = {
   /**
    * Create shockwave effect (boss attack)
    */
-  createShockwave(effects: EffectsState, shockwave: { x: number; y: number; radius: number; damage: number; color?: string }): void {
+  createShockwave(
+    effects: EffectsState,
+    shockwave: { x: number; y: number; radius: number; damage: number; color?: string },
+  ): void {
     effects.shockwaves.push({
       x: shockwave.x,
       y: shockwave.y,
       maxRadius: shockwave.radius,
       currentRadius: 0,
       damage: shockwave.damage,
-      color: shockwave.color || '#ff4444',
+      color: shockwave.color ?? '#ff4444',
       created: Date.now(),
       damageDealt: false,
       alpha: 1,

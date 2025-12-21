@@ -70,7 +70,21 @@ function renderHealth(ctx: CanvasRenderingContext2D, pickup: Pickup): void {
   ctx.scale(healthScale, healthScale);
   ctx.beginPath();
   ctx.moveTo(0, -pickup.radius * 0.3);
-  ctx.bezierCurveTo(-pickup.radius, -pickup.radius, -pickup.radius, pickup.radius * 0.5, 0, pickup.radius);
-  ctx.bezierCurveTo(pickup.radius, pickup.radius * 0.5, pickup.radius, -pickup.radius, 0, -pickup.radius * 0.3);
+  ctx.bezierCurveTo(
+    -pickup.radius,
+    -pickup.radius,
+    -pickup.radius,
+    pickup.radius * 0.5,
+    0,
+    pickup.radius,
+  );
+  ctx.bezierCurveTo(
+    pickup.radius,
+    pickup.radius * 0.5,
+    pickup.radius,
+    -pickup.radius,
+    0,
+    -pickup.radius * 0.3,
+  );
   ctx.fill();
 }

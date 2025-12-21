@@ -15,36 +15,42 @@ export interface GameEvents {
   enemyDamaged: { enemy: Enemy; damage: number; source: Vector2 };
   playerHit: { player: Player; damage: number; source: Enemy | Projectile };
   playerDeath: { player: Player; killedBy: Enemy | null };
-  
+
   // Projectile events
   projectileHit: { projectile: Projectile; target: Enemy };
   projectileExpired: { projectile: Projectile };
-  explosionTriggered: { position: Vector2; radius: number; damage: number; visualEffect: string; isBanana?: boolean };
-  
+  explosionTriggered: {
+    position: Vector2;
+    radius: number;
+    damage: number;
+    visualEffect: string;
+    isBanana?: boolean;
+  };
+
   // Pickup events
   goldCollected: { amount: number; position: Vector2 };
   healthCollected: { amount: number; position: Vector2 };
   pickupSpawned: { pickup: Pickup };
   pickupExpired: { pickup: Pickup };
-  
+
   // Wave events
   waveStart: { waveNumber: number; enemyCount: number };
   waveEnd: { waveNumber: number; enemiesKilled: number };
   bossSpawned: { enemy: Enemy; bossName: string };
   bossDefeated: { enemy: Enemy; bossName: string };
-  
+
   // Shop events
   shopOpened: { gold: number };
   shopClosed: void;
   itemPurchased: { itemId: string; cost: number };
   weaponPurchased: { weaponType: string; cost: number };
-  
+
   // Game state events
   gameStart: { characterType: string };
   gamePause: void;
   gameResume: void;
   gameOver: { score: number; wave: number; time: number };
-  
+
   // UI events
   scoreChanged: { score: number; delta: number };
   goldChanged: { gold: number; delta: number };
@@ -66,24 +72,24 @@ export interface Subscription {
 /**
  * EventBus singleton for global event management.
  * Uses typed events for compile-time safety.
- * 
+ *
  * @example
  * ```typescript
  * // Subscribe to event
  * const sub = EventBus.on('enemyDeath', (data) => {
  *   console.log(`Enemy killed at ${data.position.x}, ${data.position.y}`);
  * });
- * 
+ *
  * // Emit event
  * EventBus.emit('enemyDeath', { enemy, killer: 'player', position: { x: 100, y: 200 } });
- * 
+ *
  * // Cleanup
  * sub.unsubscribe();
  * ```
  */
 class EventBusImpl {
-  private listeners: Map<keyof GameEvents, Set<EventCallback<unknown>>> = new Map();
-  private onceListeners: Map<keyof GameEvents, Set<EventCallback<unknown>>> = new Map();
+  private listeners = new Map<keyof GameEvents, Set<EventCallback<unknown>>>();
+  private onceListeners = new Map<keyof GameEvents, Set<EventCallback<unknown>>>();
 
   /**
    * Subscribe to an event
@@ -91,15 +97,16 @@ class EventBusImpl {
    * @param callback Callback function
    * @returns Subscription handle for unsubscribing
    */
-  on<K extends keyof GameEvents>(
-    event: K,
-    callback: EventCallback<GameEvents[K]>
-  ): Subscription {
+  public on<K extends keyof GameEvents>(event: K, callback: EventCallback<GameEvents[K]>): Subscription {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
-    
-    const listeners = this.listeners.get(event)!;
+
+    const listeners = this.listeners.get(event);
+    if (!listeners) {
+      throw new Error(`Failed to get listeners for event: ${event}`);
+    }
+
     listeners.add(callback as EventCallback<unknown>);
 
     return {
@@ -115,15 +122,16 @@ class EventBusImpl {
    * @param callback Callback function
    * @returns Subscription handle for unsubscribing
    */
-  once<K extends keyof GameEvents>(
-    event: K,
-    callback: EventCallback<GameEvents[K]>
-  ): Subscription {
+  public once<K extends keyof GameEvents>(event: K, callback: EventCallback<GameEvents[K]>): Subscription {
     if (!this.onceListeners.has(event)) {
       this.onceListeners.set(event, new Set());
     }
-    
-    const listeners = this.onceListeners.get(event)!;
+
+    const listeners = this.onceListeners.get(event);
+    if (!listeners) {
+      throw new Error(`Failed to get once listeners for event: ${event}`);
+    }
+
     listeners.add(callback as EventCallback<unknown>);
 
     return {
@@ -138,7 +146,7 @@ class EventBusImpl {
    * @param event Event name
    * @param data Event payload
    */
-  emit<K extends keyof GameEvents>(event: K, data: GameEvents[K]): void {
+  public emit<K extends keyof GameEvents>(event: K, data: GameEvents[K]): void {
     // Regular listeners
     const listeners = this.listeners.get(event);
     if (listeners) {
@@ -156,7 +164,7 @@ class EventBusImpl {
     if (onceListeners && onceListeners.size > 0) {
       const callbacks = Array.from(onceListeners);
       onceListeners.clear();
-      
+
       callbacks.forEach((callback) => {
         try {
           callback(data);
@@ -171,7 +179,7 @@ class EventBusImpl {
    * Remove all listeners for a specific event
    * @param event Event name (optional, removes all if not provided)
    */
-  off<K extends keyof GameEvents>(event?: K): void {
+  public off(event?: keyof GameEvents): void {
     if (event) {
       this.listeners.delete(event);
       this.onceListeners.delete(event);
@@ -186,7 +194,7 @@ class EventBusImpl {
    * @param event Event name
    * @returns Number of listeners
    */
-  listenerCount<K extends keyof GameEvents>(event: K): number {
+  public listenerCount(event: keyof GameEvents): number {
     const regular = this.listeners.get(event)?.size ?? 0;
     const once = this.onceListeners.get(event)?.size ?? 0;
     return regular + once;
@@ -197,14 +205,14 @@ class EventBusImpl {
    * @param event Event name
    * @returns True if event has listeners
    */
-  hasListeners<K extends keyof GameEvents>(event: K): boolean {
+  public hasListeners(event: keyof GameEvents): boolean {
     return this.listenerCount(event) > 0;
   }
 
   /**
    * Clear all event listeners (useful for cleanup/reset)
    */
-  clear(): void {
+  public clear(): void {
     this.listeners.clear();
     this.onceListeners.clear();
   }

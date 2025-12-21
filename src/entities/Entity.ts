@@ -60,7 +60,7 @@ export abstract class Entity implements ITransform, ICircleCollider {
   /** Optional velocity component */
   protected velocity: IVelocity | null = null;
 
-  constructor(config: EntityConfig) {
+  public constructor(config: EntityConfig) {
     this.id = generateEntityId();
     this.x = config.x;
     this.y = config.y;
@@ -78,9 +78,7 @@ export abstract class Entity implements ITransform, ICircleCollider {
    * Gets velocity component (creates if needed)
    */
   public getVelocity(): IVelocity {
-    if (!this.velocity) {
-      this.velocity = { vx: 0, vy: 0 };
-    }
+    this.velocity ??= { vx: 0, vy: 0 };
     return this.velocity;
   }
 

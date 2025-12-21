@@ -20,18 +20,18 @@ export interface DevMenuDependencies {
   getGold: () => number;
   setGold: (value: number) => void;
   getCanvasSize: () => { width: number; height: number };
-  
+
   // Debug display options
   setShowEnemyCount: (show: boolean) => void;
-  
+
   // Game control
   pauseGame: () => void;
   resumeGame: () => void;
-  
+
   // Wave control
   getCurrentWave: () => number;
   skipToWave: (wave: number) => void;
-  
+
   // Player actions
   getPlayer: () => {
     hp: number;
@@ -42,7 +42,7 @@ export interface DevMenuDependencies {
     addItem: (itemId: string) => void;
     applyStat: (stat: string, value: number) => void;
   } | null;
-  
+
   // Entity actions
   addWeapon: (type: WeaponType) => void;
   spawnEnemy: (type: EnemyType, x: number, y: number) => void;
@@ -54,13 +54,13 @@ export class DevMenu {
   private isVisible: boolean = false;
   private deps: DevMenuDependencies;
   private previousState: string = 'playing';
-  
+
   // Drag state
   private isDragging: boolean = false;
   private dragOffsetX: number = 0;
   private dragOffsetY: number = 0;
 
-  constructor(deps: DevMenuDependencies) {
+  public constructor(deps: DevMenuDependencies) {
     this.deps = deps;
     this.init();
   }
@@ -92,7 +92,6 @@ export class DevMenu {
   private populateDropdowns(): void {
     // Items dropdown
     const itemSelect = document.getElementById('dev-item-select') as HTMLSelectElement;
-    if (itemSelect) {
       itemSelect.innerHTML = '';
       for (const [id, item] of Object.entries(SHOP_ITEMS)) {
         if (item.type === 'item') {
@@ -102,11 +101,10 @@ export class DevMenu {
           itemSelect.appendChild(option);
         }
       }
-    }
+    
 
     // Weapons dropdown
     const weaponSelect = document.getElementById('dev-weapon-select') as HTMLSelectElement;
-    if (weaponSelect) {
       weaponSelect.innerHTML = '';
       for (const [type, config] of Object.entries(WEAPON_TYPES)) {
         if (type === 'minibanana') continue; // Skip internal type
@@ -115,11 +113,9 @@ export class DevMenu {
         option.textContent = `${config.emoji || ''} ${config.name}`;
         weaponSelect.appendChild(option);
       }
-    }
 
     // Boss dropdown - use formatted type name since config.name is generic 'BOSS'
     const bossSelect = document.getElementById('dev-boss-select') as HTMLSelectElement;
-    if (bossSelect) {
       bossSelect.innerHTML = '';
       // TODO, why not use boss type enum instead of a map??
       const bossLabels: Record<string, string> = {
@@ -134,15 +130,14 @@ export class DevMenu {
         if (config.isBoss) {
           const option = document.createElement('option');
           option.value = type;
-          option.textContent = bossLabels[type] || type;
+          option.textContent = bossLabels[type] ?? type;
           bossSelect.appendChild(option);
         }
       }
-    }
+    
 
     // Enemy dropdown
     const enemySelect = document.getElementById('dev-enemy-select') as HTMLSelectElement;
-    if (enemySelect) {
       enemySelect.innerHTML = '';
       for (const [type, config] of Object.entries(ENEMY_TYPES)) {
         if (!config.isBoss) {
@@ -152,7 +147,7 @@ export class DevMenu {
           enemySelect.appendChild(option);
         }
       }
-    }
+    
   }
 
   /**
@@ -190,7 +185,7 @@ export class DevMenu {
     });
 
     // Gold button
-    document.getElementById('dev-gold-1000')?.addEventListener('click', () => this.addGold(1000));
+    document.getElementById('dev-gold-1000')?.addEventListener('click', () => { this.addGold(1000); });
 
     // Spawning
     document.getElementById('dev-boss-spawn')?.addEventListener('click', () => {
@@ -240,20 +235,20 @@ export class DevMenu {
    * Setup drag listeners for the header
    */
   private setupDragListeners(): void {
-    const header = this.container?.querySelector('.dev-menu-header') as HTMLElement;
+    const header = this.container?.querySelector('.dev-menu-header') as HTMLElement | null;
     if (!header) return;
 
-    header.addEventListener('mousedown', (e) => this.onDragStart(e));
-    document.addEventListener('mousemove', (e) => this.onDragMove(e));
-    document.addEventListener('mouseup', () => this.onDragEnd());
+    header.addEventListener('mousedown', (e: MouseEvent) => { this.onDragStart(e); });
+    document.addEventListener('mousemove', (e) => { this.onDragMove(e); });
+    document.addEventListener('mouseup', () => { this.onDragEnd(); });
   }
 
   private onDragStart(e: MouseEvent): void {
     if (!this.container) return;
-    
+
     this.isDragging = true;
     this.container.classList.add('dragging');
-    
+
     const rect = this.container.getBoundingClientRect();
     this.dragOffsetX = e.clientX - rect.left;
     this.dragOffsetY = e.clientY - rect.top;
@@ -261,21 +256,21 @@ export class DevMenu {
 
   private onDragMove(e: MouseEvent): void {
     if (!this.isDragging || !this.container) return;
-    
+
     e.preventDefault();
-    
+
     // Calculate new position
     let newX = e.clientX - this.dragOffsetX;
     let newY = e.clientY - this.dragOffsetY;
-    
+
     // Constrain to viewport
     const rect = this.container.getBoundingClientRect();
     const maxX = window.innerWidth - rect.width;
     const maxY = window.innerHeight - rect.height;
-    
+
     newX = Math.max(0, Math.min(newX, maxX));
     newY = Math.max(0, Math.min(newY, maxY));
-    
+
     // Apply position
     this.container.style.left = `${newX}px`;
     this.container.style.top = `${newY}px`;
@@ -283,11 +278,10 @@ export class DevMenu {
 
   private onDragEnd(): void {
     if (!this.isDragging) return;
-    
+
     this.isDragging = false;
     this.container?.classList.remove('dragging');
   }
-
 
   // ============ Visibility Control ============
 
@@ -296,10 +290,10 @@ export class DevMenu {
    */
   public show(): void {
     if (this.isVisible) return;
-    
+
     this.isVisible = true;
     this.container?.classList.add('visible');
-    
+
     // Store current state and pause if playing
     const currentState = this.deps.getState();
     if (currentState === 'playing') {
@@ -311,15 +305,13 @@ export class DevMenu {
 
     // Update wave input to current wave
     const waveInput = document.getElementById('dev-wave-input') as HTMLInputElement;
-    if (waveInput) {
       waveInput.value = String(this.deps.getCurrentWave());
-    }
 
     // Update god mode checkbox
     const godmodeCheckbox = document.getElementById('dev-godmode') as HTMLInputElement;
     const player = this.deps.getPlayer();
-    if (godmodeCheckbox && player) {
-      godmodeCheckbox.checked = player.godMode ?? false;
+    if (player) {
+      godmodeCheckbox.checked = player.godMode;
     }
   }
 
@@ -328,10 +320,10 @@ export class DevMenu {
    */
   public hide(): void {
     if (!this.isVisible) return;
-    
+
     this.isVisible = false;
     this.container?.classList.remove('visible');
-    
+
     // Resume game if it was playing before
     if (this.previousState === 'playing') {
       this.deps.resumeGame();
@@ -374,13 +366,13 @@ export class DevMenu {
     const player = this.deps.getPlayer();
     if (player) {
       const item = SHOP_ITEMS[itemId];
-      if (item && item.type === 'item') {
+      if (item?.type === 'item') {
         player.addItem(itemId);
         // Apply stat bonuses from effect - iterate all effect properties
         const effect = item.effect;
         for (const [stat, value] of Object.entries(effect)) {
           if (value !== undefined) {
-            player.applyStat(stat as keyof typeof effect, value);
+            player.applyStat(stat as keyof typeof effect, value as number);
           }
         }
         console.log(`[DevMenu] Added item: ${item.name}`);
@@ -414,7 +406,7 @@ export class DevMenu {
       // Spawn at random edge position
       const side = Math.floor(Math.random() * 4);
       let x: number, y: number;
-      
+
       switch (side) {
         case 0: // Top
           x = Math.random() * canvas.width;
@@ -432,7 +424,7 @@ export class DevMenu {
           x = -30;
           y = Math.random() * canvas.height;
       }
-      
+
       this.deps.spawnEnemy(type, x, y);
     }
     console.log(`[DevMenu] Spawned ${count}x ${type}`);

@@ -1,7 +1,15 @@
 name: Deploy to GitHub Pages
 
 on:
+  push:
+    branches:
+      - master
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag version to deploy (e.g. v1.2.3). Leave empty for latest.'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -9,7 +17,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: 'pages'
   cancel-in-progress: false
 
 jobs:
@@ -17,12 +25,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.tag || 'master' }}
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
@@ -33,12 +42,16 @@ jobs:
       - name: Get version from git tag
         id: version
         run: |
-          # Get latest tag or default to v0.0.0
-          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          # Use input tag or get latest tag from master
+          if [ -n "${{ inputs.tag }}" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          fi
           # Remove 'v' prefix for display
           VERSION=${TAG#v}
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Using version: $VERSION"
+          echo "Deploying version: $VERSION"
 
       - name: Build with Vite
         env:
@@ -48,10 +61,10 @@ jobs:
         run: npm run build
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: './dist'
 

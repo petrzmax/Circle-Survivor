@@ -4,8 +4,9 @@
  * Matches original js/shop.js exactly.
  */
 
-import { SHOP_ITEMS, WeaponShopItem, StatShopItem, WeaponBonusShopItem } from '@/config/shop.config';
+import { SHOP_ITEMS } from '@/config/shop.config';
 import { GAME_BALANCE } from '@/config/balance.config';
+import { WeaponType } from '@/types';
 
 // ============ Types ============
 
@@ -49,14 +50,14 @@ export class Shop {
   /**
    * Set callbacks for game integration
    */
-  setCallbacks(callbacks: ShopCallbacks): void {
+  public setCallbacks(callbacks: ShopCallbacks): void {
     this.callbacks = callbacks;
   }
 
   /**
    * Calculate reroll price
    */
-  getRerollPrice(): number {
+  private getRerollPrice(): number {
     const waveNumber = this.callbacks?.getWaveNumber() ?? 1;
     const basePrice = GAME_BALANCE.economy.reroll.baseCost;
     // Price = base * (1 + wave*perWave) * (1 + reroll*perReroll)
@@ -68,7 +69,7 @@ export class Shop {
   /**
    * Reroll items in shop
    */
-  rerollItems(player: ShopPlayer): void {
+  public rerollItems(player: ShopPlayer): void {
     if (!this.callbacks) return;
 
     const price = this.getRerollPrice();
@@ -92,13 +93,16 @@ export class Shop {
   /**
    * Dynamic price scaling
    */
-  calculatePrice(basePrice: number, player: ShopPlayer): number {
+  private calculatePrice(basePrice: number, player: ShopPlayer): number {
     const waveNumber = this.callbacks?.getWaveNumber() ?? 1;
 
     // Scaling with wave number (after startWave, +perWave% per wave)
     let waveMultiplier = 1;
     if (waveNumber > GAME_BALANCE.economy.priceScale.startWave) {
-      waveMultiplier = 1 + (waveNumber - GAME_BALANCE.economy.priceScale.startWave) * GAME_BALANCE.economy.priceScale.perWave;
+      waveMultiplier =
+        1 +
+        (waveNumber - GAME_BALANCE.economy.priceScale.startWave) *
+          GAME_BALANCE.economy.priceScale.perWave;
     }
 
     // Scaling with owned items (+perItem% per item)
@@ -117,7 +121,7 @@ export class Shop {
   /**
    * Generate items for shop
    */
-  generateItems(player: ShopPlayer): void {
+  public generateItems(player: ShopPlayer): void {
     // Item categorization
     const weapons: string[] = [];
     const items: string[] = [];
@@ -157,8 +161,9 @@ export class Shop {
 
     // 1 random from: additional item/weapon
     const extras: string[] = [];
-    if (weapons.length > weaponCount && weapons[weaponCount]) extras.push(weapons[weaponCount]!);
-    if (items.length > itemCountInShop && items[itemCountInShop]) extras.push(items[itemCountInShop]!);
+    if (weapons.length > weaponCount && weapons[weaponCount]) extras.push(weapons[weaponCount]);
+    if (items.length > itemCountInShop && items[itemCountInShop])
+      extras.push(items[itemCountInShop]);
     shuffle(extras);
     if (extras.length > 0 && extras[0]) {
       this.availableItems.push(extras[0]);
@@ -171,14 +176,14 @@ export class Shop {
   /**
    * Reset reroll on shop open
    */
-  resetReroll(): void {
+  public resetReroll(): void {
     this.rerollCount = 0;
   }
 
   /**
    * Render shop UI
    */
-  renderShop(gold: number, player: ShopPlayer): void {
+  public renderShop(gold: number, player: ShopPlayer): void {
     const shopEl = document.getElementById('shop');
     const itemsEl = document.getElementById('shop-items');
 
@@ -203,8 +208,8 @@ export class Shop {
       // Check if weapon is locked (full slots and don't have this weapon)
       let isWeaponLocked = false;
       if (item.type === 'weapon') {
-        const weaponItem = item as WeaponShopItem;
-        const hasThisWeapon = player.weapons.some((w) => w.type === weaponItem.weaponType);
+        const weaponItem = item;
+        const hasThisWeapon = player.weapons.some((w) => w.type === (weaponItem.weaponType as WeaponType));
         if (player.weapons.length >= player.maxWeapons && !hasThisWeapon) {
           isWeaponLocked = true;
         }
@@ -220,10 +225,10 @@ export class Shop {
       if (isWeaponLocked) {
         extraInfo = '<div style="color: #ff6b6b; font-size: 10px">🔒 Pełne sloty</div>';
       } else if (item.type === 'weapon') {
-        const weaponItem = item as WeaponShopItem;
+        const weaponItem = item;
         if (
           player.weapons.length >= player.maxWeapons &&
-          player.weapons.some((w) => w.type === weaponItem.weaponType)
+          player.weapons.some((w) => w.type === (weaponItem.weaponType as WeaponType))
         ) {
           // Upgrade only when you have full slots AND already have this weapon
           extraInfo = '<div style="color: #4ecdc4; font-size: 10px">⬆️ Upgrade</div>';
@@ -239,7 +244,7 @@ export class Shop {
             `;
 
       if (canBuy) {
-        itemEl.onclick = () => this.buyItem(itemKey, player, currentPrice);
+        itemEl.onclick = () => { this.buyItem(itemKey, player, currentPrice); };
       }
 
       itemsEl.appendChild(itemEl);
@@ -259,7 +264,7 @@ export class Shop {
         `;
 
     if (canReroll) {
-      rerollEl.onclick = () => this.rerollItems(player);
+      rerollEl.onclick = () => { this.rerollItems(player); };
     }
 
     itemsEl.appendChild(rerollEl);
@@ -270,7 +275,7 @@ export class Shop {
   /**
    * Buy item from shop
    */
-  buyItem(itemKey: string, player: ShopPlayer, currentPrice: number | null = null): void {
+  private buyItem(itemKey: string, player: ShopPlayer, currentPrice: number | null = null): void {
     if (!this.callbacks) return;
 
     const item = SHOP_ITEMS[itemKey];
@@ -288,14 +293,15 @@ export class Shop {
 
     switch (item.type) {
       case 'weapon': {
-        const weaponItem = item as WeaponShopItem;
+        const weaponItem = item;
         // Check if player has full slots
         if (player.weapons.length >= player.maxWeapons) {
           // Upgrade random weapon of the same type
-          const sameTypeWeapons = player.weapons.filter((w) => w.type === weaponItem.weaponType);
+          const sameTypeWeapons = player.weapons.filter((w) => w.type === (weaponItem.weaponType as WeaponType));
           if (sameTypeWeapons.length > 0) {
             // Pick random weapon of this type
-            const randomWeapon = sameTypeWeapons[Math.floor(Math.random() * sameTypeWeapons.length)];
+            const randomWeapon =
+              sameTypeWeapons[Math.floor(Math.random() * sameTypeWeapons.length)];
             if (randomWeapon) {
               randomWeapon.upgrade();
               // Show upgrade notification
@@ -315,7 +321,7 @@ export class Shop {
       }
 
       case 'weaponBonus': {
-        const bonusItem = item as WeaponBonusShopItem;
+        const bonusItem = item;
         // Bonus to random weapon (e.g., multishot)
         if (player.weapons.length === 0) {
           this.callbacks.setGold(this.callbacks.getGold() + price);
@@ -325,25 +331,29 @@ export class Shop {
         // Add item to inventory
         player.addItem(itemKey);
         // Pick random weapon
-        const randomWeaponForBonus = player.weapons[Math.floor(Math.random() * player.weapons.length)];
+        const randomWeaponForBonus =
+          player.weapons[Math.floor(Math.random() * player.weapons.length)];
         if (randomWeaponForBonus) {
           // Apply bonus to weapon
           if (bonusItem.bonusType && randomWeaponForBonus[bonusItem.bonusType] !== undefined) {
             (randomWeaponForBonus[bonusItem.bonusType] as number) += bonusItem.bonusValue;
           }
           // Show notification
-          this.callbacks.showNotification(`🎯 ${randomWeaponForBonus.name} +${bonusItem.bonusValue} pocisk!`);
+          this.callbacks.showNotification(
+            `🎯 ${randomWeaponForBonus.name} +${bonusItem.bonusValue} pocisk!`,
+          );
         }
         break;
       }
 
       case 'item': {
-        const statItem = item as StatShopItem;
+        const statItem = item;
         // Add item to inventory
         player.addItem(itemKey);
         // Apply effects
         if (statItem.effect) {
-          for (const [stat, value] of Object.entries(statItem.effect)) {
+          for (const [stat, valueRaw] of Object.entries(statItem.effect)) {
+            const value = valueRaw as number;
             if (stat === 'maxHp') {
               player.maxHp += value;
               player.hp += value; // Also heal
@@ -365,7 +375,7 @@ export class Shop {
   /**
    * Hide shop UI
    */
-  hideShop(): void {
+  public hideShop(): void {
     const shopEl = document.getElementById('shop');
     if (shopEl) shopEl.classList.add('hidden');
   }

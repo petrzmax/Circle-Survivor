@@ -24,22 +24,8 @@ export {
   type EnemyBulletData,
 } from './Enemy';
 
-export {
-  Player,
-  type PlayerConfig,
-  type PlayerStats,
-  type InputState,
-} from './Player';
+export { Player, type PlayerConfig, type PlayerStats, type InputState } from './Player';
 
-export {
-  Pickup,
-  type PickupConfig,
-  createGoldPickup,
-  createHealthPickup,
-} from './Pickup';
+export { Pickup, type PickupConfig, createGoldPickup, createHealthPickup } from './Pickup';
 
-export {
-  Weapon,
-  type WeaponEntityConfig,
-  type FireResult,
-} from './Weapon';
+export { Weapon, type WeaponEntityConfig, type FireResult } from './Weapon';

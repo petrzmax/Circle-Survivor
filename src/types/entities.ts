@@ -75,21 +75,21 @@ export interface IProjectile extends IPhysicsEntity, IDamageDealer {
   type: ProjectileType;
   ownerId: 'player' | 'enemy';
   color: string;
-  
+
   // Optional components
   explosive?: IExplosiveComponent;
   pierce?: IPierceComponent;
   chain?: IChainComponent;
-  
+
   // Short range weapons
   maxDistance?: number;
   distanceTraveled: number;
   startX: number;
   startY: number;
-  
+
   // State
   isCrit: boolean;
-  
+
   isOffScreen(canvasWidth: number, canvasHeight: number): boolean;
   shouldExpire(): boolean;
 }
@@ -104,7 +104,7 @@ export interface IDeployable extends IEntity, ICircleCollider, IExpirable {
   ownerId: string;
   isArmed: boolean;
   armDelay: number;
-  
+
   onTrigger(): void;
 }
 
@@ -116,7 +116,7 @@ export interface IDeployable extends IEntity, ICircleCollider, IExpirable {
 export interface IPickup extends IEntity, ICircleCollider, IExpirable {
   type: PickupType;
   value: number;
-  
+
   // Magnet effect
   magnetTarget?: ITransform;
   magnetSpeed: number;
@@ -132,15 +132,15 @@ export interface IEnemy extends ICombatEntity {
   color: string;
   xpValue: number;
   goldValue: number;
-  
+
   // Special properties
   isBoss: boolean;
   bossName?: string;
-  
+
   // Movement patterns
   zigzag: boolean;
   phasing: boolean;
-  
+
   // Combat
   canShoot: boolean;
   fireRate: number;
@@ -148,14 +148,14 @@ export interface IEnemy extends ICombatEntity {
   bulletSpeed: number;
   lastFireTime: number;
   attackPatterns: string[];
-  
+
   // Death effects
   explodeOnDeath: boolean;
   explosionRadius: number;
   explosionDamage: number;
   splitOnDeath: boolean;
   splitCount: number;
-  
+
   // Arena bounds
   hasEnteredArena: boolean;
 }
@@ -170,7 +170,7 @@ export interface IWeapon {
   name: string;
   emoji: string;
   level: number;
-  
+
   // Stats
   damage: number;
   baseDamage: number;
@@ -180,7 +180,7 @@ export interface IWeapon {
   spread: number;
   range: number;
   color: string;
-  
+
   // Special properties
   pierce: boolean;
   pierceCount: number;
@@ -189,12 +189,12 @@ export interface IWeapon {
   chain: boolean;
   chainCount: number;
   knockbackMultiplier: number;
-  
+
   // State
   lastFired: number;
   fireOffset: number;
   extraProjectiles: number;
-  
+
   canFire(currentTime: number): boolean;
   fire(x: number, y: number, targetX: number, targetY: number, currentTime: number): IProjectile[];
   upgrade(): void;
@@ -210,7 +210,7 @@ export interface IPlayerStats {
   maxHp: number;
   speed: number;
   pickupRange: number;
-  
+
   // Combat
   armor: number;
   damageMultiplier: number;
@@ -223,7 +223,7 @@ export interface IPlayerStats {
   projectileCount: number;
   pierce: number;
   attackRange: number;
-  
+
   // Utility
   luck: number;
   xpMultiplier: number;
@@ -241,19 +241,19 @@ export interface IPlayer extends ICombatEntity {
   width: number;
   height: number;
   color: string;
-  
+
   // Stats
   stats: IPlayerStats;
-  
+
   // Equipment
   weapons: IWeapon[];
   maxWeapons: number;
   items: string[];
-  
+
   // State
   invincibleUntil: number;
   invincibleDuration: number;
-  
+
   // Methods
   addWeapon(type: WeaponType): boolean;
   fireAllWeapons(target: ITransform | null, currentTime: number): IProjectile[];

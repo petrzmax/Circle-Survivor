@@ -216,7 +216,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     range: 230,
     weaponCategory: WeaponCategory.MELEE,
     projectileType: ProjectileType.SCYTHE,
-    // TODO projecttile section?
+    // TODO projectile section?
     rotationSpeed: 4, // ~0.6 rotations per second
   },
   [WeaponType.SWORD]: {

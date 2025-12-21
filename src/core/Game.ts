@@ -1,9 +1,7 @@
 /**
  * Main Game Controller
  * Uses new TypeScript architecture with EntityManager and Systems.
- * Preserves all game mechanics, values and visual appearance from original.
  */
-
 import { Player, InputState } from '@/entities/Player';
 import { Enemy } from '@/entities/Enemy';
 import { Projectile } from '@/entities/Projectile';
@@ -13,7 +11,7 @@ import { EntityManager } from '@/managers/EntityManager';
 import { CollisionSystem } from '@/systems/CollisionSystem';
 import { WaveManager } from '@/systems/WaveManager';
 import { Shop, ShopPlayer, ShopWeapon } from '@/ui/Shop';
-import { InputHandler, KeyState } from '@/systems/InputHandler';
+import { InputHandler } from '@/systems/InputHandler';
 import { HUD } from '@/systems/HUD';
 import { EffectsSystem, EffectsState, createEffectsState } from '@/systems/EffectsSystem';
 import { WeaponRenderer } from '@/systems/WeaponRenderer';
@@ -24,11 +22,18 @@ import { EventBus } from '@/core/EventBus';
 import { CHARACTER_TYPES } from '@/config/characters.config';
 import { WEAPON_TYPES, WeaponConfig } from '@/config/weapons.config';
 import { GAME_BALANCE } from '@/config/balance.config';
-import { CharacterType, WeaponType, ProjectileType, EnemyType, PickupType, VisualEffect, DeployableType } from '@/types/enums';
+import {
+  CharacterType,
+  WeaponType,
+  ProjectileType,
+  EnemyType,
+  PickupType,
+  VisualEffect,
+  DeployableType,
+} from '@/types/enums';
 import { circleCollision, distance } from '@/utils';
 
 // ============ Types ============
-
 export type GameState = 'start' | 'playing' | 'shop' | 'gameover' | 'paused';
 
 // Weapon runtime instance (tracks cooldowns, levels)
@@ -46,38 +51,37 @@ interface WeaponInstance {
 
 export class Game {
   // Canvas
-  canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D;
+  private canvas: HTMLCanvasElement;
+  private ctx: CanvasRenderingContext2D;
 
   // Game state
-  state: GameState = 'start';
-  lastTime: number = 0;
-  selectedCharacter: CharacterType | null = null;
+  private state: GameState = 'start';
+  private lastTime: number = 0;
+  private selectedCharacter: CharacterType | null = null;
 
   // Entity Manager
-  entityManager: EntityManager;
+  private entityManager: EntityManager;
 
   // Weapon instances (runtime state)
-  weapons: WeaponInstance[] = [];
+  private weapons: WeaponInstance[] = [];
 
   // Systems
-  collisionSystem: CollisionSystem;
-  waveManager: WaveManager;
-  shop: Shop;
-  audio: AudioSystem;
-  leaderboard: Leaderboard;
-  leaderboardUI: LeaderboardUI;
-  inputHandler: InputHandler;
+  // TODO: remove if not needed
+  // @ts-expect-error - prepared for CombatSystem refactor
+  private _collisionSystem: CollisionSystem;
+  private waveManager: WaveManager;
+  private shop: Shop;
+  private audio: AudioSystem;
+  private leaderboard: Leaderboard;
+  private leaderboardUI: LeaderboardUI;
+  private inputHandler: InputHandler;
 
   // Effects
-  effects: EffectsState;
+  private effects: EffectsState;
 
   // Resources
-  gold: number = 0;
-  xp: number = 0;
-
-  // Input
-  keys: KeyState = {};
+  private gold: number = 0;
+  private xp: number = 0;
 
   // Regeneration tracking
   private lastRegenTime: number = 0;
@@ -89,7 +93,7 @@ export class Game {
   // @ts-expect-error - stored for future use
   private _devMenu?: InstanceType<typeof import('@/debug/DevMenu').DevMenu>;
 
-  constructor() {
+  public constructor() {
     // Get canvas
     this.canvas = document.getElementById('game') as HTMLCanvasElement;
     this.ctx = this.canvas.getContext('2d')!;
@@ -98,25 +102,26 @@ export class Game {
 
     // Initialize systems
     this.entityManager = new EntityManager();
-    this.collisionSystem = new CollisionSystem(this.entityManager);
+    // TODO: refactor to CombatSystem, remove _ after
+    this._collisionSystem = new CollisionSystem(this.entityManager);
     this.waveManager = new WaveManager();
     this.shop = new Shop();
     this.audio = new AudioSystem();
     this.leaderboard = new Leaderboard();
     this.leaderboardUI = new LeaderboardUI(this.leaderboard);
     this.inputHandler = new InputHandler({
-      onPause: () => this.pauseGame(),
-      onResume: () => this.resumeGame(),
-      onSelectCharacter: (type: string) => this.selectCharacter(type as CharacterType),
-      onRestart: () => this.showCharacterSelect(),
-      onStartWave: () => this.startNextWave(),
-      onQuitToMenu: () => this.quitToMenu(),
-      onToggleSound: () => this.toggleSound(),
-      onSubmitScore: () => this.submitScore(),
-      onSwitchLeaderboardTab: (tab: string) => this.switchLeaderboardTab(tab),
-      onOpenMenuLeaderboard: () => this.openMenuLeaderboard(),
-      onCloseMenuLeaderboard: () => this.closeMenuLeaderboard(),
-      onSwitchMenuLeaderboardTab: (tab: string) => this.switchMenuLeaderboardTab(tab),
+      onPause: () => { this.pauseGame(); },
+      onResume: () => { this.resumeGame(); },
+      onSelectCharacter: (type: string) => { this.selectCharacter(type as CharacterType); },
+      onRestart: () => { this.showCharacterSelect(); },
+      onStartWave: () => { this.startNextWave(); },
+      onQuitToMenu: () => { this.quitToMenu(); },
+      onToggleSound: () => { this.toggleSound(); },
+      onSubmitScore: () => { void this.submitScore(); },
+      onSwitchLeaderboardTab: (tab: string) => { this.switchLeaderboardTab(tab); },
+      onOpenMenuLeaderboard: () => { void this.openMenuLeaderboard(); },
+      onCloseMenuLeaderboard: () => { this.closeMenuLeaderboard(); },
+      onSwitchMenuLeaderboardTab: (tab: string) => { this.switchMenuLeaderboardTab(tab); },
       getState: () => this.state,
     });
     this.effects = createEffectsState();
@@ -131,10 +136,10 @@ export class Game {
         this.gold = value;
       },
       getWaveNumber: () => this.waveManager.waveNumber,
-      playPurchaseSound: () => this.audio.purchase(),
-      playErrorSound: () => this.audio.error(),
-      showNotification: (message: string) => this.showNotification(message),
-      updateHUD: () => this.updateHUD(),
+      playPurchaseSound: () => { this.audio.purchase(); },
+      playErrorSound: () => { this.audio.error(); },
+      showNotification: (message: string) => { this.showNotification(message); },
+      updateHUD: () => { this.updateHUD(); },
     });
 
     // Bind to window for global access
@@ -144,7 +149,7 @@ export class Game {
 
     // Initialize dev menu (development only)
     if (import.meta.env.DEV) {
-      this.initDevMenu();
+      void this.initDevMenu();
     }
   }
 
@@ -157,20 +162,24 @@ export class Game {
       // State
       getState: () => this.state,
       getGold: () => this.gold,
-      setGold: (value) => { this.gold = value; },
+      setGold: (value) => {
+        this.gold = value;
+      },
       getCanvasSize: () => ({ width: this.canvas.width, height: this.canvas.height }),
-      
+
       // Debug display options
-      setShowEnemyCount: (show) => { this.showEnemyCount = show; },
-      
+      setShowEnemyCount: (show) => {
+        this.showEnemyCount = show;
+      },
+
       // Game control
-      pauseGame: () => this.pauseGame(),
-      resumeGame: () => this.resumeGame(),
-      
+      pauseGame: () => { this.pauseGame(); },
+      resumeGame: () => { this.resumeGame(); },
+
       // Wave control
       getCurrentWave: () => this.waveManager.currentWave,
-      skipToWave: (wave) => this.waveManager.skipToWave(wave),
-      
+      skipToWave: (wave) => { this.waveManager.skipToWave(wave); },
+
       // Player actions
       getPlayer: () => {
         const player = this.entityManager.getPlayer();
@@ -179,17 +188,20 @@ export class Game {
           hp: player.hp,
           maxHp: player.maxHp,
           godMode: player.godMode,
-          setGodMode: (enabled) => { player.godMode = enabled; },
-          heal: (amount) => player.heal(amount),
-          addItem: (itemId) => player.addItem(itemId),
-          applyStat: (stat, value) => player.applyStat(stat as keyof import('@/entities/Player').PlayerStats, value),
+          setGodMode: (enabled) => {
+            player.godMode = enabled;
+          },
+          heal: (amount) => { player.heal(amount); },
+          addItem: (itemId) => { player.addItem(itemId); },
+          applyStat: (stat, value) =>
+            { player.applyStat(stat as keyof import('@/entities/Player').PlayerStats, value); },
         };
       },
-      
+
       // Entity actions
-      addWeapon: (type) => this.addWeapon(type),
-      spawnEnemy: (type, x, y) => this.spawnEnemy(type, x, y),
-      killAllEnemies: () => this.killAllEnemies(),
+      addWeapon: (type) => { this.addWeapon(type); },
+      spawnEnemy: (type, x, y) => { this.spawnEnemy(type, x, y); },
+      killAllEnemies: () => { this.killAllEnemies(); },
     });
   }
 
@@ -205,50 +217,56 @@ export class Game {
 
   // ============ Setup ============
 
-  setupEventBusListeners(): void {
+  private setupEventBusListeners(): void {
     EventBus.on('enemyDeath', ({ enemy }) => {
-      this.handleEnemyDeath(enemy as Enemy);
+      this.handleEnemyDeath(enemy);
     });
   }
 
-  showNotification(message: string): void {
+  private showNotification(message: string): void {
     console.log('Notification:', message);
     // TODO: Implement visual notification
   }
 
   // ============ Leaderboard Methods ============
 
-  async openMenuLeaderboard(): Promise<void> {
+  private async openMenuLeaderboard(): Promise<void> {
     await this.leaderboardUI.openMenuLeaderboard();
   }
 
-  closeMenuLeaderboard(): void {
+  private closeMenuLeaderboard(): void {
     this.leaderboardUI.closeMenuLeaderboard();
   }
 
-  async showMenuLeaderboard(tab: string = 'local'): Promise<void> {
+  // TODO: remove if not needed
+  // @ts-expect-error - kept for potential future use
+  private async _showMenuLeaderboard(tab: string = 'local'): Promise<void> {
     await this.leaderboardUI.showMenuLeaderboard(tab);
   }
 
-  switchMenuLeaderboardTab(tab: string): void {
+  private switchMenuLeaderboardTab(tab: string): void {
     this.leaderboardUI.switchMenuLeaderboardTab(tab);
   }
 
-  async submitScore(): Promise<void> {
-    await this.leaderboardUI.submitScore(this.waveManager.waveNumber, this.xp, this.selectedCharacter);
+  private async submitScore(): Promise<void> {
+    await this.leaderboardUI.submitScore(
+      this.waveManager.waveNumber,
+      this.xp,
+      this.selectedCharacter,
+    );
   }
 
-  async showLeaderboard(tab: string = 'local', highlightName: string | null = null): Promise<void> {
+  private async showLeaderboard(tab: string = 'local', highlightName: string | null = null): Promise<void> {
     await this.leaderboardUI.showLeaderboard(tab, highlightName);
   }
 
-  switchLeaderboardTab(tab: string): void {
+  private switchLeaderboardTab(tab: string): void {
     this.leaderboardUI.switchLeaderboardTab(tab);
   }
 
   // ============ Character Selection ============
 
-  selectCharacter(characterType: CharacterType): void {
+  private selectCharacter(characterType: CharacterType): void {
     this.selectedCharacter = characterType;
 
     // Mark selected card
@@ -259,10 +277,10 @@ export class Game {
     if (selectedCard) selectedCard.classList.add('selected');
 
     // Start game after short delay
-    setTimeout(() => this.startGame(), 300);
+    setTimeout(() => { this.startGame(); }, 300);
   }
 
-  showCharacterSelect(): void {
+  private showCharacterSelect(): void {
     document.getElementById('game-over')?.classList.add('hidden');
     document.getElementById('start-screen')?.classList.remove('hidden');
     document.querySelectorAll('.character-card').forEach((card) => {
@@ -280,7 +298,7 @@ export class Game {
     }
   }
 
-  toggleSound(): void {
+  private toggleSound(): void {
     this.audio.toggle();
     const btn = document.getElementById('sound-toggle');
     if (btn) {
@@ -290,19 +308,19 @@ export class Game {
 
   // ============ Pause Menu ============
 
-  pauseGame(): void {
+  private pauseGame(): void {
     this.state = 'paused';
     document.getElementById('pause-menu')?.classList.remove('hidden');
   }
 
-  resumeGame(): void {
+  private resumeGame(): void {
     this.state = 'playing';
     document.getElementById('pause-menu')?.classList.add('hidden');
     this.lastTime = performance.now();
-    requestAnimationFrame((t) => this.gameLoop(t));
+    requestAnimationFrame((t) => { this.gameLoop(t); });
   }
 
-  quitToMenu(): void {
+  private quitToMenu(): void {
     this.state = 'start';
     document.getElementById('pause-menu')?.classList.add('hidden');
     this.showCharacterSelect();
@@ -310,14 +328,8 @@ export class Game {
 
   // ============ Game Start ============
 
-  startGame(): void {
-    if (!this.selectedCharacter) {
-      this.selectedCharacter = CharacterType.NORMIK;
-    }
-
-    // Initialize audio
-    this.audio.init();
-    this.audio.connectToEventBus();
+  private startGame(): void {
+    this.selectedCharacter ??= CharacterType.NORMIK;
 
     // Get character config
     const charConfig = CHARACTER_TYPES[this.selectedCharacter];
@@ -343,7 +355,7 @@ export class Game {
 
     // Initialize weapons
     this.weapons = [];
-    this.addWeapon(charConfig.startingWeapon as WeaponType);
+    this.addWeapon(charConfig.startingWeapon);
 
     // Reset game state
     this.gold = 0;
@@ -363,10 +375,10 @@ export class Game {
 
     // Start game loop
     this.lastTime = performance.now();
-    requestAnimationFrame((t) => this.gameLoop(t));
+    requestAnimationFrame((t) => { this.gameLoop(t); });
   }
 
-  startNextWave(): void {
+  private startNextWave(): void {
     this.shop.hideShop();
     this.state = 'playing';
 
@@ -387,7 +399,7 @@ export class Game {
 
   // ============ Weapon Management ============
 
-  addWeapon(type: WeaponType): void {
+  private addWeapon(type: WeaponType): void {
     const config = WEAPON_TYPES[type];
     if (!config) return;
 
@@ -421,14 +433,12 @@ export class Game {
    * Spread shots evenly for weapons of the same type.
    * Assigns staggered offsets so weapons don't all fire at once.
    */
-  recalculateFireOffsets(): void {
+  private recalculateFireOffsets(): void {
     // Group weapons by type
     const weaponsByType: Record<string, WeaponInstance[]> = {};
     for (const weapon of this.weapons) {
-      if (!weaponsByType[weapon.type]) {
-        weaponsByType[weapon.type] = [];
-      }
-      weaponsByType[weapon.type]!.push(weapon);
+      weaponsByType[weapon.type] ??= [];
+      weaponsByType[weapon.type]?.push(weapon);
     }
 
     // Assign staggered offsets within each type group
@@ -444,7 +454,7 @@ export class Game {
 
   // ============ Game Loop ============
 
-  gameLoop(timestamp: number): void {
+  private gameLoop(timestamp: number): void {
     const deltaTime = timestamp - this.lastTime;
     this.lastTime = timestamp;
 
@@ -455,13 +465,13 @@ export class Game {
     this.render();
 
     if (this.state !== 'gameover' && this.state !== 'paused') {
-      requestAnimationFrame((t) => this.gameLoop(t));
+      requestAnimationFrame((t) => { this.gameLoop(t); });
     }
   }
 
   // ============ Update ============
 
-  update(deltaTime: number, currentTime: number): void {
+  private update(deltaTime: number, currentTime: number): void {
     const player = this.entityManager.getPlayer();
     if (!player) return;
 
@@ -470,10 +480,10 @@ export class Game {
     // Get input state from InputHandler
     const keys = this.inputHandler.getKeys();
     const input: InputState = {
-      up: keys['w'] || keys['arrowup'] || false,
-      down: keys['s'] || keys['arrowdown'] || false,
-      left: keys['a'] || keys['arrowleft'] || false,
-      right: keys['d'] || keys['arrowright'] || false,
+      up: (keys.w ?? keys.arrowup) ?? false,
+      down: (keys.s ?? keys.arrowdown) ?? false,
+      left: (keys.a ?? keys.arrowleft) ?? false,
+      right: (keys.d ?? keys.arrowright) ?? false,
     };
 
     // Update player movement
@@ -600,7 +610,7 @@ export class Game {
             expRadius,
             projectile.damage * player.damageMultiplier,
             projectile.explosive.visualEffect,
-            isMini
+            isMini,
           );
         }
         this.entityManager.removeProjectile(projectile.id);
@@ -653,18 +663,28 @@ export class Game {
                 expRadius,
                 projectile.damage * player.damageMultiplier,
                 projectile.explosive.visualEffect,
-                isMini
+                isMini,
               );
               projectile.destroy();
               break;
             }
 
             const finalDamage = projectile.damage * player.damageMultiplier;
-            const isDead = enemy.takeDamage(finalDamage, projectile.x, projectile.y, player.knockback * projectile.knockbackMultiplier);
+            const isDead = enemy.takeDamage(
+              finalDamage,
+              projectile.x,
+              projectile.y,
+              player.knockback * projectile.knockbackMultiplier,
+            );
 
             // Chain effect
             if (projectile.canChain() && projectile.chain) {
-              this.handleChainEffect(enemy.x, enemy.y, finalDamage * 0.5, projectile.chain.chainCount);
+              this.handleChainEffect(
+                enemy.x,
+                enemy.y,
+                finalDamage * 0.5,
+                projectile.chain.chainCount,
+              );
             }
 
             // Lifesteal
@@ -695,7 +715,11 @@ export class Game {
 
       if (deployable.isArmed) {
         // Check for enemies in trigger radius
-        const nearbyEnemies = this.entityManager.getEnemiesInRadius(deployable.x, deployable.y, deployable.triggerRadius);
+        const nearbyEnemies = this.entityManager.getEnemiesInRadius(
+          deployable.x,
+          deployable.y,
+          deployable.triggerRadius,
+        );
         if (nearbyEnemies.length > 0) {
           const explosionData = deployable.trigger();
           if (explosionData) {
@@ -704,7 +728,7 @@ export class Game {
               deployable.y,
               explosionData.explosionRadius,
               explosionData.explosionDamage,
-              deployable.visualEffect
+              deployable.visualEffect,
             );
           }
         }
@@ -757,7 +781,7 @@ export class Game {
 
   // ============ Weapon Firing ============
 
-  fireWeapons(currentTime: number, player: Player): void {
+  private fireWeapons(currentTime: number, player: Player): void {
     for (let i = 0; i < this.weapons.length; i++) {
       const weapon = this.weapons[i]!;
       const config = weapon.config;
@@ -782,10 +806,10 @@ export class Game {
       // Get weapon position (use currentTarget for positioning only)
       const weaponPos = player.getWeaponPosition(i, player.currentTarget);
       const maxRange = (config.range ?? 300) * player.attackRange;
-      
+
       // Find nearest enemy from weapon position
       let target = this.entityManager.getNearestEnemy(weaponPos.x, weaponPos.y, maxRange);
-      
+
       // Fallback to main target if within range
       if (!target && player.currentTarget) {
         const dx = player.currentTarget.x - weaponPos.x;
@@ -793,7 +817,11 @@ export class Game {
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist <= maxRange) {
           // Find the actual enemy at currentTarget position
-          target = this.entityManager.getNearestEnemy(player.currentTarget.x, player.currentTarget.y, 50);
+          target = this.entityManager.getNearestEnemy(
+            player.currentTarget.x,
+            player.currentTarget.y,
+            50,
+          );
         }
       }
 
@@ -812,13 +840,13 @@ export class Game {
     }
   }
 
-  fireWeaponProjectiles(
+  private fireWeaponProjectiles(
     weapon: WeaponInstance,
     pos: { x: number; y: number; angle: number },
     target: Enemy,
     damage: number,
     projectileCount: number,
-    player: Player
+    player: Player,
   ): void {
     const config = weapon.config;
     // Always calculate angle to target - not using pos.angle fallback
@@ -855,8 +883,12 @@ export class Game {
         ownerId: player.id,
         color: config.color ?? '#ffff00',
         maxDistance: config.shortRange ? (config.maxDistance ?? config.range ?? 500) : 0, // 0 = infinite
-        pierce: config.pierce ? { pierceCount: (config.pierceCount ?? 1) + player.pierce, hitEnemies: new Set() } : undefined,
-        chain: config.chain ? { chainCount: config.chainCount ?? 3, chainRange: 150, chainedEnemies: new Set() } : undefined,
+        pierce: config.pierce
+          ? { pierceCount: (config.pierceCount ?? 1) + player.pierce, hitEnemies: new Set() }
+          : undefined,
+        chain: config.chain
+          ? { chainCount: config.chainCount ?? 3, chainRange: 150, chainedEnemies: new Set() }
+          : undefined,
         explosive: config.explosive
           ? {
               explosionRadius: config.explosionRadius ?? 50,
@@ -883,7 +915,7 @@ export class Game {
     this.playWeaponSound(weapon.type);
   }
 
-  getProjectileType(weaponType: WeaponType): ProjectileType {
+  private getProjectileType(weaponType: WeaponType): ProjectileType {
     const mapping: Partial<Record<WeaponType, ProjectileType>> = {
       [WeaponType.SCYTHE]: ProjectileType.SCYTHE,
       [WeaponType.SWORD]: ProjectileType.SWORD,
@@ -898,14 +930,14 @@ export class Game {
     return mapping[weaponType] ?? ProjectileType.STANDARD;
   }
 
-  getExplosionEffect(weaponType: WeaponType): VisualEffect {
+  private getExplosionEffect(weaponType: WeaponType): VisualEffect {
     if (weaponType === WeaponType.NUKE) return VisualEffect.NUKE;
     if (weaponType === WeaponType.HOLY_GRENADE) return VisualEffect.HOLY;
     if (weaponType === WeaponType.BANANA) return VisualEffect.BANANA;
     return VisualEffect.STANDARD;
   }
 
-  playWeaponSound(type: WeaponType): void {
+  private playWeaponSound(type: WeaponType): void {
     switch (type) {
       case WeaponType.SHOTGUN:
         this.audio.shootShotgun();
@@ -946,7 +978,7 @@ export class Game {
   /**
    * Deploy a mine at the player's position
    */
-  deployMine(config: WeaponConfig, player: Player, level: number): void {
+  private deployMine(config: WeaponConfig, player: Player, level: number): void {
     // Calculate damage with level
     const levelMultiplier = 1 + (level - 1) * 0.15;
     const damage = config.damage * levelMultiplier * player.damageMultiplier;
@@ -979,18 +1011,18 @@ export class Game {
    * Spawn enemy at position (used by DevMenu)
    * TODO: When SpawnSystem is fully integrated, delegate to SpawnSystem.spawnEnemyAt()
    */
-  spawnEnemy(type: EnemyType, x: number, y: number): void {
+  private spawnEnemy(type: EnemyType, x: number, y: number): void {
     const enemy = new Enemy({ x, y, type });
     this.entityManager.addEnemy(enemy);
-    
+
     if (enemy.isBoss) {
-      EventBus.emit('bossSpawned', { enemy, bossName: enemy.bossName || 'Boss' });
+      EventBus.emit('bossSpawned', { enemy, bossName: enemy.bossName ?? 'Boss' });
     }
   }
 
   // ============ Combat Effects ============
 
-  updateShockwaves(currentTime: number): void {
+  private updateShockwaves(currentTime: number): void {
     const player = this.entityManager.getPlayer();
     if (!player) return;
 
@@ -1003,13 +1035,13 @@ export class Game {
         takeDamage: (damage: number, time: number) => player.takeDamage(damage, time),
       },
       currentTime,
-      () => this.audio.dodge()
+      () => { this.audio.dodge(); },
     );
 
     if (playerDied) this.gameOver();
   }
 
-  handleEnemyDeath(enemy: Enemy): void {
+  private handleEnemyDeath(enemy: Enemy): void {
     // Create death effect
     EffectsSystem.createDeathEffect(this.effects, {
       x: enemy.x,
@@ -1025,22 +1057,22 @@ export class Game {
     // Drop gold - bosses drop multiple bags for satisfying effect
     const player = this.entityManager.getPlayer();
     const luck = player?.luck ?? 0;
-    
+
     if (enemy.isBoss) {
       // One large bag (50% of value) in center
       const bigPickup = createGoldPickup(enemy.x, enemy.y, Math.floor(enemy.goldValue * 0.5));
       this.entityManager.addPickup(bigPickup);
-      
+
       // 6-8 small bags scattered around
       const smallBags = 6 + Math.floor(Math.random() * 3);
       const smallValue = Math.floor((enemy.goldValue * 0.5) / smallBags);
       for (let i = 0; i < smallBags; i++) {
-        const angle = (Math.PI * 2 / smallBags) * i;
+        const angle = ((Math.PI * 2) / smallBags) * i;
         const dist = 20 + Math.random() * 30;
         const smallPickup = createGoldPickup(
           enemy.x + Math.cos(angle) * dist,
           enemy.y + Math.sin(angle) * dist,
-          smallValue
+          smallValue,
         );
         this.entityManager.addPickup(smallPickup);
       }
@@ -1048,10 +1080,14 @@ export class Game {
       // Normal enemy - one bag with random offset
       const goldOffsetX = (Math.random() - 0.5) * 20;
       const goldOffsetY = (Math.random() - 0.5) * 20;
-      const goldPickup = createGoldPickup(enemy.x + goldOffsetX, enemy.y + goldOffsetY, enemy.goldValue);
+      const goldPickup = createGoldPickup(
+        enemy.x + goldOffsetX,
+        enemy.y + goldOffsetY,
+        enemy.goldValue,
+      );
       this.entityManager.addPickup(goldPickup);
     }
-    
+
     // Bonus gold from luck
     if (luck > 0 && Math.random() < luck) {
       const bonusOffsetX = (Math.random() - 0.5) * 30;
@@ -1059,15 +1095,20 @@ export class Game {
       const bonusPickup = createGoldPickup(
         enemy.x + bonusOffsetX,
         enemy.y + bonusOffsetY,
-        Math.floor(enemy.goldValue * 0.5)
+        Math.floor(enemy.goldValue * 0.5),
       );
       this.entityManager.addPickup(bonusPickup);
     }
 
     // Chance for health drop (15% base + luck bonus)
-    const healthDropChance = GAME_BALANCE.drops.healthDropChance + luck * GAME_BALANCE.drops.healthDropLuckMultiplier;
+    const healthDropChance =
+      GAME_BALANCE.drops.healthDropChance + luck * GAME_BALANCE.drops.healthDropLuckMultiplier;
     if (Math.random() < healthDropChance) {
-      const healthPickup = createHealthPickup(enemy.x + 20, enemy.y, GAME_BALANCE.drops.healthDropValue);
+      const healthPickup = createHealthPickup(
+        enemy.x + 20,
+        enemy.y,
+        GAME_BALANCE.drops.healthDropValue,
+      );
       this.entityManager.addPickup(healthPickup);
     }
 
@@ -1091,8 +1132,8 @@ export class Game {
     enemy.destroy();
   }
 
-  spawnSplitEnemies(enemy: Enemy): void {
-    const splitType = enemy.type === 'splitter' ? 'swarm' : 'basic';
+  private spawnSplitEnemies(enemy: Enemy): void {
+    const splitType = enemy.type === EnemyType.SPLITTER ? 'swarm' : 'basic';
     for (let i = 0; i < enemy.splitCount; i++) {
       const angle = (Math.PI * 2 * i) / enemy.splitCount;
       const offsetX = Math.cos(angle) * 30;
@@ -1109,13 +1150,13 @@ export class Game {
     }
   }
 
-  handleExplosion(
+  private handleExplosion(
     x: number,
     y: number,
     radius: number,
     damage: number,
     visualEffect: VisualEffect = VisualEffect.STANDARD,
-    isMini: boolean = false
+    isMini: boolean = false,
   ): void {
     const player = this.entityManager.getPlayer();
     const damageMultiplier = player?.damageMultiplier ?? 1;
@@ -1155,12 +1196,12 @@ export class Game {
   /**
    * Spawn mini bananas after main banana explosion
    */
-  spawnMiniBananas(x: number, y: number, count: number, player: Player): void {
+  private spawnMiniBananas(x: number, y: number, count: number, player: Player): void {
     const config = WEAPON_TYPES.minibanana;
 
     for (let i = 0; i < count; i++) {
       // Spread evenly with some randomness
-      const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.5;
+      const angle = ((Math.PI * 2) / count) * i + (Math.random() - 0.5) * 0.5;
 
       // Random speed (6-10) and range (60-100px) for each mini banana
       const randomSpeed = 6 + Math.random() * 4;
@@ -1193,7 +1234,7 @@ export class Game {
     }
   }
 
-  handleChainEffect(startX: number, startY: number, damage: number, chainCount: number): void {
+  private handleChainEffect(startX: number, startY: number, damage: number, chainCount: number): void {
     let currentX = startX;
     let currentY = startY;
     let remainingChains = chainCount;
@@ -1238,7 +1279,9 @@ export class Game {
 
   // ============ Enemy Finding ============
 
-  findNearestEnemy(): Enemy | null {
+  // TODO: Remove if not needed
+  // @ts-expect-error - kept for potential future use
+  private _findNearestEnemy(): Enemy | null {
     const player = this.entityManager.getPlayer();
     if (!player) return null;
     return this.entityManager.getNearestEnemy(player.x, player.y);
@@ -1246,7 +1289,7 @@ export class Game {
 
   // ============ Render ============
 
-  render(): void {
+  private render(): void {
     // Clear
     this.ctx.fillStyle = '#16213e';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -1309,7 +1352,7 @@ export class Game {
     }
   }
 
-  renderWeaponsAroundPlayer(player: Player): void {
+  private renderWeaponsAroundPlayer(player: Player): void {
     for (let i = 0; i < this.weapons.length; i++) {
       const weapon = this.weapons[i]!;
       const pos = player.getWeaponPosition(i, player.currentTarget);
@@ -1324,12 +1367,12 @@ export class Game {
         },
         pos.x,
         pos.y,
-        pos.angle
+        pos.angle,
       );
     }
   }
 
-  renderBossHealthBar(): void {
+  private renderBossHealthBar(): void {
     const enemies = this.entityManager.getActiveEnemies();
     // Map enemies to HUDBoss format
     const hudbosses = enemies.map((e) => ({
@@ -1345,7 +1388,7 @@ export class Game {
 
   // ============ HUD ============
 
-  updateHUD(): void {
+  private updateHUD(): void {
     const player = this.entityManager.getPlayer();
     if (!player) return;
     HUD.update(player, this.waveManager, this.gold, this.xp);
@@ -1353,7 +1396,7 @@ export class Game {
 
   // ============ Shop ============
 
-  openShop(): void {
+  private openShop(): void {
     this.state = 'shop';
     this.waveManager.endWave();
     this.entityManager.clearExceptPlayer();
@@ -1368,31 +1411,30 @@ export class Game {
     }
   }
 
-  createShopPlayer(player: Player): ShopPlayer {
-    return {
-      weapons: this.weapons.map((w) => this.createShopWeapon(w)),
-      maxWeapons: player.maxWeapons,
-      items: player.items,
-      maxHp: player.maxHp,
-      hp: player.hp,
-      addWeapon: (type: string) => this.addWeapon(type as WeaponType),
-      addItem: (itemKey: string) => player.addItem(itemKey),
-      heal: (amount: number) => player.heal(amount),
-      // Stats for shop item effects
-      armor: player.armor,
-      damageMultiplier: player.damageMultiplier,
-      critChance: player.critChance,
-      dodge: player.dodge,
-      regen: player.regen,
-      lifesteal: player.lifesteal,
-      speed: player.speed,
-      thorns: player.thorns,
-      attackRange: player.attackRange,
-      explosionRadius: player.explosionRadius,
-    };
+  private createShopPlayer(player: Player): ShopPlayer {
+    // Use a Proxy on the real player, only overriding what's needed for Shop
+    return new Proxy(player as unknown as ShopPlayer, {
+      get: (target, prop) => {
+        // Override weapons to use ShopWeapon format with upgrade()
+        if (prop === 'weapons') {
+          return this.weapons.map((w) => this.createShopWeapon(w));
+        }
+        // Override addWeapon to call Game.addWeapon
+        if (prop === 'addWeapon') {
+          return (type: string) => { this.addWeapon(type as WeaponType); };
+        }
+        // Everything else comes from the real player
+        return target[prop as keyof ShopPlayer];
+      },
+      set: (target, prop, value) => {
+        // Forward all property sets directly to the real player
+        (target as Record<string, unknown>)[prop as string] = value;
+        return true;
+      },
+    });
   }
 
-  createShopWeapon(weapon: WeaponInstance): ShopWeapon {
+  private createShopWeapon(weapon: WeaponInstance): ShopWeapon {
     return {
       type: weapon.type,
       name: weapon.name,
@@ -1406,7 +1448,7 @@ export class Game {
 
   // ============ Game Over ============
 
-  gameOver(): void {
+  private gameOver(): void {
     this.state = 'gameover';
     this.audio.gameOver();
 
@@ -1417,11 +1459,11 @@ export class Game {
     document.getElementById('game-over')?.classList.remove('hidden');
 
     // Load saved player name
-    const savedName = localStorage.getItem('circle_survivor_player_name') || '';
+    const savedName = localStorage.getItem('circle_survivor_player_name') ?? '';
     const playerNameInput = document.getElementById('player-name') as HTMLInputElement;
     if (playerNameInput) playerNameInput.value = savedName;
 
     // Show leaderboard
-    this.showLeaderboard('local');
+    void this.showLeaderboard('local');
   }
 }

@@ -284,6 +284,7 @@ export class Game {
   }
 
   private showCharacterSelect(): void {
+    this.state = 'start';
     document.getElementById('game-over')?.classList.add('hidden');
     document.getElementById('start-screen')?.classList.remove('hidden');
     document.querySelectorAll('.character-card').forEach((card) => {

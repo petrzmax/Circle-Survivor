@@ -6,9 +6,9 @@ import { Player, InputState } from '@/entities/Player';
 import { Enemy } from '@/entities/Enemy';
 import { Projectile } from '@/entities/Projectile';
 import { Deployable, DeployableConfig } from '@/entities/Deployable';
-import { createGoldPickup, createHealthPickup } from '@/entities/Pickup';
 import { EntityManager } from '@/managers/EntityManager';
 import { CollisionSystem } from '@/systems/CollisionSystem';
+import { CombatSystem } from '@/systems/CombatSystem';
 import { WaveManager } from '@/systems/WaveManager';
 import { Shop, ShopPlayer, ShopWeapon } from '@/ui/Shop';
 import { InputHandler } from '@/systems/InputHandler';
@@ -66,9 +66,10 @@ export class Game {
   private weapons: WeaponInstance[] = [];
 
   // Systems
-  // TODO: remove if not needed
-  // @ts-expect-error - prepared for CombatSystem refactor
-  private _collisionSystem: CollisionSystem;
+  // TODO: Use collisionSystem.checkAll() for full CombatSystem integration
+  // @ts-expect-error - Prepared for future full collision system integration
+  private collisionSystem: CollisionSystem;
+  private combatSystem!: CombatSystem;
   private waveManager: WaveManager;
   private shop: Shop;
   private audio: AudioSystem;
@@ -86,6 +87,9 @@ export class Game {
   // Regeneration tracking
   private lastRegenTime: number = 0;
 
+  // Game loop tracking - prevents multiple loops
+  private isGameLoopRunning: boolean = false;
+
   // Debug display options
   private showEnemyCount: boolean = false;
 
@@ -102,8 +106,7 @@ export class Game {
 
     // Initialize systems
     this.entityManager = new EntityManager();
-    // TODO: refactor to CombatSystem, remove _ after
-    this._collisionSystem = new CollisionSystem(this.entityManager);
+    this.collisionSystem = new CollisionSystem(this.entityManager);
     this.waveManager = new WaveManager();
     this.shop = new Shop();
     this.audio = new AudioSystem();
@@ -126,6 +129,17 @@ export class Game {
     });
     this.effects = createEffectsState();
 
+    // Initialize CombatSystem (requires effects)
+    // TODO combatSystem should use Game_balance directly instead of passing values
+    this.combatSystem = new CombatSystem(this.entityManager, this.effects, {
+      healthDropChance: GAME_BALANCE.drops.healthDropChance,
+      healthDropValue: GAME_BALANCE.drops.healthDropValue,
+      healthDropLuckMultiplier: GAME_BALANCE.drops.healthDropLuckMultiplier,
+    });
+
+    // Setup EventBus listeners for combat events
+    this.setupCombatEventListeners();
+
     // Setup input handler
     this.inputHandler.setup();
 
@@ -142,8 +156,6 @@ export class Game {
 
     // Bind to window for global access
     (window as unknown as { game: Game }).game = this;
-
-    this.setupEventBusListeners();
 
     // Initialize dev menu (development only)
     if (import.meta.env.DEV) {
@@ -215,11 +227,6 @@ export class Game {
 
   // ============ Setup ============
 
-  private setupEventBusListeners(): void {
-    EventBus.on('enemyDeath', ({ enemy }) => {
-      this.handleEnemyDeath(enemy);
-    });
-  }
 
   private showNotification(message: string): void {
     console.log('Notification:', message);
@@ -318,8 +325,7 @@ export class Game {
   private resumeGame(): void {
     this.state = 'playing';
     document.getElementById('pause-menu')?.classList.add('hidden');
-    this.lastTime = performance.now();
-    requestAnimationFrame((t) => { this.gameLoop(t); });
+    this.startGameLoop();
   }
 
   private quitToMenu(): void {
@@ -365,6 +371,13 @@ export class Game {
     this.effects = createEffectsState();
     this.waveManager = new WaveManager();
 
+    // Reset CombatSystem with fresh effects
+    this.combatSystem = new CombatSystem(this.entityManager, this.effects, {
+      healthDropChance: GAME_BALANCE.drops.healthDropChance,
+      healthDropValue: GAME_BALANCE.drops.healthDropValue,
+      healthDropLuckMultiplier: GAME_BALANCE.drops.healthDropLuckMultiplier,
+    });
+
     // Hide overlays
     document.getElementById('start-screen')?.classList.add('hidden');
     document.getElementById('game-over')?.classList.add('hidden');
@@ -375,8 +388,7 @@ export class Game {
     this.updateHUD();
 
     // Start game loop
-    this.lastTime = performance.now();
-    requestAnimationFrame((t) => { this.gameLoop(t); });
+    this.startGameLoop();
   }
 
   private startNextWave(): void {
@@ -464,9 +476,23 @@ export class Game {
 
     this.render();
 
-    if (this.state !== 'gameover' && this.state !== 'paused') {
+    // Continue loop only for active game states
+    if (this.state === 'playing' || this.state === 'shop') {
       requestAnimationFrame((t) => { this.gameLoop(t); });
+    } else {
+      // Loop stopped - mark as not running
+      this.isGameLoopRunning = false;
     }
+  }
+
+  /**
+   * Start the game loop if not already running
+   */
+  private startGameLoop(): void {
+    if (this.isGameLoopRunning) return;
+    this.isGameLoopRunning = true;
+    this.lastTime = performance.now();
+    requestAnimationFrame((t) => { this.gameLoop(t); });
   }
 
   // ============ Update ============
@@ -519,6 +545,12 @@ export class Game {
       return;
     }
 
+    // Update CombatSystem runtime config with current player stats
+    this.combatSystem.updateRuntimeConfig({
+      luck: player.luck,
+      goldMultiplier: player.goldMultiplier,
+    });
+
     // Find nearest enemy for auto-aim
     const nearestEnemy = this.entityManager.getNearestEnemy(player.x, player.y);
     player.setTarget(nearestEnemy ? { x: nearestEnemy.x, y: nearestEnemy.y } : null);
@@ -554,7 +586,7 @@ export class Game {
           EventBus.emit('thornsTriggered', undefined);
           const thornsKilled = enemy.takeDamage(player.thorns, enemy.x, enemy.y, player.knockback);
           if (thornsKilled) {
-            this.handleEnemyDeath(enemy);
+            this.combatSystem.processEnemyDeath(enemy);
           }
         }
 
@@ -604,7 +636,7 @@ export class Game {
         if (projectile.shouldExplodeOnExpire && projectile.isExplosive() && projectile.explosive) {
           const expRadius = projectile.explosive.explosionRadius * player.explosionRadius;
           const isMini = projectile.type === ProjectileType.MINI_BANANA;
-          this.handleExplosion(
+          this.combatSystem.triggerExplosion(
             projectile.x,
             projectile.y,
             expRadius,
@@ -657,7 +689,7 @@ export class Game {
             if (projectile.isExplosive() && projectile.explosive) {
               const expRadius = projectile.explosive.explosionRadius * player.explosionRadius;
               const isMini = projectile.type === ProjectileType.MINI_BANANA;
-              this.handleExplosion(
+              this.combatSystem.triggerExplosion(
                 projectile.x,
                 projectile.y,
                 expRadius,
@@ -689,7 +721,7 @@ export class Game {
             }
 
             if (isDead) {
-              this.handleEnemyDeath(enemy);
+              this.combatSystem.processEnemyDeath(enemy);
             }
 
             if (!projectile.isActive) break;
@@ -713,7 +745,7 @@ export class Game {
         if (nearbyEnemies.length > 0) {
           const explosionData = deployable.trigger();
           if (explosionData) {
-            this.handleExplosion(
+            this.combatSystem.triggerExplosion(
               deployable.x,
               deployable.y,
               explosionData.explosionRadius,
@@ -996,204 +1028,6 @@ export class Game {
     if (playerDied) this.gameOver();
   }
 
-  private handleEnemyDeath(enemy: Enemy): void {
-    // Create death effect
-    EffectsSystem.createDeathEffect(this.effects, {
-      x: enemy.x,
-      y: enemy.y,
-      color: enemy.color,
-      isBoss: enemy.isBoss,
-      type: enemy.type,
-    });
-
-    // Award XP
-    this.xp += enemy.xpValue;
-
-    // Drop gold - bosses drop multiple bags for satisfying effect
-    const player = this.entityManager.getPlayer();
-    const luck = player?.luck ?? 0;
-
-    if (enemy.isBoss) {
-      // One large bag (50% of value) in center
-      const bigPickup = createGoldPickup(enemy.x, enemy.y, Math.floor(enemy.goldValue * 0.5));
-      this.entityManager.addPickup(bigPickup);
-
-      // 6-8 small bags scattered around
-      const smallBags = 6 + Math.floor(Math.random() * 3);
-      const smallValue = Math.floor((enemy.goldValue * 0.5) / smallBags);
-      for (let i = 0; i < smallBags; i++) {
-        const angle = ((Math.PI * 2) / smallBags) * i;
-        const dist = 20 + Math.random() * 30;
-        const smallPickup = createGoldPickup(
-          enemy.x + Math.cos(angle) * dist,
-          enemy.y + Math.sin(angle) * dist,
-          smallValue,
-        );
-        this.entityManager.addPickup(smallPickup);
-      }
-    } else {
-      // Normal enemy - one bag with random offset
-      const goldOffsetX = (Math.random() - 0.5) * 20;
-      const goldOffsetY = (Math.random() - 0.5) * 20;
-      const goldPickup = createGoldPickup(
-        enemy.x + goldOffsetX,
-        enemy.y + goldOffsetY,
-        enemy.goldValue,
-      );
-      this.entityManager.addPickup(goldPickup);
-    }
-
-    // Bonus gold from luck
-    if (luck > 0 && Math.random() < luck) {
-      const bonusOffsetX = (Math.random() - 0.5) * 30;
-      const bonusOffsetY = (Math.random() - 0.5) * 30;
-      const bonusPickup = createGoldPickup(
-        enemy.x + bonusOffsetX,
-        enemy.y + bonusOffsetY,
-        Math.floor(enemy.goldValue * 0.5),
-      );
-      this.entityManager.addPickup(bonusPickup);
-    }
-
-    // Chance for health drop (15% base + luck bonus)
-    const healthDropChance =
-      GAME_BALANCE.drops.healthDropChance + luck * GAME_BALANCE.drops.healthDropLuckMultiplier;
-    if (Math.random() < healthDropChance) {
-      const healthPickup = createHealthPickup(
-        enemy.x + 20,
-        enemy.y,
-        GAME_BALANCE.drops.healthDropValue,
-      );
-      this.entityManager.addPickup(healthPickup);
-    }
-
-    // Play sound - boss uses nuke explosion, regular enemies use death sound
-    if (enemy.isBoss) {
-      // nukeExplosion is played via explosionTriggered event
-      EventBus.emit('explosionTriggered', {
-        position: { x: enemy.x, y: enemy.y },
-        radius: 0,
-        damage: 0,
-        visualEffect: 'nuke',
-      });
-    }
-    // enemyDeath sound is already played via EventBus listener
-
-    // Handle special death effects
-    if (enemy.explodeOnDeath) {
-      this.handleExplosion(enemy.x, enemy.y, enemy.explosionRadius, enemy.explosionDamage);
-    }
-
-    if (enemy.splitOnDeath) {
-      this.spawnSplitEnemies(enemy);
-    }
-
-    // Remove from manager
-    enemy.destroy();
-  }
-
-  private spawnSplitEnemies(enemy: Enemy): void {
-    const splitType = enemy.type === EnemyType.SPLITTER ? 'swarm' : 'basic';
-    for (let i = 0; i < enemy.splitCount; i++) {
-      const angle = (Math.PI * 2 * i) / enemy.splitCount;
-      const offsetX = Math.cos(angle) * 30;
-      const offsetY = Math.sin(angle) * 30;
-
-      const splitEnemy = new Enemy({
-        x: enemy.x + offsetX,
-        y: enemy.y + offsetY,
-        type: splitType as EnemyType,
-        scale: 0.6,
-      });
-
-      this.entityManager.addEnemy(splitEnemy);
-    }
-  }
-
-  private handleExplosion(
-    x: number,
-    y: number,
-    radius: number,
-    damage: number,
-    visualEffect: VisualEffect = VisualEffect.STANDARD,
-    isMini: boolean = false,
-  ): void {
-    const player = this.entityManager.getPlayer();
-    const damageMultiplier = player?.damageMultiplier ?? 1;
-
-    // Determine explosion type flags
-    const isNuke = visualEffect === VisualEffect.NUKE;
-    const isHolyGrenade = visualEffect === VisualEffect.HOLY;
-    const isBanana = visualEffect === VisualEffect.BANANA;
-
-    // Create visual with correct type
-    EffectsSystem.createExplosion(this.effects, x, y, radius, isNuke, isHolyGrenade, isBanana);
-
-    // Banana (not mini) spawns mini bananas
-    if (isBanana && !isMini && player) {
-      this.spawnMiniBananas(x, y, 4 + Math.floor(Math.random() * 3), player);
-    }
-
-    // Damage enemies in radius
-    const enemies = this.entityManager.getEnemiesInRadius(x, y, radius);
-    for (const enemy of enemies) {
-      const isDead = enemy.takeDamage(damage * damageMultiplier, x, y);
-      if (isDead) {
-        this.handleEnemyDeath(enemy);
-      }
-    }
-
-    // Emit explosion event - AudioSystem handles sounds
-    EventBus.emit('explosionTriggered', {
-      position: { x, y },
-      radius,
-      damage,
-      visualEffect: isNuke ? 'nuke' : isHolyGrenade ? 'holy' : 'standard',
-      isBanana,
-    });
-  }
-
-  /**
-   * Spawn mini bananas after main banana explosion
-   */
-  private spawnMiniBananas(x: number, y: number, count: number, player: Player): void {
-    const config = WEAPON_TYPES.minibanana;
-
-    for (let i = 0; i < count; i++) {
-      // Spread evenly with some randomness
-      const angle = ((Math.PI * 2) / count) * i + (Math.random() - 0.5) * 0.5;
-
-      // Random speed (6-10) and range (60-100px) for each mini banana
-      const randomSpeed = 6 + Math.random() * 4;
-      const randomRange = 60 + Math.random() * 40;
-
-      const vx = Math.cos(angle) * randomSpeed;
-      const vy = Math.sin(angle) * randomSpeed;
-
-      const projectile = new Projectile({
-        x,
-        y,
-        radius: config.bulletRadius ?? 6,
-        type: ProjectileType.MINI_BANANA,
-        damage: config.damage * player.damageMultiplier,
-        ownerId: player.id,
-        color: config.color ?? '#ffff00',
-        explosive: {
-          explosionRadius: (config.explosionRadius ?? 45) * player.explosionRadius,
-          explosionDamage: config.damage * player.damageMultiplier,
-          visualEffect: VisualEffect.BANANA,
-        },
-        weaponCategory: config.weaponCategory,
-        explosiveRange: randomRange,
-        bulletSpeed: randomSpeed,
-      });
-
-      projectile.setVelocity(vx, vy);
-
-      this.entityManager.addProjectile(projectile);
-    }
-  }
-
   // ============ Enemy Finding ============
 
   // TODO: Remove if not needed
@@ -1361,6 +1195,28 @@ export class Game {
       },
       multishot: weapon.multishot,
     };
+  }
+
+  // ============ Combat Event Listeners ============
+
+  /**
+   * Setup EventBus listeners for combat events from CombatSystem
+   */
+  private setupCombatEventListeners(): void {
+    // Handle gold collection
+    EventBus.on('goldCollected', ({ amount }) => {
+      this.gold += amount;
+    });
+
+    // Handle XP awards
+    EventBus.on('xpAwarded', ({ amount }) => {
+      this.xp += amount;
+    });
+
+    // Handle player death
+    EventBus.on('playerDeath', () => {
+      this.gameOver();
+    });
   }
 
   // ============ Game Over ============

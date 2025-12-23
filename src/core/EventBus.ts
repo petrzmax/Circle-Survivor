@@ -18,6 +18,7 @@ export interface GameEvents {
   playerDeath: { player: Player; killedBy: Enemy | null };
   playerDodged: void;
   thornsTriggered: void;
+  xpAwarded: { amount: number; source: Enemy };
 
   // Weapon events
   weaponFired: { weaponType: WeaponType };

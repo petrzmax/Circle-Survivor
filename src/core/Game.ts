@@ -484,10 +484,10 @@ export class Game {
     // Get input state from InputHandler
     const keys = this.inputHandler.getKeys();
     const input: InputState = {
-      up: (keys.w ?? keys.arrowup) ?? false,
-      down: (keys.s ?? keys.arrowdown) ?? false,
-      left: (keys.a ?? keys.arrowleft) ?? false,
-      right: (keys.d ?? keys.arrowright) ?? false,
+      up: keys.w === true || keys.arrowup === true,
+      down: keys.s === true || keys.arrowdown === true,
+      left: keys.a === true || keys.arrowleft === true,
+      right: keys.d === true || keys.arrowright === true,
     };
 
     // Update player movement

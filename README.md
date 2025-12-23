@@ -51,7 +51,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) f
 ### Commit Format
 
 ```bash
-<type>(<scope>): <description>
+<type>: <description>
 
 [optional body]
 
@@ -83,4 +83,24 @@ feat!: remove support for legacy save format
 feat: new save system
 
 BREAKING CHANGE: old saves are no longer compatible
+```
+
+### Game-Specific Examples
+
+```bash
+# New gameplay feature → minor bump
+feat: add new weapon type "Laser"
+
+# Bug fixes → patch bump
+fix: prevent double game start on rapid clicking
+
+# Balance changes → patch bump
+chore: increase boss movement speed by 30%
+
+# Documentation
+docs: update game controls in README
+
+# Code improvements (no version impact in changelog)
+refactor: extract weapon logic into separate class
+perf: optimize collision detection with spatial hashing
 ```

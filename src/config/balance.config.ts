@@ -72,7 +72,7 @@ export const GAME_BALANCE = {
     /** Default critical hit damage multiplier. Crit deals base × this value. */
     baseCritMultiplier: 1.5,
     /** Invincibility frames after taking damage (milliseconds). Prevents burst damage. */
-    invincibilityMs: 500,
+    invincibilityMs: 300,
     /** Armor diminishing returns divisor. Formula: armor / (armor + this value).
      *  With 100: 50 armor = 33% reduction, 100 armor = 50%, 200 armor = 67% */
     armorDiminishingFactor: 100,

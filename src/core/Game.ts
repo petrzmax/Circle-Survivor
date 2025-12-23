@@ -1203,10 +1203,8 @@ export class Game {
    * Setup EventBus listeners for combat events from CombatSystem
    */
   private setupCombatEventListeners(): void {
-    // Handle gold collection
-    EventBus.on('goldCollected', ({ amount }) => {
-      this.gold += amount;
-    });
+    // Note: goldCollected is handled in pickup collection loop, not here
+    // to avoid double-adding gold
 
     // Handle XP awards
     EventBus.on('xpAwarded', ({ amount }) => {

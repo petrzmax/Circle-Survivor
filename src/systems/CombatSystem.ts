@@ -343,7 +343,7 @@ export class CombatSystem {
    * Handle enemy death - spawn pickups, effects, emit events
    */
   private handleEnemyDeath(enemy: Enemy, killer: 'player' | 'explosion'): void {
-    const { luck, goldMultiplier } = this.runtimeConfig;
+    const { luck } = this.runtimeConfig;
 
     // Create death effect
     EffectsSystem.createDeathEffect(this.effects, {
@@ -361,18 +361,19 @@ export class CombatSystem {
     });
 
     // Drop gold - bosses drop multiple bags for satisfying effect
+    // Note: goldMultiplier is applied during pickup collection in Game.ts, not here
     if (enemy.isBoss) {
       // One large bag (50% of value) in center
       const bigPickup = createGoldPickup(
         enemy.x,
         enemy.y,
-        Math.floor(enemy.goldValue * goldMultiplier * 0.5),
+        Math.floor(enemy.goldValue * 0.5),
       );
       this.entityManager.addPickup(bigPickup);
 
       // 6-8 small bags scattered around
       const smallBags = 6 + Math.floor(Math.random() * 3);
-      const smallValue = Math.floor((enemy.goldValue * goldMultiplier * 0.5) / smallBags);
+      const smallValue = Math.floor((enemy.goldValue * 0.5) / smallBags);
       for (let i = 0; i < smallBags; i++) {
         const angle = ((Math.PI * 2) / smallBags) * i;
         const dist = 20 + Math.random() * 30;
@@ -387,12 +388,11 @@ export class CombatSystem {
       // Normal enemy - one bag with random offset
       const goldOffsetX = (Math.random() - 0.5) * 20;
       const goldOffsetY = (Math.random() - 0.5) * 20;
-      const goldValue = Math.floor(enemy.goldValue * goldMultiplier);
-      if (goldValue > 0) {
+      if (enemy.goldValue > 0) {
         const goldPickup = createGoldPickup(
           enemy.x + goldOffsetX,
           enemy.y + goldOffsetY,
-          goldValue,
+          enemy.goldValue,
         );
         this.entityManager.addPickup(goldPickup);
       }
@@ -405,7 +405,7 @@ export class CombatSystem {
       const bonusPickup = createGoldPickup(
         enemy.x + bonusOffsetX,
         enemy.y + bonusOffsetY,
-        Math.floor(enemy.goldValue * goldMultiplier * 0.5),
+        Math.floor(enemy.goldValue * 0.5),
       );
       this.entityManager.addPickup(bonusPickup);
     }
@@ -427,16 +427,21 @@ export class CombatSystem {
       });
     }
 
-    // Handle explodeOnDeath
+    // Handle explodeOnDeath - process immediately, not queued
     if (enemy.explodeOnDeath && enemy.explosionRadius > 0) {
-      this.queueExplosion({
-        x: enemy.x,
-        y: enemy.y,
-        radius: enemy.explosionRadius,
-        damage: enemy.explosionDamage,
-        visualEffect: VisualEffect.FIRE,
-        sourceId: enemy.id,
-      });
+      const player = this.entityManager.getPlayer();
+      const damageMultiplier = player?.damageMultiplier ?? 1;
+      this.processExplosion(
+        {
+          x: enemy.x,
+          y: enemy.y,
+          radius: enemy.explosionRadius,
+          damage: enemy.explosionDamage,
+          visualEffect: VisualEffect.FIRE,
+          sourceId: enemy.id,
+        },
+        damageMultiplier,
+      );
     }
 
     // Handle splitOnDeath

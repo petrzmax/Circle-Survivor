@@ -4,6 +4,7 @@
  */
 
 import { Enemy, Player, Pickup, Projectile } from '@/entities';
+import { WeaponType } from '@/types/enums';
 import { Vector2 } from '@/utils';
 
 /**
@@ -11,10 +12,16 @@ import { Vector2 } from '@/utils';
  */
 export interface GameEvents {
   // Combat events
-  enemyDeath: { enemy: Enemy; killer: 'player' | 'explosion' | 'chain'; position: Vector2 };
+  enemyDeath: { enemy: Enemy; killer: 'player' | 'explosion'; position: Vector2 };
   enemyDamaged: { enemy: Enemy; damage: number; source: Vector2 };
   playerHit: { player: Player; damage: number; source: Enemy | Projectile };
   playerDeath: { player: Player; killedBy: Enemy | null };
+  playerDodged: void;
+  thornsTriggered: void;
+  xpAwarded: { amount: number; source: Enemy };
+
+  // Weapon events
+  weaponFired: { weaponType: WeaponType };
 
   // Projectile events
   projectileHit: { projectile: Projectile; target: Enemy };
@@ -44,6 +51,7 @@ export interface GameEvents {
   shopClosed: void;
   itemPurchased: { itemId: string; cost: number };
   weaponPurchased: { weaponType: string; cost: number };
+  shopError: void;
 
   // Game state events
   gameStart: { characterType: string };
@@ -55,6 +63,7 @@ export interface GameEvents {
   scoreChanged: { score: number; delta: number };
   goldChanged: { gold: number; delta: number };
   healthChanged: { current: number; max: number };
+  countdownTick: { seconds: number };
 }
 
 /**

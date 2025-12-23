@@ -243,29 +243,6 @@ export class CollisionSystem {
   }
 
   /**
-   * Find nearest enemy for chain effects
-   */
-  public findChainTarget(x: number, y: number, range: number, excludeIds: Set<number>): Enemy | null {
-    const enemies = this.entityManager.getActiveEnemies().filter((e) => !excludeIds.has(e.id));
-
-    let nearest: Enemy | null = null;
-    let nearestDistSq = range * range;
-
-    for (const enemy of enemies) {
-      const dx = enemy.x - x;
-      const dy = enemy.y - y;
-      const distSq = dx * dx + dy * dy;
-
-      if (distSq < nearestDistSq) {
-        nearestDistSq = distSq;
-        nearest = enemy;
-      }
-    }
-
-    return nearest;
-  }
-
-  /**
    * Check if point is inside any enemy
    */
   public isPointInEnemy(x: number, y: number): Enemy | null {

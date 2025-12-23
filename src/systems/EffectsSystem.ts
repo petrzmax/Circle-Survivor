@@ -1,5 +1,5 @@
 /**
- * EffectsSystem - handles visual effects like explosions, particles, chains.
+ * EffectsSystem - handles visual effects like explosions and particles.
  * Rendering and updating of temporary visual effects.
  * Matches original js/systems/effects-system.js exactly.
  */
@@ -18,15 +18,6 @@ export interface Explosion {
   isNuke: boolean;
   isHolyGrenade: boolean;
   isBanana: boolean;
-}
-
-export interface ChainEffect {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  alpha: number;
-  created: number;
 }
 
 export interface DeathParticle {
@@ -58,7 +49,6 @@ export interface Shockwave {
 
 export interface EffectsState {
   explosions: Explosion[];
-  chainEffects: ChainEffect[];
   deathEffects: DeathParticle[];
   shockwaves: Shockwave[];
 }
@@ -69,7 +59,6 @@ export interface EffectsState {
 export function createEffectsState(): EffectsState {
   return {
     explosions: [],
-    chainEffects: [],
     deathEffects: [],
     shockwaves: [],
   };
@@ -195,35 +184,6 @@ export const EffectsSystem = {
         ctx.lineWidth = 3;
         ctx.stroke();
       }
-      ctx.restore();
-    }
-  },
-
-  /**
-   * Render chain lightning effects
-   */
-  renderChainEffects(ctx: CanvasRenderingContext2D, chainEffects: ChainEffect[]): void {
-    for (let i = chainEffects.length - 1; i >= 0; i--) {
-      const chain = chainEffects[i]!;
-      const age = Date.now() - chain.created;
-      const duration = 300;
-      chain.alpha = 1 - age / duration;
-
-      if (chain.alpha <= 0) {
-        chainEffects.splice(i, 1);
-        continue;
-      }
-
-      ctx.save();
-      ctx.globalAlpha = chain.alpha;
-      ctx.strokeStyle = '#00ffff';
-      ctx.lineWidth = 3;
-      ctx.shadowColor = '#00ffff';
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      ctx.moveTo(chain.x1, chain.y1);
-      ctx.lineTo(chain.x2, chain.y2);
-      ctx.stroke();
       ctx.restore();
     }
   },
@@ -404,25 +364,10 @@ export const EffectsSystem = {
   },
 
   /**
-   * Create chain effect
-   */
-  createChainEffect(effects: EffectsState, x1: number, y1: number, x2: number, y2: number): void {
-    effects.chainEffects.push({
-      x1,
-      y1,
-      x2,
-      y2,
-      alpha: 1,
-      created: Date.now(),
-    });
-  },
-
-  /**
    * Render all effects
    */
   renderAll(ctx: CanvasRenderingContext2D, effects: EffectsState): void {
     this.renderExplosions(ctx, effects.explosions);
-    this.renderChainEffects(ctx, effects.chainEffects);
     this.renderDeathEffects(ctx, effects.deathEffects);
     this.renderShockwaves(ctx, effects.shockwaves);
   },

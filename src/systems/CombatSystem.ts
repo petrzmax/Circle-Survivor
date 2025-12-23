@@ -9,8 +9,10 @@ import { CollisionResult } from './CollisionSystem';
 import { Enemy } from '@/entities/Enemy';
 import { Projectile } from '@/entities/Projectile';
 import { Pickup, createGoldPickup, createHealthPickup } from '@/entities/Pickup';
-import { VisualEffect, PickupType, ProjectileType } from '@/types/enums';
+import { VisualEffect, PickupType, ProjectileType, EnemyType } from '@/types/enums';
 import { WEAPON_TYPES } from '@/config/weapons.config';
+import { EffectsState, EffectsSystem } from './EffectsSystem';
+import { GAME_BALANCE } from '@/config/balance.config';
 
 /**
  * Explosion event data
@@ -29,27 +31,37 @@ export interface ExplosionEvent {
 }
 
 /**
- * Chain lightning event data
- */
-// TODO - remove everything related to chain
-export interface ChainEvent {
-  targets: Array<{ enemy: Enemy; damage: number }>;
-  sourceProjectile: Projectile;
-}
-
-/**
  * CombatSystem configuration
  */
 export interface CombatSystemConfig {
   /** Health drop chance (0-1) */
   healthDropChance?: number;
-  /** Base gold per enemy */
-  baseGoldDrop?: number;
+  /** Base health drop value */
+  healthDropValue?: number;
+  /** Luck multiplier for health drops */
+  healthDropLuckMultiplier?: number;
+}
+
+/**
+ * Runtime config passed to processCollisions
+ * Contains player-dependent values that can change
+ */
+export interface CombatRuntimeConfig {
+  /** Player luck stat for bonus drops */
+  luck: number;
+  /** Player gold multiplier */
+  goldMultiplier: number;
+  /** Player damage multiplier */
+  damageMultiplier: number;
+  /** Player explosion radius multiplier */
+  explosionRadius: number;
+  /** Player knockback value */
+  knockback: number;
 }
 
 /**
  * Handles all combat-related logic.
- * Processes damage, spawns pickups, handles explosions and chains.
+ * Processes damage, spawns pickups, and handles explosions.
  *
  * @example
  * ```typescript
@@ -62,14 +74,46 @@ export interface CombatSystemConfig {
  */
 export class CombatSystem {
   private entityManager: EntityManager;
+  private effects: EffectsState;
   private healthDropChance: number;
+  private healthDropValue: number;
+  private healthDropLuckMultiplier: number;
 
   /** Pending explosions to process */
   private pendingExplosions: ExplosionEvent[] = [];
 
-  public constructor(entityManager: EntityManager, config: CombatSystemConfig = {}) {
+  /** Runtime config - updated each frame from player stats */
+  private runtimeConfig: CombatRuntimeConfig = {
+    luck: 0,
+    goldMultiplier: 1,
+    damageMultiplier: 1,
+    explosionRadius: 1,
+    knockback: 0,
+  };
+
+  public constructor(
+    entityManager: EntityManager,
+    effects: EffectsState,
+    config: CombatSystemConfig = {},
+  ) {
     this.entityManager = entityManager;
-    this.healthDropChance = config.healthDropChance ?? 0.05;
+    this.effects = effects;
+    this.healthDropChance = config.healthDropChance ?? GAME_BALANCE.drops.healthDropChance;
+    this.healthDropValue = config.healthDropValue ?? GAME_BALANCE.drops.healthDropValue;
+    this.healthDropLuckMultiplier =
+      config.healthDropLuckMultiplier ?? GAME_BALANCE.drops.healthDropLuckMultiplier;
+  }
+
+  /**
+   * Update runtime config from player stats
+   * Call this before processCollisions each frame
+   */
+  public updateRuntimeConfig(config: Partial<CombatRuntimeConfig>): void {
+    if (config.luck !== undefined) this.runtimeConfig.luck = config.luck;
+    if (config.goldMultiplier !== undefined) this.runtimeConfig.goldMultiplier = config.goldMultiplier;
+    if (config.damageMultiplier !== undefined) this.runtimeConfig.damageMultiplier = config.damageMultiplier;
+    if (config.explosionRadius !== undefined) this.runtimeConfig.explosionRadius = config.explosionRadius;
+    if (config.knockback !== undefined) this.runtimeConfig.knockback = config.knockback;
   }
 
   /**
@@ -81,14 +125,34 @@ export class CombatSystem {
 
     // Process player-enemy collisions
     for (const enemy of collisions.playerEnemyCollisions) {
-      const isDead = player.takeDamage(enemy.damage, currentTime);
+      // Dodge chance
+      if (player.dodge > 0 && Math.random() < player.dodge) {
+        EventBus.emit('playerDodged', undefined);
+        continue;
+      }
 
-      // TODO - Event types should be enums / class with static strings
+      // Boss damage multiplier
+      let damage = enemy.damage;
+      if (enemy.isBoss) {
+        damage *= GAME_BALANCE.boss.contactDamageMultiplier;
+      }
+
+      const isDead = player.takeDamage(damage, currentTime);
+
       EventBus.emit('playerHit', {
         player,
-        damage: enemy.damage,
+        damage,
         source: enemy,
       });
+
+      // Thorns damage - applied after player takes damage
+      if (player.thorns > 0) {
+        EventBus.emit('thornsTriggered', undefined);
+        const thornsKilled = enemy.takeDamage(player.thorns, enemy.x, enemy.y, player.knockback);
+        if (thornsKilled) {
+          this.handleEnemyDeath(enemy, 'player');
+        }
+      }
 
       if (isDead) {
         EventBus.emit('playerDeath', { player, killedBy: enemy });
@@ -97,6 +161,13 @@ export class CombatSystem {
 
     // Process player-projectile collisions (enemy bullets)
     for (const projectile of collisions.playerProjectileCollisions) {
+      // Dodge chance for projectiles too
+      if (player.dodge > 0 && Math.random() < player.dodge) {
+        EventBus.emit('playerDodged', undefined);
+        projectile.destroy();
+        continue;
+      }
+
       const isDead = player.takeDamage(projectile.damage, currentTime);
       projectile.destroy();
 
@@ -113,7 +184,7 @@ export class CombatSystem {
 
     // Process projectile-enemy collisions
     for (const { projectile, enemy } of collisions.projectileEnemyCollisions) {
-      this.processProjectileHit(projectile, enemy, player.damageMultiplier);
+      this.processProjectileHit(projectile, enemy);
     }
 
     // Process pickup collisions
@@ -142,17 +213,16 @@ export class CombatSystem {
 
   /**
    * Process a projectile hitting an enemy
+   * Uses runtimeConfig for damageMultiplier, explosionRadius, and knockback
    */
-  private processProjectileHit(
-    projectile: Projectile,
-    enemy: Enemy,
-    damageMultiplier: number,
-  ): void {
+  private processProjectileHit(projectile: Projectile, enemy: Enemy): void {
+    const { damageMultiplier, explosionRadius, knockback } = this.runtimeConfig;
     const player = this.entityManager.getPlayer();
     const finalDamage = projectile.damage * damageMultiplier;
 
-    // Apply damage with knockback
-    const isDead = enemy.takeDamage(finalDamage, projectile.x, projectile.y);
+    // Apply damage with knockback (using player knockback * projectile knockback multiplier)
+    const totalKnockback = knockback * projectile.knockbackMultiplier;
+    const isDead = enemy.takeDamage(finalDamage, projectile.x, projectile.y, totalKnockback);
 
     EventBus.emit('enemyDamaged', {
       enemy,
@@ -162,6 +232,7 @@ export class CombatSystem {
 
     // Lifesteal
     if (player && player.lifesteal > 0) {
+      // TODO nerf it
       const healAmount = finalDamage * player.lifesteal;
       player.heal(healAmount);
     }
@@ -176,21 +247,18 @@ export class CombatSystem {
       const isBanana =
         projectile.type === ProjectileType.BANANA || projectile.type === ProjectileType.MINI_BANANA;
       const isMini = projectile.type === ProjectileType.MINI_BANANA;
+      // Apply player's explosionRadius multiplier
+      const expRadius = projectile.explosive.explosionRadius * explosionRadius;
       this.queueExplosion({
         x: projectile.x,
         y: projectile.y,
-        radius: projectile.explosive.explosionRadius,
+        radius: expRadius,
         damage: projectile.explosive.explosionDamage * damageMultiplier,
         visualEffect: projectile.explosive.visualEffect ?? VisualEffect.STANDARD,
         sourceId: projectile.id,
         isBanana,
         isMini,
       });
-    }
-
-    // Handle chain projectiles
-    if (projectile.canChain() && projectile.chain) {
-      this.processChainEffect(projectile, enemy, damageMultiplier);
     }
 
     // Destroy non-piercing projectiles
@@ -201,77 +269,6 @@ export class CombatSystem {
     }
 
     EventBus.emit('projectileHit', { projectile, target: enemy });
-  }
-
-  /**
-   * Process chain lightning effect
-   */
-  private processChainEffect(
-    projectile: Projectile,
-    initialTarget: Enemy,
-    damageMultiplier: number,
-  ): void {
-    if (!projectile.chain) return;
-
-    const { chainCount, chainRange, chainedEnemies } = projectile.chain;
-    let currentTarget = initialTarget;
-    let remainingChains = chainCount;
-    let currentDamage = projectile.damage * damageMultiplier;
-    const damageDecay = 0.8; // 20% damage reduction per chain
-
-    while (remainingChains > 0) {
-      // Find next target
-      const nextTarget = this.findChainTarget(
-        currentTarget.x,
-        currentTarget.y,
-        chainRange,
-        chainedEnemies,
-      );
-
-      if (!nextTarget) break;
-
-      // Register chain
-      if (!projectile.registerChain(nextTarget.id)) break;
-
-      // Apply damage
-      currentDamage *= damageDecay;
-      const isDead = nextTarget.takeDamage(currentDamage, currentTarget.x, currentTarget.y);
-
-      if (isDead) {
-        this.handleEnemyDeath(nextTarget, 'chain');
-      }
-
-      currentTarget = nextTarget;
-      remainingChains--;
-    }
-  }
-
-  /**
-   * Find next chain target
-   */
-  private findChainTarget(
-    x: number,
-    y: number,
-    range: number,
-    excludeIds: Set<number>,
-  ): Enemy | null {
-    const enemies = this.entityManager.getActiveEnemies().filter((e) => !excludeIds.has(e.id));
-
-    let nearest: Enemy | null = null;
-    let nearestDistSq = range * range;
-
-    for (const enemy of enemies) {
-      const dx = enemy.x - x;
-      const dy = enemy.y - y;
-      const distSq = dx * dx + dy * dy;
-
-      if (distSq < nearestDistSq) {
-        nearestDistSq = distSq;
-        nearest = enemy;
-      }
-    }
-
-    return nearest;
   }
 
   /**
@@ -300,6 +297,22 @@ export class CombatSystem {
   private processExplosion(explosion: ExplosionEvent, damageMultiplier: number): void {
     const { x, y, radius, damage, visualEffect, isBanana, isMini } = explosion;
 
+    // Determine explosion type flags
+    const isNuke = visualEffect === VisualEffect.NUKE;
+    const isHolyGrenade = visualEffect === VisualEffect.HOLY;
+    const isBananaEffect = visualEffect === VisualEffect.BANANA;
+
+    // Create visual effect
+    EffectsSystem.createExplosion(
+      this.effects,
+      x,
+      y,
+      radius,
+      isNuke,
+      isHolyGrenade,
+      isBananaEffect,
+    );
+
     // Find enemies in explosion radius
     const enemies = this.entityManager.getEnemiesInRadius(x, y, radius);
 
@@ -322,75 +335,188 @@ export class CombatSystem {
       this.spawnMiniBananas(x, y, 4 + Math.floor(Math.random() * 3), damageMultiplier);
     }
 
-    // Emit explosion event for visual effects
+    // Emit explosion event for audio and other listeners
     EventBus.emit('explosionTriggered', {
       position: { x, y },
       radius,
       damage,
-      visualEffect,
+      visualEffect: isNuke ? 'nuke' : isHolyGrenade ? 'holy' : 'standard',
       isBanana,
     });
   }
 
   /**
-   * Handle enemy death - spawn pickups, emit events
+   * Process enemy death from external source (e.g. collision in Game.ts)
+   * Use this when enemy dies outside of CombatSystem collision processing
    */
-  private handleEnemyDeath(enemy: Enemy, killer: 'player' | 'explosion' | 'chain'): void {
-    enemy.destroy();
+  public processEnemyDeath(enemy: Enemy, killer: 'player' | 'explosion' = 'player'): void {
+    this.handleEnemyDeath(enemy, killer);
+  }
 
-    // Spawn gold pickup
-    const goldValue = Math.floor(
-      enemy.goldValue * (this.entityManager.getPlayer()?.goldMultiplier ?? 1),
-    );
-    if (goldValue > 0) {
-      const goldPickup = createGoldPickup(enemy.x, enemy.y, goldValue);
-      this.entityManager.addPickup(goldPickup);
+  /**
+   * Handle enemy death - spawn pickups, effects, emit events
+   */
+  private handleEnemyDeath(enemy: Enemy, killer: 'player' | 'explosion'): void {
+    const { luck } = this.runtimeConfig;
+
+    // Create death effect
+    EffectsSystem.createDeathEffect(this.effects, {
+      x: enemy.x,
+      y: enemy.y,
+      color: enemy.color,
+      isBoss: enemy.isBoss,
+      type: enemy.type,
+    });
+
+    // Award XP via event
+    EventBus.emit('xpAwarded', {
+      amount: enemy.xpValue,
+      source: enemy,
+    });
+
+    // Drop gold - bosses drop multiple bags for satisfying effect
+    // Note: goldMultiplier is applied during pickup collection in Game.ts, not here
+    if (enemy.isBoss) {
+      // One large bag (50% of value) in center
+      const bigPickup = createGoldPickup(
+        enemy.x,
+        enemy.y,
+        Math.floor(enemy.goldValue * 0.5),
+      );
+      this.entityManager.addPickup(bigPickup);
+
+      // 6-8 small bags scattered around
+      const smallBags = 6 + Math.floor(Math.random() * 3);
+      const smallValue = Math.floor((enemy.goldValue * 0.5) / smallBags);
+      for (let i = 0; i < smallBags; i++) {
+        const angle = ((Math.PI * 2) / smallBags) * i;
+        const dist = 20 + Math.random() * 30;
+        const smallPickup = createGoldPickup(
+          enemy.x + Math.cos(angle) * dist,
+          enemy.y + Math.sin(angle) * dist,
+          smallValue,
+        );
+        this.entityManager.addPickup(smallPickup);
+      }
+    } else {
+      // Normal enemy - one bag with random offset
+      const goldOffsetX = (Math.random() - 0.5) * 20;
+      const goldOffsetY = (Math.random() - 0.5) * 20;
+      if (enemy.goldValue > 0) {
+        const goldPickup = createGoldPickup(
+          enemy.x + goldOffsetX,
+          enemy.y + goldOffsetY,
+          enemy.goldValue,
+        );
+        this.entityManager.addPickup(goldPickup);
+      }
     }
 
-    // Chance to spawn health pickup
-    if (Math.random() < this.healthDropChance) {
-      const healthPickup = createHealthPickup(enemy.x, enemy.y, 10);
+    // Bonus gold from luck
+    if (luck > 0 && Math.random() < luck) {
+      const bonusOffsetX = (Math.random() - 0.5) * 30;
+      const bonusOffsetY = (Math.random() - 0.5) * 30;
+      const bonusPickup = createGoldPickup(
+        enemy.x + bonusOffsetX,
+        enemy.y + bonusOffsetY,
+        Math.floor(enemy.goldValue * 0.5),
+      );
+      this.entityManager.addPickup(bonusPickup);
+    }
+
+    // Chance for health drop (base + luck bonus)
+    const healthDropChance = this.healthDropChance + luck * this.healthDropLuckMultiplier;
+    if (Math.random() < healthDropChance) {
+      const healthPickup = createHealthPickup(enemy.x + 20, enemy.y, this.healthDropValue);
       this.entityManager.addPickup(healthPickup);
     }
 
-    // Handle explodeOnDeath
-    if (enemy.explodeOnDeath && enemy.explosionRadius > 0) {
-      this.queueExplosion({
-        x: enemy.x,
-        y: enemy.y,
-        radius: enemy.explosionRadius,
-        damage: enemy.explosionDamage,
-        visualEffect: VisualEffect.FIRE,
-        sourceId: enemy.id,
+    // Boss death - special explosion sound via event
+    if (enemy.isBoss) {
+      EventBus.emit('explosionTriggered', {
+        position: { x: enemy.x, y: enemy.y },
+        radius: 0,
+        damage: 0,
+        visualEffect: 'nuke',
       });
     }
 
-    // Handle splitOnDeath (spawning handled by SpawnSystem via event)
-    // Just emit the event, SpawnSystem will handle creating new enemies
+    // Handle explodeOnDeath - process immediately, not queued
+    if (enemy.explodeOnDeath && enemy.explosionRadius > 0) {
+      const player = this.entityManager.getPlayer();
+      const damageMultiplier = player?.damageMultiplier ?? 1;
+      this.processExplosion(
+        {
+          x: enemy.x,
+          y: enemy.y,
+          radius: enemy.explosionRadius,
+          damage: enemy.explosionDamage,
+          visualEffect: VisualEffect.FIRE,
+          sourceId: enemy.id,
+        },
+        damageMultiplier,
+      );
+    }
 
+    // Handle splitOnDeath
+    if (enemy.splitOnDeath) {
+      this.spawnSplitEnemies(enemy);
+    }
+
+    // Emit death event (audio plays via EventBus listener)
     EventBus.emit('enemyDeath', {
       enemy,
       killer,
       position: { x: enemy.x, y: enemy.y },
     });
+
+    // Remove from manager
+    enemy.destroy();
+  }
+
+  /**
+   * Spawn split enemies when enemy with splitOnDeath dies
+   */
+  private spawnSplitEnemies(enemy: Enemy): void {
+    const splitType = enemy.type === EnemyType.SPLITTER ? EnemyType.SWARM : EnemyType.BASIC;
+
+    for (let i = 0; i < enemy.splitCount; i++) {
+      const angle = (Math.PI * 2 * i) / enemy.splitCount;
+      const offsetX = Math.cos(angle) * 30;
+      const offsetY = Math.sin(angle) * 30;
+
+      const splitEnemy = new Enemy({
+        x: enemy.x + offsetX,
+        y: enemy.y + offsetY,
+        type: splitType,
+        scale: 0.6,
+      });
+
+      this.entityManager.addEnemy(splitEnemy);
+    }
   }
 
   /**
    * Process pickup collection
+   * Applies goldMultiplier for gold pickups and heals player for health pickups
    */
   private processPickupCollection(pickup: Pickup): void {
     const value = pickup.collect();
     const player = this.entityManager.getPlayer();
 
     if (pickup.type === PickupType.GOLD) {
+      // TODO should only pickup, multiply gold when receiving the event?
+      // Apply goldMultiplier from runtimeConfig
+      const goldAmount = Math.floor(value * this.runtimeConfig.goldMultiplier);
       EventBus.emit('goldCollected', {
-        amount: value,
+        amount: goldAmount,
         position: { x: pickup.x, y: pickup.y },
       });
     } else if (pickup.type === PickupType.HEALTH) {
       if (player) {
         player.heal(value);
       }
+      // TODO why emit this event if we already healed the player directly?
       EventBus.emit('healthCollected', {
         amount: value,
         position: { x: pickup.x, y: pickup.y },
@@ -430,6 +556,32 @@ export class CombatSystem {
   }
 
   /**
+   * Trigger an explosion at position (used for grenades, mines, etc.)
+   * Handles visual effects, damage, and banana splitting
+   */
+  public triggerExplosion(
+    x: number,
+    y: number,
+    radius: number,
+    damage: number,
+    visualEffect: VisualEffect = VisualEffect.STANDARD,
+    isMini: boolean = false,
+  ): void {
+    const isBanana = visualEffect === VisualEffect.BANANA;
+    this.queueExplosion({
+      x,
+      y,
+      radius,
+      damage,
+      visualEffect,
+      sourceId: -1,
+      isBanana,
+      isMini,
+    });
+    this.processExplosions();
+  }
+
+  /**
    * Set health drop chance
    */
   public setHealthDropChance(chance: number): void {
@@ -462,7 +614,10 @@ export class CombatSystem {
         color: config.color,
         type: ProjectileType.MINI_BANANA,
         ownerId: playerId,
-        maxDistance: randomRange,
+        // Use explosiveRange for grenade-like behavior (explodes at distance)
+        explosiveRange: randomRange,
+        bulletSpeed: randomSpeed,
+        weaponCategory: 'grenade',
         explosive: {
           explosionRadius: (config.explosionRadius ?? 45) * explosionRadiusMultiplier,
           explosionDamage: config.damage * damageMultiplier,

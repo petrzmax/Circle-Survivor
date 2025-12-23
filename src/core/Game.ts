@@ -6,9 +6,9 @@ import { Player, InputState } from '@/entities/Player';
 import { Enemy } from '@/entities/Enemy';
 import { Projectile } from '@/entities/Projectile';
 import { Deployable, DeployableConfig } from '@/entities/Deployable';
-import { createGoldPickup, createHealthPickup } from '@/entities/Pickup';
 import { EntityManager } from '@/managers/EntityManager';
 import { CollisionSystem } from '@/systems/CollisionSystem';
+import { CombatSystem } from '@/systems/CombatSystem';
 import { WaveManager } from '@/systems/WaveManager';
 import { Shop, ShopPlayer, ShopWeapon } from '@/ui/Shop';
 import { InputHandler } from '@/systems/InputHandler';
@@ -27,11 +27,10 @@ import {
   WeaponType,
   ProjectileType,
   EnemyType,
-  PickupType,
   VisualEffect,
   DeployableType,
 } from '@/types/enums';
-import { circleCollision, distance } from '@/utils';
+import { distance } from '@/utils';
 
 // ============ Types ============
 export type GameState = 'start' | 'playing' | 'shop' | 'gameover' | 'paused';
@@ -66,9 +65,8 @@ export class Game {
   private weapons: WeaponInstance[] = [];
 
   // Systems
-  // TODO: remove if not needed
-  // @ts-expect-error - prepared for CombatSystem refactor
-  private _collisionSystem: CollisionSystem;
+  private collisionSystem: CollisionSystem;
+  private combatSystem!: CombatSystem;
   private waveManager: WaveManager;
   private shop: Shop;
   private audio: AudioSystem;
@@ -86,6 +84,9 @@ export class Game {
   // Regeneration tracking
   private lastRegenTime: number = 0;
 
+  // Game loop tracking - prevents multiple loops
+  private isGameLoopRunning: boolean = false;
+
   // Debug display options
   private showEnemyCount: boolean = false;
 
@@ -102,8 +103,7 @@ export class Game {
 
     // Initialize systems
     this.entityManager = new EntityManager();
-    // TODO: refactor to CombatSystem, remove _ after
-    this._collisionSystem = new CollisionSystem(this.entityManager);
+    this.collisionSystem = new CollisionSystem(this.entityManager);
     this.waveManager = new WaveManager();
     this.shop = new Shop();
     this.audio = new AudioSystem();
@@ -126,6 +126,17 @@ export class Game {
     });
     this.effects = createEffectsState();
 
+    // Initialize CombatSystem (requires effects)
+    // TODO combatSystem should use Game_balance directly instead of passing values
+    this.combatSystem = new CombatSystem(this.entityManager, this.effects, {
+      healthDropChance: GAME_BALANCE.drops.healthDropChance,
+      healthDropValue: GAME_BALANCE.drops.healthDropValue,
+      healthDropLuckMultiplier: GAME_BALANCE.drops.healthDropLuckMultiplier,
+    });
+
+    // Setup EventBus listeners for combat events
+    this.setupCombatEventListeners();
+
     // Setup input handler
     this.inputHandler.setup();
 
@@ -136,16 +147,12 @@ export class Game {
         this.gold = value;
       },
       getWaveNumber: () => this.waveManager.waveNumber,
-      playPurchaseSound: () => { this.audio.purchase(); },
-      playErrorSound: () => { this.audio.error(); },
       showNotification: (message: string) => { this.showNotification(message); },
       updateHUD: () => { this.updateHUD(); },
     });
 
     // Bind to window for global access
     (window as unknown as { game: Game }).game = this;
-
-    this.setupEventBusListeners();
 
     // Initialize dev menu (development only)
     if (import.meta.env.DEV) {
@@ -217,11 +224,6 @@ export class Game {
 
   // ============ Setup ============
 
-  private setupEventBusListeners(): void {
-    EventBus.on('enemyDeath', ({ enemy }) => {
-      this.handleEnemyDeath(enemy);
-    });
-  }
 
   private showNotification(message: string): void {
     console.log('Notification:', message);
@@ -320,8 +322,7 @@ export class Game {
   private resumeGame(): void {
     this.state = 'playing';
     document.getElementById('pause-menu')?.classList.add('hidden');
-    this.lastTime = performance.now();
-    requestAnimationFrame((t) => { this.gameLoop(t); });
+    this.startGameLoop();
   }
 
   private quitToMenu(): void {
@@ -367,6 +368,13 @@ export class Game {
     this.effects = createEffectsState();
     this.waveManager = new WaveManager();
 
+    // Reset CombatSystem with fresh effects
+    this.combatSystem = new CombatSystem(this.entityManager, this.effects, {
+      healthDropChance: GAME_BALANCE.drops.healthDropChance,
+      healthDropValue: GAME_BALANCE.drops.healthDropValue,
+      healthDropLuckMultiplier: GAME_BALANCE.drops.healthDropLuckMultiplier,
+    });
+
     // Hide overlays
     document.getElementById('start-screen')?.classList.add('hidden');
     document.getElementById('game-over')?.classList.add('hidden');
@@ -374,12 +382,10 @@ export class Game {
 
     this.state = 'playing';
     this.waveManager.startWave();
-    this.audio.waveStart();
     this.updateHUD();
 
     // Start game loop
-    this.lastTime = performance.now();
-    requestAnimationFrame((t) => { this.gameLoop(t); });
+    this.startGameLoop();
   }
 
   private startNextWave(): void {
@@ -398,7 +404,6 @@ export class Game {
     this.entityManager.clearExceptPlayer();
 
     this.waveManager.startWave();
-    this.audio.waveStart();
   }
 
   // ============ Weapon Management ============
@@ -468,9 +473,23 @@ export class Game {
 
     this.render();
 
-    if (this.state !== 'gameover' && this.state !== 'paused') {
+    // Continue loop only for active game states
+    if (this.state === 'playing' || this.state === 'shop') {
       requestAnimationFrame((t) => { this.gameLoop(t); });
+    } else {
+      // Loop stopped - mark as not running
+      this.isGameLoopRunning = false;
     }
+  }
+
+  /**
+   * Start the game loop if not already running
+   */
+  private startGameLoop(): void {
+    if (this.isGameLoopRunning) return;
+    this.isGameLoopRunning = true;
+    this.lastTime = performance.now();
+    requestAnimationFrame((t) => { this.gameLoop(t); });
   }
 
   // ============ Update ============
@@ -484,10 +503,10 @@ export class Game {
     // Get input state from InputHandler
     const keys = this.inputHandler.getKeys();
     const input: InputState = {
-      up: (keys.w ?? keys.arrowup) ?? false,
-      down: (keys.s ?? keys.arrowdown) ?? false,
-      left: (keys.a ?? keys.arrowleft) ?? false,
-      right: (keys.d ?? keys.arrowright) ?? false,
+      up: keys.w === true || keys.arrowup === true,
+      down: keys.s === true || keys.arrowdown === true,
+      left: keys.a === true || keys.arrowleft === true,
+      right: keys.d === true || keys.arrowright === true,
     };
 
     // Update player movement
@@ -515,13 +534,22 @@ export class Game {
 
     // Countdown sound
     if (waveResult.countdown !== false) {
-      this.audio.countdownTick(waveResult.countdown);
+      EventBus.emit('countdownTick', { seconds: waveResult.countdown });
     }
 
     if (waveResult.waveEnded) {
       this.openShop();
       return;
     }
+
+    // Update CombatSystem runtime config with current player stats
+    this.combatSystem.updateRuntimeConfig({
+      luck: player.luck,
+      goldMultiplier: player.goldMultiplier,
+      damageMultiplier: player.damageMultiplier,
+      explosionRadius: player.explosionRadius,
+      knockback: player.knockback,
+    });
 
     // Find nearest enemy for auto-aim
     const nearestEnemy = this.entityManager.getNearestEnemy(player.x, player.y);
@@ -530,45 +558,13 @@ export class Game {
     // Fire weapons
     this.fireWeapons(currentTime, player);
 
-    // Update enemies
+    // Update enemies (movement, boss shooting)
     const enemies = this.entityManager.getActiveEnemies();
     for (const enemy of enemies) {
       enemy.update(deltaSeconds);
       enemy.moveTowardsTarget(player, deltaSeconds, this.canvas.width, this.canvas.height);
 
-      // Check collision with player
-      if (circleCollision(enemy, player)) {
-        // Dodge chance
-        if (player.dodge > 0 && Math.random() < player.dodge) {
-          this.audio.dodge();
-          continue;
-        }
-
-        // Boss damage multiplier
-        let damage = enemy.damage;
-        if (enemy.isBoss) {
-          damage *= GAME_BALANCE.boss.contactDamageMultiplier;
-        }
-
-        const isDead = player.takeDamage(damage, currentTime);
-        this.audio.playerHit();
-
-        // Thorns
-        if (player.thorns > 0) {
-          this.audio.thorns();
-          const thornsKilled = enemy.takeDamage(player.thorns, enemy.x, enemy.y, player.knockback);
-          if (thornsKilled) {
-            this.handleEnemyDeath(enemy);
-          }
-        }
-
-        if (isDead) {
-          this.gameOver();
-          return;
-        }
-      }
-
-      // Boss shooting
+      // Boss shooting (creates projectiles/shockwaves)
       if (enemy.canShoot) {
         const attackResult = enemy.tryAttack(player, currentTime);
         if (attackResult) {
@@ -595,10 +591,8 @@ export class Game {
       }
     }
 
-    // Update projectiles
+    // Update projectiles (movement, expire, off-screen removal)
     const projectiles = this.entityManager.getActiveProjectiles();
-    const playerId = player.id;
-
     for (const projectile of projectiles) {
       projectile.update(deltaSeconds);
 
@@ -608,7 +602,7 @@ export class Game {
         if (projectile.shouldExplodeOnExpire && projectile.isExplosive() && projectile.explosive) {
           const expRadius = projectile.explosive.explosionRadius * player.explosionRadius;
           const isMini = projectile.type === ProjectileType.MINI_BANANA;
-          this.handleExplosion(
+          this.combatSystem.triggerExplosion(
             projectile.x,
             projectile.y,
             expRadius,
@@ -621,7 +615,7 @@ export class Game {
         continue;
       }
 
-      // Off screen check
+      // Off screen check - destroy projectiles that left the screen
       if (
         projectile.x < -50 ||
         projectile.x > this.canvas.width + 50 ||
@@ -629,128 +623,26 @@ export class Game {
         projectile.y > this.canvas.height + 50
       ) {
         projectile.destroy();
-        continue;
-      }
-
-      // Enemy projectile -> player collision
-      if (projectile.ownerId !== playerId) {
-        if (circleCollision(projectile, player)) {
-          if (player.dodge > 0 && Math.random() < player.dodge) {
-            this.audio.dodge();
-            projectile.destroy();
-            continue;
-          }
-
-          const isDead = player.takeDamage(projectile.damage, currentTime);
-          this.audio.playerHit();
-          projectile.destroy();
-
-          if (isDead) {
-            this.gameOver();
-            return;
-          }
-        }
-      } else {
-        // Player projectile -> enemy collision
-        for (const enemy of enemies) {
-          // Skip already hit (pierce)
-          if (projectile.pierce?.hitEnemies.has(enemy.id)) continue;
-
-          if (circleCollision(projectile, enemy)) {
-            // Explosive
-            if (projectile.isExplosive() && projectile.explosive) {
-              const expRadius = projectile.explosive.explosionRadius * player.explosionRadius;
-              const isMini = projectile.type === ProjectileType.MINI_BANANA;
-              this.handleExplosion(
-                projectile.x,
-                projectile.y,
-                expRadius,
-                projectile.damage * player.damageMultiplier,
-                projectile.explosive.visualEffect,
-                isMini,
-              );
-              projectile.destroy();
-              break;
-            }
-
-            const finalDamage = projectile.damage * player.damageMultiplier;
-            const isDead = enemy.takeDamage(
-              finalDamage,
-              projectile.x,
-              projectile.y,
-              player.knockback * projectile.knockbackMultiplier,
-            );
-
-            // Chain effect
-            if (projectile.canChain() && projectile.chain) {
-              this.handleChainEffect(
-                enemy.x,
-                enemy.y,
-                finalDamage * 0.5,
-                projectile.chain.chainCount,
-              );
-            }
-
-            // Lifesteal
-            if (player.lifesteal > 0) {
-              player.heal(finalDamage * player.lifesteal);
-            }
-
-            if (projectile.canPierce()) {
-              projectile.registerHit(enemy.id);
-            } else {
-              projectile.destroy();
-            }
-
-            if (isDead) {
-              this.handleEnemyDeath(enemy);
-            }
-
-            if (!projectile.isActive) break;
-          }
-        }
       }
     }
 
-    // Update deployables (mines)
+    // Update deployables (mines) - just movement/animation
     const deployables = this.entityManager.getActiveDeployables();
     for (const deployable of deployables) {
       deployable.update(deltaSeconds);
-
-      if (deployable.isArmed) {
-        // Check for enemies in trigger radius
-        const nearbyEnemies = this.entityManager.getEnemiesInRadius(
-          deployable.x,
-          deployable.y,
-          deployable.triggerRadius,
-        );
-        if (nearbyEnemies.length > 0) {
-          const explosionData = deployable.trigger();
-          if (explosionData) {
-            this.handleExplosion(
-              deployable.x,
-              deployable.y,
-              explosionData.explosionRadius,
-              explosionData.explosionDamage,
-              deployable.visualEffect,
-            );
-          }
-        }
-      }
     }
 
-    // Update pickups
+    // Update pickups (movement, magnet attraction)
     const pickups = this.entityManager.getActivePickups();
     for (const pickup of pickups) {
       pickup.update(deltaSeconds);
 
       if (!pickup.isActive) continue;
 
-      // Check collection (magnet effect)
+      // Magnet attraction - move towards player if in range
       const distToPlayer = distance(pickup, player);
       if (distToPlayer < player.pickupRange || pickup.isAttracted) {
         pickup.isAttracted = true;
-        // Move towards player
         const dx = player.x - pickup.x;
         const dy = player.y - pickup.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -760,19 +652,12 @@ export class Game {
           pickup.y += (dy / dist) * magnetSpeed;
         }
       }
-
-      // Collect when touching player
-      if (distToPlayer < player.radius) {
-        if (pickup.type === PickupType.GOLD) {
-          this.gold += Math.floor(pickup.value * player.goldMultiplier);
-          this.audio.collectGold();
-        } else if (pickup.type === PickupType.HEALTH) {
-          player.heal(pickup.value);
-          this.audio.collectHealth();
-        }
-        pickup.destroy();
-      }
     }
+
+    // === Collision Detection & Combat Processing ===
+    // All collision handling is delegated to CollisionSystem + CombatSystem
+    const collisions = this.collisionSystem.checkAll();
+    this.combatSystem.processCollisions(collisions, currentTime);
 
     // Update shockwaves
     this.updateShockwaves(currentTime);
@@ -890,9 +775,6 @@ export class Game {
         pierce: config.pierce
           ? { pierceCount: (config.pierceCount ?? 1) + player.pierce, hitEnemies: new Set() }
           : undefined,
-        chain: config.chain
-          ? { chainCount: config.chainCount ?? 3, chainRange: 150, chainedEnemies: new Set() }
-          : undefined,
         explosive: config.explosive
           ? {
               explosionRadius: config.explosionRadius ?? 50,
@@ -942,41 +824,8 @@ export class Game {
   }
 
   private playWeaponSound(type: WeaponType): void {
-    switch (type) {
-      case WeaponType.SHOTGUN:
-        this.audio.shootShotgun();
-        break;
-      case WeaponType.SNIPER:
-        this.audio.shootSniper();
-        break;
-      case WeaponType.LASER:
-        this.audio.shootLaser();
-        break;
-      case WeaponType.MINIGUN:
-        this.audio.shootMinigun();
-        break;
-      case WeaponType.FLAMETHROWER:
-        this.audio.flamethrower();
-        break;
-      case WeaponType.SCYTHE:
-        this.audio.scytheSwing();
-        break;
-      case WeaponType.SWORD:
-        this.audio.swordSlash();
-        break;
-      case WeaponType.CROSSBOW:
-        this.audio.crossbowShoot();
-        break;
-      case WeaponType.BAZOOKA:
-      case WeaponType.NUKE:
-      case WeaponType.HOLY_GRENADE:
-      case WeaponType.BANANA:
-        // Explosion plays on hit, not on shot
-        this.audio.shoot();
-        break;
-      default:
-        this.audio.shoot();
-    }
+    // All weapon sounds are handled via EventBus
+    EventBus.emit('weaponFired', { weaponType: type });
   }
 
   /**
@@ -1005,8 +854,8 @@ export class Game {
     const mine = new Deployable(deployableConfig);
     this.entityManager.addDeployable(mine);
 
-    // Play mine deploy sound (reuse bomb sound)
-    this.audio.explosion(); // TODO: Add proper mine deploy sound
+    // Play mine deploy sound
+    EventBus.emit('weaponFired', { weaponType: WeaponType.MINES });
   }
 
   // ============ Dev Tools ============
@@ -1039,246 +888,10 @@ export class Game {
         takeDamage: (damage: number, time: number) => player.takeDamage(damage, time),
       },
       currentTime,
-      () => { this.audio.dodge(); },
+      () => { EventBus.emit('playerDodged', undefined); },
     );
 
     if (playerDied) this.gameOver();
-  }
-
-  private handleEnemyDeath(enemy: Enemy): void {
-    // Create death effect
-    EffectsSystem.createDeathEffect(this.effects, {
-      x: enemy.x,
-      y: enemy.y,
-      color: enemy.color,
-      isBoss: enemy.isBoss,
-      type: enemy.type,
-    });
-
-    // Award XP
-    this.xp += enemy.xpValue;
-
-    // Drop gold - bosses drop multiple bags for satisfying effect
-    const player = this.entityManager.getPlayer();
-    const luck = player?.luck ?? 0;
-
-    if (enemy.isBoss) {
-      // One large bag (50% of value) in center
-      const bigPickup = createGoldPickup(enemy.x, enemy.y, Math.floor(enemy.goldValue * 0.5));
-      this.entityManager.addPickup(bigPickup);
-
-      // 6-8 small bags scattered around
-      const smallBags = 6 + Math.floor(Math.random() * 3);
-      const smallValue = Math.floor((enemy.goldValue * 0.5) / smallBags);
-      for (let i = 0; i < smallBags; i++) {
-        const angle = ((Math.PI * 2) / smallBags) * i;
-        const dist = 20 + Math.random() * 30;
-        const smallPickup = createGoldPickup(
-          enemy.x + Math.cos(angle) * dist,
-          enemy.y + Math.sin(angle) * dist,
-          smallValue,
-        );
-        this.entityManager.addPickup(smallPickup);
-      }
-    } else {
-      // Normal enemy - one bag with random offset
-      const goldOffsetX = (Math.random() - 0.5) * 20;
-      const goldOffsetY = (Math.random() - 0.5) * 20;
-      const goldPickup = createGoldPickup(
-        enemy.x + goldOffsetX,
-        enemy.y + goldOffsetY,
-        enemy.goldValue,
-      );
-      this.entityManager.addPickup(goldPickup);
-    }
-
-    // Bonus gold from luck
-    if (luck > 0 && Math.random() < luck) {
-      const bonusOffsetX = (Math.random() - 0.5) * 30;
-      const bonusOffsetY = (Math.random() - 0.5) * 30;
-      const bonusPickup = createGoldPickup(
-        enemy.x + bonusOffsetX,
-        enemy.y + bonusOffsetY,
-        Math.floor(enemy.goldValue * 0.5),
-      );
-      this.entityManager.addPickup(bonusPickup);
-    }
-
-    // Chance for health drop (15% base + luck bonus)
-    const healthDropChance =
-      GAME_BALANCE.drops.healthDropChance + luck * GAME_BALANCE.drops.healthDropLuckMultiplier;
-    if (Math.random() < healthDropChance) {
-      const healthPickup = createHealthPickup(
-        enemy.x + 20,
-        enemy.y,
-        GAME_BALANCE.drops.healthDropValue,
-      );
-      this.entityManager.addPickup(healthPickup);
-    }
-
-    // Play sound - boss uses nuke explosion, regular enemies use death sound
-    if (enemy.isBoss) {
-      this.audio.nukeExplosion();
-    } else {
-      this.audio.enemyDeath();
-    }
-
-    // Handle special death effects
-    if (enemy.explodeOnDeath) {
-      this.handleExplosion(enemy.x, enemy.y, enemy.explosionRadius, enemy.explosionDamage);
-    }
-
-    if (enemy.splitOnDeath) {
-      this.spawnSplitEnemies(enemy);
-    }
-
-    // Remove from manager
-    enemy.destroy();
-  }
-
-  private spawnSplitEnemies(enemy: Enemy): void {
-    const splitType = enemy.type === EnemyType.SPLITTER ? 'swarm' : 'basic';
-    for (let i = 0; i < enemy.splitCount; i++) {
-      const angle = (Math.PI * 2 * i) / enemy.splitCount;
-      const offsetX = Math.cos(angle) * 30;
-      const offsetY = Math.sin(angle) * 30;
-
-      const splitEnemy = new Enemy({
-        x: enemy.x + offsetX,
-        y: enemy.y + offsetY,
-        type: splitType as EnemyType,
-        scale: 0.6,
-      });
-
-      this.entityManager.addEnemy(splitEnemy);
-    }
-  }
-
-  private handleExplosion(
-    x: number,
-    y: number,
-    radius: number,
-    damage: number,
-    visualEffect: VisualEffect = VisualEffect.STANDARD,
-    isMini: boolean = false,
-  ): void {
-    const player = this.entityManager.getPlayer();
-    const damageMultiplier = player?.damageMultiplier ?? 1;
-
-    // Determine explosion type flags
-    const isNuke = visualEffect === VisualEffect.NUKE;
-    const isHolyGrenade = visualEffect === VisualEffect.HOLY;
-    const isBanana = visualEffect === VisualEffect.BANANA;
-
-    // Create visual with correct type
-    EffectsSystem.createExplosion(this.effects, x, y, radius, isNuke, isHolyGrenade, isBanana);
-
-    // Banana (not mini) spawns mini bananas
-    if (isBanana && !isMini && player) {
-      this.spawnMiniBananas(x, y, 4 + Math.floor(Math.random() * 3), player);
-    }
-
-    // Damage enemies in radius
-    const enemies = this.entityManager.getEnemiesInRadius(x, y, radius);
-    for (const enemy of enemies) {
-      const isDead = enemy.takeDamage(damage * damageMultiplier, x, y);
-      if (isDead) {
-        this.handleEnemyDeath(enemy);
-      }
-    }
-
-    // Play correct explosion sound
-    if (isNuke) {
-      this.audio.nukeExplosion();
-    } else if (isHolyGrenade) {
-      this.audio.holyExplosion();
-    } else {
-      this.audio.explosion();
-    }
-  }
-
-  /**
-   * Spawn mini bananas after main banana explosion
-   */
-  private spawnMiniBananas(x: number, y: number, count: number, player: Player): void {
-    const config = WEAPON_TYPES.minibanana;
-
-    for (let i = 0; i < count; i++) {
-      // Spread evenly with some randomness
-      const angle = ((Math.PI * 2) / count) * i + (Math.random() - 0.5) * 0.5;
-
-      // Random speed (6-10) and range (60-100px) for each mini banana
-      const randomSpeed = 6 + Math.random() * 4;
-      const randomRange = 60 + Math.random() * 40;
-
-      const vx = Math.cos(angle) * randomSpeed;
-      const vy = Math.sin(angle) * randomSpeed;
-
-      const projectile = new Projectile({
-        x,
-        y,
-        radius: config.bulletRadius ?? 6,
-        type: ProjectileType.MINI_BANANA,
-        damage: config.damage * player.damageMultiplier,
-        ownerId: player.id,
-        color: config.color ?? '#ffff00',
-        explosive: {
-          explosionRadius: (config.explosionRadius ?? 45) * player.explosionRadius,
-          explosionDamage: config.damage * player.damageMultiplier,
-          visualEffect: VisualEffect.BANANA,
-        },
-        weaponCategory: config.weaponCategory,
-        explosiveRange: randomRange,
-        bulletSpeed: randomSpeed,
-      });
-
-      projectile.setVelocity(vx, vy);
-
-      this.entityManager.addProjectile(projectile);
-    }
-  }
-
-  private handleChainEffect(startX: number, startY: number, damage: number, chainCount: number): void {
-    let currentX = startX;
-    let currentY = startY;
-    let remainingChains = chainCount;
-    let currentDamage = damage;
-    const hitEnemies = new Set<number>();
-
-    while (remainingChains > 0) {
-      const enemies = this.entityManager.getActiveEnemies().filter((e) => !hitEnemies.has(e.id));
-
-      let nearest: Enemy | null = null;
-      let nearestDist = 150;
-
-      for (const enemy of enemies) {
-        const dist = distance({ x: currentX, y: currentY }, enemy);
-        if (dist < nearestDist) {
-          nearestDist = dist;
-          nearest = enemy;
-        }
-      }
-
-      if (!nearest) break;
-
-      hitEnemies.add(nearest.id);
-
-      // Create chain visual
-      EffectsSystem.createChainEffect(this.effects, currentX, currentY, nearest.x, nearest.y);
-
-      // Damage
-      currentDamage *= 0.8;
-      const isDead = nearest.takeDamage(currentDamage, currentX, currentY);
-      if (isDead) {
-        this.handleEnemyDeath(nearest);
-      }
-
-      currentX = nearest.x;
-      currentY = nearest.y;
-      remainingChains--;
-    }
-
-    this.audio.chainEffect();
   }
 
   // ============ Enemy Finding ============
@@ -1450,11 +1063,38 @@ export class Game {
     };
   }
 
+  // ============ Combat Event Listeners ============
+
+  /**
+   * Setup EventBus listeners for combat events from CombatSystem
+   */
+  private setupCombatEventListeners(): void {
+    // Handle gold collection from CombatSystem
+    EventBus.on('goldCollected', ({ amount }) => {
+      this.gold += amount;
+    });
+
+    // Handle XP awards
+    EventBus.on('xpAwarded', ({ amount }) => {
+      this.xp += amount;
+    });
+
+    // Handle player death
+    EventBus.on('playerDeath', () => {
+      this.gameOver();
+    });
+  }
+
   // ============ Game Over ============
 
   private gameOver(): void {
     this.state = 'gameover';
-    this.audio.gameOver();
+    // gameOver sound is played via EventBus listener
+    EventBus.emit('gameOver', {
+      score: this.xp,
+      wave: this.waveManager.waveNumber,
+      time: 0,
+    });
 
     const finalWave = document.getElementById('final-wave');
     const finalXp = document.getElementById('final-xp');

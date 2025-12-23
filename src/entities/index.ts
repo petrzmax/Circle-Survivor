@@ -10,7 +10,6 @@ export {
   type ProjectileConfig,
   type ExplosiveComponent,
   type PierceComponent,
-  type ChainComponent,
 } from './Projectile';
 
 export { Deployable, type DeployableConfig } from './Deployable';

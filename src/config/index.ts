@@ -23,3 +23,11 @@ export {
   type ItemEffect,
   type ShopItemType,
 } from './shop.config';
+export {
+  SOUND_DEFINITIONS,
+  type OscillatorType,
+  type ToneDefinition,
+  type NoiseDefinition,
+  type SoundStep,
+  type SoundDefinition,
+} from './sounds.config';

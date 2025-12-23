@@ -95,10 +95,6 @@ export class Weapon {
   public shortRange: boolean;
   public maxDistance: number;
 
-  /** Chain lightning effect */
-  public chain: boolean;
-  public chainCount: number;
-
   /** Explosive range for grenades */
   public explosiveRange: number;
 
@@ -151,8 +147,6 @@ export class Weapon {
     this.explosionRadius = config.explosionRadius ?? 0;
     this.shortRange = config.shortRange ?? false;
     this.maxDistance = config.maxDistance ?? Infinity;
-    this.chain = config.chain ?? false;
-    this.chainCount = config.chainCount ?? 0;
     this.explosiveRange = config.explosiveRange ?? 0;
 
     // Type mappings
@@ -369,15 +363,6 @@ export class Weapon {
       config.pierce = {
         pierceCount: this.pierceCount + extraPierce,
         hitEnemies: new Set(),
-      };
-    }
-
-    // Chain component
-    if (this.chain) {
-      config.chain = {
-        chainCount: this.chainCount,
-        chainRange: GAME_BALANCE.combat.chainRange,
-        chainedEnemies: new Set(),
       };
     }
 

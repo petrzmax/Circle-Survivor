@@ -72,7 +72,7 @@ export const GAME_BALANCE = {
     /** Default critical hit damage multiplier. Crit deals base × this value. */
     baseCritMultiplier: 1.5,
     /** Invincibility frames after taking damage (milliseconds). Prevents burst damage. */
-    invincibilityMs: 500,
+    invincibilityMs: 300,
     /** Armor diminishing returns divisor. Formula: armor / (armor + this value).
      *  With 100: 50 armor = 33% reduction, 100 armor = 50%, 200 armor = 67% */
     armorDiminishingFactor: 100,
@@ -107,15 +107,11 @@ export const GAME_BALANCE = {
 
   /**
    * Combat mechanics multipliers.
-   * Affects explosions, chain effects, and special attack behaviors.
+   * Affects explosions and special attack behaviors.
    */
   combat: {
     /** Explosion damage falloff at edge. 0.5 = 50% damage at max radius, 100% at center. */
     explosionFalloff: 0.5,
-    /** Chain lightning damage retention. 0.5 = each jump deals 50% of previous hit. */
-    chainDamageMultiplier: 0.5,
-    /** Maximum distance for chain to jump to next enemy (pixels). */
-    chainRange: 150,
     /** Explosion knockback force multiplier. */
     explosionKnockback: 5,
   },

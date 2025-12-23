@@ -51,6 +51,12 @@ export interface CombatRuntimeConfig {
   luck: number;
   /** Player gold multiplier */
   goldMultiplier: number;
+  /** Player damage multiplier */
+  damageMultiplier: number;
+  /** Player explosion radius multiplier */
+  explosionRadius: number;
+  /** Player knockback value */
+  knockback: number;
 }
 
 /**
@@ -80,6 +86,9 @@ export class CombatSystem {
   private runtimeConfig: CombatRuntimeConfig = {
     luck: 0,
     goldMultiplier: 1,
+    damageMultiplier: 1,
+    explosionRadius: 1,
+    knockback: 0,
   };
 
   public constructor(
@@ -102,6 +111,9 @@ export class CombatSystem {
   public updateRuntimeConfig(config: Partial<CombatRuntimeConfig>): void {
     if (config.luck !== undefined) this.runtimeConfig.luck = config.luck;
     if (config.goldMultiplier !== undefined) this.runtimeConfig.goldMultiplier = config.goldMultiplier;
+    if (config.damageMultiplier !== undefined) this.runtimeConfig.damageMultiplier = config.damageMultiplier;
+    if (config.explosionRadius !== undefined) this.runtimeConfig.explosionRadius = config.explosionRadius;
+    if (config.knockback !== undefined) this.runtimeConfig.knockback = config.knockback;
   }
 
   /**
@@ -172,7 +184,7 @@ export class CombatSystem {
 
     // Process projectile-enemy collisions
     for (const { projectile, enemy } of collisions.projectileEnemyCollisions) {
-      this.processProjectileHit(projectile, enemy, player.damageMultiplier);
+      this.processProjectileHit(projectile, enemy);
     }
 
     // Process pickup collisions
@@ -201,17 +213,16 @@ export class CombatSystem {
 
   /**
    * Process a projectile hitting an enemy
+   * Uses runtimeConfig for damageMultiplier, explosionRadius, and knockback
    */
-  private processProjectileHit(
-    projectile: Projectile,
-    enemy: Enemy,
-    damageMultiplier: number,
-  ): void {
+  private processProjectileHit(projectile: Projectile, enemy: Enemy): void {
+    const { damageMultiplier, explosionRadius, knockback } = this.runtimeConfig;
     const player = this.entityManager.getPlayer();
     const finalDamage = projectile.damage * damageMultiplier;
 
-    // Apply damage with knockback
-    const isDead = enemy.takeDamage(finalDamage, projectile.x, projectile.y);
+    // Apply damage with knockback (using player knockback * projectile knockback multiplier)
+    const totalKnockback = knockback * projectile.knockbackMultiplier;
+    const isDead = enemy.takeDamage(finalDamage, projectile.x, projectile.y, totalKnockback);
 
     EventBus.emit('enemyDamaged', {
       enemy,
@@ -221,6 +232,7 @@ export class CombatSystem {
 
     // Lifesteal
     if (player && player.lifesteal > 0) {
+      // TODO nerf it
       const healAmount = finalDamage * player.lifesteal;
       player.heal(healAmount);
     }
@@ -235,10 +247,12 @@ export class CombatSystem {
       const isBanana =
         projectile.type === ProjectileType.BANANA || projectile.type === ProjectileType.MINI_BANANA;
       const isMini = projectile.type === ProjectileType.MINI_BANANA;
+      // Apply player's explosionRadius multiplier
+      const expRadius = projectile.explosive.explosionRadius * explosionRadius;
       this.queueExplosion({
         x: projectile.x,
         y: projectile.y,
-        radius: projectile.explosive.explosionRadius,
+        radius: expRadius,
         damage: projectile.explosive.explosionDamage * damageMultiplier,
         visualEffect: projectile.explosive.visualEffect ?? VisualEffect.STANDARD,
         sourceId: projectile.id,
@@ -484,20 +498,25 @@ export class CombatSystem {
 
   /**
    * Process pickup collection
+   * Applies goldMultiplier for gold pickups and heals player for health pickups
    */
   private processPickupCollection(pickup: Pickup): void {
     const value = pickup.collect();
     const player = this.entityManager.getPlayer();
 
     if (pickup.type === PickupType.GOLD) {
+      // TODO should only pickup, multiply gold when receiving the event?
+      // Apply goldMultiplier from runtimeConfig
+      const goldAmount = Math.floor(value * this.runtimeConfig.goldMultiplier);
       EventBus.emit('goldCollected', {
-        amount: value,
+        amount: goldAmount,
         position: { x: pickup.x, y: pickup.y },
       });
     } else if (pickup.type === PickupType.HEALTH) {
       if (player) {
         player.heal(value);
       }
+      // TODO why emit this event if we already healed the player directly?
       EventBus.emit('healthCollected', {
         amount: value,
         position: { x: pickup.x, y: pickup.y },

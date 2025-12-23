@@ -27,11 +27,10 @@ import {
   WeaponType,
   ProjectileType,
   EnemyType,
-  PickupType,
   VisualEffect,
   DeployableType,
 } from '@/types/enums';
-import { circleCollision, distance } from '@/utils';
+import { distance } from '@/utils';
 
 // ============ Types ============
 export type GameState = 'start' | 'playing' | 'shop' | 'gameover' | 'paused';
@@ -66,8 +65,6 @@ export class Game {
   private weapons: WeaponInstance[] = [];
 
   // Systems
-  // TODO: Use collisionSystem.checkAll() for full CombatSystem integration
-  // @ts-expect-error - Prepared for future full collision system integration
   private collisionSystem: CollisionSystem;
   private combatSystem!: CombatSystem;
   private waveManager: WaveManager;
@@ -549,6 +546,9 @@ export class Game {
     this.combatSystem.updateRuntimeConfig({
       luck: player.luck,
       goldMultiplier: player.goldMultiplier,
+      damageMultiplier: player.damageMultiplier,
+      explosionRadius: player.explosionRadius,
+      knockback: player.knockback,
     });
 
     // Find nearest enemy for auto-aim
@@ -558,45 +558,13 @@ export class Game {
     // Fire weapons
     this.fireWeapons(currentTime, player);
 
-    // Update enemies
+    // Update enemies (movement, boss shooting)
     const enemies = this.entityManager.getActiveEnemies();
     for (const enemy of enemies) {
       enemy.update(deltaSeconds);
       enemy.moveTowardsTarget(player, deltaSeconds, this.canvas.width, this.canvas.height);
 
-      // Check collision with player
-      if (circleCollision(enemy, player)) {
-        // Dodge chance
-        if (player.dodge > 0 && Math.random() < player.dodge) {
-          EventBus.emit('playerDodged', undefined);
-          continue;
-        }
-
-        // Boss damage multiplier
-        let damage = enemy.damage;
-        if (enemy.isBoss) {
-          damage *= GAME_BALANCE.boss.contactDamageMultiplier;
-        }
-
-        const isDead = player.takeDamage(damage, currentTime);
-        EventBus.emit('playerHit', { player, damage, source: enemy });
-
-        // Thorns
-        if (player.thorns > 0) {
-          EventBus.emit('thornsTriggered', undefined);
-          const thornsKilled = enemy.takeDamage(player.thorns, enemy.x, enemy.y, player.knockback);
-          if (thornsKilled) {
-            this.combatSystem.processEnemyDeath(enemy);
-          }
-        }
-
-        if (isDead) {
-          this.gameOver();
-          return;
-        }
-      }
-
-      // Boss shooting
+      // Boss shooting (creates projectiles/shockwaves)
       if (enemy.canShoot) {
         const attackResult = enemy.tryAttack(player, currentTime);
         if (attackResult) {
@@ -623,10 +591,8 @@ export class Game {
       }
     }
 
-    // Update projectiles
+    // Update projectiles (movement, expire, off-screen removal)
     const projectiles = this.entityManager.getActiveProjectiles();
-    const playerId = player.id;
-
     for (const projectile of projectiles) {
       projectile.update(deltaSeconds);
 
@@ -649,7 +615,7 @@ export class Game {
         continue;
       }
 
-      // Off screen check
+      // Off screen check - destroy projectiles that left the screen
       if (
         projectile.x < -50 ||
         projectile.x > this.canvas.width + 50 ||
@@ -657,118 +623,26 @@ export class Game {
         projectile.y > this.canvas.height + 50
       ) {
         projectile.destroy();
-        continue;
-      }
-
-      // Enemy projectile -> player collision
-      if (projectile.ownerId !== playerId) {
-        if (circleCollision(projectile, player)) {
-          if (player.dodge > 0 && Math.random() < player.dodge) {
-            EventBus.emit('playerDodged', undefined);
-            projectile.destroy();
-            continue;
-          }
-
-          const isDead = player.takeDamage(projectile.damage, currentTime);
-          EventBus.emit('playerHit', { player, damage: projectile.damage, source: projectile });
-          projectile.destroy();
-
-          if (isDead) {
-            this.gameOver();
-            return;
-          }
-        }
-      } else {
-        // Player projectile -> enemy collision
-        for (const enemy of enemies) {
-          // Skip already hit (pierce)
-          if (projectile.pierce?.hitEnemies.has(enemy.id)) continue;
-
-          if (circleCollision(projectile, enemy)) {
-            // Explosive
-            if (projectile.isExplosive() && projectile.explosive) {
-              const expRadius = projectile.explosive.explosionRadius * player.explosionRadius;
-              const isMini = projectile.type === ProjectileType.MINI_BANANA;
-              this.combatSystem.triggerExplosion(
-                projectile.x,
-                projectile.y,
-                expRadius,
-                projectile.damage * player.damageMultiplier,
-                projectile.explosive.visualEffect,
-                isMini,
-              );
-              projectile.destroy();
-              break;
-            }
-
-            const finalDamage = projectile.damage * player.damageMultiplier;
-            const isDead = enemy.takeDamage(
-              finalDamage,
-              projectile.x,
-              projectile.y,
-              player.knockback * projectile.knockbackMultiplier,
-            );
-
-            // Lifesteal
-            if (player.lifesteal > 0) {
-              player.heal(finalDamage * player.lifesteal);
-            }
-
-            if (projectile.canPierce()) {
-              projectile.registerHit(enemy.id);
-            } else {
-              projectile.destroy();
-            }
-
-            if (isDead) {
-              this.combatSystem.processEnemyDeath(enemy);
-            }
-
-            if (!projectile.isActive) break;
-          }
-        }
       }
     }
 
-    // Update deployables (mines)
+    // Update deployables (mines) - just movement/animation
     const deployables = this.entityManager.getActiveDeployables();
     for (const deployable of deployables) {
       deployable.update(deltaSeconds);
-
-      if (deployable.isArmed) {
-        // Check for enemies in trigger radius
-        const nearbyEnemies = this.entityManager.getEnemiesInRadius(
-          deployable.x,
-          deployable.y,
-          deployable.triggerRadius,
-        );
-        if (nearbyEnemies.length > 0) {
-          const explosionData = deployable.trigger();
-          if (explosionData) {
-            this.combatSystem.triggerExplosion(
-              deployable.x,
-              deployable.y,
-              explosionData.explosionRadius,
-              explosionData.explosionDamage,
-              deployable.visualEffect,
-            );
-          }
-        }
-      }
     }
 
-    // Update pickups
+    // Update pickups (movement, magnet attraction)
     const pickups = this.entityManager.getActivePickups();
     for (const pickup of pickups) {
       pickup.update(deltaSeconds);
 
       if (!pickup.isActive) continue;
 
-      // Check collection (magnet effect)
+      // Magnet attraction - move towards player if in range
       const distToPlayer = distance(pickup, player);
       if (distToPlayer < player.pickupRange || pickup.isAttracted) {
         pickup.isAttracted = true;
-        // Move towards player
         const dx = player.x - pickup.x;
         const dy = player.y - pickup.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -778,20 +652,12 @@ export class Game {
           pickup.y += (dy / dist) * magnetSpeed;
         }
       }
-
-      // Collect when touching player
-      if (distToPlayer < player.radius) {
-        if (pickup.type === PickupType.GOLD) {
-          const goldAmount = Math.floor(pickup.value * player.goldMultiplier);
-          this.gold += goldAmount;
-          EventBus.emit('goldCollected', { amount: goldAmount, position: { x: pickup.x, y: pickup.y } });
-        } else if (pickup.type === PickupType.HEALTH) {
-          player.heal(pickup.value);
-          EventBus.emit('healthCollected', { amount: pickup.value, position: { x: pickup.x, y: pickup.y } });
-        }
-        pickup.destroy();
-      }
     }
+
+    // === Collision Detection & Combat Processing ===
+    // All collision handling is delegated to CollisionSystem + CombatSystem
+    const collisions = this.collisionSystem.checkAll();
+    this.combatSystem.processCollisions(collisions, currentTime);
 
     // Update shockwaves
     this.updateShockwaves(currentTime);
@@ -1203,8 +1069,10 @@ export class Game {
    * Setup EventBus listeners for combat events from CombatSystem
    */
   private setupCombatEventListeners(): void {
-    // Note: goldCollected is handled in pickup collection loop, not here
-    // to avoid double-adding gold
+    // Handle gold collection from CombatSystem
+    EventBus.on('goldCollected', ({ amount }) => {
+      this.gold += amount;
+    });
 
     // Handle XP awards
     EventBus.on('xpAwarded', ({ amount }) => {

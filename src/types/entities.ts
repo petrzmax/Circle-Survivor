@@ -61,14 +61,6 @@ export interface IPierceComponent {
 }
 
 /**
- * Chain component for projectiles that chain between enemies
- */
-export interface IChainComponent {
-  maxChains: number;
-  damageMultiplier: number;
-}
-
-/**
  * Projectile interface - flying bullets
  */
 export interface IProjectile extends IPhysicsEntity, IDamageDealer {
@@ -79,7 +71,6 @@ export interface IProjectile extends IPhysicsEntity, IDamageDealer {
   // Optional components
   explosive?: IExplosiveComponent;
   pierce?: IPierceComponent;
-  chain?: IChainComponent;
 
   // Short range weapons
   maxDistance?: number;
@@ -186,8 +177,6 @@ export interface IWeapon {
   pierceCount: number;
   explosive: boolean;
   explosionRadius: number;
-  chain: boolean;
-  chainCount: number;
   knockbackMultiplier: number;
 
   // State

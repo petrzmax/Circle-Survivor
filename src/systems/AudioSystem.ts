@@ -179,11 +179,6 @@ export class AudioSystem {
     this.playTone(250, 0.1, 'triangle', 0.4);
   }
 
-  /** Chain lightning effect */
-  public chainEffect(): void {
-    this.playTone(1500, 0.1, 'sine', 0.2);
-  }
-
   /** Scythe swing */
   public scytheSwing(): void {
     this.playTone(400, 0.1, 'sine', 0.3);

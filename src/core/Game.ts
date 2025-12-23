@@ -681,16 +681,6 @@ export class Game {
               player.knockback * projectile.knockbackMultiplier,
             );
 
-            // Chain effect
-            if (projectile.canChain() && projectile.chain) {
-              this.handleChainEffect(
-                enemy.x,
-                enemy.y,
-                finalDamage * 0.5,
-                projectile.chain.chainCount,
-              );
-            }
-
             // Lifesteal
             if (player.lifesteal > 0) {
               player.heal(finalDamage * player.lifesteal);
@@ -889,9 +879,6 @@ export class Game {
         maxDistance: config.shortRange ? (config.maxDistance ?? config.range ?? 500) : 0, // 0 = infinite
         pierce: config.pierce
           ? { pierceCount: (config.pierceCount ?? 1) + player.pierce, hitEnemies: new Set() }
-          : undefined,
-        chain: config.chain
-          ? { chainCount: config.chainCount ?? 3, chainRange: 150, chainedEnemies: new Set() }
           : undefined,
         explosive: config.explosive
           ? {
@@ -1236,49 +1223,6 @@ export class Game {
 
       this.entityManager.addProjectile(projectile);
     }
-  }
-
-  private handleChainEffect(startX: number, startY: number, damage: number, chainCount: number): void {
-    let currentX = startX;
-    let currentY = startY;
-    let remainingChains = chainCount;
-    let currentDamage = damage;
-    const hitEnemies = new Set<number>();
-
-    while (remainingChains > 0) {
-      const enemies = this.entityManager.getActiveEnemies().filter((e) => !hitEnemies.has(e.id));
-
-      let nearest: Enemy | null = null;
-      let nearestDist = 150;
-
-      for (const enemy of enemies) {
-        const dist = distance({ x: currentX, y: currentY }, enemy);
-        if (dist < nearestDist) {
-          nearestDist = dist;
-          nearest = enemy;
-        }
-      }
-
-      if (!nearest) break;
-
-      hitEnemies.add(nearest.id);
-
-      // Create chain visual
-      EffectsSystem.createChainEffect(this.effects, currentX, currentY, nearest.x, nearest.y);
-
-      // Damage
-      currentDamage *= 0.8;
-      const isDead = nearest.takeDamage(currentDamage, currentX, currentY);
-      if (isDead) {
-        this.handleEnemyDeath(nearest);
-      }
-
-      currentX = nearest.x;
-      currentY = nearest.y;
-      remainingChains--;
-    }
-
-    this.audio.chainEffect();
   }
 
   // ============ Enemy Finding ============

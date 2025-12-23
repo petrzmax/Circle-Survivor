@@ -26,16 +26,6 @@ export interface PierceComponent {
 }
 
 /**
- * Chain component data with tracking
- */
-export interface ChainComponent {
-  chainCount: number;
-  chainRange: number;
-  /** Set of enemy IDs already chained to */
-  chainedEnemies: Set<number>;
-}
-
-/**
  * Projectile configuration
  */
 export interface ProjectileConfig extends EntityConfig {
@@ -51,7 +41,6 @@ export interface ProjectileConfig extends EntityConfig {
   // Optional components
   explosive?: ExplosiveComponent;
   pierce?: PierceComponent;
-  chain?: ChainComponent;
 
   // Special behaviors
   rotationSpeed?: number;
@@ -118,9 +107,6 @@ export class Projectile extends Entity implements IExpirable {
   /** Pierce component - passes through enemies */
   public pierce: PierceComponent | null = null;
 
-  /** Chain component - jumps between enemies */
-  public chain: ChainComponent | null = null;
-
   // ============ Special Behaviors ============
 
   /** Rotation angle (for scythe, etc.) */
@@ -164,13 +150,6 @@ export class Projectile extends Entity implements IExpirable {
       };
     }
 
-    if (config.chain) {
-      this.chain = {
-        ...config.chain,
-        chainedEnemies: new Set(),
-      };
-    }
-
     // Special behaviors
     this.rotationSpeed = config.rotationSpeed ?? 0;
     this.returnToOwner = config.returnToOwner ?? false;
@@ -193,13 +172,6 @@ export class Projectile extends Entity implements IExpirable {
   }
 
   /**
-   * Checks if projectile can chain
-   */
-  public canChain(): boolean {
-    return this.chain !== null && this.chain.chainCount > 0;
-  }
-
-  /**
    * Registers a hit on enemy (for pierce tracking)
    * @param enemyId Enemy ID that was hit
    * @returns true if this is a new hit, false if already hit
@@ -213,23 +185,6 @@ export class Projectile extends Entity implements IExpirable {
       this.pierce.pierceCount--;
     }
     return true;
-  }
-
-  /**
-   * Registers a chain to enemy
-   * @param enemyId Enemy ID that was chained to
-   * @returns true if chain was successful
-   */
-  public registerChain(enemyId: number): boolean {
-    if (this.chain) {
-      if (this.chain.chainedEnemies.has(enemyId)) {
-        return false;
-      }
-      this.chain.chainedEnemies.add(enemyId);
-      this.chain.chainCount--;
-      return true;
-    }
-    return false;
   }
 
   // ============ Expirable Interface ============

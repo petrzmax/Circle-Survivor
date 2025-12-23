@@ -88,14 +88,6 @@ export interface IPierce {
   pierceCount: number;
 }
 
-/**
- * Chain component data
- */
-export interface IChain {
-  chainCount: number;
-  chainRange: number;
-}
-
 // ============ UTILITY COMPONENTS ============
 
 /**

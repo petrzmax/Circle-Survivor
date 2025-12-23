@@ -30,8 +30,6 @@ export interface WeaponConfig {
   knockbackMultiplier?: number;
   shortRange?: boolean;
   maxDistance?: number;
-  chain?: boolean;
-  chainCount?: number;
 
   // Projectile/Deployable type mapping
   projectileType?: ProjectileType;

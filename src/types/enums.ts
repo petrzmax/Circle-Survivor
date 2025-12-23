@@ -41,7 +41,6 @@ export enum VisualEffect {
   NUKE = 'nuke',
   HOLY = 'holy',
   FIRE = 'fire',
-  CHAIN = 'chain',
   BANANA = 'banana',
 }
 

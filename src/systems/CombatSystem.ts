@@ -29,15 +29,6 @@ export interface ExplosionEvent {
 }
 
 /**
- * Chain lightning event data
- */
-// TODO - remove everything related to chain
-export interface ChainEvent {
-  targets: Array<{ enemy: Enemy; damage: number }>;
-  sourceProjectile: Projectile;
-}
-
-/**
  * CombatSystem configuration
  */
 export interface CombatSystemConfig {
@@ -49,7 +40,7 @@ export interface CombatSystemConfig {
 
 /**
  * Handles all combat-related logic.
- * Processes damage, spawns pickups, handles explosions and chains.
+ * Processes damage, spawns pickups, and handles explosions.
  *
  * @example
  * ```typescript
@@ -188,11 +179,6 @@ export class CombatSystem {
       });
     }
 
-    // Handle chain projectiles
-    if (projectile.canChain() && projectile.chain) {
-      this.processChainEffect(projectile, enemy, damageMultiplier);
-    }
-
     // Destroy non-piercing projectiles
     if (!projectile.canPierce()) {
       projectile.destroy();
@@ -201,77 +187,6 @@ export class CombatSystem {
     }
 
     EventBus.emit('projectileHit', { projectile, target: enemy });
-  }
-
-  /**
-   * Process chain lightning effect
-   */
-  private processChainEffect(
-    projectile: Projectile,
-    initialTarget: Enemy,
-    damageMultiplier: number,
-  ): void {
-    if (!projectile.chain) return;
-
-    const { chainCount, chainRange, chainedEnemies } = projectile.chain;
-    let currentTarget = initialTarget;
-    let remainingChains = chainCount;
-    let currentDamage = projectile.damage * damageMultiplier;
-    const damageDecay = 0.8; // 20% damage reduction per chain
-
-    while (remainingChains > 0) {
-      // Find next target
-      const nextTarget = this.findChainTarget(
-        currentTarget.x,
-        currentTarget.y,
-        chainRange,
-        chainedEnemies,
-      );
-
-      if (!nextTarget) break;
-
-      // Register chain
-      if (!projectile.registerChain(nextTarget.id)) break;
-
-      // Apply damage
-      currentDamage *= damageDecay;
-      const isDead = nextTarget.takeDamage(currentDamage, currentTarget.x, currentTarget.y);
-
-      if (isDead) {
-        this.handleEnemyDeath(nextTarget, 'chain');
-      }
-
-      currentTarget = nextTarget;
-      remainingChains--;
-    }
-  }
-
-  /**
-   * Find next chain target
-   */
-  private findChainTarget(
-    x: number,
-    y: number,
-    range: number,
-    excludeIds: Set<number>,
-  ): Enemy | null {
-    const enemies = this.entityManager.getActiveEnemies().filter((e) => !excludeIds.has(e.id));
-
-    let nearest: Enemy | null = null;
-    let nearestDistSq = range * range;
-
-    for (const enemy of enemies) {
-      const dx = enemy.x - x;
-      const dy = enemy.y - y;
-      const distSq = dx * dx + dy * dy;
-
-      if (distSq < nearestDistSq) {
-        nearestDistSq = distSq;
-        nearest = enemy;
-      }
-    }
-
-    return nearest;
   }
 
   /**
@@ -335,7 +250,7 @@ export class CombatSystem {
   /**
    * Handle enemy death - spawn pickups, emit events
    */
-  private handleEnemyDeath(enemy: Enemy, killer: 'player' | 'explosion' | 'chain'): void {
+  private handleEnemyDeath(enemy: Enemy, killer: 'player' | 'explosion'): void {
     enemy.destroy();
 
     // Spawn gold pickup

@@ -107,15 +107,11 @@ export const GAME_BALANCE = {
 
   /**
    * Combat mechanics multipliers.
-   * Affects explosions, chain effects, and special attack behaviors.
+   * Affects explosions and special attack behaviors.
    */
   combat: {
     /** Explosion damage falloff at edge. 0.5 = 50% damage at max radius, 100% at center. */
     explosionFalloff: 0.5,
-    /** Chain lightning damage retention. 0.5 = each jump deals 50% of previous hit. */
-    chainDamageMultiplier: 0.5,
-    /** Maximum distance for chain to jump to next enemy (pixels). */
-    chainRange: 150,
     /** Explosion knockback force multiplier. */
     explosionKnockback: 5,
   },

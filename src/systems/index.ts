@@ -9,7 +9,6 @@ export { CombatSystem } from './CombatSystem';
 export type { ExplosionEvent, CombatSystemConfig } from './CombatSystem';
 
 export { AudioSystem } from './AudioSystem';
-export type { OscillatorType } from './AudioSystem';
 
 export { InputHandler } from './InputHandler';
 export type { KeyState, InputHandlerCallbacks } from './InputHandler';

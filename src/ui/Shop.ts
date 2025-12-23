@@ -4,6 +4,7 @@
  * Matches original js/shop.js exactly.
  */
 
+import { EventBus } from '@/core/EventBus';
 import { SHOP_ITEMS } from '@/config/shop.config';
 import { GAME_BALANCE } from '@/config/balance.config';
 import { WeaponType } from '@/types';
@@ -34,8 +35,6 @@ export interface ShopCallbacks {
   getGold(): number;
   setGold(value: number): void;
   getWaveNumber(): number;
-  playPurchaseSound(): void;
-  playErrorSound(): void;
   showNotification(message: string): void;
   updateHUD(): void;
 }
@@ -75,14 +74,14 @@ export class Shop {
     const price = this.getRerollPrice();
 
     if (this.callbacks.getGold() < price) {
-      this.callbacks.playErrorSound();
+      EventBus.emit('shopError', undefined);
       return;
     }
 
     this.callbacks.setGold(this.callbacks.getGold() - price);
     this.rerollCount++;
 
-    this.callbacks.playPurchaseSound();
+    EventBus.emit('itemPurchased', { itemId: 'reroll', cost: price });
 
     // Generate new items
     this.generateItems(player);
@@ -284,12 +283,12 @@ export class Shop {
     const price = currentPrice ?? this.calculatePrice(item.price, player);
 
     if (this.callbacks.getGold() < price) {
-      this.callbacks.playErrorSound();
+      EventBus.emit('shopError', undefined);
       return;
     }
 
     this.callbacks.setGold(this.callbacks.getGold() - price);
-    this.callbacks.playPurchaseSound();
+    EventBus.emit('itemPurchased', { itemId: itemKey, cost: price });
 
     switch (item.type) {
       case 'weapon': {
@@ -310,7 +309,7 @@ export class Shop {
           } else {
             // No weapon of this type - refund (shouldn't happen)
             this.callbacks.setGold(this.callbacks.getGold() + price);
-            this.callbacks.playErrorSound();
+            EventBus.emit('shopError', undefined);
             return;
           }
         } else {
@@ -325,7 +324,7 @@ export class Shop {
         // Bonus to random weapon (e.g., multishot)
         if (player.weapons.length === 0) {
           this.callbacks.setGold(this.callbacks.getGold() + price);
-          this.callbacks.playErrorSound();
+          EventBus.emit('shopError', undefined);
           return;
         }
         // Add item to inventory

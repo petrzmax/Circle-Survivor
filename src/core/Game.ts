@@ -136,8 +136,6 @@ export class Game {
         this.gold = value;
       },
       getWaveNumber: () => this.waveManager.waveNumber,
-      playPurchaseSound: () => { this.audio.purchase(); },
-      playErrorSound: () => { this.audio.error(); },
       showNotification: (message: string) => { this.showNotification(message); },
       updateHUD: () => { this.updateHUD(); },
     });
@@ -374,7 +372,6 @@ export class Game {
 
     this.state = 'playing';
     this.waveManager.startWave();
-    this.audio.waveStart();
     this.updateHUD();
 
     // Start game loop
@@ -398,7 +395,6 @@ export class Game {
     this.entityManager.clearExceptPlayer();
 
     this.waveManager.startWave();
-    this.audio.waveStart();
   }
 
   // ============ Weapon Management ============
@@ -515,7 +511,7 @@ export class Game {
 
     // Countdown sound
     if (waveResult.countdown !== false) {
-      this.audio.countdownTick(waveResult.countdown);
+      EventBus.emit('countdownTick', { seconds: waveResult.countdown });
     }
 
     if (waveResult.waveEnded) {
@@ -540,7 +536,7 @@ export class Game {
       if (circleCollision(enemy, player)) {
         // Dodge chance
         if (player.dodge > 0 && Math.random() < player.dodge) {
-          this.audio.dodge();
+          EventBus.emit('playerDodged', undefined);
           continue;
         }
 
@@ -551,11 +547,11 @@ export class Game {
         }
 
         const isDead = player.takeDamage(damage, currentTime);
-        this.audio.playerHit();
+        EventBus.emit('playerHit', { player, damage, source: enemy });
 
         // Thorns
         if (player.thorns > 0) {
-          this.audio.thorns();
+          EventBus.emit('thornsTriggered', undefined);
           const thornsKilled = enemy.takeDamage(player.thorns, enemy.x, enemy.y, player.knockback);
           if (thornsKilled) {
             this.handleEnemyDeath(enemy);
@@ -636,13 +632,13 @@ export class Game {
       if (projectile.ownerId !== playerId) {
         if (circleCollision(projectile, player)) {
           if (player.dodge > 0 && Math.random() < player.dodge) {
-            this.audio.dodge();
+            EventBus.emit('playerDodged', undefined);
             projectile.destroy();
             continue;
           }
 
           const isDead = player.takeDamage(projectile.damage, currentTime);
-          this.audio.playerHit();
+          EventBus.emit('playerHit', { player, damage: projectile.damage, source: projectile });
           projectile.destroy();
 
           if (isDead) {
@@ -754,11 +750,12 @@ export class Game {
       // Collect when touching player
       if (distToPlayer < player.radius) {
         if (pickup.type === PickupType.GOLD) {
-          this.gold += Math.floor(pickup.value * player.goldMultiplier);
-          this.audio.collectGold();
+          const goldAmount = Math.floor(pickup.value * player.goldMultiplier);
+          this.gold += goldAmount;
+          EventBus.emit('goldCollected', { amount: goldAmount, position: { x: pickup.x, y: pickup.y } });
         } else if (pickup.type === PickupType.HEALTH) {
           player.heal(pickup.value);
-          this.audio.collectHealth();
+          EventBus.emit('healthCollected', { amount: pickup.value, position: { x: pickup.x, y: pickup.y } });
         }
         pickup.destroy();
       }
@@ -929,41 +926,8 @@ export class Game {
   }
 
   private playWeaponSound(type: WeaponType): void {
-    switch (type) {
-      case WeaponType.SHOTGUN:
-        this.audio.shootShotgun();
-        break;
-      case WeaponType.SNIPER:
-        this.audio.shootSniper();
-        break;
-      case WeaponType.LASER:
-        this.audio.shootLaser();
-        break;
-      case WeaponType.MINIGUN:
-        this.audio.shootMinigun();
-        break;
-      case WeaponType.FLAMETHROWER:
-        this.audio.flamethrower();
-        break;
-      case WeaponType.SCYTHE:
-        this.audio.scytheSwing();
-        break;
-      case WeaponType.SWORD:
-        this.audio.swordSlash();
-        break;
-      case WeaponType.CROSSBOW:
-        this.audio.crossbowShoot();
-        break;
-      case WeaponType.BAZOOKA:
-      case WeaponType.NUKE:
-      case WeaponType.HOLY_GRENADE:
-      case WeaponType.BANANA:
-        // Explosion plays on hit, not on shot
-        this.audio.shoot();
-        break;
-      default:
-        this.audio.shoot();
-    }
+    // All weapon sounds are handled via EventBus
+    EventBus.emit('weaponFired', { weaponType: type });
   }
 
   /**
@@ -992,8 +956,8 @@ export class Game {
     const mine = new Deployable(deployableConfig);
     this.entityManager.addDeployable(mine);
 
-    // Play mine deploy sound (reuse bomb sound)
-    this.audio.explosion(); // TODO: Add proper mine deploy sound
+    // Play mine deploy sound
+    EventBus.emit('weaponFired', { weaponType: WeaponType.MINES });
   }
 
   // ============ Dev Tools ============
@@ -1026,7 +990,7 @@ export class Game {
         takeDamage: (damage: number, time: number) => player.takeDamage(damage, time),
       },
       currentTime,
-      () => { this.audio.dodge(); },
+      () => { EventBus.emit('playerDodged', undefined); },
     );
 
     if (playerDied) this.gameOver();
@@ -1105,10 +1069,15 @@ export class Game {
 
     // Play sound - boss uses nuke explosion, regular enemies use death sound
     if (enemy.isBoss) {
-      this.audio.nukeExplosion();
-    } else {
-      this.audio.enemyDeath();
+      // nukeExplosion is played via explosionTriggered event
+      EventBus.emit('explosionTriggered', {
+        position: { x: enemy.x, y: enemy.y },
+        radius: 0,
+        damage: 0,
+        visualEffect: 'nuke',
+      });
     }
+    // enemyDeath sound is already played via EventBus listener
 
     // Handle special death effects
     if (enemy.explodeOnDeath) {
@@ -1174,14 +1143,14 @@ export class Game {
       }
     }
 
-    // Play correct explosion sound
-    if (isNuke) {
-      this.audio.nukeExplosion();
-    } else if (isHolyGrenade) {
-      this.audio.holyExplosion();
-    } else {
-      this.audio.explosion();
-    }
+    // Emit explosion event - AudioSystem handles sounds
+    EventBus.emit('explosionTriggered', {
+      position: { x, y },
+      radius,
+      damage,
+      visualEffect: isNuke ? 'nuke' : isHolyGrenade ? 'holy' : 'standard',
+      isBanana,
+    });
   }
 
   /**
@@ -1398,7 +1367,12 @@ export class Game {
 
   private gameOver(): void {
     this.state = 'gameover';
-    this.audio.gameOver();
+    // gameOver sound is played via EventBus listener
+    EventBus.emit('gameOver', {
+      score: this.xp,
+      wave: this.waveManager.waveNumber,
+      time: 0,
+    });
 
     const finalWave = document.getElementById('final-wave');
     const finalXp = document.getElementById('final-xp');

@@ -45,6 +45,9 @@ export class WaveManager {
     this.bossSpawned = false;
     this.lastCountdownSecond = -1; // Reset countdown
     this.updateSpawnSettings();
+    
+    // Emit wave start event for audio and other systems
+    EventBus.emit('waveStart', { waveNumber: this.waveNumber, enemyCount: 0 });
   }
 
   /**

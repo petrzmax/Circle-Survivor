@@ -9,6 +9,7 @@ import { IHealth } from '@/types/components';
 import { ENEMY_TYPES, EnemyConfig, AttackPattern, generateBossName } from '@/config';
 import { GAME_BALANCE } from '@/config';
 import { Vector2, clamp, randomElement } from '@/utils';
+import { TWO_PI } from '@/utils/math';
 
 /**
  * Attack result types

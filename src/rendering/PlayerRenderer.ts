@@ -4,6 +4,7 @@
  */
 
 import { Player } from '@/entities/Player';
+import { TWO_PI } from '@/utils/math';
 
 /**
  * Renders the player to the canvas.

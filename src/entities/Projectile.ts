@@ -8,6 +8,7 @@ import { Entity, EntityConfig } from './Entity';
 import { ProjectileType, VisualEffect } from '@/types/enums';
 import { IExpirable, IExplosive } from '@/types/components';
 import { Vector2, distance, randomRange } from '@/utils';
+import { TWO_PI } from '@/utils/math';
 
 /**
  * Explosive component data

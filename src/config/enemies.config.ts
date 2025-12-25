@@ -92,7 +92,7 @@ export interface EnemyConfig {
   goldValue: number;
 
   // Optional behaviors
-  isBoss?: boolean; // TODO 
+  isBoss?: boolean; // TODO
   canShoot?: boolean;
   fireRate?: number;
   bulletSpeed?: number;

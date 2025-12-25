@@ -100,19 +100,34 @@ export class InputHandler {
    */
   private setupButtons(): void {
     const restartBtn = document.getElementById('restart-btn');
-    if (restartBtn) restartBtn.onclick = () => { this.callbacks.onRestart(); };
+    if (restartBtn)
+      restartBtn.onclick = () => {
+        this.callbacks.onRestart();
+      };
 
     const startWaveBtn = document.getElementById('start-wave-btn');
-    if (startWaveBtn) startWaveBtn.onclick = () => { this.callbacks.onStartWave(); };
+    if (startWaveBtn)
+      startWaveBtn.onclick = () => {
+        this.callbacks.onStartWave();
+      };
 
     const resumeBtn = document.getElementById('resume-btn');
-    if (resumeBtn) resumeBtn.onclick = () => { this.callbacks.onResume(); };
+    if (resumeBtn)
+      resumeBtn.onclick = () => {
+        this.callbacks.onResume();
+      };
 
     const quitBtn = document.getElementById('quit-btn');
-    if (quitBtn) quitBtn.onclick = () => { this.callbacks.onQuitToMenu(); };
+    if (quitBtn)
+      quitBtn.onclick = () => {
+        this.callbacks.onQuitToMenu();
+      };
 
     const soundToggle = document.getElementById('sound-toggle');
-    if (soundToggle) soundToggle.onclick = () => { this.callbacks.onToggleSound(); };
+    if (soundToggle)
+      soundToggle.onclick = () => {
+        this.callbacks.onToggleSound();
+      };
   }
 
   /**
@@ -121,7 +136,10 @@ export class InputHandler {
   private setupLeaderboard(): void {
     // Score submission
     const submitBtn = document.getElementById('submit-score-btn');
-    if (submitBtn) submitBtn.onclick = () => { this.callbacks.onSubmitScore(); };
+    if (submitBtn)
+      submitBtn.onclick = () => {
+        this.callbacks.onSubmitScore();
+      };
 
     const playerName = document.getElementById('player-name');
     if (playerName) {
@@ -142,12 +160,16 @@ export class InputHandler {
     // Menu leaderboard
     const menuLeaderboardBtn = document.getElementById('menu-leaderboard-btn');
     if (menuLeaderboardBtn) {
-      menuLeaderboardBtn.onclick = () => { this.callbacks.onOpenMenuLeaderboard(); };
+      menuLeaderboardBtn.onclick = () => {
+        this.callbacks.onOpenMenuLeaderboard();
+      };
     }
 
     const menuLeaderboardClose = document.getElementById('menu-leaderboard-close');
     if (menuLeaderboardClose) {
-      menuLeaderboardClose.onclick = () => { this.callbacks.onCloseMenuLeaderboard(); };
+      menuLeaderboardClose.onclick = () => {
+        this.callbacks.onCloseMenuLeaderboard();
+      };
     }
 
     document.querySelectorAll('.menu-tab-btn').forEach((btn) => {

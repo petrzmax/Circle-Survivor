@@ -8,6 +8,7 @@ import { Entity, EntityConfig } from './Entity';
 import { DeployableType, VisualEffect } from '@/types/enums';
 import { IExpirable, IExplosive } from '@/types/components';
 import { randomInt } from '@/utils';
+import { TWO_PI } from '@/utils/math';
 
 /**
  * Deployable configuration

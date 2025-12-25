@@ -4,6 +4,7 @@
  */
 
 import { Enemy } from '@/entities/Enemy';
+import { TWO_PI } from '@/utils/math';
 
 /**
  * Renders an enemy to the canvas.

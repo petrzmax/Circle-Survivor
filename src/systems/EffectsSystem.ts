@@ -5,6 +5,7 @@
  */
 
 import { distance, randomAngle, randomChance, randomRange } from '@/utils';
+import { TWO_PI } from '@/utils/math';
 
 // ============ Effect Interfaces ============
 

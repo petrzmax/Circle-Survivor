@@ -4,6 +4,7 @@
 
 import { Deployable } from '@/entities/Deployable';
 import { DeployableType } from '@/types/enums';
+import { TWO_PI } from '@/utils/math';
 
 /**
  * Renders a deployable to the canvas based on its type.

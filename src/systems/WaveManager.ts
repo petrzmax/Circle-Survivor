@@ -45,7 +45,7 @@ export class WaveManager {
     this.bossSpawned = false;
     this.lastCountdownSecond = -1; // Reset countdown
     this.updateSpawnSettings();
-    
+
     // Emit wave start event for audio and other systems
     EventBus.emit('waveStart', { waveNumber: this.waveNumber, enemyCount: 0 });
   }
@@ -104,7 +104,11 @@ export class WaveManager {
   /**
    * Update wave state
    */
-  public update(deltaTime: number, canvas: CanvasBounds, bossAlive: boolean = false): WaveUpdateResult {
+  public update(
+    deltaTime: number,
+    canvas: CanvasBounds,
+    bossAlive: boolean = false,
+  ): WaveUpdateResult {
     if (!this.isWaveActive) return { enemies: [], waveEnded: false, countdown: false };
 
     const enemies: Enemy[] = [];

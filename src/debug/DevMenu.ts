@@ -9,7 +9,7 @@ import { WeaponType, EnemyType } from '@/types/enums';
 import { WEAPON_TYPES } from '@/config/weapons.config';
 import { ENEMY_TYPES } from '@/config/enemies.config';
 import { SHOP_ITEMS } from '@/config/shop.config';
-import { getSpawnPoint, randomInt } from '@/utils';
+import { getSpawnPoint } from '@/utils';
 
 /**
  * DevMenu dependencies - injected callbacks for game actions

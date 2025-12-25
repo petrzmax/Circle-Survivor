@@ -164,7 +164,9 @@ export class EntityManager {
    * Add multiple projectiles at once
    */
   public addProjectiles(projectiles: Projectile[]): void {
-    projectiles.forEach((p) => { this.addProjectile(p); });
+    projectiles.forEach((p) => {
+      this.addProjectile(p);
+    });
   }
 
   /**

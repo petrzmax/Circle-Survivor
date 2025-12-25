@@ -8,6 +8,7 @@ import { IHealth } from '@/types/components';
 import { CharacterType, WeaponType } from '@/types/enums';
 import { CHARACTER_TYPES, CharacterConfig, GAME_BALANCE } from '@/config';
 import { clamp, Vector2 } from '@/utils';
+import { TWO_PI } from '@/utils/math';
 
 /**
  * Player stats interface - all modifiable stats

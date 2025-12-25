@@ -1,7 +1,7 @@
 /**
  * AudioSystem - Programmatic sound generation using Web Audio API.
  * Generates all game sounds procedurally without external audio files.
- * 
+ *
  * Sound definitions are in sounds.config.ts - this class only plays them.
  */
 
@@ -36,7 +36,8 @@ export class AudioSystem {
    */
   private init(): boolean {
     try {
-      const AudioContextClass = window.AudioContext ?? (window as WindowWithWebkit).webkitAudioContext;
+      const AudioContextClass =
+        window.AudioContext ?? (window as WindowWithWebkit).webkitAudioContext;
       if (!AudioContextClass) {
         console.warn('[AudioSystem] Web Audio API not supported');
         this.enabled = false;
@@ -185,33 +186,63 @@ export class AudioSystem {
    */
   private connectToEventBus(): void {
     // Pickups
-    EventBus.on('goldCollected', () => { this.play('collectGold'); });
-    EventBus.on('healthCollected', () => { this.play('collectHealth'); });
+    EventBus.on('goldCollected', () => {
+      this.play('collectGold');
+    });
+    EventBus.on('healthCollected', () => {
+      this.play('collectHealth');
+    });
 
     // Combat
-    EventBus.on('playerHit', () => { this.play('playerHit'); });
-    EventBus.on('enemyDamaged', () => { this.play('enemyHit'); });
-    EventBus.on('enemyDeath', () => { this.play('enemyDeath'); });
-    EventBus.on('playerDodged', () => { this.play('dodge'); });
-    EventBus.on('thornsTriggered', () => { this.play('thorns'); });
+    EventBus.on('playerHit', () => {
+      this.play('playerHit');
+    });
+    EventBus.on('enemyDamaged', () => {
+      this.play('enemyHit');
+    });
+    EventBus.on('enemyDeath', () => {
+      this.play('enemyDeath');
+    });
+    EventBus.on('playerDodged', () => {
+      this.play('dodge');
+    });
+    EventBus.on('thornsTriggered', () => {
+      this.play('thorns');
+    });
 
     // Weapons - WeaponType value IS the sound key!
-    EventBus.on('weaponFired', ({ weaponType }) => { this.play(weaponType); });
+    EventBus.on('weaponFired', ({ weaponType }) => {
+      this.play(weaponType);
+    });
 
     // Wave & Boss
-    EventBus.on('waveStart', () => { this.play('waveStart'); });
-    EventBus.on('bossSpawned', () => { this.play('bossSpawn'); });
+    EventBus.on('waveStart', () => {
+      this.play('waveStart');
+    });
+    EventBus.on('bossSpawned', () => {
+      this.play('bossSpawn');
+    });
 
     // Shop
-    EventBus.on('itemPurchased', () => { this.play('purchase'); });
-    EventBus.on('weaponPurchased', () => { this.play('purchase'); });
-    EventBus.on('shopError', () => { this.play('error'); });
+    EventBus.on('itemPurchased', () => {
+      this.play('purchase');
+    });
+    EventBus.on('weaponPurchased', () => {
+      this.play('purchase');
+    });
+    EventBus.on('shopError', () => {
+      this.play('error');
+    });
 
     // Game state
-    EventBus.on('gameOver', () => { this.play('gameOver'); });
+    EventBus.on('gameOver', () => {
+      this.play('gameOver');
+    });
 
     // Countdown
-    EventBus.on('countdownTick', ({ seconds }) => { this.play(`countdownTick_${seconds}`); });
+    EventBus.on('countdownTick', ({ seconds }) => {
+      this.play(`countdownTick_${seconds}`);
+    });
 
     // Explosions
     EventBus.on('explosionTriggered', (data) => {

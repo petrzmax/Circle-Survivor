@@ -6,6 +6,7 @@
 import { Projectile } from '@/entities/Projectile';
 import { ProjectileType } from '@/types/enums';
 import { randomRange } from '@/utils';
+import { TWO_PI } from '@/utils/math';
 
 /**
  * Renders a projectile to the canvas based on its type.

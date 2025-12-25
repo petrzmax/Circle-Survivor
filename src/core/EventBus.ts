@@ -106,7 +106,10 @@ class EventBusImpl {
    * @param callback Callback function
    * @returns Subscription handle for unsubscribing
    */
-  public on<K extends keyof GameEvents>(event: K, callback: EventCallback<GameEvents[K]>): Subscription {
+  public on<K extends keyof GameEvents>(
+    event: K,
+    callback: EventCallback<GameEvents[K]>,
+  ): Subscription {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
@@ -131,7 +134,10 @@ class EventBusImpl {
    * @param callback Callback function
    * @returns Subscription handle for unsubscribing
    */
-  public once<K extends keyof GameEvents>(event: K, callback: EventCallback<GameEvents[K]>): Subscription {
+  public once<K extends keyof GameEvents>(
+    event: K,
+    callback: EventCallback<GameEvents[K]>,
+  ): Subscription {
     if (!this.onceListeners.has(event)) {
       this.onceListeners.set(event, new Set());
     }

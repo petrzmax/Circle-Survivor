@@ -103,7 +103,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     name: 'Shotgun',
     description: '5 pocisków na strzał',
     price: 80,
-    emoji: '💥',
+    emoji: '💥🔫',
   },
   sniper: {
     type: 'weapon',
@@ -111,7 +111,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     name: 'Snajperka',
     description: 'Wysokie obrażenia, przebija',
     price: 100,
-    emoji: '🎯',
+    emoji: '🎯🔫',
   },
   laser: {
     type: 'weapon',
@@ -119,7 +119,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     name: 'Laser',
     description: 'Ciągły ogień',
     price: 120,
-    emoji: '⚡',
+    emoji: '🔫⚡',
   },
   minigun: {
     type: 'weapon',
@@ -143,7 +143,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     name: 'Miotacz Ognia',
     description: 'Krótki zasięg, duże obrażenia',
     price: 140,
-    emoji: '🔥',
+    emoji: '🔥🔫',
   },
   mines: {
     type: 'weapon',
@@ -286,7 +286,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     emoji: '🦷',
     effect: { lifesteal: 0.03 },
   },
-  explosiveRounds: {
+  coldWar: {
     type: 'item',
     name: 'Zimna Wojna',
     description: '+15% zasięgu eksplozji',
@@ -404,7 +404,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     price: 300,
     emoji: '🏎️',
     effect: {
-      speed: 1,
+      speed: 1, // TODO what, adjust / fix
       dodge: 0.12,
     },
   },
@@ -423,13 +423,13 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   koronaPodroznika: {
     type: 'item',
     name: 'Korona Podróżnika',
-    description: '+50% XP, +30% złota, +25% luck',
+    description: '+25% XP, +15% złota, +15% luck',
     price: 250,
     emoji: '🗺️',
     effect: {
-      xpMultiplier: 0.5,
-      goldMultiplier: 0.3,
-      luck: 0.25,
+      xpMultiplier: 0.25,
+      goldMultiplier: 0.15,
+      luck: 0.15,
     },
   },
   kierbceWierzbickiego: {
@@ -456,15 +456,15 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   },
 
   // ============ NEW ITEMS ============
-  rekaMidasa: {
+  midasHand: {
     type: 'item',
     name: 'Ręka Midasa',
     description: '+30% zdobywanego złota!',
     price: 180,
-    emoji: '👑',
+    emoji: '✋💰',
     effect: { goldMultiplier: 0.3 },
   },
-  trzeciaReka: {
+  thirdHand: {
     type: 'item',
     name: 'Trzecia Ręka',
     description: '+1 slot na broń',
@@ -473,7 +473,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     effect: { maxWeapons: 1 },
     minWave: 10,
   },
-  kopytoDzika: {
+  boarHoof: {
     type: 'item',
     name: 'Kopyto Prawdziwego Dzika',
     description: 'DZIK MODE! +15% speed, +15% DMG, +10 thorns!',

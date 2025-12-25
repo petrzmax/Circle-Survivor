@@ -18,7 +18,7 @@ export function renderEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
 
   // Body
   ctx.beginPath();
-  ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+  ctx.arc(enemy.x, enemy.y, enemy.radius, 0, TWO_PI);
   ctx.fillStyle = enemy.color;
   ctx.fill();
 
@@ -53,14 +53,14 @@ export function renderEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
     enemy.y - enemy.radius * 0.2,
     enemy.radius * 0.2,
     0,
-    Math.PI * 2,
+    TWO_PI,
   );
   ctx.arc(
     enemy.x + enemy.radius * 0.3,
     enemy.y - enemy.radius * 0.2,
     enemy.radius * 0.2,
     0,
-    Math.PI * 2,
+    TWO_PI,
   );
   ctx.fill();
 

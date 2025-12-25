@@ -381,7 +381,7 @@ export class Enemy extends Entity implements IHealth {
 
     // Body
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.arc(this.x, this.y, this.radius, 0, TWO_PI);
     ctx.fillStyle = this.color;
     ctx.fill();
 
@@ -427,20 +427,8 @@ export class Enemy extends Entity implements IHealth {
   private drawEyes(ctx: CanvasRenderingContext2D): void {
     ctx.fillStyle = 'white';
     ctx.beginPath();
-    ctx.arc(
-      this.x - this.radius * 0.3,
-      this.y - this.radius * 0.2,
-      this.radius * 0.2,
-      0,
-      Math.PI * 2,
-    );
-    ctx.arc(
-      this.x + this.radius * 0.3,
-      this.y - this.radius * 0.2,
-      this.radius * 0.2,
-      0,
-      Math.PI * 2,
-    );
+    ctx.arc(this.x - this.radius * 0.3, this.y - this.radius * 0.2, this.radius * 0.2, 0, TWO_PI);
+    ctx.arc(this.x + this.radius * 0.3, this.y - this.radius * 0.2, this.radius * 0.2, 0, TWO_PI);
     ctx.fill();
 
     // Angry eyebrows

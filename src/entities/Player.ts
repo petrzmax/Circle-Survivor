@@ -311,7 +311,7 @@ export class Player extends Entity implements IHealth {
     const weaponRadius = 25;
     const weaponCount = this.weaponTypes.length || 1;
 
-    const spreadAngle = ((Math.PI * 2) / weaponCount) * index;
+    const spreadAngle = (TWO_PI / weaponCount) * index;
 
     const posX = this.x + Math.cos(spreadAngle) * weaponRadius;
     const posY = this.y + Math.sin(spreadAngle) * weaponRadius;
@@ -463,8 +463,8 @@ export class Player extends Entity implements IHealth {
     ctx.fillStyle = 'white';
     const eyeOffset = 5;
     ctx.beginPath();
-    ctx.arc(this.x - eyeOffset, this.y - 3, 4, 0, Math.PI * 2);
-    ctx.arc(this.x + eyeOffset, this.y - 3, 4, 0, Math.PI * 2);
+    ctx.arc(this.x - eyeOffset, this.y - 3, 4, 0, TWO_PI);
+    ctx.arc(this.x + eyeOffset, this.y - 3, 4, 0, TWO_PI);
     ctx.fill();
 
     ctx.restore();

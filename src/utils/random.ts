@@ -3,7 +3,7 @@
  * Provides controlled randomness for game mechanics.
  */
 
-import { Vector2 } from './math';
+import { TWO_PI, Vector2 } from './math';
 
 /**
  * Generates random float in range [min, max)
@@ -88,7 +88,7 @@ export function shuffledCopy<T>(array: readonly T[]): T[] {
  * @returns Random point on circle edge
  */
 export function randomPointOnCircle(center: Vector2, radius: number): Vector2 {
-  const angle = Math.random() * Math.PI * 2;
+  const angle = Math.random() * TWO_PI;
   return {
     x: center.x + Math.cos(angle) * radius,
     y: center.y + Math.sin(angle) * radius,
@@ -116,7 +116,7 @@ export function randomPointInCircle(center: Vector2, radius: number): Vector2 {
  * @returns Random angle [0, 2π)
  */
 export function randomAngle(): number {
-  return Math.random() * Math.PI * 2;
+  return Math.random() * TWO_PI;
 }
 
 /**
@@ -174,13 +174,13 @@ export function getSpawnPointOnSide(
 ): Vector2 {
   switch (side) {
     case ScreenSide.TOP:
-      return { x: randomRange(0, canvas.width), y: -margin };
+      return { x: randomInt(0, canvas.width), y: -margin };
     case ScreenSide.RIGHT:
-      return { x: canvas.width + margin, y: randomRange(0, canvas.height) };
+      return { x: canvas.width + margin, y: randomInt(0, canvas.height) };
     case ScreenSide.BOTTOM:
-      return { x: randomRange(0, canvas.width), y: canvas.height + margin };
+      return { x: randomInt(0, canvas.width), y: canvas.height + margin };
     case ScreenSide.LEFT:
-      return { x: -margin, y: randomRange(0, canvas.height) };
+      return { x: -margin, y: randomInt(0, canvas.height) };
   }
 }
 

@@ -390,7 +390,7 @@ export class CombatSystem {
       const smallBags = randomInt(6, 8);
       const smallValue = Math.floor((enemy.goldValue * 0.5) / smallBags);
       for (let i = 0; i < smallBags; i++) {
-        const angle = ((Math.PI * 2) / smallBags) * i;
+        const angle = (TWO_PI / smallBags) * i;
         const dist = randomInt(20, 50);
         const offset = vectorFromAngle(angle, dist);
         const smallPickup = createGoldPickup(enemy.x + offset.x, enemy.y + offset.y, smallValue);
@@ -480,7 +480,7 @@ export class CombatSystem {
     const splitType = enemy.type === EnemyType.SPLITTER ? EnemyType.SWARM : EnemyType.BASIC;
 
     for (let i = 0; i < enemy.splitCount; i++) {
-      const angle = (Math.PI * 2 * i) / enemy.splitCount;
+      const angle = (TWO_PI * i) / enemy.splitCount;
       const offsetX = Math.cos(angle) * 30;
       const offsetY = Math.sin(angle) * 30;
 
@@ -597,7 +597,7 @@ export class CombatSystem {
     const playerId = player?.id ?? -1;
 
     for (let i = 0; i < count; i++) {
-      const angle = ((Math.PI * 2) / count) * i + randomRange(-0.25, 0.25);
+      const angle = (TWO_PI / count) * i + randomRange(-0.25, 0.25);
 
       // Random speed (6-10) and distance (60-100px) for each mini banana
       const speed = randomInt(6, 10);

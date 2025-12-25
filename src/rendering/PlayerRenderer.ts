@@ -48,8 +48,8 @@ export function renderPlayer(
   ctx.fillStyle = 'white';
   const eyeOffset = 5;
   ctx.beginPath();
-  ctx.arc(player.x - eyeOffset, player.y - 3, 4, 0, Math.PI * 2);
-  ctx.arc(player.x + eyeOffset, player.y - 3, 4, 0, Math.PI * 2);
+  ctx.arc(player.x - eyeOffset, player.y - 3, 4, 0, TWO_PI);
+  ctx.arc(player.x + eyeOffset, player.y - 3, 4, 0, TWO_PI);
   ctx.fill();
 
   ctx.globalAlpha = 1;

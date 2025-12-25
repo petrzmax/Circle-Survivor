@@ -134,7 +134,7 @@ export const EffectsSystem = {
       ctx.save();
       ctx.globalAlpha = exp.alpha;
       ctx.beginPath();
-      ctx.arc(exp.x, exp.y, exp.radius * (1 - exp.alpha * 0.3), 0, Math.PI * 2);
+      ctx.arc(exp.x, exp.y, exp.radius * (1 - exp.alpha * 0.3), 0, TWO_PI);
 
       if (exp.isNuke) {
         // Nuke - green explosion with multiple rings
@@ -147,7 +147,7 @@ export const EffectsSystem = {
         ctx.fill();
         // Second ring
         ctx.beginPath();
-        ctx.arc(exp.x, exp.y, exp.radius * 0.6 * (1 - exp.alpha * 0.5), 0, Math.PI * 2);
+        ctx.arc(exp.x, exp.y, exp.radius * 0.6 * (1 - exp.alpha * 0.5), 0, TWO_PI);
         ctx.strokeStyle = '#00ff00';
         ctx.lineWidth = 5;
         ctx.stroke();
@@ -221,7 +221,7 @@ export const EffectsSystem = {
       }
 
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.size * p.life, 0, TWO_PI);
       ctx.fill();
       ctx.restore();
     }
@@ -239,7 +239,7 @@ export const EffectsSystem = {
 
       // Outer ring (expanding)
       ctx.beginPath();
-      ctx.arc(sw.x, sw.y, sw.currentRadius, 0, Math.PI * 2);
+      ctx.arc(sw.x, sw.y, sw.currentRadius, 0, TWO_PI);
       ctx.strokeStyle = sw.color || '#ff4444';
       ctx.lineWidth = 8;
       ctx.shadowColor = sw.color || '#ff4444';
@@ -248,7 +248,7 @@ export const EffectsSystem = {
 
       // Inner ring
       ctx.beginPath();
-      ctx.arc(sw.x, sw.y, sw.currentRadius * 0.7, 0, Math.PI * 2);
+      ctx.arc(sw.x, sw.y, sw.currentRadius * 0.7, 0, TWO_PI);
       ctx.lineWidth = 4;
       ctx.stroke();
 
@@ -281,7 +281,7 @@ export const EffectsSystem = {
 
     // Creating particles
     for (let i = 0; i < particleCount; i++) {
-      const angle = ((Math.PI * 2) / particleCount) * i + randomRange(0, 0.5);
+      const angle = (TWO_PI / particleCount) * i + randomRange(0, 0.5);
       const speed = randomRange(2, 6);
 
       effects.deathEffects.push({

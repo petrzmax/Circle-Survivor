@@ -5,6 +5,8 @@
 
 import { ITransform } from '@/types/components';
 
+export const TWO_PI = Math.PI * 2;
+
 /**
  * 2D Vector interface
  */

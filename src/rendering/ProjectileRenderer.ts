@@ -54,7 +54,7 @@ export function renderProjectile(ctx: CanvasRenderingContext2D, projectile: Proj
  */
 function renderStandardBullet(ctx: CanvasRenderingContext2D, p: Projectile): void {
   ctx.beginPath();
-  ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+  ctx.arc(p.x, p.y, p.radius, 0, TWO_PI);
   ctx.fillStyle = p.color;
   ctx.fill();
 
@@ -77,7 +77,7 @@ function renderStandardBullet(ctx: CanvasRenderingContext2D, p: Projectile): voi
  */
 function renderNuke(ctx: CanvasRenderingContext2D, p: Projectile): void {
   ctx.beginPath();
-  ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+  ctx.arc(p.x, p.y, p.radius, 0, TWO_PI);
 
   const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
   gradient.addColorStop(0, '#ffffff');
@@ -139,7 +139,7 @@ function renderSword(ctx: CanvasRenderingContext2D, p: Projectile): void {
  */
 function renderHolyGrenade(ctx: CanvasRenderingContext2D, p: Projectile): void {
   ctx.beginPath();
-  ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+  ctx.arc(p.x, p.y, p.radius, 0, TWO_PI);
 
   const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
   gradient.addColorStop(0, '#ffffff');
@@ -201,7 +201,7 @@ function renderCrossbowBolt(ctx: CanvasRenderingContext2D, p: Projectile): void 
   // Glowing hook (cyan)
   ctx.fillStyle = '#00ffff';
   ctx.beginPath();
-  ctx.arc(p.radius, 0, 3, 0, Math.PI * 2);
+  ctx.arc(p.radius, 0, 3, 0, TWO_PI);
   ctx.fill();
 }
 
@@ -213,7 +213,7 @@ function renderRocket(ctx: CanvasRenderingContext2D, p: Projectile): void {
 
   // Body with gradient
   ctx.beginPath();
-  ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+  ctx.arc(p.x, p.y, p.radius, 0, TWO_PI);
   const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
   gradient.addColorStop(0, '#ffff00');
   gradient.addColorStop(0.7, '#ff4400');
@@ -237,7 +237,7 @@ function renderFlame(ctx: CanvasRenderingContext2D, p: Projectile): void {
   const alpha = Math.max(0.3, 1 - p.distanceTraveled / (p.maxDistance || 120));
 
   ctx.beginPath();
-  ctx.arc(p.x, p.y, p.radius * randomRange(1, 1.3), 0, Math.PI * 2);
+  ctx.arc(p.x, p.y, p.radius * randomRange(1, 1.3), 0, TWO_PI);
 
   const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
   gradient.addColorStop(0, `rgba(255, 255, 0, ${alpha})`);
@@ -257,13 +257,13 @@ function renderEnemyBullet(ctx: CanvasRenderingContext2D, p: Projectile): void {
 
   // Main bullet
   ctx.beginPath();
-  ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+  ctx.arc(p.x, p.y, p.radius, 0, TWO_PI);
   ctx.fillStyle = p.color;
   ctx.fill();
 
   // Darker center
   ctx.beginPath();
-  ctx.arc(p.x, p.y, p.radius * 0.5, 0, Math.PI * 2);
+  ctx.arc(p.x, p.y, p.radius * 0.5, 0, TWO_PI);
   ctx.fillStyle = '#000';
   ctx.fill();
 }

@@ -4,6 +4,8 @@
  * Matches original js/systems/weapon-renderer.js exactly.
  */
 
+import { TWO_PI } from '@/utils/math';
+
 // ============ Types ============
 
 export interface RenderedWeapon {
@@ -103,11 +105,11 @@ export const WeaponRenderer = {
         // Laser - futuristic
         ctx.fillStyle = '#ff00ff';
         ctx.beginPath();
-        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        ctx.arc(0, 0, 6, 0, TWO_PI);
         ctx.fill();
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.arc(0, -3, 3, 0, Math.PI * 2);
+        ctx.arc(0, -3, 3, 0, TWO_PI);
         ctx.fill();
         break;
 
@@ -144,11 +146,11 @@ export const WeaponRenderer = {
         // Mines
         ctx.fillStyle = '#333';
         ctx.beginPath();
-        ctx.arc(0, 0, 8, 0, Math.PI * 2);
+        ctx.arc(0, 0, 8, 0, TWO_PI);
         ctx.fill();
         ctx.fillStyle = '#ff0000';
         ctx.beginPath();
-        ctx.arc(0, 0, 3, 0, Math.PI * 2);
+        ctx.arc(0, 0, 3, 0, TWO_PI);
         ctx.fill();
         break;
 
@@ -163,7 +165,7 @@ export const WeaponRenderer = {
         ctx.fill();
         ctx.fillStyle = '#ffff00';
         ctx.beginPath();
-        ctx.arc(0, 2, 4, 0, Math.PI * 2);
+        ctx.arc(0, 2, 4, 0, TWO_PI);
         ctx.fill();
         break;
 
@@ -195,7 +197,7 @@ export const WeaponRenderer = {
         // Holy Grenade
         ctx.fillStyle = '#ffd700';
         ctx.beginPath();
-        ctx.arc(0, 0, 7, 0, Math.PI * 2);
+        ctx.arc(0, 0, 7, 0, TWO_PI);
         ctx.fill();
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = 2;
@@ -230,7 +232,7 @@ export const WeaponRenderer = {
         // Default icon
         ctx.fillStyle = weapon.color ?? '#fff';
         ctx.beginPath();
-        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        ctx.arc(0, 0, 6, 0, TWO_PI);
         ctx.fill();
     }
 

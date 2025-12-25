@@ -317,7 +317,7 @@ export class Projectile extends Entity implements IExpirable {
   private drawBullet(ctx: CanvasRenderingContext2D): void {
     // Standard bullet with glow
     ctx.beginPath();
-    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+    ctx.arc(0, 0, this.radius, 0, TWO_PI);
     ctx.fillStyle = this.color;
     ctx.fill();
 
@@ -343,14 +343,14 @@ export class Projectile extends Entity implements IExpirable {
 
     // Main bullet
     ctx.beginPath();
-    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+    ctx.arc(0, 0, this.radius, 0, TWO_PI);
     ctx.fillStyle = this.color;
     ctx.fill();
 
     // Darker center
     ctx.shadowBlur = 0;
     ctx.beginPath();
-    ctx.arc(0, 0, this.radius * 0.5, 0, Math.PI * 2);
+    ctx.arc(0, 0, this.radius * 0.5, 0, TWO_PI);
     ctx.fillStyle = '#000';
     ctx.fill();
   }
@@ -385,7 +385,7 @@ export class Projectile extends Entity implements IExpirable {
 
     // Radial gradient from yellow center to dark red edge
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.arc(this.x, this.y, this.radius, 0, TWO_PI);
     const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
     gradient.addColorStop(0, '#ffff00');
     gradient.addColorStop(0.7, '#ff4400');
@@ -409,7 +409,7 @@ export class Projectile extends Entity implements IExpirable {
     ctx.save();
 
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.arc(this.x, this.y, this.radius, 0, TWO_PI);
     const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
     gradient.addColorStop(0, '#ffffff');
     gradient.addColorStop(0.5, '#00ff00');
@@ -427,7 +427,7 @@ export class Projectile extends Entity implements IExpirable {
     // Flickering flame
     const flicker = randomRange(0.8, 1.2);
     ctx.beginPath();
-    ctx.arc(0, 0, this.radius * flicker, 0, Math.PI * 2);
+    ctx.arc(0, 0, this.radius * flicker, 0, TWO_PI);
     ctx.fillStyle = this.color;
     ctx.fill();
   }
@@ -439,7 +439,7 @@ export class Projectile extends Entity implements IExpirable {
 
     // Golden ball with gradient
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.arc(this.x, this.y, this.radius, 0, TWO_PI);
     const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
     gradient.addColorStop(0, '#ffffff');
     gradient.addColorStop(0.5, '#ffd700');
@@ -496,7 +496,7 @@ export class Projectile extends Entity implements IExpirable {
     // Glowing hook (cyan)
     ctx.fillStyle = '#00ffff';
     ctx.beginPath();
-    ctx.arc(this.radius, 0, 3, 0, Math.PI * 2);
+    ctx.arc(this.radius, 0, 3, 0, TWO_PI);
     ctx.fill();
   }
 }

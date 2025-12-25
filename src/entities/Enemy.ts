@@ -8,7 +8,7 @@ import { EnemyType } from '@/types/enums';
 import { IHealth } from '@/types/components';
 import { ENEMY_TYPES, EnemyConfig, AttackPattern, generateBossName } from '@/config';
 import { GAME_BALANCE } from '@/config';
-import { Vector2, clamp } from '@/utils';
+import { Vector2, clamp, randomElement } from '@/utils';
 
 /**
  * Attack result types
@@ -70,12 +70,8 @@ export class Enemy extends Entity implements IHealth {
   public speed: number;
 
   // ============ Health Component ============
-
-  /** Maximum HP */
-  public maxHp: number;
-
-  /** Current HP */
   public hp: number;
+  public maxHp: number;
 
   // ============ Rewards ============
 
@@ -312,9 +308,7 @@ export class Enemy extends Entity implements IHealth {
     if (currentTime - this.lastFireTime < this.fireRate) return null;
 
     this.lastFireTime = currentTime;
-
-    // Random pattern
-    const pattern = this.attackPatterns[Math.floor(Math.random() * this.attackPatterns.length)];
+    const pattern = randomElement(this.attackPatterns);
 
     const dx = target.x - this.x;
     const dy = target.y - this.y;

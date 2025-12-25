@@ -3,7 +3,7 @@
  * Efficient collision checks for game entities.
  */
 
-import { Vector2, distanceSquared, clamp } from './math';
+import { Vector2, distanceSquared, clamp, distance } from './math';
 import { ICircleCollider } from '@/types/components';
 
 /**
@@ -145,6 +145,6 @@ export function rectCollision(a: Rectangle, b: Rectangle): boolean {
  * @returns Overlap depth (positive if overlapping, negative if not)
  */
 export function circleOverlapDepth(a: Circle, b: Circle): number {
-  const dist = Math.sqrt(distanceSquared(a, b));
+  const dist = distance(a, b);
   return a.radius + b.radius - dist;
 }

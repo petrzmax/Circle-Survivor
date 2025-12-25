@@ -7,6 +7,7 @@
 
 import { EventBus } from '@/core/EventBus';
 import { SOUND_DEFINITIONS, SoundStep, OscillatorType } from '@/config/sounds.config';
+import { randomRange } from '@/utils';
 
 /**
  * Extend Window interface to include webkit prefixed AudioContext
@@ -92,7 +93,7 @@ export class AudioSystem {
     const data = buffer.getChannelData(0);
 
     for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1;
+      data[i] = randomRange(-1, 1);
     }
 
     const noise = this.ctx.createBufferSource();

@@ -7,6 +7,7 @@
 import { Entity, EntityConfig } from './Entity';
 import { DeployableType, VisualEffect } from '@/types/enums';
 import { IExpirable, IExplosive } from '@/types/components';
+import { randomInt } from '@/utils';
 
 /**
  * Deployable configuration
@@ -101,7 +102,7 @@ export class Deployable extends Entity implements IExpirable {
     this.isArmed = this.armingTime <= 0;
 
     // Random offset for staggered blinking
-    this.blinkOffset = Math.random() * 1000;
+    this.blinkOffset = randomInt(0, 1000);
   }
 
   // ============ State Helpers ============

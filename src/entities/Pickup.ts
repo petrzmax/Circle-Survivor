@@ -6,7 +6,7 @@
 import { Entity } from './Entity';
 import { PickupType } from '@/types/enums';
 import { IExpirable, ICollectible } from '@/types/components';
-import { Vector2, distance, normalize } from '@/utils';
+import { Vector2, distance, normalize, randomAngle } from '@/utils';
 
 /**
  * Pickup configuration
@@ -61,7 +61,7 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
   private spawnTime: number = Date.now();
 
   /** Animation offset */
-  private animationOffset: number = Math.random() * Math.PI * 2;
+  private animationOffset: number = randomAngle();
 
   /** Base Y position for animation */
   private baseY: number;

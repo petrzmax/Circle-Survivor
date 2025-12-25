@@ -5,6 +5,7 @@
 
 import { Projectile } from '@/entities/Projectile';
 import { ProjectileType } from '@/types/enums';
+import { randomRange } from '@/utils';
 
 /**
  * Renders a projectile to the canvas based on its type.
@@ -236,7 +237,7 @@ function renderFlame(ctx: CanvasRenderingContext2D, p: Projectile): void {
   const alpha = Math.max(0.3, 1 - p.distanceTraveled / (p.maxDistance || 120));
 
   ctx.beginPath();
-  ctx.arc(p.x, p.y, p.radius * (1 + Math.random() * 0.3), 0, Math.PI * 2);
+  ctx.arc(p.x, p.y, p.radius * randomRange(1, 1.3), 0, Math.PI * 2);
 
   const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
   gradient.addColorStop(0, `rgba(255, 255, 0, ${alpha})`);

@@ -4,7 +4,7 @@
  * Matches original js/systems/effects-system.js exactly.
  */
 
-import { distance } from '@/utils';
+import { distance, randomAngle, randomChance, randomRange } from '@/utils';
 
 // ============ Effect Interfaces ============
 
@@ -15,12 +15,14 @@ export interface Explosion {
   maxRadius: number;
   alpha: number;
   created: number;
+  // TODO refactor to enum or type
   isNuke: boolean;
   isHolyGrenade: boolean;
   isBanana: boolean;
 }
 
 export interface DeathParticle {
+  // TODO add velocity component and transform component
   x: number;
   y: number;
   vx: number;
@@ -96,7 +98,7 @@ export const EffectsSystem = {
         const distToPlayer = distance({ x: sw.x, y: sw.y }, player);
         if (distToPlayer <= sw.currentRadius && distToPlayer >= sw.currentRadius - 30) {
           // Player in wave range
-          if (player.dodge > 0 && Math.random() < player.dodge) {
+          if (randomChance(player.dodge)) {
             onDodge();
           } else {
             const isDead = player.takeDamage(sw.damage, currentTime);
@@ -279,19 +281,19 @@ export const EffectsSystem = {
 
     // Creating particles
     for (let i = 0; i < particleCount; i++) {
-      const angle = ((Math.PI * 2) / particleCount) * i + Math.random() * 0.5;
-      const speed = 2 + Math.random() * 4;
+      const angle = ((Math.PI * 2) / particleCount) * i + randomRange(0, 0.5);
+      const speed = randomRange(2, 6);
 
       effects.deathEffects.push({
         x: enemy.x,
         y: enemy.y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        size: particleSize * (0.5 + Math.random() * 0.5),
+        size: particleSize * randomRange(0.5, 1),
         color: particleColor,
         alpha: 1,
         life: 1,
-        decay: 0.02 + Math.random() * 0.02,
+        decay: randomRange(0.02, 0.04),
         isBoss: enemy.isBoss,
       });
     }
@@ -299,15 +301,15 @@ export const EffectsSystem = {
     // Additional effect for boss - second wave of larger particles
     if (enemy.isBoss) {
       for (let i = 0; i < 20; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 1 + Math.random() * 2;
+        const angle = randomAngle();
+        const speed = randomRange(1, 3);
 
         effects.deathEffects.push({
           x: enemy.x,
           y: enemy.y,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
-          size: 10 + Math.random() * 10,
+          size: randomRange(10, 20),
           color: '#FFD700', // Golden color
           alpha: 1,
           life: 1,

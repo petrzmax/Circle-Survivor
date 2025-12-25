@@ -7,7 +7,7 @@
 import { Entity, EntityConfig } from './Entity';
 import { ProjectileType, VisualEffect } from '@/types/enums';
 import { IExpirable, IExplosive } from '@/types/components';
-import { Vector2, distance } from '@/utils';
+import { Vector2, distance, randomRange } from '@/utils';
 
 /**
  * Explosive component data
@@ -425,7 +425,7 @@ export class Projectile extends Entity implements IExpirable {
 
   private drawFlame(ctx: CanvasRenderingContext2D): void {
     // Flickering flame
-    const flicker = 0.8 + Math.random() * 0.4;
+    const flicker = randomRange(0.8, 1.2);
     ctx.beginPath();
     ctx.arc(0, 0, this.radius * flicker, 0, Math.PI * 2);
     ctx.fillStyle = this.color;

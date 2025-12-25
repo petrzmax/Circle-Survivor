@@ -13,6 +13,8 @@ import { VisualEffect, PickupType, ProjectileType, EnemyType } from '@/types/enu
 import { WEAPON_TYPES } from '@/config/weapons.config';
 import { EffectsState, EffectsSystem } from './EffectsSystem';
 import { GAME_BALANCE } from '@/config/balance.config';
+import { randomChance, randomInt, randomRange } from '@/utils/random';
+import { vectorFromAngle } from '@/utils';
 
 /**
  * Explosion event data
@@ -110,9 +112,12 @@ export class CombatSystem {
    */
   public updateRuntimeConfig(config: Partial<CombatRuntimeConfig>): void {
     if (config.luck !== undefined) this.runtimeConfig.luck = config.luck;
-    if (config.goldMultiplier !== undefined) this.runtimeConfig.goldMultiplier = config.goldMultiplier;
-    if (config.damageMultiplier !== undefined) this.runtimeConfig.damageMultiplier = config.damageMultiplier;
-    if (config.explosionRadius !== undefined) this.runtimeConfig.explosionRadius = config.explosionRadius;
+    if (config.goldMultiplier !== undefined)
+      this.runtimeConfig.goldMultiplier = config.goldMultiplier;
+    if (config.damageMultiplier !== undefined)
+      this.runtimeConfig.damageMultiplier = config.damageMultiplier;
+    if (config.explosionRadius !== undefined)
+      this.runtimeConfig.explosionRadius = config.explosionRadius;
     if (config.knockback !== undefined) this.runtimeConfig.knockback = config.knockback;
   }
 
@@ -126,7 +131,7 @@ export class CombatSystem {
     // Process player-enemy collisions
     for (const enemy of collisions.playerEnemyCollisions) {
       // Dodge chance
-      if (player.dodge > 0 && Math.random() < player.dodge) {
+      if (randomChance(player.dodge)) {
         EventBus.emit('playerDodged', undefined);
         continue;
       }
@@ -162,7 +167,7 @@ export class CombatSystem {
     // Process player-projectile collisions (enemy bullets)
     for (const projectile of collisions.playerProjectileCollisions) {
       // Dodge chance for projectiles too
-      if (player.dodge > 0 && Math.random() < player.dodge) {
+      if (randomChance(player.dodge)) {
         EventBus.emit('playerDodged', undefined);
         projectile.destroy();
         continue;
@@ -332,7 +337,7 @@ export class CombatSystem {
 
     // Banana (not mini) - spawn mini bananas
     if (isBanana && !isMini) {
-      this.spawnMiniBananas(x, y, 4 + Math.floor(Math.random() * 3), damageMultiplier);
+      this.spawnMiniBananas(x, y, randomInt(4, 6), damageMultiplier);
     }
 
     // Emit explosion event for audio and other listeners
@@ -378,30 +383,23 @@ export class CombatSystem {
     // Note: goldMultiplier is applied during pickup collection in Game.ts, not here
     if (enemy.isBoss) {
       // One large bag (50% of value) in center
-      const bigPickup = createGoldPickup(
-        enemy.x,
-        enemy.y,
-        Math.floor(enemy.goldValue * 0.5),
-      );
+      const bigPickup = createGoldPickup(enemy.x, enemy.y, Math.floor(enemy.goldValue * 0.5));
       this.entityManager.addPickup(bigPickup);
 
       // 6-8 small bags scattered around
-      const smallBags = 6 + Math.floor(Math.random() * 3);
+      const smallBags = randomInt(6, 8);
       const smallValue = Math.floor((enemy.goldValue * 0.5) / smallBags);
       for (let i = 0; i < smallBags; i++) {
         const angle = ((Math.PI * 2) / smallBags) * i;
-        const dist = 20 + Math.random() * 30;
-        const smallPickup = createGoldPickup(
-          enemy.x + Math.cos(angle) * dist,
-          enemy.y + Math.sin(angle) * dist,
-          smallValue,
-        );
+        const dist = randomInt(20, 50);
+        const offset = vectorFromAngle(angle, dist);
+        const smallPickup = createGoldPickup(enemy.x + offset.x, enemy.y + offset.y, smallValue);
         this.entityManager.addPickup(smallPickup);
       }
     } else {
       // Normal enemy - one bag with random offset
-      const goldOffsetX = (Math.random() - 0.5) * 20;
-      const goldOffsetY = (Math.random() - 0.5) * 20;
+      const goldOffsetX = randomInt(-10, 10);
+      const goldOffsetY = randomInt(-10, 10);
       if (enemy.goldValue > 0) {
         const goldPickup = createGoldPickup(
           enemy.x + goldOffsetX,
@@ -413,9 +411,10 @@ export class CombatSystem {
     }
 
     // Bonus gold from luck
-    if (luck > 0 && Math.random() < luck) {
-      const bonusOffsetX = (Math.random() - 0.5) * 30;
-      const bonusOffsetY = (Math.random() - 0.5) * 30;
+    // TODO verify luck is it float or int?
+    if (randomChance(luck)) {
+      const bonusOffsetX = randomInt(-15, 15);
+      const bonusOffsetY = randomInt(-15, 15);
       const bonusPickup = createGoldPickup(
         enemy.x + bonusOffsetX,
         enemy.y + bonusOffsetY,
@@ -426,7 +425,7 @@ export class CombatSystem {
 
     // Chance for health drop (base + luck bonus)
     const healthDropChance = this.healthDropChance + luck * this.healthDropLuckMultiplier;
-    if (Math.random() < healthDropChance) {
+    if (randomChance(healthDropChance)) {
       const healthPickup = createHealthPickup(enemy.x + 20, enemy.y, this.healthDropValue);
       this.entityManager.addPickup(healthPickup);
     }
@@ -598,25 +597,25 @@ export class CombatSystem {
     const playerId = player?.id ?? -1;
 
     for (let i = 0; i < count; i++) {
-      const angle = ((Math.PI * 2) / count) * i + (Math.random() - 0.5) * 0.5;
+      const angle = ((Math.PI * 2) / count) * i + randomRange(-0.25, 0.25);
 
       // Random speed (6-10) and distance (60-100px) for each mini banana
-      const randomSpeed = 6 + Math.random() * 4;
-      const randomRange = 60 + Math.random() * 40;
+      const speed = randomInt(6, 10);
+      const range = randomInt(60, 100);
 
       const projectile = new Projectile({
         x,
         y,
-        vx: Math.cos(angle) * randomSpeed,
-        vy: Math.sin(angle) * randomSpeed,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
         damage: config.damage * damageMultiplier,
         radius: config.bulletRadius ?? 6,
         color: config.color,
         type: ProjectileType.MINI_BANANA,
         ownerId: playerId,
         // Use explosiveRange for grenade-like behavior (explodes at distance)
-        explosiveRange: randomRange,
-        bulletSpeed: randomSpeed,
+        explosiveRange: range,
+        bulletSpeed: speed,
         weaponCategory: 'grenade',
         explosive: {
           explosionRadius: (config.explosionRadius ?? 45) * explosionRadiusMultiplier,

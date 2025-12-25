@@ -45,11 +45,10 @@ export abstract class Entity implements ITransform, ICircleCollider {
   /** Unique entity identifier */
   public readonly id: number;
 
-  /** Position X */
   public x: number;
-
-  /** Position Y */
   public y: number;
+
+  // TODO: Consider adding a transform component instead of separate x/y
 
   /** Collision radius */
   public radius: number;
@@ -101,6 +100,14 @@ export abstract class Entity implements ITransform, ICircleCollider {
     }
   }
 
+  // TODO refactor to not use vx,vy directly - to vector2
+  /**
+   * Sets velocity from vector
+   */
+  public setVelocityVector(vector: Vector2): void {
+    this.setVelocity(vector.x, vector.y);
+  }
+
   /**
    * Gets position as Vector2
    */
@@ -122,6 +129,7 @@ export abstract class Entity implements ITransform, ICircleCollider {
    */
   public applyVelocity(deltaTime: number): void {
     if (this.velocity) {
+      // TODO IS * 60 needed - analyze
       this.x += this.velocity.vx * deltaTime * 60; // Normalize to 60fps
       this.y += this.velocity.vy * deltaTime * 60;
     }
@@ -160,6 +168,7 @@ export abstract class Entity implements ITransform, ICircleCollider {
     vel.vy += direction.y * force;
   }
 
+  // TODO use to grenades mechanics
   /**
    * Applies friction to velocity
    * @param friction Friction factor (0-1, lower = more friction)

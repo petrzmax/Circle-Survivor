@@ -5,12 +5,13 @@
  * Future: Object pooling can be added here to reduce GC pressure.
  */
 
-import { Entity } from '@/entities/Entity';
+import { Deployable } from '@/entities/Deployable';
 import { Enemy } from '@/entities/Enemy';
+import { Entity } from '@/entities/Entity';
+import { Pickup } from '@/entities/Pickup';
 import { Player } from '@/entities/Player';
 import { Projectile } from '@/entities/Projectile';
-import { Deployable } from '@/entities/Deployable';
-import { Pickup } from '@/entities/Pickup';
+import { distanceSquared, Vector2 } from '@/utils';
 
 /**
  * Entity categories for typed retrieval
@@ -29,41 +30,14 @@ export interface EntityManagerConfig {
  * Manages all game entities with typed collections.
  * Provides efficient add/remove/query operations.
  *
- * @example
- * ```typescript
- * const manager = new EntityManager();
- *
- * // Add entities
- * manager.addEnemy(enemy);
- * manager.addProjectile(projectile);
- *
- * // Query entities
- * const enemies = manager.getEnemies();
- * const activeProjectiles = manager.getProjectiles().filter(p => p.isActive);
- *
- * // Update all
- * manager.updateAll(deltaTime);
- *
- * // Cleanup dead entities
- * manager.removeInactive();
- * ```
  */
 export class EntityManager {
   /** Current player (single instance) */
   private player: Player | null = null;
-
-  /** Active enemies */
   private enemies = new Map<number, Enemy>();
-
-  /** Active projectiles (player and enemy) */
   private projectiles = new Map<number, Projectile>();
-
-  /** Active deployables (mines, turrets) */
   private deployables = new Map<number, Deployable>();
-
-  /** Active pickups */
   private pickups = new Map<number, Pickup>();
-
   /** Debug mode */
   private debug: boolean;
 
@@ -86,14 +60,6 @@ export class EntityManager {
    */
   public getPlayer(): Player | null {
     return this.player;
-  }
-
-  /**
-   * Remove the player
-   */
-  public removePlayer(): void {
-    this.player = null;
-    this.log('Player removed');
   }
 
   // ========== Enemies ==========
@@ -438,26 +404,22 @@ export class EntityManager {
   /**
    * Find enemies within radius of a point
    */
-  public getEnemiesInRadius(x: number, y: number, radius: number): Enemy[] {
+  public getEnemiesInRadius(position: Vector2, radius: number): Enemy[] {
     const radiusSq = radius * radius;
     return this.getActiveEnemies().filter((enemy) => {
-      const dx = enemy.x - x;
-      const dy = enemy.y - y;
-      return dx * dx + dy * dy <= radiusSq;
+      return distanceSquared(enemy.position, position) <= radiusSq;
     });
   }
 
   /**
    * Find nearest enemy to a point
    */
-  public getNearestEnemy(x: number, y: number, maxDistance?: number): Enemy | null {
+  public getNearestEnemy(position: Vector2, maxDistance?: number): Enemy | null {
     let nearest: Enemy | null = null;
     let nearestDistSq = maxDistance ? maxDistance * maxDistance : Infinity;
 
     this.getActiveEnemies().forEach((enemy) => {
-      const dx = enemy.x - x;
-      const dy = enemy.y - y;
-      const distSq = dx * dx + dy * dy;
+      const distSq = distanceSquared(enemy.position, position);
 
       if (distSq < nearestDistSq) {
         nearestDistSq = distSq;
@@ -471,12 +433,10 @@ export class EntityManager {
   /**
    * Find pickups within radius of a point
    */
-  public getPickupsInRadius(x: number, y: number, radius: number): Pickup[] {
+  public getPickupsInRadius(position: Vector2, radius: number): Pickup[] {
     const radiusSq = radius * radius;
     return this.getActivePickups().filter((pickup) => {
-      const dx = pickup.x - x;
-      const dy = pickup.y - y;
-      return dx * dx + dy * dy <= radiusSq;
+      return distanceSquared(pickup.position, position) <= radiusSq;
     });
   }
 

@@ -3,17 +3,17 @@
  * Handles weapon stats, firing logic, and projectile creation.
  */
 
+import { GAME_BALANCE, WEAPON_TYPES } from '@/config';
 import {
-  WeaponType,
-  WeaponCategory,
-  ProjectileType,
   DeployableType,
+  ProjectileType,
   VisualEffect,
+  WeaponCategory,
+  WeaponType,
 } from '@/types/enums';
-import { WEAPON_TYPES, GAME_BALANCE } from '@/config';
-import { Projectile, ProjectileConfig } from './Projectile';
-import { Deployable, DeployableConfig } from './Deployable';
 import { degreesToRadians, randomChance, randomRange } from '@/utils';
+import { Deployable, DeployableConfig } from './Deployable';
+import { Projectile, ProjectileConfig } from './Projectile';
 
 /**
  * Fire result - can be projectiles or deployables
@@ -306,8 +306,7 @@ export class Weapon {
     explosionRadiusMultiplier: number,
   ): Projectile {
     const config: ProjectileConfig = {
-      x,
-      y,
+      position: { x, y },
       vx: Math.cos(angle) * this.bulletSpeed,
       vy: Math.sin(angle) * this.bulletSpeed,
       radius: this.bulletRadius,
@@ -362,8 +361,10 @@ export class Weapon {
     explosionRadiusMultiplier: number,
   ): Deployable {
     const config: DeployableConfig = {
-      x,
-      y,
+      position: {
+        x,
+        y,
+      },
       radius: this.bulletRadius,
       type: DeployableType.MINE,
       damage: this.damage * damageMultiplier,

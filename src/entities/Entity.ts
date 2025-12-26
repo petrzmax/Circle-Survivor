@@ -3,8 +3,8 @@
  * All game objects inherit from this class.
  */
 
-import { ITransform, IVelocity, ICircleCollider } from '@/types/components';
-import { Vector2, normalize } from '@/utils';
+import { ICircleCollider, ITransform, IVelocity } from '@/types/components';
+import { Vector2 } from '@/utils';
 
 /**
  * Unique entity ID counter
@@ -29,8 +29,7 @@ export function resetEntityIdCounter(): void {
  * Base entity configuration
  */
 export interface EntityConfig {
-  x: number;
-  y: number;
+  position: Vector2;
   radius: number;
   vx?: number;
   vy?: number;
@@ -44,11 +43,7 @@ export interface EntityConfig {
 export abstract class Entity implements ITransform, ICircleCollider {
   /** Unique entity identifier */
   public readonly id: number;
-
-  public x: number;
-  public y: number;
-
-  // TODO: Consider adding a transform component instead of separate x/y
+  public position: Vector2;
 
   /** Collision radius */
   public radius: number;
@@ -61,8 +56,7 @@ export abstract class Entity implements ITransform, ICircleCollider {
 
   public constructor(config: EntityConfig) {
     this.id = generateEntityId();
-    this.x = config.x;
-    this.y = config.y;
+    this.position = config.position;
     this.radius = config.radius;
 
     if (config.vx !== undefined || config.vy !== undefined) {
@@ -79,13 +73,6 @@ export abstract class Entity implements ITransform, ICircleCollider {
   public getVelocity(): IVelocity {
     this.velocity ??= { vx: 0, vy: 0 };
     return this.velocity;
-  }
-
-  /**
-   * Checks if entity has velocity
-   */
-  public hasVelocity(): boolean {
-    return this.velocity !== null;
   }
 
   /**
@@ -112,15 +99,14 @@ export abstract class Entity implements ITransform, ICircleCollider {
    * Gets position as Vector2
    */
   public getPosition(): Vector2 {
-    return { x: this.x, y: this.y };
+    return this.position;
   }
 
   /**
    * Sets position
    */
-  public setPosition(x: number, y: number): void {
-    this.x = x;
-    this.y = y;
+  public setPosition(position: Vector2): void {
+    this.position = position;
   }
 
   /**
@@ -130,42 +116,9 @@ export abstract class Entity implements ITransform, ICircleCollider {
   public applyVelocity(deltaTime: number): void {
     if (this.velocity) {
       // TODO IS * 60 needed - analyze
-      this.x += this.velocity.vx * deltaTime * 60; // Normalize to 60fps
-      this.y += this.velocity.vy * deltaTime * 60;
+      this.position.x += this.velocity.vx * deltaTime * 60; // Normalize to 60fps
+      this.position.y += this.velocity.vy * deltaTime * 60;
     }
-  }
-
-  /**
-   * Moves entity towards target position
-   * @param target Target position
-   * @param speed Movement speed
-   * @param deltaTime Time since last frame
-   */
-  public moveTowards(target: Vector2, speed: number, deltaTime: number): void {
-    const direction = normalize({
-      x: target.x - this.x,
-      y: target.y - this.y,
-    });
-
-    this.x += direction.x * speed * deltaTime * 60;
-    this.y += direction.y * speed * deltaTime * 60;
-  }
-
-  /**
-   * Applies knockback force
-   * @param fromX Source X position
-   * @param fromY Source Y position
-   * @param force Knockback strength
-   */
-  public applyKnockback(fromX: number, fromY: number, force: number): void {
-    const direction = normalize({
-      x: this.x - fromX,
-      y: this.y - fromY,
-    });
-
-    const vel = this.getVelocity();
-    vel.vx += direction.x * force;
-    vel.vy += direction.y * force;
   }
 
   // TODO use to grenades mechanics

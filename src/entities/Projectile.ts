@@ -4,11 +4,11 @@
  * Uses composition with optional components for different behaviors.
  */
 
-import { Entity, EntityConfig } from './Entity';
-import { ProjectileType, VisualEffect } from '@/types/enums';
 import { IExpirable, IExplosive } from '@/types/components';
+import { ProjectileType, VisualEffect } from '@/types/enums';
 import { Vector2, distance, randomRange } from '@/utils';
 import { TWO_PI } from '@/utils/math';
+import { Entity, EntityConfig } from './Entity';
 
 /**
  * Explosive component data
@@ -131,7 +131,7 @@ export class Projectile extends Entity implements IExpirable {
     this.color = config.color ?? '#ffff00';
     this.maxDistance = config.maxDistance ?? 0;
     this.lifetime = config.lifetime ?? Infinity;
-    this.spawnPosition = { x: config.x, y: config.y };
+    this.spawnPosition = { ...config.position };
 
     // Grenade behavior
     this.weaponCategory = config.weaponCategory ?? 'gun';
@@ -220,17 +220,13 @@ export class Projectile extends Entity implements IExpirable {
       this.rotation += this.rotationSpeed * deltaTime;
     }
 
-    // Store old position for distance calculation (for non-grenades)
-    const oldX = this.x;
-    const oldY = this.y;
-
     // Apply velocity first
     this.applyVelocity(deltaTime);
 
     // Calculate distance traveled
     if (this.weaponCategory === 'grenade' && this.explosiveRange > 0) {
-      // Grenades: distance from spawn point (like original)
-      this.distanceTraveled = distance(this.spawnPosition, { x: this.x, y: this.y });
+      // Grenades: distance from spawn point
+      this.distanceTraveled = distance(this.spawnPosition, this.position);
 
       const progress = this.distanceTraveled / this.explosiveRange;
 
@@ -253,8 +249,9 @@ export class Projectile extends Entity implements IExpirable {
         this.shouldExplodeOnExpire = true;
       }
     } else {
-      // Other projectiles: accumulated distance
-      this.distanceTraveled += distance({ x: oldX, y: oldY }, { x: this.x, y: this.y });
+      // TODO needed?
+      // Other projectiles: distance from spawn point
+      this.distanceTraveled = distance(this.spawnPosition, this.position);
     }
 
     // Check expiration
@@ -269,7 +266,7 @@ export class Projectile extends Entity implements IExpirable {
    */
   public draw(ctx: CanvasRenderingContext2D): void {
     ctx.save();
-    ctx.translate(this.x, this.y);
+    ctx.translate(this.position.x, this.position.y);
 
     if (this.rotation !== 0) {
       ctx.rotate(this.rotation);
@@ -386,8 +383,15 @@ export class Projectile extends Entity implements IExpirable {
 
     // Radial gradient from yellow center to dark red edge
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, TWO_PI);
-    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+    ctx.arc(this.position.x, this.position.y, this.radius, 0, TWO_PI);
+    const gradient = ctx.createRadialGradient(
+      this.position.x,
+      this.position.y,
+      0,
+      this.position.x,
+      this.position.y,
+      this.radius,
+    );
     gradient.addColorStop(0, '#ffff00');
     gradient.addColorStop(0.7, '#ff4400');
     gradient.addColorStop(1, '#aa0000');
@@ -397,8 +401,8 @@ export class Projectile extends Entity implements IExpirable {
     // Trail behind rocket (using velocity direction)
     const vel = this.getVelocity();
     ctx.beginPath();
-    ctx.moveTo(this.x - vel.vx * 2, this.y - vel.vy * 2);
-    ctx.lineTo(this.x - vel.vx * 4, this.y - vel.vy * 4);
+    ctx.moveTo(this.position.x - vel.vx * 2, this.position.y - vel.vy * 2);
+    ctx.lineTo(this.position.x - vel.vx * 4, this.position.y - vel.vy * 4);
     ctx.strokeStyle = '#ff8800';
     ctx.lineWidth = 4;
     ctx.stroke();
@@ -410,8 +414,15 @@ export class Projectile extends Entity implements IExpirable {
     ctx.save();
 
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, TWO_PI);
-    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+    ctx.arc(this.position.x, this.position.y, this.radius, 0, TWO_PI);
+    const gradient = ctx.createRadialGradient(
+      this.position.x,
+      this.position.y,
+      0,
+      this.position.x,
+      this.position.y,
+      this.radius,
+    );
     gradient.addColorStop(0, '#ffffff');
     gradient.addColorStop(0.5, '#00ff00');
     gradient.addColorStop(1, '#004400');
@@ -440,8 +451,15 @@ export class Projectile extends Entity implements IExpirable {
 
     // Golden ball with gradient
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, TWO_PI);
-    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+    ctx.arc(this.position.x, this.position.y, this.radius, 0, TWO_PI);
+    const gradient = ctx.createRadialGradient(
+      this.position.x,
+      this.position.y,
+      0,
+      this.position.x,
+      this.position.y,
+      this.radius,
+    );
     gradient.addColorStop(0, '#ffffff');
     gradient.addColorStop(0.5, '#ffd700');
     gradient.addColorStop(1, '#b8860b');
@@ -452,10 +470,10 @@ export class Projectile extends Entity implements IExpirable {
     ctx.strokeStyle = '#8b0000';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(this.x, this.y - 5);
-    ctx.lineTo(this.x, this.y + 5);
-    ctx.moveTo(this.x - 4, this.y - 1);
-    ctx.lineTo(this.x + 4, this.y - 1);
+    ctx.moveTo(this.position.x, this.position.y - 5);
+    ctx.lineTo(this.position.x, this.position.y + 5);
+    ctx.moveTo(this.position.x - 4, this.position.y - 1);
+    ctx.lineTo(this.position.x + 4, this.position.y - 1);
     ctx.stroke();
 
     // Glow

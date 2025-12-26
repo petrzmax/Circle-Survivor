@@ -1,3 +1,6 @@
+import { Vector2 } from '@/utils';
+import { VisualEffect } from './enums';
+
 /**
  * Component interfaces for entity composition.
  * These interfaces define reusable behaviors that can be composed together.
@@ -8,9 +11,12 @@
 /**
  * Position in 2D space
  */
+// TODO Use as a composition component, do not implement directly
 export interface ITransform {
-  x: number;
-  y: number;
+  position: Vector2;
+  // TODO potentially add later
+  // rotation: number;
+  // scale: Vector2;
 }
 
 /**
@@ -69,8 +75,6 @@ export interface IKnockbackable {
   knockbackY: number;
   applyKnockback(forceX: number, forceY: number): void;
 }
-
-import { VisualEffect } from './enums';
 
 /**
  * Explosive component data

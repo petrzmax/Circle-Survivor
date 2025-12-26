@@ -65,8 +65,6 @@ export interface IPierceComponent {
  */
 export interface IProjectile extends IPhysicsEntity, IDamageDealer {
   type: ProjectileType;
-  ownerId: 'player' | 'enemy';
-  color: string;
 
   // Optional components
   explosive?: IExplosiveComponent;

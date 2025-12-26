@@ -3,8 +3,6 @@
  * Common mathematical operations for game calculations.
  */
 
-import { ITransform } from '@/types/components';
-
 export const TWO_PI = Math.PI * 2;
 
 /**
@@ -193,11 +191,11 @@ export function rotateVector(vector: Vector2, angle: number): Vector2 {
 }
 
 /**
- * Gets direction vector from transform to target position
- * @param transform Source transform
+ * Gets direction vector from source to target position
+ * @param source Source position
  * @param target Target position
  * @returns Normalized direction vector
  */
-export function directionTo(transform: ITransform, target: Vector2): Vector2 {
-  return normalize(subtractVectors(target, transform));
+export function directionTo(source: Vector2, target: Vector2): Vector2 {
+  return normalize(subtractVectors(target, source));
 }

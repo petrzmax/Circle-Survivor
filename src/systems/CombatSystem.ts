@@ -3,26 +3,25 @@
  * Processes collision results and applies damage, knockback, etc.
  */
 
-import { EntityManager } from '@/managers/EntityManager';
-import { EventBus } from '@/core/EventBus';
-import { CollisionResult } from './CollisionSystem';
-import { Enemy } from '@/entities/Enemy';
-import { Projectile } from '@/entities/Projectile';
-import { Pickup, createGoldPickup, createHealthPickup } from '@/entities/Pickup';
-import { VisualEffect, PickupType, ProjectileType, EnemyType } from '@/types/enums';
-import { WEAPON_TYPES } from '@/config/weapons.config';
-import { EffectsState, EffectsSystem } from './EffectsSystem';
 import { GAME_BALANCE } from '@/config/balance.config';
-import { randomChance, randomInt, randomRange } from '@/utils/random';
+import { WEAPON_TYPES } from '@/config/weapons.config';
+import { EventBus } from '@/core/EventBus';
+import { Enemy } from '@/entities/Enemy';
+import { createGoldPickup, createHealthPickup, Pickup } from '@/entities/Pickup';
+import { Projectile } from '@/entities/Projectile';
+import { EntityManager } from '@/managers/EntityManager';
+import { EnemyType, PickupType, ProjectileType, VisualEffect } from '@/types/enums';
 import { vectorFromAngle } from '@/utils';
+import { addVectors, TWO_PI, Vector2 } from '@/utils/math';
+import { randomChance, randomInt, randomPointInCircle, randomRange } from '@/utils/random';
+import { CollisionResult } from './CollisionSystem';
+import { EffectsState, EffectsSystem } from './EffectsSystem';
 
 /**
  * Explosion event data
  */
 export interface ExplosionEvent {
-  // TODO, use vector2
-  x: number;
-  y: number;
+  position: Vector2;
   radius: number;
   damage: number;
   visualEffect: VisualEffect;
@@ -153,7 +152,7 @@ export class CombatSystem {
       // Thorns damage - applied after player takes damage
       if (player.thorns > 0) {
         EventBus.emit('thornsTriggered', undefined);
-        const thornsKilled = enemy.takeDamage(player.thorns, enemy.x, enemy.y, player.knockback);
+        const thornsKilled = enemy.takeDamage(player.thorns, enemy.position, player.knockback);
         if (thornsKilled) {
           this.handleEnemyDeath(enemy, 'player');
         }
@@ -202,8 +201,7 @@ export class CombatSystem {
       const explosionData = deployable.trigger();
       if (explosionData) {
         this.queueExplosion({
-          x: deployable.x,
-          y: deployable.y,
+          position: deployable.position,
           radius: explosionData.explosionRadius,
           damage: explosionData.explosionDamage,
           visualEffect: explosionData.visualEffect ?? VisualEffect.STANDARD,
@@ -227,12 +225,12 @@ export class CombatSystem {
 
     // Apply damage with knockback (using player knockback * projectile knockback multiplier)
     const totalKnockback = knockback * projectile.knockbackMultiplier;
-    const isDead = enemy.takeDamage(finalDamage, projectile.x, projectile.y, totalKnockback);
+    const isDead = enemy.takeDamage(finalDamage, projectile.position, totalKnockback);
 
     EventBus.emit('enemyDamaged', {
       enemy,
       damage: finalDamage,
-      source: { x: projectile.x, y: projectile.y },
+      source: projectile.position,
     });
 
     // Lifesteal
@@ -255,11 +253,10 @@ export class CombatSystem {
       // Apply player's explosionRadius multiplier
       const expRadius = projectile.explosive.explosionRadius * explosionRadius;
       this.queueExplosion({
-        x: projectile.x,
-        y: projectile.y,
+        position: projectile.position,
         radius: expRadius,
         damage: projectile.explosive.explosionDamage * damageMultiplier,
-        visualEffect: projectile.explosive.visualEffect ?? VisualEffect.STANDARD,
+        visualEffect: projectile.explosive.visualEffect,
         sourceId: projectile.id,
         isBanana,
         isMini,
@@ -291,8 +288,10 @@ export class CombatSystem {
     const damageMultiplier = player?.damageMultiplier ?? 1;
 
     while (this.pendingExplosions.length > 0) {
-      const explosion = this.pendingExplosions.shift()!;
-      this.processExplosion(explosion, damageMultiplier);
+      const explosion = this.pendingExplosions.shift();
+      if (explosion) {
+        this.processExplosion(explosion, damageMultiplier);
+      }
     }
   }
 
@@ -300,7 +299,7 @@ export class CombatSystem {
    * Process a single explosion
    */
   private processExplosion(explosion: ExplosionEvent, damageMultiplier: number): void {
-    const { x, y, radius, damage, visualEffect, isBanana, isMini } = explosion;
+    const { position, radius, damage, visualEffect, isBanana, isMini } = explosion;
 
     // Determine explosion type flags
     const isNuke = visualEffect === VisualEffect.NUKE;
@@ -310,8 +309,7 @@ export class CombatSystem {
     // Create visual effect
     EffectsSystem.createExplosion(
       this.effects,
-      x,
-      y,
+      position,
       radius,
       isNuke,
       isHolyGrenade,
@@ -319,15 +317,15 @@ export class CombatSystem {
     );
 
     // Find enemies in explosion radius
-    const enemies = this.entityManager.getEnemiesInRadius(x, y, radius);
+    const enemies = this.entityManager.getEnemiesInRadius(position, radius);
 
     for (const enemy of enemies) {
-      const isDead = enemy.takeDamage(damage * damageMultiplier, x, y);
+      const isDead = enemy.takeDamage(damage * damageMultiplier, position);
 
       EventBus.emit('enemyDamaged', {
         enemy,
         damage: damage * damageMultiplier,
-        source: { x, y },
+        source: position,
       });
 
       if (isDead) {
@@ -337,12 +335,12 @@ export class CombatSystem {
 
     // Banana (not mini) - spawn mini bananas
     if (isBanana && !isMini) {
-      this.spawnMiniBananas(x, y, randomInt(4, 6), damageMultiplier);
+      this.spawnMiniBananas(position.x, position.y, randomInt(4, 6), damageMultiplier);
     }
 
     // Emit explosion event for audio and other listeners
     EventBus.emit('explosionTriggered', {
-      position: { x, y },
+      position,
       radius,
       damage,
       visualEffect: isNuke ? 'nuke' : isHolyGrenade ? 'holy' : 'standard',
@@ -366,8 +364,7 @@ export class CombatSystem {
 
     // Create death effect
     EffectsSystem.createDeathEffect(this.effects, {
-      x: enemy.x,
-      y: enemy.y,
+      position: enemy.position,
       color: enemy.color,
       isBoss: enemy.isBoss,
       type: enemy.type,
@@ -383,7 +380,7 @@ export class CombatSystem {
     // Note: goldMultiplier is applied during pickup collection in Game.ts, not here
     if (enemy.isBoss) {
       // One large bag (50% of value) in center
-      const bigPickup = createGoldPickup(enemy.x, enemy.y, Math.floor(enemy.goldValue * 0.5));
+      const bigPickup = createGoldPickup(enemy.position, Math.floor(enemy.goldValue * 0.5));
       this.entityManager.addPickup(bigPickup);
 
       // 6-8 small bags scattered around
@@ -393,19 +390,14 @@ export class CombatSystem {
         const angle = (TWO_PI / smallBags) * i;
         const dist = randomInt(20, 50);
         const offset = vectorFromAngle(angle, dist);
-        const smallPickup = createGoldPickup(enemy.x + offset.x, enemy.y + offset.y, smallValue);
+        const smallPickup = createGoldPickup(addVectors(enemy.position, offset), smallValue);
         this.entityManager.addPickup(smallPickup);
       }
     } else {
       // Normal enemy - one bag with random offset
-      const goldOffsetX = randomInt(-10, 10);
-      const goldOffsetY = randomInt(-10, 10);
+      const goldPosition = randomPointInCircle(enemy.position, 10);
       if (enemy.goldValue > 0) {
-        const goldPickup = createGoldPickup(
-          enemy.x + goldOffsetX,
-          enemy.y + goldOffsetY,
-          enemy.goldValue,
-        );
+        const goldPickup = createGoldPickup(goldPosition, enemy.goldValue);
         this.entityManager.addPickup(goldPickup);
       }
     }
@@ -413,27 +405,26 @@ export class CombatSystem {
     // Bonus gold from luck
     // TODO verify luck is it float or int?
     if (randomChance(luck)) {
-      const bonusOffsetX = randomInt(-15, 15);
-      const bonusOffsetY = randomInt(-15, 15);
-      const bonusPickup = createGoldPickup(
-        enemy.x + bonusOffsetX,
-        enemy.y + bonusOffsetY,
-        Math.floor(enemy.goldValue * 0.5),
-      );
+      const bonusPosition = randomPointInCircle(enemy.position, 15);
+      const bonusPickup = createGoldPickup(bonusPosition, Math.floor(enemy.goldValue * 0.5));
       this.entityManager.addPickup(bonusPickup);
     }
 
     // Chance for health drop (base + luck bonus)
     const healthDropChance = this.healthDropChance + luck * this.healthDropLuckMultiplier;
     if (randomChance(healthDropChance)) {
-      const healthPickup = createHealthPickup(enemy.x + 20, enemy.y, this.healthDropValue);
+      const healthPickup = createHealthPickup(
+        enemy.position.x + 20,
+        enemy.position.y,
+        this.healthDropValue,
+      );
       this.entityManager.addPickup(healthPickup);
     }
 
     // Boss death - special explosion sound via event
     if (enemy.isBoss) {
       EventBus.emit('explosionTriggered', {
-        position: { x: enemy.x, y: enemy.y },
+        position: enemy.position,
         radius: 0,
         damage: 0,
         visualEffect: 'nuke',
@@ -446,8 +437,7 @@ export class CombatSystem {
       const damageMultiplier = player?.damageMultiplier ?? 1;
       this.processExplosion(
         {
-          x: enemy.x,
-          y: enemy.y,
+          position: enemy.position,
           radius: enemy.explosionRadius,
           damage: enemy.explosionDamage,
           visualEffect: VisualEffect.FIRE,
@@ -466,7 +456,7 @@ export class CombatSystem {
     EventBus.emit('enemyDeath', {
       enemy,
       killer,
-      position: { x: enemy.x, y: enemy.y },
+      position: enemy.position,
     });
 
     // Remove from manager
@@ -485,8 +475,10 @@ export class CombatSystem {
       const offsetY = Math.sin(angle) * 30;
 
       const splitEnemy = new Enemy({
-        x: enemy.x + offsetX,
-        y: enemy.y + offsetY,
+        position: {
+          x: enemy.position.x + offsetX,
+          y: enemy.position.y + offsetY,
+        },
         type: splitType,
         scale: 0.6,
       });
@@ -509,7 +501,7 @@ export class CombatSystem {
       const goldAmount = Math.floor(value * this.runtimeConfig.goldMultiplier);
       EventBus.emit('goldCollected', {
         amount: goldAmount,
-        position: { x: pickup.x, y: pickup.y },
+        position: pickup.position,
       });
     } else if (pickup.type === PickupType.HEALTH) {
       if (player) {
@@ -518,7 +510,7 @@ export class CombatSystem {
       // TODO why emit this event if we already healed the player directly?
       EventBus.emit('healthCollected', {
         amount: value,
-        position: { x: pickup.x, y: pickup.y },
+        position: pickup.position,
       });
     }
   }
@@ -537,15 +529,13 @@ export class CombatSystem {
    * Apply damage to all enemies in area
    */
   public applyAreaDamage(
-    x: number,
-    y: number,
+    position: Vector2,
     radius: number,
     damage: number,
     visualEffect: VisualEffect = VisualEffect.STANDARD,
   ): void {
     this.queueExplosion({
-      x,
-      y,
+      position,
       radius,
       damage,
       visualEffect,
@@ -559,8 +549,7 @@ export class CombatSystem {
    * Handles visual effects, damage, and banana splitting
    */
   public triggerExplosion(
-    x: number,
-    y: number,
+    position: Vector2,
     radius: number,
     damage: number,
     visualEffect: VisualEffect = VisualEffect.STANDARD,
@@ -568,8 +557,7 @@ export class CombatSystem {
   ): void {
     const isBanana = visualEffect === VisualEffect.BANANA;
     this.queueExplosion({
-      x,
-      y,
+      position,
       radius,
       damage,
       visualEffect,
@@ -604,8 +592,10 @@ export class CombatSystem {
       const range = randomInt(60, 100);
 
       const projectile = new Projectile({
-        x,
-        y,
+        position: {
+          x,
+          y,
+        },
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         damage: config.damage * damageMultiplier,

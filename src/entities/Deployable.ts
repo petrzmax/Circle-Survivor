@@ -185,7 +185,7 @@ export class Deployable extends Entity implements IExpirable {
    */
   public draw(ctx: CanvasRenderingContext2D): void {
     ctx.save();
-    ctx.translate(this.x, this.y);
+    ctx.translate(this.position.x, this.position.y);
 
     switch (this.type) {
       case DeployableType.MINE:

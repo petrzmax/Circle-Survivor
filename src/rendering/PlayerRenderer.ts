@@ -1,6 +1,5 @@
 /**
  * PlayerRenderer - Renders the player entity.
- * Matches original js/player.js render() exactly.
  */
 
 import { Player } from '@/entities/Player';
@@ -24,8 +23,8 @@ export function renderPlayer(
   // Body (rectangle)
   ctx.fillStyle = player.color;
   ctx.fillRect(
-    player.x - player.width / 2,
-    player.y - player.height / 2,
+    player.position.x - player.width / 2,
+    player.position.y - player.height / 2,
     player.width,
     player.height,
   );
@@ -39,8 +38,8 @@ export function renderPlayer(
     ctx.lineWidth = 2;
   }
   ctx.strokeRect(
-    player.x - player.width / 2,
-    player.y - player.height / 2,
+    player.position.x - player.width / 2,
+    player.position.y - player.height / 2,
     player.width,
     player.height,
   );
@@ -49,8 +48,8 @@ export function renderPlayer(
   ctx.fillStyle = 'white';
   const eyeOffset = 5;
   ctx.beginPath();
-  ctx.arc(player.x - eyeOffset, player.y - 3, 4, 0, TWO_PI);
-  ctx.arc(player.x + eyeOffset, player.y - 3, 4, 0, TWO_PI);
+  ctx.arc(player.position.x - eyeOffset, player.position.y - 3, 4, 0, TWO_PI);
+  ctx.arc(player.position.x + eyeOffset, player.position.y - 3, 4, 0, TWO_PI);
   ctx.fill();
 
   ctx.globalAlpha = 1;

@@ -1,7 +1,6 @@
 /**
  * Shop system
  * Generates items, renders shop UI, handles purchases
- * Matches original js/shop.js exactly.
  */
 
 import { EventBus } from '@/core/EventBus';
@@ -110,7 +109,7 @@ export class Shop {
     const itemMultiplier = 1 + itemCount * GAME_BALANCE.economy.priceScale.perItem;
 
     // Scaling with weapon count (+perWeapon% per weapon)
-    const weaponCount = player.weapons ? player.weapons.length : 0;
+    const weaponCount = player.weapons.length;
     const weaponMultiplier = 1 + weaponCount * GAME_BALANCE.economy.priceScale.perWeapon;
 
     // Final price (rounded to 5)

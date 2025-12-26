@@ -35,7 +35,7 @@ export function renderDeployable(ctx: CanvasRenderingContext2D, deployable: Depl
 function renderMine(ctx: CanvasRenderingContext2D, d: Deployable): void {
   // Body
   ctx.beginPath();
-  ctx.arc(d.x, d.y, d.radius, 0, TWO_PI);
+  ctx.arc(d.position.x, d.position.y, d.radius, 0, TWO_PI);
   ctx.fillStyle = '#333';
   ctx.fill();
 
@@ -47,7 +47,7 @@ function renderMine(ctx: CanvasRenderingContext2D, d: Deployable): void {
   // Blinking light only when armed
   if (d.isArmed) {
     ctx.beginPath();
-    ctx.arc(d.x, d.y - 3, 3, 0, TWO_PI);
+    ctx.arc(d.position.x, d.position.y - 3, 3, 0, TWO_PI);
     ctx.fillStyle = Math.floor(Date.now() / 200) % 2 ? '#ff0000' : '#440000';
     ctx.fill();
   }
@@ -59,13 +59,13 @@ function renderMine(ctx: CanvasRenderingContext2D, d: Deployable): void {
 function renderTurret(ctx: CanvasRenderingContext2D, d: Deployable): void {
   // Base
   ctx.beginPath();
-  ctx.arc(d.x, d.y, d.radius, 0, TWO_PI);
+  ctx.arc(d.position.x, d.position.y, d.radius, 0, TWO_PI);
   ctx.fillStyle = '#555555';
   ctx.fill();
 
   // Gun barrel
   ctx.beginPath();
-  ctx.rect(d.x, d.y - 3, d.radius + 5, 6);
+  ctx.rect(d.position.x, d.position.y - 3, d.radius + 5, 6);
   ctx.fillStyle = '#333333';
   ctx.fill();
 
@@ -85,8 +85,8 @@ function renderTrap(ctx: CanvasRenderingContext2D, d: Deployable): void {
   for (let i = 0; i < spikes * 2; i++) {
     const angle = (i * Math.PI) / spikes;
     const r = i % 2 === 0 ? d.radius : d.radius * 0.6;
-    const x = d.x + Math.cos(angle) * r;
-    const y = d.y + Math.sin(angle) * r;
+    const x = d.position.x + Math.cos(angle) * r;
+    const y = d.position.y + Math.sin(angle) * r;
     if (i === 0) {
       ctx.moveTo(x, y);
     } else {

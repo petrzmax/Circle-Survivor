@@ -1,34 +1,34 @@
 /**
  * Main Game Controller
  */
-import { Player, InputState } from '@/entities/Player';
-import { Enemy } from '@/entities/Enemy';
-import { Projectile } from '@/entities/Projectile';
-import { Deployable, DeployableConfig } from '@/entities/Deployable';
-import { EntityManager } from '@/managers/EntityManager';
-import { CollisionSystem } from '@/systems/CollisionSystem';
-import { CombatSystem } from '@/systems/CombatSystem';
-import { WaveManager } from '@/systems/WaveManager';
-import { Shop, ShopPlayer, ShopWeapon } from '@/ui/Shop';
-import { InputHandler } from '@/systems/InputHandler';
-import { HUD } from '@/systems/HUD';
-import { EffectsSystem, EffectsState, createEffectsState } from '@/systems/EffectsSystem';
-import { WeaponRenderer } from '@/systems/WeaponRenderer';
-import { AudioSystem } from '@/systems/AudioSystem';
-import { LeaderboardUI } from '@/ui/LeaderboardUI';
-import { Leaderboard } from '@/ui/Leaderboard';
-import { EventBus } from '@/core/EventBus';
+import { GAME_BALANCE } from '@/config/balance.config';
 import { CHARACTER_TYPES } from '@/config/characters.config';
 import { WEAPON_TYPES, WeaponConfig } from '@/config/weapons.config';
-import { GAME_BALANCE } from '@/config/balance.config';
+import { EventBus } from '@/core/EventBus';
+import { Deployable, DeployableConfig } from '@/entities/Deployable';
+import { Enemy } from '@/entities/Enemy';
+import { InputState, Player } from '@/entities/Player';
+import { Projectile } from '@/entities/Projectile';
+import { EntityManager } from '@/managers/EntityManager';
+import { AudioSystem } from '@/systems/AudioSystem';
+import { CollisionSystem } from '@/systems/CollisionSystem';
+import { CombatSystem } from '@/systems/CombatSystem';
+import { EffectsState, EffectsSystem, createEffectsState } from '@/systems/EffectsSystem';
+import { HUD } from '@/systems/HUD';
+import { InputHandler } from '@/systems/InputHandler';
+import { WaveManager } from '@/systems/WaveManager';
+import { WeaponRenderer } from '@/systems/WeaponRenderer';
 import {
   CharacterType,
-  WeaponType,
-  ProjectileType,
-  EnemyType,
-  VisualEffect,
   DeployableType,
+  EnemyType,
+  ProjectileType,
+  VisualEffect,
+  WeaponType,
 } from '@/types/enums';
+import { Leaderboard } from '@/ui/Leaderboard';
+import { LeaderboardUI } from '@/ui/LeaderboardUI';
+import { Shop, ShopPlayer, ShopWeapon } from '@/ui/Shop';
 import { degreesToRadians, distance, randomChance, randomRange, vectorFromAngle } from '@/utils';
 
 // ============ Types ============
@@ -442,8 +442,8 @@ export class Game {
     if (player) {
       player.hp = player.maxHp;
       // Reset player position to center
-      player.x = this.canvas.width / 2;
-      player.y = this.canvas.height / 2;
+      player.position.x = this.canvas.width / 2;
+      player.position.y = this.canvas.height / 2;
     }
 
     // Clear entities except player
@@ -602,8 +602,8 @@ export class Game {
     });
 
     // Find nearest enemy for auto-aim
-    const nearestEnemy = this.entityManager.getNearestEnemy(player.x, player.y);
-    player.setTarget(nearestEnemy ? { x: nearestEnemy.x, y: nearestEnemy.y } : null);
+    const nearestEnemy = this.entityManager.getNearestEnemy(player.position);
+    player.setTarget(nearestEnemy ? nearestEnemy.position : null);
 
     // Fire weapons
     this.fireWeapons(currentTime, player);
@@ -612,18 +612,20 @@ export class Game {
     const enemies = this.entityManager.getActiveEnemies();
     for (const enemy of enemies) {
       enemy.update(deltaSeconds);
-      enemy.moveTowardsTarget(player, deltaSeconds, this.canvas.width, this.canvas.height);
+      enemy.moveTowardsTarget(player.position, deltaSeconds, this.canvas.width, this.canvas.height);
 
       // Boss shooting (creates projectiles/shockwaves)
       if (enemy.canShoot) {
-        const attackResult = enemy.tryAttack(player, currentTime);
+        const attackResult = enemy.tryAttack(player.position, currentTime);
         if (attackResult) {
           if (attackResult.type === 'bullets') {
             // Create enemy projectiles
             for (const bulletData of attackResult.bullets) {
               const projectile = new Projectile({
-                x: bulletData.x,
-                y: bulletData.y,
+                position: {
+                  x: bulletData.x,
+                  y: bulletData.y,
+                },
                 radius: 6,
                 type: ProjectileType.ENEMY_BULLET,
                 damage: bulletData.damage,
@@ -653,8 +655,7 @@ export class Game {
           const expRadius = projectile.explosive.explosionRadius * player.explosionRadius;
           const isMini = projectile.type === ProjectileType.MINI_BANANA;
           this.combatSystem.triggerExplosion(
-            projectile.x,
-            projectile.y,
+            projectile.position,
             expRadius,
             projectile.damage * player.damageMultiplier,
             projectile.explosive.visualEffect,
@@ -667,10 +668,10 @@ export class Game {
 
       // Off screen check - destroy projectiles that left the screen
       if (
-        projectile.x < -50 ||
-        projectile.x > this.canvas.width + 50 ||
-        projectile.y < -50 ||
-        projectile.y > this.canvas.height + 50
+        projectile.position.x < -50 ||
+        projectile.position.x > this.canvas.width + 50 ||
+        projectile.position.y < -50 ||
+        projectile.position.y > this.canvas.height + 50
       ) {
         projectile.destroy();
       }
@@ -690,16 +691,15 @@ export class Game {
       if (!pickup.isActive) continue;
 
       // Magnet attraction - move towards player if in range
-      const distToPlayer = distance(pickup, player);
+      const distToPlayer = distance(pickup.position, player.position);
       if (distToPlayer < player.pickupRange || pickup.isAttracted) {
         pickup.isAttracted = true;
-        const dx = player.x - pickup.x;
-        const dy = player.y - pickup.y;
-
+        const dx = player.position.x - pickup.position.x;
+        const dy = player.position.y - pickup.position.y;
         if (distToPlayer > 0) {
           const magnetSpeed = 5; // Pixels per second
-          pickup.x += (dx / distToPlayer) * magnetSpeed;
-          pickup.y += (dy / distToPlayer) * magnetSpeed;
+          pickup.position.x += (dx / distToPlayer) * magnetSpeed;
+          pickup.position.y += (dy / distToPlayer) * magnetSpeed;
           // pickup.applyVelocity(deltaTime)
         }
       }
@@ -748,7 +748,7 @@ export class Game {
       const maxRange = (config.range ?? 300) * player.attackRange;
 
       // Find nearest enemy from weapon position
-      let target = this.entityManager.getNearestEnemy(weaponPos.x, weaponPos.y, maxRange);
+      let target = this.entityManager.getNearestEnemy(weaponPos, maxRange);
 
       // Fallback to main target if within range
       if (!target && player.currentTarget) {
@@ -757,11 +757,7 @@ export class Game {
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist <= maxRange) {
           // Find the actual enemy at currentTarget position
-          target = this.entityManager.getNearestEnemy(
-            player.currentTarget.x,
-            player.currentTarget.y,
-            50,
-          );
+          target = this.entityManager.getNearestEnemy(player.currentTarget, 50);
         }
       }
 
@@ -790,7 +786,7 @@ export class Game {
   ): void {
     const config = weapon.config;
     // Always calculate angle to target - not using pos.angle fallback
-    const targetAngle = Math.atan2(target.y - pos.y, target.x - pos.x);
+    const targetAngle = Math.atan2(target.position.y - pos.y, target.position.x - pos.x);
 
     // Critical hit check
     const isCrit = randomChance(player.critChance);
@@ -813,8 +809,7 @@ export class Game {
       const velocityVector = vectorFromAngle(angle, speed);
 
       const projectile = new Projectile({
-        x: pos.x,
-        y: pos.y,
+        position: { x: pos.x, y: pos.y },
         radius: config.bulletRadius ?? 4, // Default 4 like original
         type: this.getProjectileType(weapon.type),
         damage: finalDamage,
@@ -886,8 +881,7 @@ export class Game {
 
     // Create deployable config
     const deployableConfig: DeployableConfig = {
-      x: player.x,
-      y: player.y,
+      position: player.position,
       radius: config.bulletRadius ?? 12,
       type: DeployableType.MINE,
       damage: damage,
@@ -913,7 +907,7 @@ export class Game {
    * TODO: When SpawnSystem is fully integrated, delegate to SpawnSystem.spawnEnemyAt()
    */
   private spawnEnemy(type: EnemyType, x: number, y: number): void {
-    const enemy = new Enemy({ x, y, type });
+    const enemy = new Enemy({ position: { x, y }, type });
     this.entityManager.addEnemy(enemy);
 
     if (enemy.isBoss) {
@@ -930,8 +924,8 @@ export class Game {
     const playerDied = EffectsSystem.updateShockwaves(
       this.effects,
       {
-        x: player.x,
-        y: player.y,
+        x: player.position.x,
+        y: player.position.y,
         dodge: player.dodge,
         takeDamage: (damage: number, time: number) => player.takeDamage(damage, time),
       },

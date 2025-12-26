@@ -3,12 +3,12 @@
  * The main playable character with stats, weapons, and items.
  */
 
-import { Entity } from './Entity';
+import { CHARACTER_TYPES, CharacterConfig, GAME_BALANCE } from '@/config';
 import { IHealth } from '@/types/components';
 import { CharacterType, WeaponType } from '@/types/enums';
-import { CHARACTER_TYPES, CharacterConfig, GAME_BALANCE } from '@/config';
 import { clamp, Vector2 } from '@/utils';
 import { TWO_PI } from '@/utils/math';
+import { Entity } from './Entity';
 
 /**
  * Player stats interface - all modifiable stats
@@ -139,8 +139,7 @@ export class Player extends Entity implements IHealth {
 
   public constructor(config: PlayerConfig) {
     super({
-      x: config.x,
-      y: config.y,
+      position: { x: config.x, y: config.y },
       radius: 15, // half of width
     });
 
@@ -254,12 +253,12 @@ export class Player extends Entity implements IHealth {
     }
 
     // Apply movement
-    this.x += vx * this.speed;
-    this.y += vy * this.speed;
+    this.position.x += vx * this.speed;
+    this.position.y += vy * this.speed;
 
     // Keep in bounds
-    this.x = clamp(this.x, this.width / 2, canvasWidth - this.width / 2);
-    this.y = clamp(this.y, this.height / 2, canvasHeight - this.height / 2);
+    this.position.x = clamp(this.position.x, this.width / 2, canvasWidth - this.width / 2);
+    this.position.y = clamp(this.position.y, this.height / 2, canvasHeight - this.height / 2);
 
     // Store velocity for external use
     this.setVelocity(vx * this.speed, vy * this.speed);
@@ -314,8 +313,8 @@ export class Player extends Entity implements IHealth {
 
     const spreadAngle = (TWO_PI / weaponCount) * index;
 
-    const posX = this.x + Math.cos(spreadAngle) * weaponRadius;
-    const posY = this.y + Math.sin(spreadAngle) * weaponRadius;
+    const posX = this.position.x + Math.cos(spreadAngle) * weaponRadius;
+    const posY = this.position.y + Math.sin(spreadAngle) * weaponRadius;
 
     let aimAngle = spreadAngle;
     if (target) {
@@ -448,7 +447,12 @@ export class Player extends Entity implements IHealth {
 
     // Body
     ctx.fillStyle = this.color;
-    ctx.fillRect(this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
+    ctx.fillRect(
+      this.position.x - this.width / 2,
+      this.position.y - this.height / 2,
+      this.width,
+      this.height,
+    );
 
     // Armor visual
     if (this.armor > 0) {
@@ -458,14 +462,19 @@ export class Player extends Entity implements IHealth {
       ctx.strokeStyle = '#2a7fff';
       ctx.lineWidth = 2;
     }
-    ctx.strokeRect(this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
+    ctx.strokeRect(
+      this.position.x - this.width / 2,
+      this.position.y - this.height / 2,
+      this.width,
+      this.height,
+    );
 
     // Eyes
     ctx.fillStyle = 'white';
     const eyeOffset = 5;
     ctx.beginPath();
-    ctx.arc(this.x - eyeOffset, this.y - 3, 4, 0, TWO_PI);
-    ctx.arc(this.x + eyeOffset, this.y - 3, 4, 0, TWO_PI);
+    ctx.arc(this.position.x - eyeOffset, this.position.y - 3, 4, 0, TWO_PI);
+    ctx.arc(this.position.x + eyeOffset, this.position.y - 3, 4, 0, TWO_PI);
     ctx.fill();
 
     ctx.restore();

@@ -139,7 +139,7 @@ export class WaveManager {
     if (this.shouldSpawnBoss()) {
       const spawn = getSpawnPoint(canvas);
       const bossType = this.getBossType();
-      const boss = new Enemy({ x: spawn.x, y: spawn.y, type: bossType });
+      const boss = new Enemy({ position: spawn, type: bossType });
 
       // Scaling 1: With boss wave number (+50% HP, +25% DMG per boss wave)
       const bossWave = Math.floor(this.waveNumber / 3);
@@ -173,7 +173,7 @@ export class WaveManager {
       for (let i = 0; i < this.enemiesPerSpawn; i++) {
         const spawn = getSpawnPoint(canvas);
         const type = this.getRandomEnemyType();
-        const enemy = new Enemy({ x: spawn.x, y: spawn.y, type: type });
+        const enemy = new Enemy({ position: spawn, type: type });
 
         // Enemy scaling from wave 5 (exponential: scalingFactor^n)
         if (this.waveNumber >= GAME_BALANCE.enemy.scalingStartWave) {

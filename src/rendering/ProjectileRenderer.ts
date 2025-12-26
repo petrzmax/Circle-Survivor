@@ -55,7 +55,7 @@ export function renderProjectile(ctx: CanvasRenderingContext2D, projectile: Proj
  */
 function renderStandardBullet(ctx: CanvasRenderingContext2D, p: Projectile): void {
   ctx.beginPath();
-  ctx.arc(p.x, p.y, p.radius, 0, TWO_PI);
+  ctx.arc(p.position.x, p.position.y, p.radius, 0, TWO_PI);
   ctx.fillStyle = p.color;
   ctx.fill();
 
@@ -78,9 +78,16 @@ function renderStandardBullet(ctx: CanvasRenderingContext2D, p: Projectile): voi
  */
 function renderNuke(ctx: CanvasRenderingContext2D, p: Projectile): void {
   ctx.beginPath();
-  ctx.arc(p.x, p.y, p.radius, 0, TWO_PI);
+  ctx.arc(p.position.x, p.position.y, p.radius, 0, TWO_PI);
 
-  const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
+  const gradient = ctx.createRadialGradient(
+    p.position.x,
+    p.position.y,
+    0,
+    p.position.x,
+    p.position.y,
+    p.radius,
+  );
   gradient.addColorStop(0, '#ffffff');
   gradient.addColorStop(0.5, '#00ff00');
   gradient.addColorStop(1, '#004400');
@@ -96,7 +103,7 @@ function renderNuke(ctx: CanvasRenderingContext2D, p: Projectile): void {
  * Scythe - rotating crescent (uses projectile's rotation property)
  */
 function renderScythe(ctx: CanvasRenderingContext2D, p: Projectile): void {
-  ctx.translate(p.x, p.y);
+  ctx.translate(p.position.x, p.position.y);
   ctx.rotate(p.rotation);
 
   ctx.beginPath();
@@ -118,7 +125,7 @@ function renderScythe(ctx: CanvasRenderingContext2D, p: Projectile): void {
  */
 function renderSword(ctx: CanvasRenderingContext2D, p: Projectile): void {
   const vel = p.getVelocity();
-  ctx.translate(p.x, p.y);
+  ctx.translate(p.position.x, p.position.y);
   ctx.rotate(Math.atan2(vel.vy, vel.vx));
 
   ctx.beginPath();
@@ -140,9 +147,16 @@ function renderSword(ctx: CanvasRenderingContext2D, p: Projectile): void {
  */
 function renderHolyGrenade(ctx: CanvasRenderingContext2D, p: Projectile): void {
   ctx.beginPath();
-  ctx.arc(p.x, p.y, p.radius, 0, TWO_PI);
+  ctx.arc(p.position.x, p.position.y, p.radius, 0, TWO_PI);
 
-  const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
+  const gradient = ctx.createRadialGradient(
+    p.position.x,
+    p.position.y,
+    0,
+    p.position.x,
+    p.position.y,
+    p.radius,
+  );
   gradient.addColorStop(0, '#ffffff');
   gradient.addColorStop(0.5, '#ffd700');
   gradient.addColorStop(1, '#b8860b');
@@ -153,10 +167,10 @@ function renderHolyGrenade(ctx: CanvasRenderingContext2D, p: Projectile): void {
   ctx.strokeStyle = '#8b0000';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(p.x, p.y - 5);
-  ctx.lineTo(p.x, p.y + 5);
-  ctx.moveTo(p.x - 4, p.y - 1);
-  ctx.lineTo(p.x + 4, p.y - 1);
+  ctx.moveTo(p.position.x, p.position.y - 5);
+  ctx.lineTo(p.position.x, p.position.y + 5);
+  ctx.moveTo(p.position.x - 4, p.position.y - 1);
+  ctx.lineTo(p.position.x + 4, p.position.y - 1);
   ctx.stroke();
 
   ctx.shadowColor = '#ffd700';
@@ -167,7 +181,7 @@ function renderHolyGrenade(ctx: CanvasRenderingContext2D, p: Projectile): void {
  * Banana - rotating yellow crescent (uses Date.now for rotation)
  */
 function renderBanana(ctx: CanvasRenderingContext2D, p: Projectile): void {
-  ctx.translate(p.x, p.y);
+  ctx.translate(p.position.x, p.position.y);
   ctx.rotate(Date.now() / 150);
 
   ctx.beginPath();
@@ -185,7 +199,7 @@ function renderBanana(ctx: CanvasRenderingContext2D, p: Projectile): void {
  */
 function renderCrossbowBolt(ctx: CanvasRenderingContext2D, p: Projectile): void {
   const vel = p.getVelocity();
-  ctx.translate(p.x, p.y);
+  ctx.translate(p.position.x, p.position.y);
   ctx.rotate(Math.atan2(vel.vy, vel.vx));
 
   // Arrow shaft
@@ -214,8 +228,15 @@ function renderRocket(ctx: CanvasRenderingContext2D, p: Projectile): void {
 
   // Body with gradient
   ctx.beginPath();
-  ctx.arc(p.x, p.y, p.radius, 0, TWO_PI);
-  const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
+  ctx.arc(p.position.x, p.position.y, p.radius, 0, TWO_PI);
+  const gradient = ctx.createRadialGradient(
+    p.position.x,
+    p.position.y,
+    0,
+    p.position.x,
+    p.position.y,
+    p.radius,
+  );
   gradient.addColorStop(0, '#ffff00');
   gradient.addColorStop(0.7, '#ff4400');
   gradient.addColorStop(1, '#aa0000');
@@ -224,8 +245,8 @@ function renderRocket(ctx: CanvasRenderingContext2D, p: Projectile): void {
 
   // Flame trail
   ctx.beginPath();
-  ctx.moveTo(p.x - vel.vx * 2, p.y - vel.vy * 2);
-  ctx.lineTo(p.x - vel.vx * 4, p.y - vel.vy * 4);
+  ctx.moveTo(p.position.x - vel.vx * 2, p.position.y - vel.vy * 2);
+  ctx.lineTo(p.position.x - vel.vx * 4, p.position.y - vel.vy * 4);
   ctx.strokeStyle = '#ff8800';
   ctx.lineWidth = 4;
   ctx.stroke();
@@ -238,9 +259,16 @@ function renderFlame(ctx: CanvasRenderingContext2D, p: Projectile): void {
   const alpha = Math.max(0.3, 1 - p.distanceTraveled / (p.maxDistance || 120));
 
   ctx.beginPath();
-  ctx.arc(p.x, p.y, p.radius * randomRange(1, 1.3), 0, TWO_PI);
+  ctx.arc(p.position.x, p.position.y, p.radius * randomRange(1, 1.3), 0, TWO_PI);
 
-  const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
+  const gradient = ctx.createRadialGradient(
+    p.position.x,
+    p.position.y,
+    0,
+    p.position.x,
+    p.position.y,
+    p.radius,
+  );
   gradient.addColorStop(0, `rgba(255, 255, 0, ${alpha})`);
   gradient.addColorStop(0.5, `rgba(255, 100, 0, ${alpha})`);
   gradient.addColorStop(1, `rgba(255, 0, 0, ${alpha * 0.5})`);
@@ -258,13 +286,13 @@ function renderEnemyBullet(ctx: CanvasRenderingContext2D, p: Projectile): void {
 
   // Main bullet
   ctx.beginPath();
-  ctx.arc(p.x, p.y, p.radius, 0, TWO_PI);
+  ctx.arc(p.position.x, p.position.y, p.radius, 0, TWO_PI);
   ctx.fillStyle = p.color;
   ctx.fill();
 
   // Darker center
   ctx.beginPath();
-  ctx.arc(p.x, p.y, p.radius * 0.5, 0, TWO_PI);
+  ctx.arc(p.position.x, p.position.y, p.radius * 0.5, 0, TWO_PI);
   ctx.fillStyle = '#000';
   ctx.fill();
 }

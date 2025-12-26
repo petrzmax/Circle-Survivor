@@ -1,6 +1,5 @@
 /**
  * PickupRenderer - Renders pickup entities.
- * Matches original js/entities/pickup.js render() exactly.
  */
 
 import { Pickup } from '@/entities/Pickup';
@@ -45,7 +44,7 @@ function renderGold(ctx: CanvasRenderingContext2D, pickup: Pickup, scale: number
   ctx.font = `${16 * scale}px Arial`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('💰', pickup.x, pickup.y);
+  ctx.fillText('💰', pickup.position.x, pickup.position.y);
 }
 
 /**
@@ -66,7 +65,7 @@ function renderHealth(ctx: CanvasRenderingContext2D, pickup: Pickup): void {
   ctx.fillStyle = '#ff4444';
 
   // Draw a heart shape
-  ctx.translate(pickup.x, pickup.y);
+  ctx.translate(pickup.position.x, pickup.position.y);
   ctx.scale(healthScale, healthScale);
   ctx.beginPath();
   ctx.moveTo(0, -pickup.radius * 0.3);

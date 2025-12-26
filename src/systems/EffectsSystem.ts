@@ -1,11 +1,10 @@
 /**
  * EffectsSystem - handles visual effects like explosions and particles.
  * Rendering and updating of temporary visual effects.
- * Matches original js/systems/effects-system.js exactly.
  */
 
 import { distance, randomAngle, randomChance, randomRange } from '@/utils';
-import { TWO_PI } from '@/utils/math';
+import { TWO_PI, Vector2 } from '@/utils/math';
 
 // ============ Effect Interfaces ============
 
@@ -262,7 +261,7 @@ export const EffectsSystem = {
    */
   createDeathEffect(
     effects: EffectsState,
-    enemy: { x: number; y: number; color: string; isBoss: boolean; type: string },
+    enemy: { position: Vector2; color: string; isBoss: boolean; type: string },
   ): void {
     // Particle count depends on enemy type
     let particleCount = 8;
@@ -286,8 +285,8 @@ export const EffectsSystem = {
       const speed = randomRange(2, 6);
 
       effects.deathEffects.push({
-        x: enemy.x,
-        y: enemy.y,
+        x: enemy.position.x,
+        y: enemy.position.y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         size: particleSize * randomRange(0.5, 1),
@@ -306,8 +305,8 @@ export const EffectsSystem = {
         const speed = randomRange(1, 3);
 
         effects.deathEffects.push({
-          x: enemy.x,
-          y: enemy.y,
+          x: enemy.position.x,
+          y: enemy.position.y,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
           size: randomRange(10, 20),
@@ -326,16 +325,15 @@ export const EffectsSystem = {
    */
   createExplosion(
     effects: EffectsState,
-    x: number,
-    y: number,
+    position: Vector2,
     radius: number,
     isNuke: boolean = false,
     isHolyGrenade: boolean = false,
     isBanana: boolean = false,
   ): void {
     effects.explosions.push({
-      x,
-      y,
+      x: position.x,
+      y: position.y,
       radius,
       maxRadius: radius,
       alpha: 1,

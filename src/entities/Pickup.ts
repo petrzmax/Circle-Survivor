@@ -3,10 +3,10 @@
  * Represents collectible items dropped by enemies (gold, health, XP).
  */
 
-import { Entity } from './Entity';
+import { ICollectible, IExpirable } from '@/types/components';
 import { PickupType } from '@/types/enums';
-import { IExpirable, ICollectible } from '@/types/components';
 import { Vector2, distance, normalize, randomAngle } from '@/utils';
+import { Entity } from './Entity';
 
 /**
  * Pickup configuration
@@ -68,15 +68,14 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
 
   public constructor(config: PickupConfig) {
     super({
-      x: config.x,
-      y: config.y,
+      position: { x: config.x, y: config.y },
       radius: 8,
     });
 
     this.type = config.type;
     this.value = config.value;
 
-    // Gold: 3s, Health: 15s (matching original)
+    // Gold: 3s, Health: 15s
     this.lifetime = config.lifetime ?? (this.type === PickupType.GOLD ? 3 : 15);
     this.baseY = config.y;
 
@@ -113,13 +112,6 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
   // ============ ICollectible ============
 
   /**
-   * Checks if player is in range to collect
-   */
-  public isInRange(playerX: number, playerY: number, pickupRange: number): boolean {
-    return distance({ x: playerX, y: playerY }, this) <= pickupRange;
-  }
-
-  /**
    * Collects the pickup
    * @returns The value of the pickup
    */
@@ -138,9 +130,10 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
     this.lifetime -= deltaTime;
 
     // Up-down animation (only when not being collected)
+    // TODO is it possible to animate it with css?
     if (!this.isAttracted) {
       const time = (Date.now() - this.spawnTime) / 1000;
-      this.y = this.baseY + Math.sin(time * 3 + this.animationOffset) * 1.5;
+      this.position.y = this.baseY + Math.sin(time * 3 + this.animationOffset) * 1.5;
     }
 
     if (this.isExpired()) {
@@ -155,19 +148,19 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
    * @param deltaTime Delta time in seconds
    */
   public updateAttraction(player: Vector2, pickupRange: number, _deltaTime: number): void {
-    const dist = distance(player, this);
+    const dist = distance(player, this.position);
 
     if (dist <= pickupRange || this.isAttracted) {
       this.isAttracted = true;
 
       // Move towards player
-      const dx = player.x - this.x;
-      const dy = player.y - this.y;
+      const dx = player.x - this.position.x;
+      const dy = player.y - this.position.y;
       const norm = normalize({ x: dx, y: dy });
 
-      this.x += norm.x * this.attractionSpeed;
-      this.y += norm.y * this.attractionSpeed;
-      this.baseY = this.y; // Update base position
+      this.position.x += norm.x * this.attractionSpeed;
+      this.position.y += norm.y * this.attractionSpeed;
+      this.baseY = this.position.y; // Update base position
     }
   }
 
@@ -196,7 +189,7 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
       ctx.font = `${16 * scale}px Arial`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('💰', this.x, this.y);
+      ctx.fillText('💰', this.position.x, this.position.y);
     } else if (this.type === PickupType.HEALTH) {
       // Red heart shape with glow - matching original
       // Shadow must be set BEFORE drawing
@@ -206,7 +199,7 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
 
       ctx.fillStyle = '#ff4444';
       // Draw a heart shape with bezier curves
-      ctx.translate(this.x, this.y);
+      ctx.translate(this.position.x, this.position.y);
       ctx.scale(scale, scale);
       ctx.beginPath();
       ctx.moveTo(0, -this.radius * 0.3);
@@ -236,10 +229,10 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
 /**
  * Factory function to create gold pickup
  */
-export function createGoldPickup(x: number, y: number, value: number): Pickup {
+export function createGoldPickup(position: Vector2, value: number): Pickup {
   return new Pickup({
-    x,
-    y,
+    x: position.x,
+    y: position.y,
     type: PickupType.GOLD,
     value,
   });

@@ -19,7 +19,7 @@ export function renderEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
 
   // Body
   ctx.beginPath();
-  ctx.arc(enemy.x, enemy.y, enemy.radius, 0, TWO_PI);
+  ctx.arc(enemy.position.x, enemy.position.y, enemy.radius, 0, TWO_PI);
   ctx.fillStyle = enemy.color;
   ctx.fill();
 
@@ -35,12 +35,17 @@ export function renderEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
     const hpPercent = enemy.hp / enemy.maxHp;
 
     ctx.fillStyle = '#333';
-    ctx.fillRect(enemy.x - barWidth / 2, enemy.y - enemy.radius - 10, barWidth, barHeight);
+    ctx.fillRect(
+      enemy.position.x - barWidth / 2,
+      enemy.position.y - enemy.radius - 10,
+      barWidth,
+      barHeight,
+    );
 
     ctx.fillStyle = hpPercent > 0.5 ? '#2ecc71' : hpPercent > 0.25 ? '#f39c12' : '#e74c3c';
     ctx.fillRect(
-      enemy.x - barWidth / 2,
-      enemy.y - enemy.radius - 10,
+      enemy.position.x - barWidth / 2,
+      enemy.position.y - enemy.radius - 10,
       barWidth * hpPercent,
       barHeight,
     );
@@ -50,15 +55,15 @@ export function renderEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
   ctx.fillStyle = 'white';
   ctx.beginPath();
   ctx.arc(
-    enemy.x - enemy.radius * 0.3,
-    enemy.y - enemy.radius * 0.2,
+    enemy.position.x - enemy.radius * 0.3,
+    enemy.position.y - enemy.radius * 0.2,
     enemy.radius * 0.2,
     0,
     TWO_PI,
   );
   ctx.arc(
-    enemy.x + enemy.radius * 0.3,
-    enemy.y - enemy.radius * 0.2,
+    enemy.position.x + enemy.radius * 0.3,
+    enemy.position.y - enemy.radius * 0.2,
     enemy.radius * 0.2,
     0,
     TWO_PI,
@@ -69,23 +74,23 @@ export function renderEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
   ctx.strokeStyle = '#333';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(enemy.x - enemy.radius * 0.5, enemy.y - enemy.radius * 0.4);
-  ctx.lineTo(enemy.x - enemy.radius * 0.1, enemy.y - enemy.radius * 0.5);
-  ctx.moveTo(enemy.x + enemy.radius * 0.5, enemy.y - enemy.radius * 0.4);
-  ctx.lineTo(enemy.x + enemy.radius * 0.1, enemy.y - enemy.radius * 0.5);
+  ctx.moveTo(enemy.position.x - enemy.radius * 0.5, enemy.position.y - enemy.radius * 0.4);
+  ctx.lineTo(enemy.position.x - enemy.radius * 0.1, enemy.position.y - enemy.radius * 0.5);
+  ctx.moveTo(enemy.position.x + enemy.radius * 0.5, enemy.position.y - enemy.radius * 0.4);
+  ctx.lineTo(enemy.position.x + enemy.radius * 0.1, enemy.position.y - enemy.radius * 0.5);
   ctx.stroke();
 
   // Boss crown
   if (enemy.isBoss) {
     ctx.fillStyle = '#ffd700';
     ctx.beginPath();
-    ctx.moveTo(enemy.x - 20, enemy.y - enemy.radius - 5);
-    ctx.lineTo(enemy.x - 15, enemy.y - enemy.radius - 20);
-    ctx.lineTo(enemy.x - 5, enemy.y - enemy.radius - 10);
-    ctx.lineTo(enemy.x, enemy.y - enemy.radius - 25);
-    ctx.lineTo(enemy.x + 5, enemy.y - enemy.radius - 10);
-    ctx.lineTo(enemy.x + 15, enemy.y - enemy.radius - 20);
-    ctx.lineTo(enemy.x + 20, enemy.y - enemy.radius - 5);
+    ctx.moveTo(enemy.position.x - 20, enemy.position.y - enemy.radius - 5);
+    ctx.lineTo(enemy.position.x - 15, enemy.position.y - enemy.radius - 20);
+    ctx.lineTo(enemy.position.x - 5, enemy.position.y - enemy.radius - 10);
+    ctx.lineTo(enemy.position.x, enemy.position.y - enemy.radius - 25);
+    ctx.lineTo(enemy.position.x + 5, enemy.position.y - enemy.radius - 10);
+    ctx.lineTo(enemy.position.x + 15, enemy.position.y - enemy.radius - 20);
+    ctx.lineTo(enemy.position.x + 20, enemy.position.y - enemy.radius - 5);
     ctx.closePath();
     ctx.fill();
 
@@ -96,9 +101,9 @@ export function renderEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
       ctx.fillStyle = '#ff0000';
       ctx.strokeStyle = '#000';
       ctx.lineWidth = 3;
-      ctx.strokeText(enemy.bossName, enemy.x, enemy.y - enemy.radius - 35);
+      ctx.strokeText(enemy.bossName, enemy.position.x, enemy.position.y - enemy.radius - 35);
       ctx.fillStyle = '#ffd700';
-      ctx.fillText(enemy.bossName, enemy.x, enemy.y - enemy.radius - 35);
+      ctx.fillText(enemy.bossName, enemy.position.x, enemy.position.y - enemy.radius - 35);
     }
   }
 

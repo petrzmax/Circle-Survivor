@@ -97,8 +97,7 @@ function renderNuke(ctx: CanvasRenderingContext2D, p: Projectile): void {
  * Scythe - rotating crescent (uses projectile's rotation property)
  */
 function renderScythe(ctx: CanvasRenderingContext2D, p: Projectile): void {
-  // TODO fix origin point for rotation, it's crazy
-  // ctx.rotate(p.rotation);
+  ctx.rotate(p.rotation);
 
   ctx.beginPath();
   ctx.arc(0, 0, p.radius, 0.2 * Math.PI, 1.8 * Math.PI);

@@ -266,15 +266,6 @@ export class Projectile extends Entity implements IExpirable {
    * @param ctx Canvas rendering context
    */
   public draw(ctx: CanvasRenderingContext2D): void {
-    ctx.save();
-
-    // TODO fix rotation - crazy shit
-    if (this.rotation !== 0) {
-      ctx.rotate(this.rotation);
-    }
-
     renderProjectile(ctx, this);
-
-    ctx.restore();
   }
 }

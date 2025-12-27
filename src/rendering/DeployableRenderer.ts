@@ -1,7 +1,3 @@
-/**
- * DeployableRenderer - Renders deployable objects (mines, turrets).
- */
-
 import { Deployable } from '@/entities/Deployable';
 import { DeployableType } from '@/types/enums';
 import { TWO_PI } from '@/utils/math';
@@ -23,7 +19,7 @@ export function renderDeployable(ctx: CanvasRenderingContext2D, deployable: Depl
       renderTrap(ctx, deployable);
       break;
     default:
-      renderMine(ctx, deployable);
+      throw new Error(`Unknown deployable type: ${deployable.type as string}`);
   }
 
   ctx.restore();

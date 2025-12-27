@@ -1,7 +1,3 @@
-/**
- * PlayerRenderer - Renders the player entity.
- */
-
 import { Player } from '@/entities/Player';
 import { TWO_PI } from '@/utils/math';
 
@@ -13,6 +9,9 @@ export function renderPlayer(
   player: Player,
   currentTime: number,
 ): void {
+  ctx.save();
+  ctx.translate(player.position.x, player.position.y);
+
   // Flash when invincible
   if (currentTime < player.invincibleUntil) {
     if (Math.floor(currentTime / 100) % 2 === 0) {
@@ -22,39 +21,33 @@ export function renderPlayer(
 
   // Body (rectangle)
   ctx.fillStyle = player.color;
-  ctx.fillRect(
-    player.position.x - player.width / 2,
-    player.position.y - player.height / 2,
-    player.width,
-    player.height,
-  );
+  ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
 
   // Armor visual (blue border if has armor)
   if (player.armor > 0) {
     ctx.strokeStyle = `rgba(100, 150, 255, ${Math.min(player.armor / 50, 1)})`;
     ctx.lineWidth = 3;
   } else {
+    // TODO when no armor, looks too similar to armored state
     ctx.strokeStyle = '#2a7fff';
     ctx.lineWidth = 2;
   }
-  ctx.strokeRect(
-    player.position.x - player.width / 2,
-    player.position.y - player.height / 2,
-    player.width,
-    player.height,
-  );
+  ctx.strokeRect(-player.width / 2, -player.height / 2, player.width, player.height);
 
-  // Eyes (direction indicator)
+  // TODO experiment - look on  nearest enemy
+  // Eyes
   ctx.fillStyle = 'white';
   const eyeOffset = 5;
   ctx.beginPath();
-  ctx.arc(player.position.x - eyeOffset, player.position.y - 3, 4, 0, TWO_PI);
-  ctx.arc(player.position.x + eyeOffset, player.position.y - 3, 4, 0, TWO_PI);
+  ctx.arc(-eyeOffset, -3, 4, 0, TWO_PI);
+  ctx.arc(eyeOffset, -3, 4, 0, TWO_PI);
   ctx.fill();
 
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = 1; // TODO needed?
+  ctx.restore();
 }
 
+// TODO: move to HUDRenderer.ts
 /**
  * Renders player health bar (HUD element, positioned relative to canvas not player)
  */

@@ -4,6 +4,7 @@
  */
 
 import { CHARACTER_TYPES, CharacterConfig, GAME_BALANCE } from '@/config';
+import { renderPlayer } from '@/rendering';
 import { IHealth } from '@/types/components';
 import { CharacterType, WeaponType } from '@/types/enums';
 import { clamp, Vector2 } from '@/utils';
@@ -430,53 +431,7 @@ export class Player extends Entity implements IHealth {
     }
   }
 
-  // ============ Rendering ============
-
-  /**
-   * Draws player
-   */
   public draw(ctx: CanvasRenderingContext2D, currentTime: number = 0): void {
-    ctx.save();
-
-    // Flash when invincible
-    if (currentTime < this.invincibleUntil) {
-      if (Math.floor(currentTime / 100) % 2 === 0) {
-        ctx.globalAlpha = 0.5;
-      }
-    }
-
-    // Body
-    ctx.fillStyle = this.color;
-    ctx.fillRect(
-      this.position.x - this.width / 2,
-      this.position.y - this.height / 2,
-      this.width,
-      this.height,
-    );
-
-    // Armor visual
-    if (this.armor > 0) {
-      ctx.strokeStyle = `rgba(100, 150, 255, ${Math.min(this.armor / 50, 1)})`;
-      ctx.lineWidth = 3;
-    } else {
-      ctx.strokeStyle = '#2a7fff';
-      ctx.lineWidth = 2;
-    }
-    ctx.strokeRect(
-      this.position.x - this.width / 2,
-      this.position.y - this.height / 2,
-      this.width,
-      this.height,
-    );
-
-    // Eyes
-    ctx.fillStyle = 'white';
-    const eyeOffset = 5;
-    ctx.beginPath();
-    ctx.arc(this.position.x - eyeOffset, this.position.y - 3, 4, 0, TWO_PI);
-    ctx.arc(this.position.x + eyeOffset, this.position.y - 3, 4, 0, TWO_PI);
-    ctx.fill();
-
-    ctx.restore();
+    renderPlayer(ctx, this, currentTime);
   }
 }

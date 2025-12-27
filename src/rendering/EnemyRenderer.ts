@@ -1,8 +1,3 @@
-/**
- * EnemyRenderer - Renders enemy entities.
- * Matches original js/enemy.js render() exactly.
- */
-
 import { Enemy } from '@/entities/Enemy';
 import { TWO_PI } from '@/utils/math';
 
@@ -11,6 +6,7 @@ import { TWO_PI } from '@/utils/math';
  */
 export function renderEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
   ctx.save();
+  ctx.translate(enemy.position.x, enemy.position.y);
 
   // Ghost transparency
   if (enemy.phasing) {
@@ -19,7 +15,7 @@ export function renderEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
 
   // Body
   ctx.beginPath();
-  ctx.arc(enemy.position.x, enemy.position.y, enemy.radius, 0, TWO_PI);
+  ctx.arc(0, 0, enemy.radius, 0, TWO_PI);
   ctx.fillStyle = enemy.color;
   ctx.fill();
 
@@ -30,83 +26,17 @@ export function renderEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
 
   // HP bar (only if damaged, and not for bosses with top health bar)
   if (enemy.hp < enemy.maxHp && !enemy.hasTopHealthBar) {
-    const barWidth = enemy.radius * 2;
-    const barHeight = 4;
-    const hpPercent = enemy.hp / enemy.maxHp;
-
-    ctx.fillStyle = '#333';
-    ctx.fillRect(
-      enemy.position.x - barWidth / 2,
-      enemy.position.y - enemy.radius - 10,
-      barWidth,
-      barHeight,
-    );
-
-    ctx.fillStyle = hpPercent > 0.5 ? '#2ecc71' : hpPercent > 0.25 ? '#f39c12' : '#e74c3c';
-    ctx.fillRect(
-      enemy.position.x - barWidth / 2,
-      enemy.position.y - enemy.radius - 10,
-      barWidth * hpPercent,
-      barHeight,
-    );
+    drawHealthBar(ctx, enemy);
   }
 
-  // Eyes
-  ctx.fillStyle = 'white';
-  ctx.beginPath();
-  ctx.arc(
-    enemy.position.x - enemy.radius * 0.3,
-    enemy.position.y - enemy.radius * 0.2,
-    enemy.radius * 0.2,
-    0,
-    TWO_PI,
-  );
-  ctx.arc(
-    enemy.position.x + enemy.radius * 0.3,
-    enemy.position.y - enemy.radius * 0.2,
-    enemy.radius * 0.2,
-    0,
-    TWO_PI,
-  );
-  ctx.fill();
+  drawEyes(ctx, enemy);
 
-  // Angry eyebrows
-  ctx.strokeStyle = '#333';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(enemy.position.x - enemy.radius * 0.5, enemy.position.y - enemy.radius * 0.4);
-  ctx.lineTo(enemy.position.x - enemy.radius * 0.1, enemy.position.y - enemy.radius * 0.5);
-  ctx.moveTo(enemy.position.x + enemy.radius * 0.5, enemy.position.y - enemy.radius * 0.4);
-  ctx.lineTo(enemy.position.x + enemy.radius * 0.1, enemy.position.y - enemy.radius * 0.5);
-  ctx.stroke();
-
-  // Boss crown
   if (enemy.isBoss) {
-    ctx.fillStyle = '#ffd700';
-    ctx.beginPath();
-    ctx.moveTo(enemy.position.x - 20, enemy.position.y - enemy.radius - 5);
-    ctx.lineTo(enemy.position.x - 15, enemy.position.y - enemy.radius - 20);
-    ctx.lineTo(enemy.position.x - 5, enemy.position.y - enemy.radius - 10);
-    ctx.lineTo(enemy.position.x, enemy.position.y - enemy.radius - 25);
-    ctx.lineTo(enemy.position.x + 5, enemy.position.y - enemy.radius - 10);
-    ctx.lineTo(enemy.position.x + 15, enemy.position.y - enemy.radius - 20);
-    ctx.lineTo(enemy.position.x + 20, enemy.position.y - enemy.radius - 5);
-    ctx.closePath();
-    ctx.fill();
-
-    // Boss name
-    if (enemy.bossName) {
-      ctx.font = 'bold 14px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#ff0000';
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 3;
-      ctx.strokeText(enemy.bossName, enemy.position.x, enemy.position.y - enemy.radius - 35);
-      ctx.fillStyle = '#ffd700';
-      ctx.fillText(enemy.bossName, enemy.position.x, enemy.position.y - enemy.radius - 35);
-    }
+    drawBossCrown(ctx, enemy);
+    drawBossName(ctx, enemy);
   }
 
+  // TODO: hmmm probably it does not work, or is not visible enough
   // Exploder warning glow
   if (enemy.explodeOnDeath) {
     ctx.shadowColor = '#ffff00';
@@ -114,4 +44,62 @@ export function renderEnemy(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
   }
 
   ctx.restore();
+}
+
+function drawEyes(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
+  ctx.fillStyle = 'white';
+  ctx.beginPath();
+  ctx.arc(-enemy.radius * 0.3, -enemy.radius * 0.2, enemy.radius * 0.2, 0, TWO_PI);
+  ctx.arc(enemy.radius * 0.3, -enemy.radius * 0.2, enemy.radius * 0.2, 0, TWO_PI);
+  ctx.fill();
+
+  // TODO: pupils should follow player?
+  // TODO: these eyebrows are sad, make them angry
+  // Angry eyebrows
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-enemy.radius * 0.5, -enemy.radius * 0.4);
+  ctx.lineTo(-enemy.radius * 0.1, -enemy.radius * 0.5);
+  ctx.moveTo(enemy.radius * 0.5, -enemy.radius * 0.4);
+  ctx.lineTo(enemy.radius * 0.1, -enemy.radius * 0.5);
+  ctx.stroke();
+}
+
+function drawHealthBar(ctx: CanvasRenderingContext2D, e: Enemy): void {
+  const barWidth = e.radius * 2;
+  const barHeight = 4;
+  const hpPercent = e.hp / e.maxHp;
+  ctx.fillStyle = '#333';
+  ctx.fillRect(-barWidth / 2, -e.radius - 10, barWidth, barHeight);
+
+  ctx.fillStyle = hpPercent > 0.5 ? '#2ecc71' : hpPercent > 0.25 ? '#f39c12' : '#e74c3c';
+  ctx.fillRect(-barWidth / 2, -e.radius - 10, barWidth * hpPercent, barHeight);
+}
+
+function drawBossCrown(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
+  ctx.fillStyle = '#ffd700';
+  ctx.beginPath();
+  ctx.moveTo(-20, -enemy.radius - 5);
+  ctx.lineTo(-15, -enemy.radius - 20);
+  ctx.lineTo(-5, -enemy.radius - 10);
+  ctx.lineTo(0, -enemy.radius - 25);
+  ctx.lineTo(5, -enemy.radius - 10);
+  ctx.lineTo(15, -enemy.radius - 20);
+  ctx.lineTo(20, -enemy.radius - 5);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawBossName(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
+  // TODO it shouldn't be necessary to check again
+  if (!enemy.bossName) return;
+
+  ctx.font = 'bold 14px Arial';
+  ctx.textAlign = 'center';
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 3;
+  ctx.strokeText(enemy.bossName, 0, -enemy.radius - 35);
+  ctx.fillStyle = '#ffd700';
+  ctx.fillText(enemy.bossName, 0, -enemy.radius - 35);
 }

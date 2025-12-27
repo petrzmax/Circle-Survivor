@@ -3,13 +3,13 @@
  * Represents all enemy types including basic enemies and bosses.
  */
 
-import { Entity } from './Entity';
-import { EnemyType } from '@/types/enums';
+import { AttackPattern, ENEMY_TYPES, EnemyConfig, GAME_BALANCE, generateBossName } from '@/config';
+import { renderEnemy } from '@/rendering';
 import { IHealth } from '@/types/components';
-import { ENEMY_TYPES, EnemyConfig, AttackPattern, generateBossName } from '@/config';
-import { GAME_BALANCE } from '@/config';
-import { Vector2, clamp, randomElement } from '@/utils';
-import { distance, TWO_PI } from '@/utils/math';
+import { EnemyType } from '@/types/enums';
+import { clamp, randomElement, Vector2 } from '@/utils';
+import { distance } from '@/utils/math';
+import { Entity } from './Entity';
 
 /**
  * Attack result types
@@ -363,111 +363,11 @@ export class Enemy extends Entity implements IHealth {
     }
   }
 
-  // ============ Rendering ============
-
+  // TODO: move to RenderSystem
   /**
    * Draws enemy
    */
   public draw(ctx: CanvasRenderingContext2D): void {
-    const { x, y } = this.position;
-    ctx.save();
-
-    // Ghost transparency
-    if (this.phasing) {
-      ctx.globalAlpha = 0.6 + Math.sin(Date.now() / 200) * 0.2;
-    }
-
-    // Body
-    ctx.beginPath();
-    ctx.arc(x, y, this.radius, 0, TWO_PI);
-    ctx.fillStyle = this.color;
-    ctx.fill();
-
-    // Border
-    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // HP bar (only if damaged, and not for bosses with top health bar)
-    if (this.hp < this.maxHp && !this.hasTopHealthBar) {
-      this.drawHealthBar(ctx);
-    }
-
-    // Eyes
-    this.drawEyes(ctx);
-
-    // Boss crown and name
-    if (this.isBoss) {
-      this.drawBossCrown(ctx);
-    }
-
-    // Exploder glow
-    if (this.explodeOnDeath) {
-      ctx.shadowColor = '#ffff00';
-      ctx.shadowBlur = 10 + Math.sin(Date.now() / 100) * 5;
-    }
-
-    ctx.restore();
-  }
-
-  private drawHealthBar(ctx: CanvasRenderingContext2D): void {
-    const { x, y } = this.position;
-
-    const barWidth = this.radius * 2;
-    const barHeight = 4;
-    const hpPercent = this.hp / this.maxHp;
-
-    ctx.fillStyle = '#333';
-    ctx.fillRect(x - barWidth / 2, y - this.radius - 10, barWidth, barHeight);
-
-    ctx.fillStyle = hpPercent > 0.5 ? '#2ecc71' : hpPercent > 0.25 ? '#f39c12' : '#e74c3c';
-    ctx.fillRect(x - barWidth / 2, y - this.radius - 10, barWidth * hpPercent, barHeight);
-  }
-
-  private drawEyes(ctx: CanvasRenderingContext2D): void {
-    const { x, y } = this.position;
-
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(x - this.radius * 0.3, y - this.radius * 0.2, this.radius * 0.2, 0, TWO_PI);
-    ctx.arc(x + this.radius * 0.3, y - this.radius * 0.2, this.radius * 0.2, 0, TWO_PI);
-    ctx.fill();
-
-    // Angry eyebrows
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x - this.radius * 0.5, y - this.radius * 0.4);
-    ctx.lineTo(x - this.radius * 0.1, y - this.radius * 0.5);
-    ctx.moveTo(x + this.radius * 0.5, y - this.radius * 0.4);
-    ctx.lineTo(x + this.radius * 0.1, y - this.radius * 0.5);
-    ctx.stroke();
-  }
-
-  private drawBossCrown(ctx: CanvasRenderingContext2D): void {
-    const { x, y } = this.position;
-
-    ctx.fillStyle = '#ffd700';
-    ctx.beginPath();
-    ctx.moveTo(x - 20, y - this.radius - 5);
-    ctx.lineTo(x - 15, y - this.radius - 20);
-    ctx.lineTo(x - 5, y - this.radius - 10);
-    ctx.lineTo(x, y - this.radius - 25);
-    ctx.lineTo(x + 5, y - this.radius - 10);
-    ctx.lineTo(x + 15, y - this.radius - 20);
-    ctx.lineTo(x + 20, y - this.radius - 5);
-    ctx.closePath();
-    ctx.fill();
-
-    // Boss name
-    if (this.bossName) {
-      ctx.font = 'bold 14px Arial';
-      ctx.textAlign = 'center';
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 3;
-      ctx.strokeText(this.bossName, this.position.x, this.position.y - this.radius - 35);
-      ctx.fillStyle = '#ffd700';
-      ctx.fillText(this.bossName, this.position.x, this.position.y - this.radius - 35);
-    }
+    renderEnemy(ctx, this);
   }
 }

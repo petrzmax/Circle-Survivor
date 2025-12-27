@@ -156,11 +156,10 @@ function renderHolyGrenade(ctx: CanvasRenderingContext2D, p: Projectile): void {
 }
 
 /**
- * Banana - rotating yellow crescent (uses Date.now for rotation)
+ * Banana - rotating yellow crescent
  */
 function renderBanana(ctx: CanvasRenderingContext2D, p: Projectile): void {
-  // TODO: fix rotation
-  ctx.rotate(Date.now() / 150);
+  ctx.rotate(p.rotation);
 
   ctx.beginPath();
   ctx.arc(0, -5, p.radius, 0.2 * Math.PI, 0.8 * Math.PI);

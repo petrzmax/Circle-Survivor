@@ -3,7 +3,8 @@
  * The main playable character with stats, weapons, and items.
  */
 
-import { CHARACTER_TYPES, CharacterConfig, GAME_BALANCE } from '@/config';
+import { CHARACTER_TYPES, CharacterConfig, GAME_BALANCE, WEAPON_TYPES } from '@/config';
+import type { WeaponInstance } from '@/core/Game';
 import { renderPlayer } from '@/rendering';
 import { IHealth } from '@/types/components';
 import { CharacterType, WeaponType } from '@/types/enums';
@@ -118,8 +119,8 @@ export class Player extends Entity implements IHealth {
   /** Maximum weapon slots */
   public maxWeapons: number = 6;
 
-  /** Equipped weapon types (managed externally by weapon system) */
-  public weaponTypes: WeaponType[] = [];
+  /** Equipped weapons with runtime state */
+  public weapons: WeaponInstance[] = [];
 
   /** Collected item IDs */
   public items: string[] = [];
@@ -275,14 +276,37 @@ export class Player extends Entity implements IHealth {
   // ============ Weapons & Items ============
 
   /**
-   * Adds a weapon type
-   * @returns true if added, false if no slots
+   * Adds a weapon type and creates full weapon instance
+   * @returns true if added, false if no slots available or weapon already exists
    */
   public addWeapon(type: WeaponType): boolean {
-    if (this.weaponTypes.length >= this.maxWeapons) {
+    if (this.weapons.length >= this.maxWeapons) {
+      // Check if we already have this weapon - upgrade it
+      const existing = this.weapons.find((w) => w.type === type);
+      if (existing) {
+        existing.level++;
+        return true;
+      }
       return false;
     }
-    this.weaponTypes.push(type);
+
+    const config = WEAPON_TYPES[type];
+    if (!config) {
+      console.error(`Unknown weapon type: ${type}`);
+      return false;
+    }
+
+    // Create full weapon instance
+    this.weapons.push({
+      type,
+      config,
+      level: 1,
+      lastFireTime: 0,
+      multishot: 0,
+      name: config.name,
+      fireOffset: 0,
+    });
+
     return true;
   }
 
@@ -310,7 +334,7 @@ export class Player extends Entity implements IHealth {
     target: Vector2 | null = null,
   ): { x: number; y: number; angle: number } {
     const weaponRadius = 25;
-    const weaponCount = this.weaponTypes.length || 1;
+    const weaponCount = this.weapons.length || 1;
 
     const spreadAngle = (TWO_PI / weaponCount) * index;
 

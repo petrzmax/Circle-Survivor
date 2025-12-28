@@ -2,149 +2,117 @@
  * Weapon Renderer - draws weapons around the player
  */
 
+import { Player } from '@/entities/Player';
 import { WeaponType } from '@/types';
 import { TWO_PI } from '@/utils/math';
 
-// ============ Types ============
+/**
+ * Draw all weapons around the player
+ */
+export function renderWeapons(ctx: CanvasRenderingContext2D, player: Player): void {
+  const weaponCount = player.weapons.length;
+  if (weaponCount === 0) return;
 
-export interface RenderedWeapon {
-  type: WeaponType;
-  level: number;
-  color?: string;
+  player.weapons.forEach((weapon, index) => {
+    // Get weapon position with target aiming
+    const pos = player.getWeaponPosition(index, player.currentTarget);
+
+    // Draw weapon icon
+    drawWeapon(ctx, weapon.type, weapon.level, pos.x, pos.y, pos.angle);
+  });
 }
 
-export interface WeaponPosition {
-  x: number;
-  y: number;
-  angle: number;
+function drawWeapon(
+  ctx: CanvasRenderingContext2D,
+  type: WeaponType,
+  level: number,
+  x: number,
+  y: number,
+  angle: number,
+): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle + Math.PI / 2); // Rotation in movement direction
+
+  switch (type) {
+    case WeaponType.PISTOL:
+      drawPistol(ctx);
+      break;
+
+    case WeaponType.SMG:
+      drawSMG(ctx);
+      break;
+
+    case WeaponType.SHOTGUN:
+      drawShotgun(ctx);
+      break;
+
+    case WeaponType.SNIPER:
+      drawSniper(ctx);
+      break;
+
+    case WeaponType.LASER:
+      drawLaser(ctx);
+      break;
+
+    case WeaponType.MINIGUN:
+      drawMinigun(ctx);
+      break;
+
+    case WeaponType.BAZOOKA:
+      drawBazooka(ctx);
+      break;
+
+    case WeaponType.FLAMETHROWER:
+      drawFlamethrower(ctx);
+      break;
+
+    case WeaponType.MINES:
+      drawMine(ctx);
+      break;
+
+    case WeaponType.NUKE:
+      // TODO: change name to nuclear launcher
+      drawNuke(ctx);
+      break;
+
+    case WeaponType.SCYTHE:
+      drawScythe(ctx);
+      break;
+
+    case WeaponType.SWORD:
+      drawSword(ctx);
+      break;
+
+    case WeaponType.HOLY_GRENADE:
+      drawHolyGrenade(ctx);
+      break;
+
+    case WeaponType.BANANA:
+      drawBanana(ctx);
+      break;
+
+    case WeaponType.CROSSBOW:
+      drawCrossbow(ctx);
+      break;
+
+    default:
+      throw new Error(`[WeaponRenderer] Unknown weapon type: ${type as string}`);
+  }
+
+  // Weapon level (if > 1)
+  if (level > 1) {
+    drawWeaponLevel(ctx, level);
+  }
+
+  ctx.restore();
 }
 
-// TODO is it needed? It only narrows down player data scope?
-export interface WeaponRenderPlayer {
-  weapons: RenderedWeapon[];
-  currentTarget: { x: number; y: number } | null;
-  getWeaponPosition(
-    index: number,
-    currentTime: number,
-    target: { x: number; y: number } | null,
-  ): WeaponPosition;
-}
-
-export const WeaponRenderer = {
-  /**
-   * Draw all weapons around the player
-   */
-  renderWeapons(
-    ctx: CanvasRenderingContext2D,
-    player: WeaponRenderPlayer,
-    currentTime: number,
-  ): void {
-    const weaponCount = player.weapons.length;
-    if (weaponCount === 0) return;
-
-    player.weapons.forEach((weapon, index) => {
-      // Use the same function as when shooting - with target!
-      const pos = player.getWeaponPosition(index, currentTime, player.currentTarget);
-
-      // Draw weapon icon
-      this.drawWeapon(ctx, weapon, pos.x, pos.y, pos.angle);
-    });
-  },
-
-  /**
-   * Draw a single weapon icon
-   */
-  drawWeapon(
-    ctx: CanvasRenderingContext2D,
-    weapon: RenderedWeapon,
-    x: number,
-    y: number,
-    angle: number,
-  ): void {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(angle + Math.PI / 2); // Rotation in movement direction
-
-    switch (weapon.type) {
-      case WeaponType.PISTOL:
-        drawPistol(ctx);
-        break;
-
-      case WeaponType.SMG:
-        drawSMG(ctx);
-        break;
-
-      case WeaponType.SHOTGUN:
-        drawShotgun(ctx);
-        break;
-
-      case WeaponType.SNIPER:
-        drawSniper(ctx);
-        break;
-
-      case WeaponType.LASER:
-        drawLaser(ctx);
-        break;
-
-      case WeaponType.MINIGUN:
-        drawMinigun(ctx);
-        break;
-
-      case WeaponType.BAZOOKA:
-        drawBazooka(ctx);
-        break;
-
-      case WeaponType.FLAMETHROWER:
-        drawFlamethrower(ctx);
-        break;
-
-      case WeaponType.MINES:
-        drawMine(ctx);
-        break;
-
-      case WeaponType.NUKE:
-        // TODO: change name to nuclear launcher
-        drawNuke(ctx);
-        break;
-
-      case WeaponType.SCYTHE:
-        drawScythe(ctx);
-        break;
-
-      case WeaponType.SWORD:
-        drawSword(ctx);
-        break;
-
-      case WeaponType.HOLY_GRENADE:
-        drawHolyGrenade(ctx);
-        break;
-
-      case WeaponType.BANANA:
-        drawBanana(ctx);
-        break;
-
-      case WeaponType.CROSSBOW:
-        drawCrossbow(ctx);
-        break;
-
-      default:
-        throw new Error(`[WeaponRenderer] Unknown weapon type: ${weapon.type as string}`);
-    }
-
-    // Weapon level (if > 1)
-    if (weapon.level > 1) {
-      drawWeaponLevel(ctx, weapon);
-    }
-
-    ctx.restore();
-  },
-};
-
-function drawWeaponLevel(ctx: CanvasRenderingContext2D, weapon: RenderedWeapon): void {
+function drawWeaponLevel(ctx: CanvasRenderingContext2D, level: number): void {
   ctx.fillStyle = '#ffd700';
   ctx.font = 'bold 8px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText(`+${weapon.level - 1}`, 0, 14);
+  ctx.fillText(`+${level - 1}`, 0, 14);
 }
 
 function drawCrossbow(ctx: CanvasRenderingContext2D): void {

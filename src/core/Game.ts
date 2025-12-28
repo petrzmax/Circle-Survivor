@@ -3,21 +3,21 @@
  */
 import { GAME_BALANCE } from '@/config/balance.config';
 import { CHARACTER_TYPES } from '@/config/characters.config';
-import { WEAPON_TYPES, WeaponConfig } from '@/config/weapons.config';
+import { WeaponConfig } from '@/config/weapons.config';
 import { EventBus } from '@/core/EventBus';
 import { Deployable, DeployableConfig } from '@/entities/Deployable';
 import { Enemy } from '@/entities/Enemy';
 import { InputState, Player } from '@/entities/Player';
 import { Projectile } from '@/entities/Projectile';
 import { EntityManager } from '@/managers/EntityManager';
+import { renderWeapons } from '@/rendering/WeaponRenderer';
 import { AudioSystem } from '@/systems/AudioSystem';
 import { CollisionSystem } from '@/systems/CollisionSystem';
 import { CombatSystem } from '@/systems/CombatSystem';
-import { EffectsState, EffectsSystem, createEffectsState } from '@/systems/EffectsSystem';
+import { createEffectsState, EffectsState, EffectsSystem } from '@/systems/EffectsSystem';
 import { HUD } from '@/systems/HUD';
 import { InputHandler } from '@/systems/InputHandler';
 import { WaveManager } from '@/systems/WaveManager';
-import { WeaponRenderer } from '@/systems/WeaponRenderer';
 import {
   CharacterType,
   DeployableType,
@@ -34,8 +34,9 @@ import { degreesToRadians, distance, randomChance, randomRange, vectorFromAngle 
 // ============ Types ============
 export type GameState = 'start' | 'playing' | 'shop' | 'gameover' | 'paused';
 
+// TODO move to separate file
 // Weapon runtime instance (tracks cooldowns, levels)
-interface WeaponInstance {
+export interface WeaponInstance {
   type: WeaponType;
   config: WeaponConfig;
   level: number;
@@ -59,9 +60,6 @@ export class Game {
 
   // Entity Manager
   private entityManager: EntityManager;
-
-  // Weapon instances (runtime state)
-  private weapons: WeaponInstance[] = [];
 
   // Systems
   private collisionSystem: CollisionSystem;
@@ -405,7 +403,6 @@ export class Game {
     this.entityManager.setPlayer(player);
 
     // Initialize weapons
-    this.weapons = [];
     this.addWeapon(charConfig.startingWeapon);
 
     // Reset game state
@@ -455,30 +452,12 @@ export class Game {
   // ============ Weapon Management ============
 
   private addWeapon(type: WeaponType): void {
-    const config = WEAPON_TYPES[type];
-    if (!config) return;
-
     const player = this.entityManager.getPlayer();
-    if (player && player.weaponTypes.length >= player.maxWeapons) {
-      // Check if we already have this weapon - upgrade it
-      const existing = this.weapons.find((w) => w.type === type);
-      if (existing) {
-        existing.level++;
-        return;
-      }
-      return;
-    }
+    if (!player) return;
 
-    player?.addWeapon(type);
-    this.weapons.push({
-      type,
-      config,
-      level: 1,
-      lastFireTime: 0,
-      multishot: 0, // Extra projectiles from items (not base bulletCount)
-      name: config.name,
-      fireOffset: 0,
-    });
+    // Let player handle weapon creation and management
+    const added = player.addWeapon(type);
+    if (!added) return;
 
     // Recalculate fire offsets for staggered shooting
     this.recalculateFireOffsets();
@@ -489,9 +468,12 @@ export class Game {
    * Assigns staggered offsets so weapons don't all fire at once.
    */
   private recalculateFireOffsets(): void {
+    const player = this.entityManager.getPlayer();
+    if (!player) return;
+
     // Group weapons by type
     const weaponsByType: Record<string, WeaponInstance[]> = {};
-    for (const weapon of this.weapons) {
+    for (const weapon of player.weapons) {
       weaponsByType[weapon.type] ??= [];
       weaponsByType[weapon.type]?.push(weapon);
     }
@@ -722,8 +704,8 @@ export class Game {
   // ============ Weapon Firing ============
 
   private fireWeapons(currentTime: number, player: Player): void {
-    for (let i = 0; i < this.weapons.length; i++) {
-      const weapon = this.weapons[i]!;
+    for (let i = 0; i < player.weapons.length; i++) {
+      const weapon = player.weapons[i]!;
       const config = weapon.config;
 
       // Calculate fire rate with level and player multiplier
@@ -991,7 +973,7 @@ export class Game {
       player.draw(this.ctx, this.lastTime);
 
       // Render weapons around player
-      this.renderWeaponsAroundPlayer(player);
+      renderWeapons(this.ctx, player);
     }
 
     // Render boss health bar
@@ -1000,26 +982,6 @@ export class Game {
     // Render enemy count (dev mode only, when enabled)
     if (this.showEnemyCount) {
       HUD.renderEnemyCount(this.ctx, this.entityManager.getActiveEnemyCount(), this.canvas.height);
-    }
-  }
-
-  private renderWeaponsAroundPlayer(player: Player): void {
-    for (let i = 0; i < this.weapons.length; i++) {
-      const weapon = this.weapons[i]!;
-      const pos = player.getWeaponPosition(i, player.currentTarget);
-
-      // Use WeaponRenderer
-      WeaponRenderer.drawWeaponIcon(
-        this.ctx,
-        {
-          type: weapon.type,
-          level: weapon.level,
-          color: weapon.config.color,
-        },
-        pos.x,
-        pos.y,
-        pos.angle,
-      );
     }
   }
 
@@ -1063,12 +1025,13 @@ export class Game {
   }
 
   private createShopPlayer(player: Player): ShopPlayer {
+    const weapons = player.weapons;
     // Use a Proxy on the real player, only overriding what's needed for Shop
     return new Proxy(player as unknown as ShopPlayer, {
       get: (target, prop) => {
         // Override weapons to use ShopWeapon format with upgrade()
         if (prop === 'weapons') {
-          return this.weapons.map((w) => this.createShopWeapon(w));
+          return weapons.map((w: WeaponInstance) => this.createShopWeapon(w));
         }
         // Override addWeapon to call Game.addWeapon
         if (prop === 'addWeapon') {

@@ -76,6 +76,8 @@ export const GAME_BALANCE = {
     /** Armor diminishing returns divisor. Formula: armor / (armor + this value).
      *  With 100: 50 armor = 33% reduction, 100 armor = 50%, 200 armor = 67% */
     armorDiminishingFactor: 100,
+    /** Maximum dodge chance cap. 0.6 = 60% max dodge to prevent overpowered builds. */
+    maxDodge: 0.6,
   },
 
   /**

@@ -444,7 +444,7 @@ export class Player extends Entity implements IHealth {
         this.goldMultiplier += value;
         break;
       case 'dodge':
-        this.dodge += value;
+        this.dodge = Math.min(this.dodge + value, GAME_BALANCE.player.maxDodge);
         break;
       case 'thorns':
         this.thorns += value;

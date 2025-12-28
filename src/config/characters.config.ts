@@ -25,8 +25,8 @@ export const CHARACTER_TYPES: Record<CharacterType, CharacterConfig> = {
     description: 'Były pracownik korpo. Wypalony, ale wściekły.',
     color: '#ff6600',
     maxHp: 80,
-    speed: 3.6, // -10%
-    damageMultiplier: 1.25, // +25%
+    speed: 3.2, // -20%
+    damageMultiplier: 1.2, // +20%
     goldMultiplier: 1,
     startingWeapon: WeaponType.SHOTGUN,
   },
@@ -37,7 +37,7 @@ export const CHARACTER_TYPES: Record<CharacterType, CharacterConfig> = {
     maxHp: 70,
     speed: 4.8, // +20%
     damageMultiplier: 1,
-    goldMultiplier: 1.3, // +30%
+    goldMultiplier: 1.15, // +15%
     startingWeapon: WeaponType.SMG,
   },
   [CharacterType.NORMIK]: {

@@ -78,7 +78,7 @@
 
         <!-- Start screen -->
         <div id="start-screen">
-            <div id="game-version">Circle Survivor <span id="version-number">dev</span> - Artur Petrzak 2025</div>
+            <div id="game-version">Circle Survivor <a id="version-number" href="https://github.com/petrzmax/Circle-Survivor/releases" target="_blank" rel="noopener noreferrer">dev</a> - Artur Petrzak 2025</div>
             <h1>🎮 CIRCLE SURVIVOR</h1>
             <p>Wybierz swoją postać!</p>
             <div id="character-select">
@@ -87,9 +87,10 @@
                     <h3>Wypaleniec</h3>
                     <p class="character-desc">Były pracownik korpo. Wypalony, ale wściekły.</p>
                     <ul class="character-stats">
+                        <!-- TODO load from config -->
                         <li>❤️ HP: 80</li>
-                        <li>⚔️ Obrażenia: +25%</li>
-                        <li>🦶 Szybkość: -10%</li>
+                        <li>⚔️ Obrażenia: +20%</li>
+                        <li>🦶 Szybkość: -20%</li>
                         <li>🔫 Broń: Shotgun</li>
                     </ul>
                 </div>
@@ -100,7 +101,7 @@
                     <ul class="character-stats">
                         <li>❤️ HP: 70</li>
                         <li>🦶 Szybkość: +20%</li>
-                        <li>💰 Złoto: +30%</li>
+                        <li>💰 Złoto: +15%</li>
                         <li>🔫 Broń: SMG</li>
                     </ul>
                 </div>
@@ -117,12 +118,12 @@
                 </div>
             </div>
             <p class="controls">WASD - ruch | Auto-strzelanie | Kliknij postać aby wybrać</p>
-            <button id="menu-leaderboard-btn">🏆 TOP 20</button>
+            <button id="menu-leaderboard-btn">🏆 TOP 10</button>
         </div>
 
         <!-- Menu Leaderboard overlay -->
         <div id="menu-leaderboard" class="hidden">
-            <h2>🏆 TOP 20</h2>
+            <h2>🏆 TOP 10</h2>
             <div id="menu-leaderboard-container">
                 <div class="leaderboard-tabs">
                     <button class="menu-tab-btn active" data-tab="local">🏠 Lokalne</button>

@@ -220,8 +220,11 @@ export class Leaderboard {
   }
 
   // Render leaderboard HTML
-  public renderLeaderboard(scores: LeaderboardEntry[], highlightName: string | null = null): string {
-    if (!scores || scores.length === 0) {
+  public renderLeaderboard(
+    scores: LeaderboardEntry[],
+    highlightName: string | null = null,
+  ): string {
+    if (scores.length === 0) {
       return '<li class="no-scores">Brak wyników - bądź pierwszy!</li>';
     }
 

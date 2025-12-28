@@ -1,31 +1,21 @@
-/**
- * Systems module exports
- */
-
 export { CollisionSystem } from './CollisionSystem';
 export type { CollisionResult, CollisionSystemConfig } from './CollisionSystem';
 
 export { CombatSystem } from './CombatSystem';
-export type { ExplosionEvent, CombatSystemConfig } from './CombatSystem';
+export type { CombatSystemConfig, ExplosionEvent } from './CombatSystem';
 
 export { AudioSystem } from './AudioSystem';
 
 export { InputHandler } from './InputHandler';
-export type { KeyState, InputHandlerCallbacks } from './InputHandler';
+export type { InputHandlerCallbacks, KeyState } from './InputHandler';
 
-export { EffectsSystem, createEffectsState } from './EffectsSystem';
-export type {
-  Explosion,
-  DeathParticle,
-  Shockwave,
-  EffectsState,
-} from './EffectsSystem';
+export { createEffectsState, EffectsSystem } from './EffectsSystem';
+export type { DeathParticle, EffectsState, Explosion, Shockwave } from './EffectsSystem';
 
 export { HUD } from './HUD';
-export type { HUDPlayer, HUDWaveManager, HUDBoss } from './HUD';
+export type { HUDBoss, HUDPlayer, HUDWaveManager } from './HUD';
 
-export { WeaponRenderer } from './WeaponRenderer';
-export type { RenderedWeapon, WeaponPosition, WeaponRenderPlayer } from './WeaponRenderer';
+export { renderWeapons } from '../rendering/WeaponRenderer';
 
 export { WaveManager } from './WaveManager';
 export type { WaveUpdateResult } from './WaveManager';

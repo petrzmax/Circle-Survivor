@@ -3,12 +3,12 @@
  * Emits events when collisions are detected for other systems to handle.
  */
 
-import { EntityManager } from '@/managers/EntityManager';
-import { distanceSquared } from '@/utils';
-import { Enemy } from '@/entities/Enemy';
-import { Projectile } from '@/entities/Projectile';
-import { Pickup } from '@/entities/Pickup';
 import { Deployable } from '@/entities/Deployable';
+import { Enemy } from '@/entities/Enemy';
+import { Pickup } from '@/entities/Pickup';
+import { Projectile } from '@/entities/Projectile';
+import { EntityManager } from '@/managers/EntityManager';
+import { distanceSquared, Vector2 } from '@/utils';
 
 /**
  * Collision detection result
@@ -39,18 +39,6 @@ export interface CollisionSystemConfig {
 /**
  * Handles all collision detection in the game.
  * Uses spatial queries from EntityManager for efficiency.
- *
- * @example
- * ```typescript
- * const collisionSystem = new CollisionSystem(entityManager, {
- *   pickupRadius: 25,
- *   attractionRadius: 100
- * });
- *
- * // In game loop
- * const collisions = collisionSystem.checkAll();
- * // Handle collisions or let other systems handle via events
- * ```
  */
 export class CollisionSystem {
   private entityManager: EntityManager;
@@ -113,7 +101,7 @@ export class CollisionSystem {
       if (enemy.phasing) continue;
 
       const combinedRadius = player.radius + enemy.radius;
-      if (distanceSquared(player, enemy) < combinedRadius * combinedRadius) {
+      if (distanceSquared(player.position, enemy.position) < combinedRadius * combinedRadius) {
         collisions.push(enemy);
       }
     }
@@ -133,7 +121,7 @@ export class CollisionSystem {
 
     for (const projectile of enemyProjectiles) {
       const combinedRadius = player.radius + projectile.radius;
-      if (distanceSquared(player, projectile) < combinedRadius * combinedRadius) {
+      if (distanceSquared(player.position, projectile.position) < combinedRadius * combinedRadius) {
         collisions.push(projectile);
       }
     }
@@ -152,7 +140,10 @@ export class CollisionSystem {
     for (const projectile of playerProjectiles) {
       for (const enemy of enemies) {
         const combinedRadius = projectile.radius + enemy.radius;
-        if (distanceSquared(projectile, enemy) < combinedRadius * combinedRadius) {
+        if (
+          distanceSquared(projectile.position, enemy.position) <
+          combinedRadius * combinedRadius
+        ) {
           // For piercing projectiles, check if already hit
           if (projectile.canPierce()) {
             if (!projectile.registerHit(enemy.id)) {
@@ -185,7 +176,7 @@ export class CollisionSystem {
 
     for (const pickup of pickups) {
       const combinedRadius = this.pickupRadius + pickup.radius;
-      if (distanceSquared(player, pickup) < combinedRadius * combinedRadius) {
+      if (distanceSquared(player.position, pickup.position) < combinedRadius * combinedRadius) {
         collisions.push(pickup);
       }
     }
@@ -202,12 +193,15 @@ export class CollisionSystem {
     const enemies = this.entityManager.getActiveEnemies();
 
     for (const deployable of deployables) {
-      const triggerRadius = deployable.triggerRadius ?? deployable.radius;
+      const triggerRadius = deployable.triggerRadius;
       const triggeredBy: Enemy[] = [];
 
       for (const enemy of enemies) {
         const combinedRadius = triggerRadius + enemy.radius;
-        if (distanceSquared(deployable, enemy) < combinedRadius * combinedRadius) {
+        if (
+          distanceSquared(deployable.position, enemy.position) <
+          combinedRadius * combinedRadius
+        ) {
           triggeredBy.push(enemy);
         }
       }
@@ -238,19 +232,19 @@ export class CollisionSystem {
   /**
    * Find enemies in explosion radius
    */
-  public getEnemiesInExplosion(x: number, y: number, radius: number): Enemy[] {
-    return this.entityManager.getEnemiesInRadius(x, y, radius);
+  public getEnemiesInExplosion(position: Vector2, radius: number): Enemy[] {
+    return this.entityManager.getEnemiesInRadius(position, radius);
   }
 
   /**
    * Check if point is inside any enemy
    */
-  public isPointInEnemy(x: number, y: number): Enemy | null {
+  public isPointInEnemy(position: Vector2): Enemy | null {
     const enemies = this.entityManager.getActiveEnemies();
 
     for (const enemy of enemies) {
-      const dx = x - enemy.x;
-      const dy = y - enemy.y;
+      const dx = position.x - enemy.position.x;
+      const dy = position.y - enemy.position.y;
       if (dx * dx + dy * dy <= enemy.radius * enemy.radius) {
         return enemy;
       }

@@ -3,7 +3,7 @@
  * Provides controlled randomness for game mechanics.
  */
 
-import { Vector2 } from './math';
+import { TWO_PI, Vector2 } from './math';
 
 /**
  * Generates random float in range [min, max)
@@ -31,7 +31,7 @@ export function randomInt(min: number, max: number): number {
  * @returns True if random check succeeds
  */
 export function randomChance(chance: number): boolean {
-  return Math.random() < chance;
+  return chance > 0 && Math.random() < chance;
 }
 
 /**
@@ -88,7 +88,7 @@ export function shuffledCopy<T>(array: readonly T[]): T[] {
  * @returns Random point on circle edge
  */
 export function randomPointOnCircle(center: Vector2, radius: number): Vector2 {
-  const angle = Math.random() * Math.PI * 2;
+  const angle = Math.random() * TWO_PI;
   return {
     x: center.x + Math.cos(angle) * radius,
     y: center.y + Math.sin(angle) * radius,
@@ -104,7 +104,7 @@ export function randomPointOnCircle(center: Vector2, radius: number): Vector2 {
 export function randomPointInCircle(center: Vector2, radius: number): Vector2 {
   // Use sqrt for uniform distribution
   const r = radius * Math.sqrt(Math.random());
-  const angle = Math.random() * Math.PI * 2;
+  const angle = randomAngle();
   return {
     x: center.x + Math.cos(angle) * r,
     y: center.y + Math.sin(angle) * r,
@@ -116,7 +116,7 @@ export function randomPointInCircle(center: Vector2, radius: number): Vector2 {
  * @returns Random angle [0, 2π)
  */
 export function randomAngle(): number {
-  return Math.random() * Math.PI * 2;
+  return Math.random() * TWO_PI;
 }
 
 /**
@@ -157,17 +157,7 @@ export enum ScreenSide {
  */
 export function getSpawnPoint(canvas: CanvasBounds, margin: number = 50): Vector2 {
   const side = randomInt(0, 3) as ScreenSide;
-
-  switch (side) {
-    case ScreenSide.TOP:
-      return { x: randomRange(0, canvas.width), y: -margin };
-    case ScreenSide.RIGHT:
-      return { x: canvas.width + margin, y: randomRange(0, canvas.height) };
-    case ScreenSide.BOTTOM:
-      return { x: randomRange(0, canvas.width), y: canvas.height + margin };
-    case ScreenSide.LEFT:
-      return { x: -margin, y: randomRange(0, canvas.height) };
-  }
+  return getSpawnPointOnSide(canvas, side, margin);
 }
 
 /**
@@ -184,28 +174,27 @@ export function getSpawnPointOnSide(
 ): Vector2 {
   switch (side) {
     case ScreenSide.TOP:
-      return { x: randomRange(0, canvas.width), y: -margin };
+      return { x: randomInt(0, canvas.width), y: -margin };
     case ScreenSide.RIGHT:
-      return { x: canvas.width + margin, y: randomRange(0, canvas.height) };
+      return { x: canvas.width + margin, y: randomInt(0, canvas.height) };
     case ScreenSide.BOTTOM:
-      return { x: randomRange(0, canvas.width), y: canvas.height + margin };
+      return { x: randomInt(0, canvas.width), y: canvas.height + margin };
     case ScreenSide.LEFT:
-      return { x: -margin, y: randomRange(0, canvas.height) };
+      return { x: -margin, y: randomInt(0, canvas.height) };
   }
 }
 
 /**
  * Generates random point inside rectangle
- * @param x Left edge
- * @param y Top edge
+ * @param position Top-left position of rectangle
  * @param width Width of rectangle
  * @param height Height of rectangle
  * @returns Random point inside rectangle
  */
-export function randomPointInRect(x: number, y: number, width: number, height: number): Vector2 {
+export function randomPointInRect(position: Vector2, width: number, height: number): Vector2 {
   return {
-    x: randomRange(x, x + width),
-    y: randomRange(y, y + height),
+    x: randomInt(position.x, position.x + width),
+    y: randomInt(position.y, position.y + height),
   };
 }
 

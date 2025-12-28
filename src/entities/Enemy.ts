@@ -3,12 +3,13 @@
  * Represents all enemy types including basic enemies and bosses.
  */
 
-import { Entity } from './Entity';
-import { EnemyType } from '@/types/enums';
+import { AttackPattern, ENEMY_TYPES, EnemyConfig, GAME_BALANCE, generateBossName } from '@/config';
+import { renderEnemy } from '@/rendering';
 import { IHealth } from '@/types/components';
-import { ENEMY_TYPES, EnemyConfig, AttackPattern, generateBossName } from '@/config';
-import { GAME_BALANCE } from '@/config';
-import { Vector2, clamp } from '@/utils';
+import { EnemyType } from '@/types/enums';
+import { clamp, randomElement, Vector2 } from '@/utils';
+import { distance } from '@/utils/math';
+import { Entity } from './Entity';
 
 /**
  * Attack result types
@@ -45,8 +46,7 @@ export interface EnemyBulletData {
  * Enemy configuration for constructor
  */
 export interface EnemyEntityConfig {
-  x: number;
-  y: number;
+  position: Vector2;
   type: EnemyType;
   /** Scale multiplier for split enemies */
   scale?: number;
@@ -70,12 +70,8 @@ export class Enemy extends Entity implements IHealth {
   public speed: number;
 
   // ============ Health Component ============
-
-  /** Maximum HP */
-  public maxHp: number;
-
-  /** Current HP */
   public hp: number;
+  public maxHp: number;
 
   // ============ Rewards ============
 
@@ -145,8 +141,7 @@ export class Enemy extends Entity implements IHealth {
     const scale = entityConfig.scale ?? 1;
 
     super({
-      x: entityConfig.x,
-      y: entityConfig.y,
+      position: entityConfig.position,
       radius: config.radius * scale,
     });
 
@@ -195,26 +190,24 @@ export class Enemy extends Entity implements IHealth {
    * Takes damage and applies knockback
    * @returns true if enemy died
    */
-  public takeDamage(
-    amount: number,
-    sourceX: number,
-    sourceY: number,
-    knockbackMultiplier: number = 1,
-  ): boolean {
+  public takeDamage(amount: number, source: Vector2, knockbackMultiplier: number = 1): boolean {
     this.hp -= amount;
 
     // Apply knockback
     const knockbackStrength = this.isBoss
-      ? GAME_BALANCE.boss.knockbackResistance
+      ? // TODO hmm knockback is once resistance, once multiplier...
+        GAME_BALANCE.boss.knockbackResistance
       : GAME_BALANCE.enemy.knockbackMultiplier;
 
-    const dx = this.x - sourceX;
-    const dy = this.y - sourceY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dist = distance(this.position, source);
+    const force = knockbackStrength * knockbackMultiplier;
+
+    const dx = this.position.x - source.x;
+    const dy = this.position.y - source.y;
 
     if (dist > 0) {
-      this.knockbackX = (dx / dist) * knockbackStrength * knockbackMultiplier;
-      this.knockbackY = (dy / dist) * knockbackStrength * knockbackMultiplier;
+      this.knockbackX = (dx / dist) * force;
+      this.knockbackY = (dy / dist) * force;
     }
 
     return this.hp <= 0;
@@ -265,8 +258,8 @@ export class Enemy extends Entity implements IHealth {
     canvasWidth: number,
     canvasHeight: number,
   ): void {
-    const dx = target.x - this.x;
-    const dy = target.y - this.y;
+    const dx = target.x - this.position.x;
+    const dy = target.y - this.position.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     if (dist > 0) {
@@ -279,16 +272,16 @@ export class Enemy extends Entity implements IHealth {
         moveY += (dx / dist) * this.speed * 0.8 * this.zigzagDir;
       }
 
-      this.x += moveX + this.knockbackX;
-      this.y += moveY + this.knockbackY;
+      this.position.x += moveX + this.knockbackX;
+      this.position.y += moveY + this.knockbackY;
     }
 
     // Check if enemy entered arena
     const isFullyInside =
-      this.x > this.radius &&
-      this.x < canvasWidth - this.radius &&
-      this.y > this.radius &&
-      this.y < canvasHeight - this.radius;
+      this.position.x > this.radius &&
+      this.position.x < canvasWidth - this.radius &&
+      this.position.y > this.radius &&
+      this.position.y < canvasHeight - this.radius;
 
     if (isFullyInside) {
       this.hasEnteredArena = true;
@@ -296,8 +289,8 @@ export class Enemy extends Entity implements IHealth {
 
     // Limit position only if already inside
     if (this.hasEnteredArena) {
-      this.x = clamp(this.x, this.radius, canvasWidth - this.radius);
-      this.y = clamp(this.y, this.radius, canvasHeight - this.radius);
+      this.position.x = clamp(this.position.x, this.radius, canvasWidth - this.radius);
+      this.position.y = clamp(this.position.y, this.radius, canvasHeight - this.radius);
     }
   }
 
@@ -312,12 +305,10 @@ export class Enemy extends Entity implements IHealth {
     if (currentTime - this.lastFireTime < this.fireRate) return null;
 
     this.lastFireTime = currentTime;
+    const pattern = randomElement(this.attackPatterns);
 
-    // Random pattern
-    const pattern = this.attackPatterns[Math.floor(Math.random() * this.attackPatterns.length)];
-
-    const dx = target.x - this.x;
-    const dy = target.y - this.y;
+    const dx = target.x - this.position.x;
+    const dy = target.y - this.position.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     if (dist === 0) return null;
@@ -333,8 +324,8 @@ export class Enemy extends Entity implements IHealth {
         for (let i = 0; i < spreadCount; i++) {
           const angle = baseAngle - spreadAngle / 2 + (spreadAngle / (spreadCount - 1)) * i;
           bullets.push({
-            x: this.x,
-            y: this.y,
+            x: this.position.x,
+            y: this.position.y,
             vx: Math.cos(angle) * this.bulletSpeed,
             vy: Math.sin(angle) * this.bulletSpeed,
             damage: this.bulletDamage * 0.6,
@@ -347,8 +338,8 @@ export class Enemy extends Entity implements IHealth {
       case 'shockwave':
         return {
           type: 'shockwave',
-          x: this.x,
-          y: this.y,
+          x: this.position.x,
+          y: this.position.y,
           radius: this.radius * 3,
           damage: this.bulletDamage * 1.5,
           color: this.color,
@@ -360,8 +351,8 @@ export class Enemy extends Entity implements IHealth {
           type: 'bullets',
           bullets: [
             {
-              x: this.x,
-              y: this.y,
+              x: this.position.x,
+              y: this.position.y,
               vx: (dx / dist) * this.bulletSpeed,
               vy: (dy / dist) * this.bulletSpeed,
               damage: this.bulletDamage,
@@ -372,116 +363,11 @@ export class Enemy extends Entity implements IHealth {
     }
   }
 
-  // ============ Rendering ============
-
+  // TODO: move to RenderSystem
   /**
    * Draws enemy
    */
   public draw(ctx: CanvasRenderingContext2D): void {
-    ctx.save();
-
-    // Ghost transparency
-    if (this.phasing) {
-      ctx.globalAlpha = 0.6 + Math.sin(Date.now() / 200) * 0.2;
-    }
-
-    // Body
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-    ctx.fillStyle = this.color;
-    ctx.fill();
-
-    // Border
-    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // HP bar (only if damaged, and not for bosses with top health bar)
-    if (this.hp < this.maxHp && !this.hasTopHealthBar) {
-      this.drawHealthBar(ctx);
-    }
-
-    // Eyes
-    this.drawEyes(ctx);
-
-    // Boss crown and name
-    if (this.isBoss) {
-      this.drawBossCrown(ctx);
-    }
-
-    // Exploder glow
-    if (this.explodeOnDeath) {
-      ctx.shadowColor = '#ffff00';
-      ctx.shadowBlur = 10 + Math.sin(Date.now() / 100) * 5;
-    }
-
-    ctx.restore();
-  }
-
-  private drawHealthBar(ctx: CanvasRenderingContext2D): void {
-    const barWidth = this.radius * 2;
-    const barHeight = 4;
-    const hpPercent = this.hp / this.maxHp;
-
-    ctx.fillStyle = '#333';
-    ctx.fillRect(this.x - barWidth / 2, this.y - this.radius - 10, barWidth, barHeight);
-
-    ctx.fillStyle = hpPercent > 0.5 ? '#2ecc71' : hpPercent > 0.25 ? '#f39c12' : '#e74c3c';
-    ctx.fillRect(this.x - barWidth / 2, this.y - this.radius - 10, barWidth * hpPercent, barHeight);
-  }
-
-  private drawEyes(ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(
-      this.x - this.radius * 0.3,
-      this.y - this.radius * 0.2,
-      this.radius * 0.2,
-      0,
-      Math.PI * 2,
-    );
-    ctx.arc(
-      this.x + this.radius * 0.3,
-      this.y - this.radius * 0.2,
-      this.radius * 0.2,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-
-    // Angry eyebrows
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(this.x - this.radius * 0.5, this.y - this.radius * 0.4);
-    ctx.lineTo(this.x - this.radius * 0.1, this.y - this.radius * 0.5);
-    ctx.moveTo(this.x + this.radius * 0.5, this.y - this.radius * 0.4);
-    ctx.lineTo(this.x + this.radius * 0.1, this.y - this.radius * 0.5);
-    ctx.stroke();
-  }
-
-  private drawBossCrown(ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = '#ffd700';
-    ctx.beginPath();
-    ctx.moveTo(this.x - 20, this.y - this.radius - 5);
-    ctx.lineTo(this.x - 15, this.y - this.radius - 20);
-    ctx.lineTo(this.x - 5, this.y - this.radius - 10);
-    ctx.lineTo(this.x, this.y - this.radius - 25);
-    ctx.lineTo(this.x + 5, this.y - this.radius - 10);
-    ctx.lineTo(this.x + 15, this.y - this.radius - 20);
-    ctx.lineTo(this.x + 20, this.y - this.radius - 5);
-    ctx.closePath();
-    ctx.fill();
-
-    // Boss name
-    if (this.bossName) {
-      ctx.font = 'bold 14px Arial';
-      ctx.textAlign = 'center';
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 3;
-      ctx.strokeText(this.bossName, this.x, this.y - this.radius - 35);
-      ctx.fillStyle = '#ffd700';
-      ctx.fillText(this.bossName, this.x, this.y - this.radius - 35);
-    }
+    renderEnemy(ctx, this);
   }
 }

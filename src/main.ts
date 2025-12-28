@@ -8,10 +8,14 @@ import { GAME_VERSION } from '@/version';
 
 // Start when page loads
 window.addEventListener('load', () => {
-  // Set version number
-  const versionElement = document.getElementById('version-number');
+  // Set version number and link to GitHub release
+  const versionElement = document.getElementById('version-number') as HTMLAnchorElement | null;
   if (versionElement) {
     versionElement.textContent = GAME_VERSION;
+    // Link to specific release tag if not dev version
+    if (GAME_VERSION !== 'dev') {
+      versionElement.href = `https://github.com/petrzmax/Circle-Survivor/releases/tag/v${GAME_VERSION}`;
+    }
   }
 
   // Initialize game

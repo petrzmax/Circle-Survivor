@@ -129,6 +129,17 @@ body {
     font-style: italic;
 }
 
+#version-number {
+    color: #888;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+#version-number:hover {
+    color: #ffd700;
+    text-decoration: underline;
+}
+
 #pause-menu button {
     margin: 5px;
 }

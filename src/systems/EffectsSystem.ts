@@ -1,10 +1,10 @@
 /**
  * EffectsSystem - handles visual effects like explosions and particles.
  * Rendering and updating of temporary visual effects.
- * Matches original js/systems/effects-system.js exactly.
  */
 
-import { distance } from '@/utils';
+import { distance, randomAngle, randomChance, randomRange } from '@/utils';
+import { TWO_PI, Vector2 } from '@/utils/math';
 
 // ============ Effect Interfaces ============
 
@@ -15,12 +15,14 @@ export interface Explosion {
   maxRadius: number;
   alpha: number;
   created: number;
+  // TODO refactor to enum or type
   isNuke: boolean;
   isHolyGrenade: boolean;
   isBanana: boolean;
 }
 
 export interface DeathParticle {
+  // TODO add velocity component and transform component
   x: number;
   y: number;
   vx: number;
@@ -96,7 +98,7 @@ export const EffectsSystem = {
         const distToPlayer = distance({ x: sw.x, y: sw.y }, player);
         if (distToPlayer <= sw.currentRadius && distToPlayer >= sw.currentRadius - 30) {
           // Player in wave range
-          if (player.dodge > 0 && Math.random() < player.dodge) {
+          if (randomChance(player.dodge)) {
             onDodge();
           } else {
             const isDead = player.takeDamage(sw.damage, currentTime);
@@ -132,7 +134,7 @@ export const EffectsSystem = {
       ctx.save();
       ctx.globalAlpha = exp.alpha;
       ctx.beginPath();
-      ctx.arc(exp.x, exp.y, exp.radius * (1 - exp.alpha * 0.3), 0, Math.PI * 2);
+      ctx.arc(exp.x, exp.y, exp.radius * (1 - exp.alpha * 0.3), 0, TWO_PI);
 
       if (exp.isNuke) {
         // Nuke - green explosion with multiple rings
@@ -145,7 +147,7 @@ export const EffectsSystem = {
         ctx.fill();
         // Second ring
         ctx.beginPath();
-        ctx.arc(exp.x, exp.y, exp.radius * 0.6 * (1 - exp.alpha * 0.5), 0, Math.PI * 2);
+        ctx.arc(exp.x, exp.y, exp.radius * 0.6 * (1 - exp.alpha * 0.5), 0, TWO_PI);
         ctx.strokeStyle = '#00ff00';
         ctx.lineWidth = 5;
         ctx.stroke();
@@ -219,7 +221,7 @@ export const EffectsSystem = {
       }
 
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.size * p.life, 0, TWO_PI);
       ctx.fill();
       ctx.restore();
     }
@@ -237,7 +239,7 @@ export const EffectsSystem = {
 
       // Outer ring (expanding)
       ctx.beginPath();
-      ctx.arc(sw.x, sw.y, sw.currentRadius, 0, Math.PI * 2);
+      ctx.arc(sw.x, sw.y, sw.currentRadius, 0, TWO_PI);
       ctx.strokeStyle = sw.color || '#ff4444';
       ctx.lineWidth = 8;
       ctx.shadowColor = sw.color || '#ff4444';
@@ -246,7 +248,7 @@ export const EffectsSystem = {
 
       // Inner ring
       ctx.beginPath();
-      ctx.arc(sw.x, sw.y, sw.currentRadius * 0.7, 0, Math.PI * 2);
+      ctx.arc(sw.x, sw.y, sw.currentRadius * 0.7, 0, TWO_PI);
       ctx.lineWidth = 4;
       ctx.stroke();
 
@@ -259,7 +261,7 @@ export const EffectsSystem = {
    */
   createDeathEffect(
     effects: EffectsState,
-    enemy: { x: number; y: number; color: string; isBoss: boolean; type: string },
+    enemy: { position: Vector2; color: string; isBoss: boolean; type: string },
   ): void {
     // Particle count depends on enemy type
     let particleCount = 8;
@@ -279,19 +281,19 @@ export const EffectsSystem = {
 
     // Creating particles
     for (let i = 0; i < particleCount; i++) {
-      const angle = ((Math.PI * 2) / particleCount) * i + Math.random() * 0.5;
-      const speed = 2 + Math.random() * 4;
+      const angle = (TWO_PI / particleCount) * i + randomRange(0, 0.5);
+      const speed = randomRange(2, 6);
 
       effects.deathEffects.push({
-        x: enemy.x,
-        y: enemy.y,
+        x: enemy.position.x,
+        y: enemy.position.y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        size: particleSize * (0.5 + Math.random() * 0.5),
+        size: particleSize * randomRange(0.5, 1),
         color: particleColor,
         alpha: 1,
         life: 1,
-        decay: 0.02 + Math.random() * 0.02,
+        decay: randomRange(0.02, 0.04),
         isBoss: enemy.isBoss,
       });
     }
@@ -299,15 +301,15 @@ export const EffectsSystem = {
     // Additional effect for boss - second wave of larger particles
     if (enemy.isBoss) {
       for (let i = 0; i < 20; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 1 + Math.random() * 2;
+        const angle = randomAngle();
+        const speed = randomRange(1, 3);
 
         effects.deathEffects.push({
-          x: enemy.x,
-          y: enemy.y,
+          x: enemy.position.x,
+          y: enemy.position.y,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
-          size: 10 + Math.random() * 10,
+          size: randomRange(10, 20),
           color: '#FFD700', // Golden color
           alpha: 1,
           life: 1,
@@ -323,16 +325,15 @@ export const EffectsSystem = {
    */
   createExplosion(
     effects: EffectsState,
-    x: number,
-    y: number,
+    position: Vector2,
     radius: number,
     isNuke: boolean = false,
     isHolyGrenade: boolean = false,
     isBanana: boolean = false,
   ): void {
     effects.explosions.push({
-      x,
-      y,
+      x: position.x,
+      y: position.y,
       radius,
       maxRadius: radius,
       alpha: 1,
@@ -367,6 +368,7 @@ export const EffectsSystem = {
    * Render all effects
    */
   renderAll(ctx: CanvasRenderingContext2D, effects: EffectsState): void {
+    // TODO move to rendering
     this.renderExplosions(ctx, effects.explosions);
     this.renderDeathEffects(ctx, effects.deathEffects);
     this.renderShockwaves(ctx, effects.shockwaves);

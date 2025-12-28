@@ -3,7 +3,7 @@
  * Each weapon has unique stats and behavior.
  */
 
-import { WeaponType, WeaponCategory, ProjectileType, DeployableType } from '@/types/enums';
+import { DeployableType, ProjectileType, WeaponCategory, WeaponType } from '@/types/enums';
 
 /**
  * Weapon configuration interface
@@ -53,6 +53,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     color: '#ffff00',
     range: 265,
     weaponCategory: WeaponCategory.GUN,
+    knockbackMultiplier: 0.6,
     projectileType: ProjectileType.STANDARD,
   },
   [WeaponType.SMG]: {
@@ -270,6 +271,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     weaponCategory: WeaponCategory.GRENADE,
     explosiveRange: 235,
     projectileType: ProjectileType.BANANA,
+    rotationSpeed: 4, // ~0.6 rotations per second
   },
   [WeaponType.CROSSBOW]: {
     name: 'Kusza Przebijająca',
@@ -307,5 +309,6 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     weaponCategory: WeaponCategory.GRENADE,
     explosiveRange: 80,
     projectileType: ProjectileType.MINI_BANANA,
+    rotationSpeed: 6, // ~0.8 rotations per second
   },
 } as const;

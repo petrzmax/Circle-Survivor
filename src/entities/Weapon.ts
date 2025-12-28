@@ -3,16 +3,17 @@
  * Handles weapon stats, firing logic, and projectile creation.
  */
 
+import { GAME_BALANCE, WEAPON_TYPES } from '@/config';
 import {
-  WeaponType,
-  WeaponCategory,
-  ProjectileType,
   DeployableType,
+  ProjectileType,
   VisualEffect,
+  WeaponCategory,
+  WeaponType,
 } from '@/types/enums';
-import { WEAPON_TYPES, GAME_BALANCE } from '@/config';
-import { Projectile, ProjectileConfig } from './Projectile';
+import { degreesToRadians, randomChance, randomRange } from '@/utils';
 import { Deployable, DeployableConfig } from './Deployable';
+import { Projectile, ProjectileConfig } from './Projectile';
 
 /**
  * Fire result - can be projectiles or deployables
@@ -191,38 +192,6 @@ export class Weapon {
   }
 
   /**
-   * Get sound type for this weapon
-   */
-  public getSoundType(): string {
-    switch (this.type) {
-      case WeaponType.SHOTGUN:
-        return 'shotgun';
-      case WeaponType.SNIPER:
-        return 'sniper';
-      case WeaponType.LASER:
-        return 'laser';
-      case WeaponType.MINIGUN:
-        return 'minigun';
-      case WeaponType.FLAMETHROWER:
-        return 'flamethrower';
-      case WeaponType.SCYTHE:
-        return 'scythe';
-      case WeaponType.SWORD:
-        return 'sword';
-      case WeaponType.CROSSBOW:
-        return 'crossbow';
-      case WeaponType.BAZOOKA:
-      case WeaponType.NUKE:
-      case WeaponType.MINES:
-      case WeaponType.HOLY_GRENADE:
-      case WeaponType.BANANA:
-        return 'shoot'; // Explosion plays on hit
-      default:
-        return 'shoot';
-    }
-  }
-
-  /**
    * Fire weapon and create projectiles/deployables
    */
   public fire(
@@ -294,14 +263,14 @@ export class Weapon {
         angle = baseAngle - spreadRad / 2 + (spreadRad / (totalBullets - 1)) * i;
       } else if (this.spread > 0) {
         // Random spread for single bullet
-        const spreadRad = ((Math.random() - 0.5) * this.spread * Math.PI) / 180;
+        const spreadRad = randomRange(-0.5, 0.5) * degreesToRadians(this.spread);
         angle += spreadRad;
       }
 
       // Critical hit check
       let finalDamage = this.damage * damageMultiplier;
       let isCrit = false;
-      if (Math.random() < critChance) {
+      if (randomChance(critChance)) {
         finalDamage *= critDamage;
         isCrit = true;
       }
@@ -337,8 +306,7 @@ export class Weapon {
     explosionRadiusMultiplier: number,
   ): Projectile {
     const config: ProjectileConfig = {
-      x,
-      y,
+      position: { x, y },
       vx: Math.cos(angle) * this.bulletSpeed,
       vy: Math.sin(angle) * this.bulletSpeed,
       radius: this.bulletRadius,
@@ -393,8 +361,10 @@ export class Weapon {
     explosionRadiusMultiplier: number,
   ): Deployable {
     const config: DeployableConfig = {
-      x,
-      y,
+      position: {
+        x,
+        y,
+      },
       radius: this.bulletRadius,
       type: DeployableType.MINE,
       damage: this.damage * damageMultiplier,
@@ -424,18 +394,5 @@ export class Weapon {
       default:
         return VisualEffect.STANDARD;
     }
-  }
-
-  /**
-   * Clone weapon for multishot or other effects
-   */
-  public clone(): Weapon {
-    const weapon = new Weapon({ type: this.type });
-    weapon.level = this.level;
-    weapon.damage = this.damage;
-    weapon.fireRate = this.fireRate;
-    weapon.explosionRadius = this.explosionRadius;
-    weapon.extraProjectiles = this.extraProjectiles;
-    return weapon;
   }
 }

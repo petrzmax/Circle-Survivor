@@ -4,69 +4,107 @@
  */
 
 import { EnemyType } from '@/types/enums';
+import { randomElement } from '@/utils/random';
+
+// TODO extract name generation to separate file
 
 /**
  * Boss name generator arrays
  */
 export const BOSS_NAME_PREFIXES: readonly string[] = [
-  'Kieł',
-  'Opus',
-  'Miłośnik',
-  'Marcel',
-  'Władca',
-  'Pan',
-  'Pogromca',
-  'Cień',
-  'Gniew',
-  'Strach',
-  'Żelazny',
-  'Krwawy',
-  'Złoty',
-  'Mroczny',
-  'Szalony',
   'Bezlitosny',
-  'Potężny',
-  'Wielki',
-  'Starożytny',
-  'Niszczyciel',
-  'Ojciec',
+  'Bogini',
+  'Bóg',
+  'Cesarz',
+  'Cesarzowa',
+  'Cień',
+  'Ciotka',
+  'Dominator',
+  'Essa',
+  'Gniew',
+  'Imperator',
+  'Imperatorka',
+  'Kapłan',
+  'Kieł',
+  'Król',
+  'Królowa',
+  'Krwawy',
+  'Krzyk',
+  'Krzykaczka',
+  'Książę',
+  'Księżniczka',
+  'Łowca',
+  'Marcel',
   'Matka',
+  'Miłośnik',
+  'Mroczny',
+  'Nadzorca',
+  'Niszczyciel',
+  'Obrońca',
+  'Ojciec',
+  'Opus',
+  'Pan',
+  'Płacz',
+  'Pogromca',
+  'Potężny',
+  'Pożeracz',
+  'Rzeźniczka',
+  'Rzeźnik',
+  'Sigma',
+  'Starożytny',
+  'Strach',
+  'Strażnik',
+  'Szalony',
+  'Wdowa',
+  'Wielki',
+  'Władca',
+  'Wujek',
+  'Zabójca',
+  'Zderzacz',
+  'Złoty',
+  'Zwiastun',
 ] as const;
 
 export const BOSS_NAME_SUFFIXES: readonly string[] = [
+  'Baagera',
+  'Beliara',
   'Beredy',
-  'Radzimirskiego',
   'Biznesu',
+  'Burzy',
+  'Chaosu',
+  'Ciemności',
+  'Cieni',
+  'Dominatora',
+  'Gromu',
+  'Kamilka',
+  'Kazika',
+  'Koszmaru',
+  'Krwi',
+  'Krzysztofa',
+  'Kubicy',
+  'Matiego',
   'Kustosz',
   'Nocy',
-  'Chaosu',
-  'Kubicy',
-  'Kamilka',
-  'Podróżnika',
-  'Ciemności',
-  'Zniszczenia',
-  'Śmierci',
   'Otchłani',
   'Piekła',
-  'Zagłady',
-  'Burzy',
-  'Cieni',
-  'Krwi',
-  'Gromu',
-  'Wieczności',
+  'Podróżnika',
+  'Popiołów',
   'Pożogi',
+  'Radzimirskiego',
+  'Śmierci',
+  'Światła',
+  'Wieczności',
+  'Zagłady',
   'Zarazy',
-  'Koszmaru',
-  'Kazika',
-  'Baagera',
+  'Zniszczenia',
 ] as const;
 
 /**
  * Generates a random boss name from prefix and suffix arrays
  */
 export function generateBossName(): string {
-  const prefix = BOSS_NAME_PREFIXES[Math.floor(Math.random() * BOSS_NAME_PREFIXES.length)];
-  const suffix = BOSS_NAME_SUFFIXES[Math.floor(Math.random() * BOSS_NAME_SUFFIXES.length)];
+  const prefix = randomElement(BOSS_NAME_PREFIXES);
+  const suffix = randomElement(BOSS_NAME_SUFFIXES);
   return `${prefix} ${suffix}`;
 }
 
@@ -89,7 +127,7 @@ export interface EnemyConfig {
   goldValue: number;
 
   // Optional behaviors
-  isBoss?: boolean;
+  isBoss?: boolean; // TODO
   canShoot?: boolean;
   fireRate?: number;
   bulletSpeed?: number;

@@ -3,11 +3,14 @@
  * The main playable character with stats, weapons, and items.
  */
 
-import { Entity } from './Entity';
+import { CHARACTER_TYPES, CharacterConfig, GAME_BALANCE, WEAPON_TYPES } from '@/config';
+import type { WeaponInstance } from '@/core/Game';
+import { renderPlayer } from '@/rendering';
 import { IHealth } from '@/types/components';
 import { CharacterType, WeaponType } from '@/types/enums';
-import { CHARACTER_TYPES, CharacterConfig, GAME_BALANCE } from '@/config';
 import { clamp, Vector2 } from '@/utils';
+import { TWO_PI } from '@/utils/math';
+import { Entity } from './Entity';
 
 /**
  * Player stats interface - all modifiable stats
@@ -38,6 +41,7 @@ export interface PlayerStats {
   dodge: number;
   thorns: number;
   regen: number;
+  maxWeapons: number;
 }
 
 /**
@@ -116,8 +120,8 @@ export class Player extends Entity implements IHealth {
   /** Maximum weapon slots */
   public maxWeapons: number = 6;
 
-  /** Equipped weapon types (managed externally by weapon system) */
-  public weaponTypes: WeaponType[] = [];
+  /** Equipped weapons with runtime state */
+  public weapons: WeaponInstance[] = [];
 
   /** Collected item IDs */
   public items: string[] = [];
@@ -138,8 +142,7 @@ export class Player extends Entity implements IHealth {
 
   public constructor(config: PlayerConfig) {
     super({
-      x: config.x,
-      y: config.y,
+      position: { x: config.x, y: config.y },
       radius: 15, // half of width
     });
 
@@ -253,12 +256,12 @@ export class Player extends Entity implements IHealth {
     }
 
     // Apply movement
-    this.x += vx * this.speed;
-    this.y += vy * this.speed;
+    this.position.x += vx * this.speed;
+    this.position.y += vy * this.speed;
 
     // Keep in bounds
-    this.x = clamp(this.x, this.width / 2, canvasWidth - this.width / 2);
-    this.y = clamp(this.y, this.height / 2, canvasHeight - this.height / 2);
+    this.position.x = clamp(this.position.x, this.width / 2, canvasWidth - this.width / 2);
+    this.position.y = clamp(this.position.y, this.height / 2, canvasHeight - this.height / 2);
 
     // Store velocity for external use
     this.setVelocity(vx * this.speed, vy * this.speed);
@@ -274,14 +277,37 @@ export class Player extends Entity implements IHealth {
   // ============ Weapons & Items ============
 
   /**
-   * Adds a weapon type
-   * @returns true if added, false if no slots
+   * Adds a weapon type and creates full weapon instance
+   * @returns true if added, false if no slots available or weapon already exists
    */
   public addWeapon(type: WeaponType): boolean {
-    if (this.weaponTypes.length >= this.maxWeapons) {
+    if (this.weapons.length >= this.maxWeapons) {
+      // Check if we already have this weapon - upgrade it
+      const existing = this.weapons.find((w) => w.type === type);
+      if (existing) {
+        existing.level++;
+        return true;
+      }
       return false;
     }
-    this.weaponTypes.push(type);
+
+    const config = WEAPON_TYPES[type];
+    if (!config) {
+      console.error(`Unknown weapon type: ${type}`);
+      return false;
+    }
+
+    // Create full weapon instance
+    this.weapons.push({
+      type,
+      config,
+      level: 1,
+      lastFireTime: 0,
+      multishot: 0,
+      name: config.name,
+      fireOffset: 0,
+    });
+
     return true;
   }
 
@@ -309,12 +335,12 @@ export class Player extends Entity implements IHealth {
     target: Vector2 | null = null,
   ): { x: number; y: number; angle: number } {
     const weaponRadius = 25;
-    const weaponCount = this.weaponTypes.length || 1;
+    const weaponCount = this.weapons.length || 1;
 
-    const spreadAngle = ((Math.PI * 2) / weaponCount) * index;
+    const spreadAngle = (TWO_PI / weaponCount) * index;
 
-    const posX = this.x + Math.cos(spreadAngle) * weaponRadius;
-    const posY = this.y + Math.sin(spreadAngle) * weaponRadius;
+    const posX = this.position.x + Math.cos(spreadAngle) * weaponRadius;
+    const posY = this.position.y + Math.sin(spreadAngle) * weaponRadius;
 
     let aimAngle = spreadAngle;
     if (target) {
@@ -419,7 +445,7 @@ export class Player extends Entity implements IHealth {
         this.goldMultiplier += value;
         break;
       case 'dodge':
-        this.dodge += value;
+        this.dodge = Math.min(this.dodge + value, GAME_BALANCE.player.maxDodge);
         break;
       case 'thorns':
         this.thorns += value;
@@ -427,46 +453,13 @@ export class Player extends Entity implements IHealth {
       case 'regen':
         this.regen += value;
         break;
+      case 'maxWeapons':
+        this.maxWeapons += value;
+        break;
     }
   }
 
-  // ============ Rendering ============
-
-  /**
-   * Draws player
-   */
   public draw(ctx: CanvasRenderingContext2D, currentTime: number = 0): void {
-    ctx.save();
-
-    // Flash when invincible
-    if (currentTime < this.invincibleUntil) {
-      if (Math.floor(currentTime / 100) % 2 === 0) {
-        ctx.globalAlpha = 0.5;
-      }
-    }
-
-    // Body
-    ctx.fillStyle = this.color;
-    ctx.fillRect(this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
-
-    // Armor visual
-    if (this.armor > 0) {
-      ctx.strokeStyle = `rgba(100, 150, 255, ${Math.min(this.armor / 50, 1)})`;
-      ctx.lineWidth = 3;
-    } else {
-      ctx.strokeStyle = '#2a7fff';
-      ctx.lineWidth = 2;
-    }
-    ctx.strokeRect(this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
-
-    // Eyes
-    ctx.fillStyle = 'white';
-    const eyeOffset = 5;
-    ctx.beginPath();
-    ctx.arc(this.x - eyeOffset, this.y - 3, 4, 0, Math.PI * 2);
-    ctx.arc(this.x + eyeOffset, this.y - 3, 4, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
+    renderPlayer(ctx, this, currentTime);
   }
 }

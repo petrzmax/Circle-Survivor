@@ -1,13 +1,13 @@
 /**
  * Shop system
  * Generates items, renders shop UI, handles purchases
- * Matches original js/shop.js exactly.
  */
 
 import { EventBus } from '@/core/EventBus';
 import { SHOP_ITEMS } from '@/config/shop.config';
 import { GAME_BALANCE } from '@/config/balance.config';
 import { WeaponType } from '@/types';
+import { randomElementStrict, shuffleArray } from '@/utils';
 
 // ============ Types ============
 
@@ -24,7 +24,7 @@ export interface ShopPlayer {
 }
 
 export interface ShopWeapon {
-  type: string;
+  type: WeaponType;
   name: string;
   level: number;
   upgrade(): void;
@@ -109,7 +109,7 @@ export class Shop {
     const itemMultiplier = 1 + itemCount * GAME_BALANCE.economy.priceScale.perItem;
 
     // Scaling with weapon count (+perWeapon% per weapon)
-    const weaponCount = player.weapons ? player.weapons.length : 0;
+    const weaponCount = player.weapons.length;
     const weaponMultiplier = 1 + weaponCount * GAME_BALANCE.economy.priceScale.perWeapon;
 
     // Final price (rounded to 5)
@@ -137,9 +137,8 @@ export class Shop {
     });
 
     // Shuffle each category
-    const shuffle = <T>(arr: T[]): T[] => arr.sort(() => Math.random() - 0.5);
-    shuffle(weapons);
-    shuffle(items);
+    shuffleArray(weapons);
+    shuffleArray(items);
 
     // Build shop with guaranteed variety
     this.availableItems = [];
@@ -163,13 +162,13 @@ export class Shop {
     if (weapons.length > weaponCount && weapons[weaponCount]) extras.push(weapons[weaponCount]);
     if (items.length > itemCountInShop && items[itemCountInShop])
       extras.push(items[itemCountInShop]);
-    shuffle(extras);
+    shuffleArray(extras);
     if (extras.length > 0 && extras[0]) {
       this.availableItems.push(extras[0]);
     }
 
     // Shuffle final list
-    shuffle(this.availableItems);
+    shuffleArray(this.availableItems);
   }
 
   /**
@@ -208,7 +207,7 @@ export class Shop {
       let isWeaponLocked = false;
       if (item.type === 'weapon') {
         const weaponItem = item;
-        const hasThisWeapon = player.weapons.some((w) => w.type === (weaponItem.weaponType as WeaponType));
+        const hasThisWeapon = player.weapons.some((w) => w.type === weaponItem.weaponType);
         if (player.weapons.length >= player.maxWeapons && !hasThisWeapon) {
           isWeaponLocked = true;
         }
@@ -227,7 +226,7 @@ export class Shop {
         const weaponItem = item;
         if (
           player.weapons.length >= player.maxWeapons &&
-          player.weapons.some((w) => w.type === (weaponItem.weaponType as WeaponType))
+          player.weapons.some((w) => w.type === weaponItem.weaponType)
         ) {
           // Upgrade only when you have full slots AND already have this weapon
           extraInfo = '<div style="color: #4ecdc4; font-size: 10px">⬆️ Upgrade</div>';
@@ -243,7 +242,9 @@ export class Shop {
             `;
 
       if (canBuy) {
-        itemEl.onclick = () => { this.buyItem(itemKey, player, currentPrice); };
+        itemEl.onclick = () => {
+          this.buyItem(itemKey, player, currentPrice);
+        };
       }
 
       itemsEl.appendChild(itemEl);
@@ -263,7 +264,9 @@ export class Shop {
         `;
 
     if (canReroll) {
-      rerollEl.onclick = () => { this.rerollItems(player); };
+      rerollEl.onclick = () => {
+        this.rerollItems(player);
+      };
     }
 
     itemsEl.appendChild(rerollEl);
@@ -296,16 +299,14 @@ export class Shop {
         // Check if player has full slots
         if (player.weapons.length >= player.maxWeapons) {
           // Upgrade random weapon of the same type
-          const sameTypeWeapons = player.weapons.filter((w) => w.type === (weaponItem.weaponType as WeaponType));
+          const sameTypeWeapons = player.weapons.filter((w) => w.type === weaponItem.weaponType);
           if (sameTypeWeapons.length > 0) {
             // Pick random weapon of this type
-            const randomWeapon =
-              sameTypeWeapons[Math.floor(Math.random() * sameTypeWeapons.length)];
-            if (randomWeapon) {
-              randomWeapon.upgrade();
-              // Show upgrade notification
-              this.callbacks.showNotification(`⬆️ ${item.name} +${randomWeapon.level}`);
-            }
+            const randomWeapon = randomElementStrict(sameTypeWeapons);
+            randomWeapon.upgrade();
+            // TODO does it work?
+            // Show upgrade notification
+            this.callbacks.showNotification(`⬆️ ${item.name} +${randomWeapon.level}`);
           } else {
             // No weapon of this type - refund (shouldn't happen)
             this.callbacks.setGold(this.callbacks.getGold() + price);
@@ -330,18 +331,16 @@ export class Shop {
         // Add item to inventory
         player.addItem(itemKey);
         // Pick random weapon
-        const randomWeaponForBonus =
-          player.weapons[Math.floor(Math.random() * player.weapons.length)];
-        if (randomWeaponForBonus) {
-          // Apply bonus to weapon
-          if (bonusItem.bonusType && randomWeaponForBonus[bonusItem.bonusType] !== undefined) {
-            (randomWeaponForBonus[bonusItem.bonusType] as number) += bonusItem.bonusValue;
-          }
-          // Show notification
-          this.callbacks.showNotification(
-            `🎯 ${randomWeaponForBonus.name} +${bonusItem.bonusValue} pocisk!`,
-          );
+        const randomWeaponForBonus = randomElementStrict(player.weapons);
+        // Apply bonus to weapon
+        if (bonusItem.bonusType && randomWeaponForBonus[bonusItem.bonusType] !== undefined) {
+          (randomWeaponForBonus[bonusItem.bonusType] as number) += bonusItem.bonusValue;
         }
+        // Show notification
+        this.callbacks.showNotification(
+          `🎯 ${randomWeaponForBonus.name} +${bonusItem.bonusValue} pocisk!`,
+        );
+
         break;
       }
 

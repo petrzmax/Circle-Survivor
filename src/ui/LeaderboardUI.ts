@@ -108,7 +108,10 @@ export class LeaderboardUI {
   /**
    * Show leaderboard with specific tab
    */
-  public async showLeaderboard(tab: string = 'local', highlightName: string | null = null): Promise<void> {
+  public async showLeaderboard(
+    tab: string = 'local',
+    highlightName: string | null = null,
+  ): Promise<void> {
     const listEl = document.getElementById('leaderboard-list');
     if (!listEl) return;
 

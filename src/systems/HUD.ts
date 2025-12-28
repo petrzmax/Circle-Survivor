@@ -1,7 +1,6 @@
 /**
  * HUD (Heads-Up Display) system
  * Updates and renders UI elements
- * Matches original js/systems/hud.js exactly.
  */
 
 // ============ Types ============
@@ -108,6 +107,7 @@ export const HUD = {
     if (statRegen) statRegen.textContent = player.regen.toFixed(1);
   },
 
+  // TODO: move to RenderSystem
   /**
    * Render boss health bar at top of screen
    */

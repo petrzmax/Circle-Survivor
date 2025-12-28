@@ -7,6 +7,8 @@
 import { Entity, EntityConfig } from './Entity';
 import { DeployableType, VisualEffect } from '@/types/enums';
 import { IExpirable, IExplosive } from '@/types/components';
+import { randomInt } from '@/utils';
+import { TWO_PI } from '@/utils/math';
 
 /**
  * Deployable configuration
@@ -101,7 +103,7 @@ export class Deployable extends Entity implements IExpirable {
     this.isArmed = this.armingTime <= 0;
 
     // Random offset for staggered blinking
-    this.blinkOffset = Math.random() * 1000;
+    this.blinkOffset = randomInt(0, 1000);
   }
 
   // ============ State Helpers ============
@@ -183,7 +185,7 @@ export class Deployable extends Entity implements IExpirable {
    */
   public draw(ctx: CanvasRenderingContext2D): void {
     ctx.save();
-    ctx.translate(this.x, this.y);
+    ctx.translate(this.position.x, this.position.y);
 
     switch (this.type) {
       case DeployableType.MINE:
@@ -205,7 +207,7 @@ export class Deployable extends Entity implements IExpirable {
   private drawMine(ctx: CanvasRenderingContext2D): void {
     // Mine - dark circle with blinking red light when armed (like original)
     ctx.beginPath();
-    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+    ctx.arc(0, 0, this.radius, 0, TWO_PI);
     ctx.fillStyle = '#333';
     ctx.fill();
     ctx.strokeStyle = '#666';
@@ -215,7 +217,7 @@ export class Deployable extends Entity implements IExpirable {
     // Blinking red light when armed (with offset for staggered blinking)
     if (this.isArmed) {
       ctx.beginPath();
-      ctx.arc(0, -3, 3, 0, Math.PI * 2);
+      ctx.arc(0, -3, 3, 0, TWO_PI);
       ctx.fillStyle = Math.floor((Date.now() + this.blinkOffset) / 200) % 2 ? '#ff0000' : '#440000';
       ctx.fill();
     }
@@ -224,7 +226,7 @@ export class Deployable extends Entity implements IExpirable {
   private drawTurret(ctx: CanvasRenderingContext2D): void {
     // Base
     ctx.beginPath();
-    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+    ctx.arc(0, 0, this.radius, 0, TWO_PI);
     ctx.fillStyle = this.color;
     ctx.fill();
 
@@ -238,7 +240,7 @@ export class Deployable extends Entity implements IExpirable {
     const spikes = 8;
     ctx.beginPath();
     for (let i = 0; i < spikes; i++) {
-      const angle = (i / spikes) * Math.PI * 2;
+      const angle = (i / spikes) * TWO_PI;
       const innerRadius = this.radius * 0.5;
       const outerRadius = this.radius;
 

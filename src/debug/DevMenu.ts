@@ -9,6 +9,7 @@ import { WeaponType, EnemyType } from '@/types/enums';
 import { WEAPON_TYPES } from '@/config/weapons.config';
 import { ENEMY_TYPES } from '@/config/enemies.config';
 import { SHOP_ITEMS } from '@/config/shop.config';
+import { getSpawnPoint } from '@/utils';
 
 /**
  * DevMenu dependencies - injected callbacks for game actions
@@ -92,62 +93,59 @@ export class DevMenu {
   private populateDropdowns(): void {
     // Items dropdown - include both 'item' and 'weaponBonus' types
     const itemSelect = document.getElementById('dev-item-select') as HTMLSelectElement;
-      itemSelect.innerHTML = '';
-      for (const [id, item] of Object.entries(SHOP_ITEMS)) {
-        if (item.type === 'item' || item.type === 'weaponBonus') {
-          const option = document.createElement('option');
-          option.value = id;
-          option.textContent = `${item.emoji || ''} ${item.name}`;
-          itemSelect.appendChild(option);
-        }
+    itemSelect.innerHTML = '';
+    for (const [id, item] of Object.entries(SHOP_ITEMS)) {
+      if (item.type === 'item' || item.type === 'weaponBonus') {
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = `${item.emoji || ''} ${item.name}`;
+        itemSelect.appendChild(option);
       }
-    
+    }
 
     // Weapons dropdown
     const weaponSelect = document.getElementById('dev-weapon-select') as HTMLSelectElement;
-      weaponSelect.innerHTML = '';
-      for (const [type, config] of Object.entries(WEAPON_TYPES)) {
-        if (type === 'minibanana') continue; // Skip internal type
-        const option = document.createElement('option');
-        option.value = type;
-        option.textContent = `${config.emoji || ''} ${config.name}`;
-        weaponSelect.appendChild(option);
-      }
+    weaponSelect.innerHTML = '';
+    for (const [type, config] of Object.entries(WEAPON_TYPES)) {
+      if (type === 'minibanana') continue; // Skip internal type
+      const option = document.createElement('option');
+      option.value = type;
+      option.textContent = `${config.emoji || ''} ${config.name}`;
+      weaponSelect.appendChild(option);
+    }
 
     // Boss dropdown - use formatted type name since config.name is generic 'BOSS'
     const bossSelect = document.getElementById('dev-boss-select') as HTMLSelectElement;
-      bossSelect.innerHTML = '';
-      // TODO, why not use boss type enum instead of a map??
-      const bossLabels: Record<string, string> = {
-        boss: '👹 Standard Boss',
-        boss_swarm: '🐝 Swarm Boss',
-        boss_tank: '🛡️ Tank Boss',
-        boss_speed: '⚡ Speed Boss',
-        boss_exploder: '💥 Exploder Boss',
-        boss_ghost: '👻 Ghost Boss',
-      };
-      for (const [type, config] of Object.entries(ENEMY_TYPES)) {
-        if (config.isBoss) {
-          const option = document.createElement('option');
-          option.value = type;
-          option.textContent = bossLabels[type] ?? type;
-          bossSelect.appendChild(option);
-        }
+    bossSelect.innerHTML = '';
+    // TODO, why not use boss type enum instead of a map??
+    const bossLabels: Record<string, string> = {
+      boss: '👹 Standard Boss',
+      boss_swarm: '🐝 Swarm Boss',
+      boss_tank: '🛡️ Tank Boss',
+      boss_speed: '⚡ Speed Boss',
+      boss_exploder: '💥 Exploder Boss',
+      boss_ghost: '👻 Ghost Boss',
+    };
+    for (const [type, config] of Object.entries(ENEMY_TYPES)) {
+      if (config.isBoss) {
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = bossLabels[type] ?? type;
+        bossSelect.appendChild(option);
       }
-    
+    }
 
     // Enemy dropdown
     const enemySelect = document.getElementById('dev-enemy-select') as HTMLSelectElement;
-      enemySelect.innerHTML = '';
-      for (const [type, config] of Object.entries(ENEMY_TYPES)) {
-        if (!config.isBoss) {
-          const option = document.createElement('option');
-          option.value = type;
-          option.textContent = config.name;
-          enemySelect.appendChild(option);
-        }
+    enemySelect.innerHTML = '';
+    for (const [type, config] of Object.entries(ENEMY_TYPES)) {
+      if (!config.isBoss) {
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = config.name;
+        enemySelect.appendChild(option);
       }
-    
+    }
   }
 
   /**
@@ -185,7 +183,9 @@ export class DevMenu {
     });
 
     // Gold button
-    document.getElementById('dev-gold-1000')?.addEventListener('click', () => { this.addGold(1000); });
+    document.getElementById('dev-gold-1000')?.addEventListener('click', () => {
+      this.addGold(1000);
+    });
 
     // Spawning
     document.getElementById('dev-boss-spawn')?.addEventListener('click', () => {
@@ -238,9 +238,15 @@ export class DevMenu {
     const header = this.container?.querySelector('.dev-menu-header') as HTMLElement | null;
     if (!header) return;
 
-    header.addEventListener('mousedown', (e: MouseEvent) => { this.onDragStart(e); });
-    document.addEventListener('mousemove', (e) => { this.onDragMove(e); });
-    document.addEventListener('mouseup', () => { this.onDragEnd(); });
+    header.addEventListener('mousedown', (e: MouseEvent) => {
+      this.onDragStart(e);
+    });
+    document.addEventListener('mousemove', (e) => {
+      this.onDragMove(e);
+    });
+    document.addEventListener('mouseup', () => {
+      this.onDragEnd();
+    });
   }
 
   private onDragStart(e: MouseEvent): void {
@@ -305,7 +311,7 @@ export class DevMenu {
 
     // Update wave input to current wave
     const waveInput = document.getElementById('dev-wave-input') as HTMLInputElement;
-      waveInput.value = String(this.deps.getCurrentWave());
+    waveInput.value = String(this.deps.getCurrentWave());
 
     // Update god mode checkbox
     const godmodeCheckbox = document.getElementById('dev-godmode') as HTMLInputElement;
@@ -403,29 +409,8 @@ export class DevMenu {
   private spawnEnemy(type: EnemyType, count: number): void {
     const canvas = this.deps.getCanvasSize();
     for (let i = 0; i < count; i++) {
-      // Spawn at random edge position
-      const side = Math.floor(Math.random() * 4);
-      let x: number, y: number;
-
-      switch (side) {
-        case 0: // Top
-          x = Math.random() * canvas.width;
-          y = -30;
-          break;
-        case 1: // Right
-          x = canvas.width + 30;
-          y = Math.random() * canvas.height;
-          break;
-        case 2: // Bottom
-          x = Math.random() * canvas.width;
-          y = canvas.height + 30;
-          break;
-        default: // Left
-          x = -30;
-          y = Math.random() * canvas.height;
-      }
-
-      this.deps.spawnEnemy(type, x, y);
+      const point = getSpawnPoint(canvas, 30);
+      this.deps.spawnEnemy(type, point.x, point.y);
     }
     console.log(`[DevMenu] Spawned ${count}x ${type}`);
   }

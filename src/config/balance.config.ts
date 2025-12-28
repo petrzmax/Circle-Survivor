@@ -76,6 +76,8 @@ export const GAME_BALANCE = {
     /** Armor diminishing returns divisor. Formula: armor / (armor + this value).
      *  With 100: 50 armor = 33% reduction, 100 armor = 50%, 200 armor = 67% */
     armorDiminishingFactor: 100,
+    /** Maximum dodge chance cap. 0.6 = 60% max dodge to prevent overpowered builds. */
+    maxDodge: 0.6,
   },
 
   /**
@@ -142,6 +144,19 @@ export const GAME_BALANCE = {
     healthDropLuckMultiplier: 0.2,
     /** Health pickup heal amount. */
     healthDropValue: 10,
+  },
+
+  /**
+   * Pickup attraction mechanics.
+   * Controls how pickups move toward the player.
+   */
+  pickup: {
+    /** Player speed multiplier for pickup attraction. 1.2 = pickups move 20% faster than player. */
+    playerSpeedMultiplier: 1.2,
+    /** Minimum distance factor multiplier. Pickups never move slower than base × this. */
+    minDistanceFactor: 0.5,
+    /** Maximum distance factor multiplier. Pickups at player position move at base × this. */
+    maxDistanceFactor: 2.0,
   },
 } as const;
 

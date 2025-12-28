@@ -53,6 +53,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     color: '#ffff00',
     range: 265,
     weaponCategory: WeaponCategory.GUN,
+    knockbackMultiplier: 0.6,
     projectileType: ProjectileType.STANDARD,
   },
   [WeaponType.SMG]: {

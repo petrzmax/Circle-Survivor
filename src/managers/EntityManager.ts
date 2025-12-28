@@ -11,7 +11,7 @@ import { Entity } from '@/entities/Entity';
 import { Pickup } from '@/entities/Pickup';
 import { Player } from '@/entities/Player';
 import { Projectile } from '@/entities/Projectile';
-import { distanceSquared, Vector2 } from '@/utils';
+import { distanceSquared, pointInRect, Vector2 } from '@/utils';
 
 /**
  * Entity categories for typed retrieval
@@ -413,12 +413,29 @@ export class EntityManager {
 
   /**
    * Find nearest enemy to a point
+   * @param position Position to search from
+   * @param maxDistance Maximum distance to search (optional)
+   * @param canvasBounds Canvas boundaries to filter enemies (optional)
    */
-  public getNearestEnemy(position: Vector2, maxDistance?: number): Enemy | null {
+  public getNearestEnemy(
+    position: Vector2,
+    maxDistance?: number,
+    canvasBounds?: { width: number; height: number },
+  ): Enemy | null {
     let nearest: Enemy | null = null;
     let nearestDistSq = maxDistance ? maxDistance * maxDistance : Infinity;
 
     this.getActiveEnemies().forEach((enemy) => {
+      // Filter out enemies outside the map bounds
+      if (canvasBounds) {
+        const mapRect = {
+          position: { x: 0, y: 0 },
+          width: canvasBounds.width,
+          height: canvasBounds.height,
+        };
+        if (!pointInRect(enemy.position, mapRect)) return; // Skip enemies outside
+      }
+
       const distSq = distanceSquared(enemy.position, position);
 
       if (distSq < nearestDistSq) {

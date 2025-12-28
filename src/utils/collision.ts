@@ -3,15 +3,14 @@
  * Efficient collision checks for game entities.
  */
 
-import { Vector2, distanceSquared, clamp, distance } from './math';
 import { ICircleCollider } from '@/types/components';
+import { Vector2, clamp, distance, distanceSquared } from './math';
 
 /**
  * Rectangle interface for collision detection
  */
 export interface Rectangle {
-  x: number;
-  y: number;
+  position: Vector2;
   width: number;
   height: number;
 }
@@ -61,8 +60,8 @@ export function entityCollision(
  */
 export function rectCircleCollision(rect: Rectangle, circle: Circle): boolean {
   // Find the closest point on rectangle to circle center
-  const closestX = clamp(circle.x, rect.x, rect.x + rect.width);
-  const closestY = clamp(circle.y, rect.y, rect.y + rect.height);
+  const closestX = clamp(circle.x, rect.position.x, rect.position.x + rect.width);
+  const closestY = clamp(circle.y, rect.position.y, rect.position.y + rect.height);
 
   // Check if closest point is within circle radius
   const distX = circle.x - closestX;
@@ -89,10 +88,10 @@ export function pointInCircle(point: Vector2, circle: Circle): boolean {
  */
 export function pointInRect(point: Vector2, rect: Rectangle): boolean {
   return (
-    point.x >= rect.x &&
-    point.x <= rect.x + rect.width &&
-    point.y >= rect.y &&
-    point.y <= rect.y + rect.height
+    point.x >= rect.position.x &&
+    point.x <= rect.position.x + rect.width &&
+    point.y >= rect.position.y &&
+    point.y <= rect.position.y + rect.height
   );
 }
 
@@ -105,10 +104,10 @@ export function pointInRect(point: Vector2, rect: Rectangle): boolean {
  */
 export function circleInRect(circle: Circle, rect: Rectangle): boolean {
   return (
-    circle.x - circle.radius >= rect.x &&
-    circle.x + circle.radius <= rect.x + rect.width &&
-    circle.y - circle.radius >= rect.y &&
-    circle.y + circle.radius <= rect.y + rect.height
+    circle.x - circle.radius >= rect.position.x &&
+    circle.x + circle.radius <= rect.position.x + rect.width &&
+    circle.y - circle.radius >= rect.position.y &&
+    circle.y + circle.radius <= rect.position.y + rect.height
   );
 }
 
@@ -120,10 +119,10 @@ export function circleInRect(circle: Circle, rect: Rectangle): boolean {
  */
 export function circleOutsideRect(circle: Circle, rect: Rectangle): boolean {
   return (
-    circle.x - circle.radius < rect.x ||
-    circle.x + circle.radius > rect.x + rect.width ||
-    circle.y - circle.radius < rect.y ||
-    circle.y + circle.radius > rect.y + rect.height
+    circle.x - circle.radius < rect.position.x ||
+    circle.x + circle.radius > rect.position.x + rect.width ||
+    circle.y - circle.radius < rect.position.y ||
+    circle.y + circle.radius > rect.position.y + rect.height
   );
 }
 
@@ -134,7 +133,12 @@ export function circleOutsideRect(circle: Circle, rect: Rectangle): boolean {
  * @returns True if rectangles overlap
  */
 export function rectCollision(a: Rectangle, b: Rectangle): boolean {
-  return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+  return (
+    a.position.x < b.position.x + b.width &&
+    a.position.x + a.width > b.position.x &&
+    a.position.y < b.position.y + b.height &&
+    a.position.y + a.height > b.position.y
+  );
 }
 
 /**

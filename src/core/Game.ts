@@ -583,8 +583,13 @@ export class Game {
       knockback: player.knockback,
     });
 
-    // Find nearest enemy for auto-aim
-    const nearestEnemy = this.entityManager.getNearestEnemy(player.position);
+    // Find nearest enemy for auto-aim (only within map bounds)
+    const canvasBounds = { width: this.canvas.width, height: this.canvas.height };
+    const nearestEnemy = this.entityManager.getNearestEnemy(
+      player.position,
+      undefined,
+      canvasBounds,
+    );
     player.setTarget(nearestEnemy ? nearestEnemy.position : null);
 
     // Fire weapons
@@ -729,8 +734,9 @@ export class Game {
       const weaponPos = player.getWeaponPosition(i, player.currentTarget);
       const maxRange = (config.range ?? 300) * player.attackRange;
 
-      // Find nearest enemy from weapon position
-      let target = this.entityManager.getNearestEnemy(weaponPos, maxRange);
+      // Find nearest enemy from weapon position within map bounds
+      const canvasBounds = { width: this.canvas.width, height: this.canvas.height };
+      let target = this.entityManager.getNearestEnemy(weaponPos, maxRange, canvasBounds);
 
       // Fallback to main target if within range
       if (!target && player.currentTarget) {
@@ -738,8 +744,8 @@ export class Game {
         const dy = player.currentTarget.y - weaponPos.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist <= maxRange) {
-          // Find the actual enemy at currentTarget position
-          target = this.entityManager.getNearestEnemy(player.currentTarget, 50);
+          // Find the actual enemy at currentTarget position within map bounds
+          target = this.entityManager.getNearestEnemy(player.currentTarget, 50, canvasBounds);
         }
       }
 

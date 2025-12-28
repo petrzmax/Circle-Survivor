@@ -409,16 +409,16 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
       dodge: 0.12,
     },
   },
-  kielichAlichi: {
+  kielichAlicji: {
     type: 'item',
     name: 'Kielich Alicji',
-    description: '+10% lifesteal, +30 max HP, regen +1/s',
+    description: '+5% lifesteal, +30 max HP, regen +0.5/s',
     price: 280,
     emoji: '🏆',
     effect: {
-      lifesteal: 0.1,
+      lifesteal: 0.05,
       maxHp: 30,
-      regen: 1,
+      regen: 0.5,
     },
   },
   koronaPodroznika: {

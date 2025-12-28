@@ -401,12 +401,12 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   bolidKubicy: {
     type: 'item',
     name: 'Bolid Kubicy',
-    description: '+25% szybkości ruchu, +12% dodge!',
+    description: '+25% szybkości ruchu, +10% dodge!',
     price: 300,
     emoji: '🏎️',
     effect: {
       speed: 1, // TODO what, adjust / fix
-      dodge: 0.12,
+      dodge: 0.1,
     },
   },
   kielichAlicji: {

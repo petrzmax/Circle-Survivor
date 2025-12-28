@@ -145,6 +145,19 @@ export const GAME_BALANCE = {
     /** Health pickup heal amount. */
     healthDropValue: 10,
   },
+
+  /**
+   * Pickup attraction mechanics.
+   * Controls how pickups move toward the player.
+   */
+  pickup: {
+    /** Player speed multiplier for pickup attraction. 1.2 = pickups move 20% faster than player. */
+    playerSpeedMultiplier: 1.2,
+    /** Minimum distance factor multiplier. Pickups never move slower than base × this. */
+    minDistanceFactor: 0.5,
+    /** Maximum distance factor multiplier. Pickups at player position move at base × this. */
+    maxDistanceFactor: 2.0,
+  },
 } as const;
 
 /** Type for the game balance configuration */

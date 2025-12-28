@@ -684,10 +684,20 @@ export class Game {
         const dx = player.position.x - pickup.position.x;
         const dy = player.position.y - pickup.position.y;
         if (distToPlayer > 0) {
-          const magnetSpeed = 5; // Pixels per second
+          // Scale attraction speed:
+          // 1. Base speed = player speed * multiplier (always faster than player)
+          // 2. Distance factor modulates speed based on proximity
+          const speedMultiplier = GAME_BALANCE.pickup.playerSpeedMultiplier;
+          const minFactor = GAME_BALANCE.pickup.minDistanceFactor;
+          const maxFactor = GAME_BALANCE.pickup.maxDistanceFactor;
+          // Clamp normalized distance to [0, 1] to prevent weird behavior when outside range
+          const normalizedDistance = Math.min(1, distToPlayer / player.pickupRange);
+          // Interpolate from maxFactor (close) to minFactor (far)
+          const distanceFactor = maxFactor - (maxFactor - minFactor) * normalizedDistance;
+          const magnetSpeed = player.speed * speedMultiplier * distanceFactor;
+
           pickup.position.x += (dx / distToPlayer) * magnetSpeed;
           pickup.position.y += (dy / distToPlayer) * magnetSpeed;
-          // pickup.applyVelocity(deltaTime)
         }
       }
     }

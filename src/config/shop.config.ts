@@ -294,15 +294,16 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     emoji: '💥',
     effect: { explosionRadius: 0.15 },
   },
-  multishot: {
-    type: 'weaponBonus',
-    name: 'Multishot',
-    description: '+1 pocisk do losowej broni',
-    price: 150,
-    emoji: '🎯',
-    bonusType: 'extraProjectiles',
-    bonusValue: 1,
-  },
+  // TODO disabled because multishot does not work well / is too op
+  // multishot: {
+  //   type: 'weaponBonus',
+  //   name: 'Multishot',
+  //   description: '+1 pocisk do losowej broni',
+  //   price: 150,
+  //   emoji: '🎯',
+  //   bonusType: 'extraProjectiles',
+  //   bonusValue: 1,
+  // },
   piercingArrows: {
     type: 'item',
     name: 'Przebijające Strzały',
@@ -435,13 +436,13 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   kierbceWierzbickiego: {
     type: 'item',
     name: 'Kierbce Wierzbickiego',
-    description: '+40% DMG, +2 pociski, +20% crit!',
+    description: '+20% DMG, +10% crit!',
     price: 350,
     emoji: '🥊',
     effect: {
-      damageMultiplier: 0.4,
-      projectileCount: 2,
-      critChance: 0.2,
+      damageMultiplier: 0.2,
+      // projectileCount: 2, TODO disabled because multishot does not work well / is too op
+      critChance: 0.1,
     },
   },
   kijBejsbolowyByczka: {

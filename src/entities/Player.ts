@@ -41,6 +41,7 @@ export interface PlayerStats {
   dodge: number;
   thorns: number;
   regen: number;
+  maxWeapons: number;
 }
 
 /**
@@ -451,6 +452,9 @@ export class Player extends Entity implements IHealth {
         break;
       case 'regen':
         this.regen += value;
+        break;
+      case 'maxWeapons':
+        this.maxWeapons += value;
         break;
     }
   }

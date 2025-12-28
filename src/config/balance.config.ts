@@ -139,11 +139,11 @@ export const GAME_BALANCE = {
    */
   drops: {
     /** Base health drop chance (0.15 = 15%). Affected by luck stat. */
-    healthDropChance: 0.15,
+    healthDropChance: 0.1,
     /** Luck bonus multiplier for health drops. Final chance = base + luck * this. */
     healthDropLuckMultiplier: 0.2,
     /** Health pickup heal amount. */
-    healthDropValue: 10,
+    healthDropValue: 6,
   },
 
   /**

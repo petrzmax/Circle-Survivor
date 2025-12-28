@@ -368,6 +368,7 @@ export const EffectsSystem = {
    * Render all effects
    */
   renderAll(ctx: CanvasRenderingContext2D, effects: EffectsState): void {
+    // TODO move to rendering
     this.renderExplosions(ctx, effects.explosions);
     this.renderDeathEffects(ctx, effects.deathEffects);
     this.renderShockwaves(ctx, effects.shockwaves);

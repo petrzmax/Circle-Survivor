@@ -1,13 +1,9 @@
 /**
  * Enums for type-safe game constants.
- * Use enums instead of string literals or boolean flags.
  */
 
 // ============ PROJECTILE TYPES ============
 
-/**
- * Types of projectiles (flying bullets)
- */
 export enum ProjectileType {
   STANDARD = 'standard',
   ROCKET = 'rocket',
@@ -22,9 +18,6 @@ export enum ProjectileType {
   ENEMY_BULLET = 'enemyBullet',
 }
 
-/**
- * Types of deployable objects (static, don't fly)
- */
 export enum DeployableType {
   MINE = 'mine',
   TURRET = 'turret',
@@ -60,9 +53,6 @@ export enum GameState {
 
 // ============ ENTITY TYPES ============
 
-/**
- * Enemy types
- */
 export enum EnemyType {
   BASIC = 'basic',
   FAST = 'fast',
@@ -83,9 +73,6 @@ export enum EnemyType {
   BOSS_GHOST = 'bossGhost',
 }
 
-/**
- * Pickup types
- */
 export enum PickupType {
   GOLD = 'gold',
   HEALTH = 'health',
@@ -93,9 +80,6 @@ export enum PickupType {
 
 // ============ WEAPON TYPES ============
 
-/**
- * Weapon types
- */
 export enum WeaponType {
   PISTOL = 'pistol',
   SMG = 'smg',

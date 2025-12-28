@@ -3,7 +3,7 @@
  * Enables loose coupling between systems through events.
  */
 
-import { Enemy, Player, Pickup, Projectile } from '@/entities';
+import { Enemy, Pickup, Player, Projectile } from '@/entities';
 import { WeaponType } from '@/types/enums';
 import { Vector2 } from '@/utils';
 
@@ -98,7 +98,6 @@ export interface Subscription {
  */
 class EventBusImpl {
   private listeners = new Map<keyof GameEvents, Set<EventCallback<unknown>>>();
-  private onceListeners = new Map<keyof GameEvents, Set<EventCallback<unknown>>>();
 
   /**
    * Subscribe to an event
@@ -129,34 +128,6 @@ class EventBusImpl {
   }
 
   /**
-   * Subscribe to an event only once
-   * @param event Event name
-   * @param callback Callback function
-   * @returns Subscription handle for unsubscribing
-   */
-  public once<K extends keyof GameEvents>(
-    event: K,
-    callback: EventCallback<GameEvents[K]>,
-  ): Subscription {
-    if (!this.onceListeners.has(event)) {
-      this.onceListeners.set(event, new Set());
-    }
-
-    const listeners = this.onceListeners.get(event);
-    if (!listeners) {
-      throw new Error(`Failed to get once listeners for event: ${event}`);
-    }
-
-    listeners.add(callback as EventCallback<unknown>);
-
-    return {
-      unsubscribe: () => {
-        listeners.delete(callback as EventCallback<unknown>);
-      },
-    };
-  }
-
-  /**
    * Emit an event to all subscribers
    * @param event Event name
    * @param data Event payload
@@ -173,63 +144,6 @@ class EventBusImpl {
         }
       });
     }
-
-    // Once listeners
-    const onceListeners = this.onceListeners.get(event);
-    if (onceListeners && onceListeners.size > 0) {
-      const callbacks = Array.from(onceListeners);
-      onceListeners.clear();
-
-      callbacks.forEach((callback) => {
-        try {
-          callback(data);
-        } catch (error) {
-          console.error(`Error in once listener for "${event}":`, error);
-        }
-      });
-    }
-  }
-
-  /**
-   * Remove all listeners for a specific event
-   * @param event Event name (optional, removes all if not provided)
-   */
-  public off(event?: keyof GameEvents): void {
-    if (event) {
-      this.listeners.delete(event);
-      this.onceListeners.delete(event);
-    } else {
-      this.listeners.clear();
-      this.onceListeners.clear();
-    }
-  }
-
-  /**
-   * Get the number of listeners for an event
-   * @param event Event name
-   * @returns Number of listeners
-   */
-  public listenerCount(event: keyof GameEvents): number {
-    const regular = this.listeners.get(event)?.size ?? 0;
-    const once = this.onceListeners.get(event)?.size ?? 0;
-    return regular + once;
-  }
-
-  /**
-   * Check if an event has any listeners
-   * @param event Event name
-   * @returns True if event has listeners
-   */
-  public hasListeners(event: keyof GameEvents): boolean {
-    return this.listenerCount(event) > 0;
-  }
-
-  /**
-   * Clear all event listeners (useful for cleanup/reset)
-   */
-  public clear(): void {
-    this.listeners.clear();
-    this.onceListeners.clear();
   }
 }
 
@@ -237,8 +151,3 @@ class EventBusImpl {
  * Global EventBus instance
  */
 export const EventBus = new EventBusImpl();
-
-/**
- * Re-export for testing or creating isolated instances
- */
-export { EventBusImpl };

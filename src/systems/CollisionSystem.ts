@@ -39,18 +39,6 @@ export interface CollisionSystemConfig {
 /**
  * Handles all collision detection in the game.
  * Uses spatial queries from EntityManager for efficiency.
- *
- * @example
- * ```typescript
- * const collisionSystem = new CollisionSystem(entityManager, {
- *   pickupRadius: 25,
- *   attractionRadius: 100
- * });
- *
- * // In game loop
- * const collisions = collisionSystem.checkAll();
- * // Handle collisions or let other systems handle via events
- * ```
  */
 export class CollisionSystem {
   private entityManager: EntityManager;

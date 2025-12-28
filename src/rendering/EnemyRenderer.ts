@@ -54,15 +54,14 @@ function drawEyes(ctx: CanvasRenderingContext2D, enemy: Enemy): void {
   ctx.fill();
 
   // TODO: pupils should follow player?
-  // TODO: these eyebrows are sad, make them angry
-  // Angry eyebrows
+  // Angry eyebrows (angled downward toward center)
   ctx.strokeStyle = '#333';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(-enemy.radius * 0.5, -enemy.radius * 0.4);
-  ctx.lineTo(-enemy.radius * 0.1, -enemy.radius * 0.5);
-  ctx.moveTo(enemy.radius * 0.5, -enemy.radius * 0.4);
-  ctx.lineTo(enemy.radius * 0.1, -enemy.radius * 0.5);
+  ctx.moveTo(-enemy.radius * 0.5, -enemy.radius * 0.5);
+  ctx.lineTo(-enemy.radius * 0.1, -enemy.radius * 0.3);
+  ctx.moveTo(enemy.radius * 0.5, -enemy.radius * 0.5);
+  ctx.lineTo(enemy.radius * 0.1, -enemy.radius * 0.3);
   ctx.stroke();
 }
 

@@ -384,6 +384,7 @@ export class Player extends Entity implements IHealth {
       dodge: this.dodge,
       thorns: this.thorns,
       regen: this.regen,
+      maxWeapons: this.maxWeapons,
     };
   }
 

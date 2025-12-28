@@ -219,6 +219,11 @@ export class CombatSystem {
    * Uses runtimeConfig for damageMultiplier, explosionRadius, and knockback
    */
   private processProjectileHit(projectile: Projectile, enemy: Enemy): void {
+    // Skip if enemy already dead (prevents multiple death events from shotgun pellets in same frame)
+    if (enemy.isDead()) {
+      return;
+    }
+
     const { damageMultiplier, explosionRadius, knockback } = this.runtimeConfig;
     const player = this.entityManager.getPlayer();
     const finalDamage = projectile.damage * damageMultiplier;

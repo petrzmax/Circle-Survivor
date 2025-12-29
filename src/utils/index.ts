@@ -38,6 +38,8 @@ export {
   circleOverlapDepth,
 } from './collision';
 
+export { getEnemyDisplayName } from './format';
+
 export {
   randomRange,
   randomInt,

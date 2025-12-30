@@ -304,14 +304,16 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   //   bonusType: 'extraProjectiles',
   //   bonusValue: 1,
   // },
-  piercingArrows: {
-    type: 'item',
-    name: 'Przebijające Strzały',
-    description: '+2 przebicia',
-    price: 100,
-    emoji: '➡️',
-    effect: { pierce: 2 },
-  },
+
+  // TODO disabled because does not work well / is too op
+  // piercingArrows: {
+  //   type: 'item',
+  //   name: 'Przebijające Strzały',
+  //   description: '+2 przebicia',
+  //   price: 100,
+  //   emoji: '➡️',
+  //   effect: { pierce: 2 },
+  // },
 
   // ============ ITEMS - UTILITY ============
   speedBoots: {

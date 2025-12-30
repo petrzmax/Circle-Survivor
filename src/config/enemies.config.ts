@@ -172,7 +172,7 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     xpValue: 35,
     goldValue: 9,
     canShoot: true,
-    fireRate: 3000,
+    fireRate: 4000,
     bulletSpeed: 3,
     bulletDamage: 15,
     attackPatterns: ['single'],

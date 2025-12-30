@@ -228,7 +228,7 @@ export class WaveManager {
       if (rand < 0.25) return EnemyType.BASIC;
       if (rand < 0.4) return EnemyType.FAST;
       if (rand < 0.6) return EnemyType.SWARM;
-      if (rand < 0.8) return EnemyType.TANK;
+      if (rand < 0.7) return EnemyType.TANK;
       return EnemyType.ZIGZAG;
     }
 

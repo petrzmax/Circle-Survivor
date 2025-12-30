@@ -3,8 +3,8 @@ import { PickupType } from '@/types/enums';
 
 // ============ Off-screen Canvas Cache for Performance ============
 // Pre-render pickups once, then stamp copies with drawImage() (10x faster than fillText)
-// TODO - refactor to a general caching system if needed elsewhere
-// TODO refactor the code
+// TODO refactor to a general caching system. it's renderer, cache logic should not be here
+// TODO refactor the code, it's ugly!
 
 interface CachedCanvas {
   canvas: HTMLCanvasElement;

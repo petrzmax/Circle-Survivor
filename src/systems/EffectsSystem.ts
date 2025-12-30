@@ -139,6 +139,7 @@ export const EffectsSystem = {
   /**
    * Render death particle effects
    */
+  // TODO optimize - explosins bottleneck
   renderDeathEffects(ctx: CanvasRenderingContext2D, deathEffects: DeathParticle[]): void {
     for (let i = deathEffects.length - 1; i >= 0; i--) {
       const p = deathEffects[i]!;

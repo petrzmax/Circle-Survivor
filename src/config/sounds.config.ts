@@ -131,6 +131,7 @@ export const SOUND_DEFINITIONS: Record<string, SoundDefinition> = {
       { type: 'noise', duration: 0.3, volume: 0.6 },
       { type: 'tone', frequency: 80, duration: 0.3, oscillator: 'sine', volume: 0.5 },
     ],
+    cooldown: 20,
   },
 
   nukeExplosion: {
@@ -164,6 +165,7 @@ export const SOUND_DEFINITIONS: Record<string, SoundDefinition> = {
       { type: 'tone', frequency: 800, duration: 0.05, oscillator: 'sine', volume: 0.3 },
       { type: 'tone', frequency: 1000, duration: 0.05, oscillator: 'sine', volume: 0.3 },
     ],
+    cooldown: 20,
   },
 
   collectXP: {
@@ -176,6 +178,7 @@ export const SOUND_DEFINITIONS: Record<string, SoundDefinition> = {
       { type: 'tone', frequency: 600, duration: 0.1, oscillator: 'sine', volume: 0.3 },
       { type: 'tone', frequency: 800, duration: 0.15, oscillator: 'sine', volume: 0.3 },
     ],
+    cooldown: 50,
   },
 
   // ========== Combat Sounds (with cooldown for anti-spam) ==========

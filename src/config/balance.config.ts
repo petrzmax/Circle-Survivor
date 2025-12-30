@@ -99,7 +99,7 @@ export const GAME_BALANCE = {
     /** Reroll cost scaling. Discourages excessive rerolling. */
     reroll: {
       /** Base reroll cost in gold. */
-      baseCost: 15,
+      baseCost: 4,
       /** Cost increase per wave. 0.2 = +20% per wave. */
       perWave: 0.2,
       /** Cost increase per reroll used this shop visit. 0.5 = +50% per reroll. */

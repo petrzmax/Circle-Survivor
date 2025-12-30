@@ -89,6 +89,9 @@ export class Game {
   // Regeneration tracking
   private lastRegenTime: number = 0;
 
+  // HUD update throttling
+  private lastHUDUpdate: number = 0;
+
   // Game loop tracking - prevents multiple loops
   private isGameLoopRunning: boolean = false;
 
@@ -713,7 +716,12 @@ export class Game {
     // Cleanup
     this.entityManager.removeInactive();
 
-    this.updateHUD();
+    // TODO migrate to canvas overlay HUD?
+    // Throttle HUD updates to reduce DOM manipulation cost (60 FPS → 10 updates/sec)
+    if (currentTime - this.lastHUDUpdate >= 100) {
+      this.updateHUD();
+      this.lastHUDUpdate = currentTime;
+    }
   }
 
   // ============ Weapon Firing ============

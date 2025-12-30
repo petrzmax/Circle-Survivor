@@ -3,6 +3,7 @@
  * Rendering and updating of temporary visual effects.
  */
 
+import { renderExplosion } from '@/rendering';
 import { distance, randomAngle, randomChance, randomRange } from '@/utils';
 import { TWO_PI, Vector2 } from '@/utils/math';
 
@@ -131,62 +132,7 @@ export const EffectsSystem = {
         continue;
       }
 
-      ctx.save();
-      ctx.globalAlpha = exp.alpha;
-      ctx.beginPath();
-      ctx.arc(exp.x, exp.y, exp.radius * (1 - exp.alpha * 0.3), 0, TWO_PI);
-
-      if (exp.isNuke) {
-        // Nuke - green explosion with multiple rings
-        const gradient = ctx.createRadialGradient(exp.x, exp.y, 0, exp.x, exp.y, exp.radius);
-        gradient.addColorStop(0, '#ffffff');
-        gradient.addColorStop(0.3, '#00ff00');
-        gradient.addColorStop(0.6, '#008800');
-        gradient.addColorStop(1, 'rgba(0, 50, 0, 0)');
-        ctx.fillStyle = gradient;
-        ctx.fill();
-        // Second ring
-        ctx.beginPath();
-        ctx.arc(exp.x, exp.y, exp.radius * 0.6 * (1 - exp.alpha * 0.5), 0, TWO_PI);
-        ctx.strokeStyle = '#00ff00';
-        ctx.lineWidth = 5;
-        ctx.stroke();
-      } else if (exp.isHolyGrenade) {
-        // Holy Grenade - golden holy explosion
-        const gradient = ctx.createRadialGradient(exp.x, exp.y, 0, exp.x, exp.y, exp.radius);
-        gradient.addColorStop(0, '#ffffff');
-        gradient.addColorStop(0.3, '#ffdd00');
-        gradient.addColorStop(0.6, '#ffaa00');
-        gradient.addColorStop(1, 'rgba(255, 200, 0, 0)');
-        ctx.fillStyle = gradient;
-        ctx.fill();
-        // Luminous cross
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.moveTo(exp.x, exp.y - exp.radius * 0.5);
-        ctx.lineTo(exp.x, exp.y + exp.radius * 0.5);
-        ctx.moveTo(exp.x - exp.radius * 0.4, exp.y);
-        ctx.lineTo(exp.x + exp.radius * 0.4, exp.y);
-        ctx.stroke();
-      } else if (exp.isBanana) {
-        // Banana bomb - yellow explosion
-        const gradient = ctx.createRadialGradient(exp.x, exp.y, 0, exp.x, exp.y, exp.radius);
-        gradient.addColorStop(0, '#ffff00');
-        gradient.addColorStop(0.4, '#ffcc00');
-        gradient.addColorStop(0.7, '#ff6600');
-        gradient.addColorStop(1, 'rgba(255, 100, 0, 0)');
-        ctx.fillStyle = gradient;
-        ctx.fill();
-      } else {
-        // Normal explosion
-        ctx.fillStyle = '#ffff00';
-        ctx.fill();
-        ctx.strokeStyle = '#ff8800';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-      }
-      ctx.restore();
+      renderExplosion(ctx, exp);
     }
   },
 

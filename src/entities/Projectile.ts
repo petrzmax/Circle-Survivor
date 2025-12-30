@@ -4,7 +4,6 @@
  * Uses composition with optional components for different behaviors.
  */
 
-import { renderProjectile } from '@/rendering';
 import { IExpirable, IExplosive } from '@/types/components';
 import { ProjectileType, VisualEffect } from '@/types/enums';
 import { Vector2, distance } from '@/utils';
@@ -258,14 +257,5 @@ export class Projectile extends Entity implements IExpirable {
     if (this.isExpired()) {
       this.destroy();
     }
-  }
-
-  // TODO move to rendererSystem
-  /**
-   * Draws projectile
-   * @param ctx Canvas rendering context
-   */
-  public draw(ctx: CanvasRenderingContext2D): void {
-    renderProjectile(ctx, this);
   }
 }

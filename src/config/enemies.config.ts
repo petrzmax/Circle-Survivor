@@ -117,7 +117,6 @@ export type AttackPattern = 'single' | 'spread' | 'shockwave';
  * Enemy configuration interface
  */
 export interface EnemyConfig {
-  name: string;
   color: string;
   radius: number;
   speed: number;
@@ -146,9 +145,7 @@ export interface EnemyConfig {
 
 export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
   // ============ BASIC ENEMIES ============
-  // TODO hmm are names needed? if I already have EnemyType? It should be enough
   [EnemyType.BASIC]: {
-    name: 'Basic',
     color: '#e94560',
     radius: 15,
     speed: 1.5,
@@ -158,7 +155,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     goldValue: 2,
   },
   [EnemyType.FAST]: {
-    name: 'Fast',
     color: '#ff8c00',
     radius: 10,
     speed: 3.5,
@@ -168,7 +164,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     goldValue: 4,
   },
   [EnemyType.TANK]: {
-    name: 'Tank',
     color: '#9b59b6',
     radius: 28,
     speed: 0.7,
@@ -177,13 +172,12 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     xpValue: 35,
     goldValue: 9,
     canShoot: true,
-    fireRate: 3000,
+    fireRate: 4000,
     bulletSpeed: 3,
     bulletDamage: 15,
     attackPatterns: ['single'],
   },
   [EnemyType.SWARM]: {
-    name: 'Swarm',
     color: '#2ecc71',
     radius: 7,
     speed: 2.2,
@@ -195,7 +189,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
 
   // ============ ADVANCED ENEMIES ============
   [EnemyType.SPRINTER]: {
-    name: 'Sprinter',
     color: '#00ffff',
     radius: 9,
     speed: 5,
@@ -205,7 +198,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     goldValue: 5,
   },
   [EnemyType.BRUTE]: {
-    name: 'Brute',
     color: '#8b0000',
     radius: 35,
     speed: 0.5,
@@ -220,7 +212,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     attackPatterns: ['single'],
   },
   [EnemyType.GHOST]: {
-    name: 'Ghost',
     color: 'rgba(255, 255, 255, 0.6)',
     radius: 14,
     speed: 2,
@@ -231,7 +222,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     phasing: true,
   },
   [EnemyType.EXPLODER]: {
-    name: 'Exploder',
     color: '#ffff00',
     radius: 12,
     speed: 1.8,
@@ -244,7 +234,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     explosionDamage: 15,
   },
   [EnemyType.ZIGZAG]: {
-    name: 'Zigzag',
     color: '#ff69b4',
     radius: 11,
     speed: 2.5,
@@ -255,7 +244,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     zigzag: true,
   },
   [EnemyType.SPLITTER]: {
-    name: 'Splitter',
     color: '#7cfc00',
     radius: 20,
     speed: 1.2,
@@ -269,7 +257,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
 
   // ============ BOSSES ============
   [EnemyType.BOSS]: {
-    name: 'BOSS',
     color: '#ff0000',
     radius: 50,
     speed: 0.5,
@@ -285,7 +272,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     attackPatterns: ['single', 'spread'],
   },
   [EnemyType.BOSS_SWARM]: {
-    name: 'BOSS',
     color: '#00ff00',
     radius: 45,
     speed: 0.8,
@@ -303,7 +289,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     attackPatterns: ['single', 'spread'],
   },
   [EnemyType.BOSS_TANK]: {
-    name: 'BOSS',
     color: '#8b00ff',
     radius: 65,
     speed: 0.3,
@@ -319,7 +304,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     attackPatterns: ['single', 'shockwave'],
   },
   [EnemyType.BOSS_SPEED]: {
-    name: 'BOSS',
     color: '#00ffff',
     radius: 40,
     speed: 1.6,
@@ -336,7 +320,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     attackPatterns: ['single', 'spread'],
   },
   [EnemyType.BOSS_EXPLODER]: {
-    name: 'BOSS',
     color: '#ffff00',
     radius: 55,
     speed: 0.5,
@@ -355,7 +338,6 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     attackPatterns: ['spread', 'shockwave'],
   },
   [EnemyType.BOSS_GHOST]: {
-    name: 'BOSS',
     color: 'rgba(255, 255, 255, 0.7)',
     radius: 48,
     speed: 0.7,

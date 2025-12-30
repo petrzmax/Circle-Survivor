@@ -5,6 +5,7 @@
 
 export {
   type Vector2,
+  copyVector,
   distance,
   distanceSquared,
   normalize,
@@ -37,6 +38,8 @@ export {
   rectCollision,
   circleOverlapDepth,
 } from './collision';
+
+export { getEnemyDisplayName } from './format';
 
 export {
   randomRange,

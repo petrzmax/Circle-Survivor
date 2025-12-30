@@ -3,13 +3,13 @@
  * Only available in development mode (import.meta.env.DEV).
  */
 
-import './devMenuStyles.css';
-import devMenuTemplate from './devMenuTemplate.html?raw';
-import { WeaponType, EnemyType } from '@/types/enums';
-import { WEAPON_TYPES } from '@/config/weapons.config';
 import { ENEMY_TYPES } from '@/config/enemies.config';
 import { SHOP_ITEMS } from '@/config/shop.config';
-import { getSpawnPoint } from '@/utils';
+import { WEAPON_TYPES } from '@/config/weapons.config';
+import { EnemyType, WeaponType } from '@/types/enums';
+import { getEnemyDisplayName, getSpawnPoint } from '@/utils';
+import './devMenuStyles.css';
+import devMenuTemplate from './devMenuTemplate.html?raw';
 
 /**
  * DevMenu dependencies - injected callbacks for game actions
@@ -114,23 +114,15 @@ export class DevMenu {
       weaponSelect.appendChild(option);
     }
 
-    // Boss dropdown - use formatted type name since config.name is generic 'BOSS'
+    // Boss dropdown
     const bossSelect = document.getElementById('dev-boss-select') as HTMLSelectElement;
     bossSelect.innerHTML = '';
-    // TODO, why not use boss type enum instead of a map??
-    const bossLabels: Record<string, string> = {
-      boss: '👹 Standard Boss',
-      boss_swarm: '🐝 Swarm Boss',
-      boss_tank: '🛡️ Tank Boss',
-      boss_speed: '⚡ Speed Boss',
-      boss_exploder: '💥 Exploder Boss',
-      boss_ghost: '👻 Ghost Boss',
-    };
-    for (const [type, config] of Object.entries(ENEMY_TYPES)) {
+    for (const type of Object.values(EnemyType)) {
+      const config = ENEMY_TYPES[type];
       if (config.isBoss) {
         const option = document.createElement('option');
         option.value = type;
-        option.textContent = bossLabels[type] ?? type;
+        option.textContent = getEnemyDisplayName(type);
         bossSelect.appendChild(option);
       }
     }
@@ -138,11 +130,12 @@ export class DevMenu {
     // Enemy dropdown
     const enemySelect = document.getElementById('dev-enemy-select') as HTMLSelectElement;
     enemySelect.innerHTML = '';
-    for (const [type, config] of Object.entries(ENEMY_TYPES)) {
+    for (const type of Object.values(EnemyType)) {
+      const config = ENEMY_TYPES[type];
       if (!config.isBoss) {
         const option = document.createElement('option');
         option.value = type;
-        option.textContent = config.name;
+        option.textContent = getEnemyDisplayName(type);
         enemySelect.appendChild(option);
       }
     }

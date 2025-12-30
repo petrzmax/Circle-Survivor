@@ -145,10 +145,4 @@ export abstract class Entity implements ITransform, ICircleCollider {
    * @param deltaTime Time since last frame in seconds
    */
   public abstract update(deltaTime: number): void;
-
-  /**
-   * Abstract draw method - must be implemented by subclasses
-   * @param ctx Canvas rendering context
-   */
-  public abstract draw(ctx: CanvasRenderingContext2D): void;
 }

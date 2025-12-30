@@ -5,6 +5,7 @@
 
 export {
   type Vector2,
+  copyVector,
   distance,
   distanceSquared,
   normalize,

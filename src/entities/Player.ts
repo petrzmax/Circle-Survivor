@@ -5,7 +5,6 @@
 
 import { CHARACTER_TYPES, CharacterConfig, GAME_BALANCE, WEAPON_TYPES } from '@/config';
 import type { WeaponInstance } from '@/core/Game';
-import { renderPlayer } from '@/rendering';
 import { IHealth } from '@/types/components';
 import { CharacterType, WeaponType } from '@/types/enums';
 import { clamp, Vector2 } from '@/utils';
@@ -458,9 +457,5 @@ export class Player extends Entity implements IHealth {
         this.maxWeapons += value;
         break;
     }
-  }
-
-  public draw(ctx: CanvasRenderingContext2D, currentTime: number = 0): void {
-    renderPlayer(ctx, this, currentTime);
   }
 }

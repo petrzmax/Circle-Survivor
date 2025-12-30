@@ -1,14 +1,13 @@
 /**
  * Wave Management
  * Controls wave progression, enemy spawning, boss spawning
- * Matches original js/wave.js exactly.
  */
 
 import { GAME_BALANCE } from '@/config/balance.config';
-import { EnemyType } from '@/types/enums';
-import { Enemy } from '@/entities/Enemy';
 import { EventBus } from '@/core/EventBus';
-import { getSpawnPoint, CanvasBounds } from '@/utils/random';
+import { Enemy } from '@/entities/Enemy';
+import { EnemyType } from '@/types/enums';
+import { CanvasBounds, getSpawnPoint } from '@/utils/random';
 
 // ============ Types ============
 
@@ -296,7 +295,6 @@ export class WaveManager {
    * Check if boss should spawn
    */
   private shouldSpawnBoss(): boolean {
-    // TODO change bossSpawned to boss is alive
     return this.waveNumber % 3 === 0 && !this.bossSpawned && this.timeRemaining < 20;
   }
 

@@ -3,7 +3,6 @@
  * Represents collectible items dropped by enemies (gold, health, XP).
  */
 
-import { renderPickup } from '@/rendering';
 import { ICollectible, IExpirable } from '@/types/components';
 import { PickupType } from '@/types/enums';
 import { Vector2, distance, normalize, randomAngle } from '@/utils';
@@ -145,14 +144,6 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
       this.position.y += norm.y * this.attractionSpeed;
       this.baseY = this.position.y; // Update base position
     }
-  }
-
-  // TODO move to render system
-  /**
-   * Draws pickup
-   */
-  public draw(ctx: CanvasRenderingContext2D): void {
-    renderPickup(ctx, this);
   }
 }
 

@@ -4,11 +4,10 @@
  * Unlike Projectile, Deployable doesn't have velocity - it stays in place.
  */
 
-import { Entity, EntityConfig } from './Entity';
-import { DeployableType, VisualEffect } from '@/types/enums';
 import { IExpirable, IExplosive } from '@/types/components';
+import { DeployableType, VisualEffect } from '@/types/enums';
 import { randomInt } from '@/utils';
-import { TWO_PI } from '@/utils/math';
+import { Entity, EntityConfig } from './Entity';
 
 /**
  * Deployable configuration
@@ -78,7 +77,7 @@ export class Deployable extends Entity implements IExpirable {
   public animationTime: number = 0;
 
   /** Blink offset for staggered blinking (based on creation time) */
-  private readonly blinkOffset: number;
+  public readonly blinkOffset: number;
 
   public constructor(config: DeployableConfig) {
     // Deployables don't have velocity
@@ -177,84 +176,5 @@ export class Deployable extends Entity implements IExpirable {
     if (this.isExpired()) {
       this.destroy();
     }
-  }
-
-  /**
-   * Draws deployable
-   * @param ctx Canvas rendering context
-   */
-  public draw(ctx: CanvasRenderingContext2D): void {
-    ctx.save();
-    ctx.translate(this.position.x, this.position.y);
-
-    switch (this.type) {
-      case DeployableType.MINE:
-        this.drawMine(ctx);
-        break;
-      case DeployableType.TURRET:
-        this.drawTurret(ctx);
-        break;
-      case DeployableType.TRAP:
-        this.drawTrap(ctx);
-        break;
-    }
-
-    ctx.restore();
-  }
-
-  // ============ Draw Helpers ============
-
-  private drawMine(ctx: CanvasRenderingContext2D): void {
-    // Mine - dark circle with blinking red light when armed (like original)
-    ctx.beginPath();
-    ctx.arc(0, 0, this.radius, 0, TWO_PI);
-    ctx.fillStyle = '#333';
-    ctx.fill();
-    ctx.strokeStyle = '#666';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Blinking red light when armed (with offset for staggered blinking)
-    if (this.isArmed) {
-      ctx.beginPath();
-      ctx.arc(0, -3, 3, 0, TWO_PI);
-      ctx.fillStyle = Math.floor((Date.now() + this.blinkOffset) / 200) % 2 ? '#ff0000' : '#440000';
-      ctx.fill();
-    }
-  }
-
-  private drawTurret(ctx: CanvasRenderingContext2D): void {
-    // Base
-    ctx.beginPath();
-    ctx.arc(0, 0, this.radius, 0, TWO_PI);
-    ctx.fillStyle = this.color;
-    ctx.fill();
-
-    // Barrel
-    ctx.fillStyle = '#888888';
-    ctx.fillRect(0, -this.radius * 0.2, this.radius * 1.5, this.radius * 0.4);
-  }
-
-  private drawTrap(ctx: CanvasRenderingContext2D): void {
-    // Spike trap
-    const spikes = 8;
-    ctx.beginPath();
-    for (let i = 0; i < spikes; i++) {
-      const angle = (i / spikes) * TWO_PI;
-      const innerRadius = this.radius * 0.5;
-      const outerRadius = this.radius;
-
-      if (i === 0) {
-        ctx.moveTo(Math.cos(angle) * outerRadius, Math.sin(angle) * outerRadius);
-      } else {
-        ctx.lineTo(Math.cos(angle) * outerRadius, Math.sin(angle) * outerRadius);
-      }
-
-      const midAngle = angle + Math.PI / spikes;
-      ctx.lineTo(Math.cos(midAngle) * innerRadius, Math.sin(midAngle) * innerRadius);
-    }
-    ctx.closePath();
-    ctx.fillStyle = this.color;
-    ctx.fill();
   }
 }

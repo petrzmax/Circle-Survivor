@@ -14,6 +14,14 @@ export interface Vector2 {
 }
 
 /**
+ * Creates a copy of a vector (new object with same values)
+ * Useful to avoid unintended reference sharing
+ */
+export function copyVector(v: Vector2): Vector2 {
+  return { x: v.x, y: v.y };
+}
+
+/**
  * Calculates Euclidean distance between two points
  * @param a First point
  * @param b Second point

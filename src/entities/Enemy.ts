@@ -4,7 +4,6 @@
  */
 
 import { AttackPattern, ENEMY_TYPES, EnemyConfig, GAME_BALANCE, generateBossName } from '@/config';
-import { renderEnemy } from '@/rendering';
 import { IHealth } from '@/types/components';
 import { EnemyType } from '@/types/enums';
 import { clamp, randomElement, Vector2 } from '@/utils';
@@ -361,13 +360,5 @@ export class Enemy extends Entity implements IHealth {
           ],
         };
     }
-  }
-
-  // TODO: move to RenderSystem
-  /**
-   * Draws enemy
-   */
-  public draw(ctx: CanvasRenderingContext2D): void {
-    renderEnemy(ctx, this);
   }
 }

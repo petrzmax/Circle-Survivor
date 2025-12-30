@@ -1,3 +1,4 @@
+import { RenderSystem } from './../systems/RenderSystem';
 /**
  * Main Game Controller
  */
@@ -10,7 +11,6 @@ import { Enemy } from '@/entities/Enemy';
 import { InputState, Player } from '@/entities/Player';
 import { Projectile } from '@/entities/Projectile';
 import { EntityManager } from '@/managers/EntityManager';
-import { renderWeapons } from '@/rendering/WeaponRenderer';
 import { AudioSystem } from '@/systems/AudioSystem';
 import { CollisionSystem } from '@/systems/CollisionSystem';
 import { CombatSystem } from '@/systems/CombatSystem';
@@ -29,7 +29,14 @@ import {
 import { Leaderboard } from '@/ui/Leaderboard';
 import { LeaderboardUI } from '@/ui/LeaderboardUI';
 import { Shop, ShopPlayer, ShopWeapon } from '@/ui/Shop';
-import { degreesToRadians, distance, randomChance, randomRange, vectorFromAngle } from '@/utils';
+import {
+  degreesToRadians,
+  distance,
+  randomChance,
+  randomRange,
+  vectorFromAngle,
+  copyVector,
+} from '@/utils';
 
 // ============ Types ============
 export type GameState = 'start' | 'playing' | 'shop' | 'gameover' | 'paused';
@@ -62,14 +69,15 @@ export class Game {
   private entityManager: EntityManager;
 
   // Systems
+  private audio: AudioSystem;
   private collisionSystem: CollisionSystem;
   private combatSystem!: CombatSystem;
-  private waveManager: WaveManager;
-  private shop: Shop;
-  private audio: AudioSystem;
+  private inputHandler: InputHandler;
   private leaderboard: Leaderboard;
   private leaderboardUI: LeaderboardUI;
-  private inputHandler: InputHandler;
+  private renderSystem: RenderSystem;
+  private shop: Shop;
+  private waveManager: WaveManager;
 
   // Effects
   private effects: EffectsState;
@@ -101,6 +109,7 @@ export class Game {
     // Initialize systems
     this.entityManager = new EntityManager();
     this.collisionSystem = new CollisionSystem(this.entityManager);
+    this.renderSystem = new RenderSystem(this.entityManager);
     this.waveManager = new WaveManager();
     this.shop = new Shop();
     this.audio = new AudioSystem();
@@ -148,12 +157,7 @@ export class Game {
     this.effects = createEffectsState();
 
     // Initialize CombatSystem (requires effects)
-    // TODO combatSystem should use Game_balance directly instead of passing values
-    this.combatSystem = new CombatSystem(this.entityManager, this.effects, {
-      healthDropChance: GAME_BALANCE.drops.healthDropChance,
-      healthDropValue: GAME_BALANCE.drops.healthDropValue,
-      healthDropLuckMultiplier: GAME_BALANCE.drops.healthDropLuckMultiplier,
-    });
+    this.combatSystem = new CombatSystem(this.entityManager, this.effects);
 
     // Setup EventBus listeners for combat events
     this.setupCombatEventListeners();
@@ -412,11 +416,7 @@ export class Game {
     this.waveManager = new WaveManager();
 
     // Reset CombatSystem with fresh effects
-    this.combatSystem = new CombatSystem(this.entityManager, this.effects, {
-      healthDropChance: GAME_BALANCE.drops.healthDropChance,
-      healthDropValue: GAME_BALANCE.drops.healthDropValue,
-      healthDropLuckMultiplier: GAME_BALANCE.drops.healthDropLuckMultiplier,
-    });
+    this.combatSystem = new CombatSystem(this.entityManager, this.effects);
 
     // Hide overlays
     document.getElementById('start-screen')?.classList.add('hidden');
@@ -840,7 +840,7 @@ export class Game {
     }
 
     // Play weapon sound
-    this.playWeaponSound(weapon.type);
+    EventBus.emit('weaponFired', { weaponType: weapon.type });
   }
 
   private getProjectileType(weaponType: WeaponType): ProjectileType {
@@ -865,10 +865,6 @@ export class Game {
     return VisualEffect.STANDARD;
   }
 
-  private playWeaponSound(type: WeaponType): void {
-    EventBus.emit('weaponFired', { weaponType: type });
-  }
-
   /**
    * Deploy a mine at the player's position
    */
@@ -879,7 +875,7 @@ export class Game {
 
     // Create deployable config
     const deployableConfig: DeployableConfig = {
-      position: player.position,
+      position: copyVector(player.position), // Copy position so mine doesn't follow player
       radius: config.bulletRadius ?? 12,
       type: DeployableType.MINE,
       damage: damage,
@@ -939,58 +935,10 @@ export class Game {
   // ============ Render ============
 
   private render(): void {
-    // Clear
-    this.ctx.fillStyle = '#16213e';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-    // Grid pattern
-    this.ctx.strokeStyle = '#1a2744';
-    this.ctx.lineWidth = 1;
-    const gridSize = 40;
-    for (let x = 0; x < this.canvas.width; x += gridSize) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(x, 0);
-      this.ctx.lineTo(x, this.canvas.height);
-      this.ctx.stroke();
-    }
-    for (let y = 0; y < this.canvas.height; y += gridSize) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(0, y);
-      this.ctx.lineTo(this.canvas.width, y);
-      this.ctx.stroke();
-    }
-
     // Render effects
+    this.renderSystem.renderAll(this.ctx, this.lastTime);
+    // TODO: integrate EffectsSystem rendering into RenderSystem
     EffectsSystem.renderAll(this.ctx, this.effects);
-
-    // Render pickups
-    for (const pickup of this.entityManager.getActivePickups()) {
-      pickup.draw(this.ctx);
-    }
-
-    // Render deployables
-    for (const deployable of this.entityManager.getActiveDeployables()) {
-      deployable.draw(this.ctx);
-    }
-
-    // Render projectiles
-    for (const projectile of this.entityManager.getActiveProjectiles()) {
-      projectile.draw(this.ctx);
-    }
-
-    // Render enemies
-    for (const enemy of this.entityManager.getActiveEnemies()) {
-      enemy.draw(this.ctx);
-    }
-
-    // Render player
-    const player = this.entityManager.getPlayer();
-    if (player) {
-      player.draw(this.ctx, this.lastTime);
-
-      // Render weapons around player
-      renderWeapons(this.ctx, player);
-    }
 
     // Render boss health bar
     this.renderBossHealthBar();

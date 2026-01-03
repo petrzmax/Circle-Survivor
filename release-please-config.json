@@ -3,8 +3,8 @@
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
   "include-v-in-tag": true,
-  "pull-request-header": "",
-  "pull-request-footer": "",
+  "pull-request-header": "New release available!",
+  "pull-request-footer": " ",
   "pull-request-title-pattern": "🚀 Release ${version}",
   "packages": {
     ".": {}

@@ -3,12 +3,15 @@
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
   "include-v-in-tag": true,
+  "pull-request-header": "",
+  "pull-request-footer": "",
   "packages": {
     ".": {}
   },
   "changelog-sections": [
     { "type": "feat", "section": "✨ Features" },
     { "type": "fix", "scope": "balance", "section": "⚖️ Balance Changes" },
+    { "type": "balance", "section": "⚖️ Balance Changes" },
     { "type": "fix", "section": "🐛 Bug Fixes" },
     { "type": "refactor", "section": "♻️ Refactoring" },
     { "type": "perf", "section": "⚡ Performance" },

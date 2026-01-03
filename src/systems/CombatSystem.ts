@@ -12,7 +12,7 @@ import { Projectile } from '@/entities/Projectile';
 import { EntityManager } from '@/managers/EntityManager';
 import { EnemyType, PickupType, ProjectileType, VisualEffect } from '@/types/enums';
 import { vectorFromAngle } from '@/utils';
-import { addVectors, TWO_PI, Vector2 } from '@/utils/math';
+import { addVectors, distance, TWO_PI, Vector2 } from '@/utils/math';
 import { randomChance, randomInt, randomPointInCircle, randomRange } from '@/utils/random';
 import { CollisionResult } from './CollisionSystem';
 import { EffectsState, EffectsSystem } from './EffectsSystem';
@@ -29,6 +29,8 @@ export interface ExplosionEvent {
   // TODO - some enum / type instead of booleans
   isBanana?: boolean;
   isMini?: boolean;
+  /** If true, explosion damages player (enemy explosions only) */
+  isEnemyExplosion?: boolean;
 }
 
 /**
@@ -240,7 +242,7 @@ export class CombatSystem {
 
     // Lifesteal
     if (player && player.lifesteal > 0) {
-      // TODO nerf it
+      // TODO nerf it, make it a chance instead of flat %
       const healAmount = finalDamage * player.lifesteal;
       player.heal(healAmount);
     }
@@ -304,7 +306,8 @@ export class CombatSystem {
    * Process a single explosion
    */
   private processExplosion(explosion: ExplosionEvent, damageMultiplier: number): void {
-    const { position, radius, damage, visualEffect, isBanana, isMini } = explosion;
+    const { position, radius, damage, visualEffect, isBanana, isMini, isEnemyExplosion } =
+      explosion;
 
     // Determine explosion type flags
     const isNuke = visualEffect === VisualEffect.NUKE;
@@ -320,6 +323,26 @@ export class CombatSystem {
       isHolyGrenade,
       isBananaEffect,
     );
+
+    // Damage player if this is an enemy explosion
+    if (isEnemyExplosion) {
+      const player = this.entityManager.getPlayer();
+      if (player?.isActive) {
+        const distToPlayer = distance(player.position, position);
+
+        if (distToPlayer <= radius) {
+          // Player in explosion radius - deal damage
+          player.takeDamage(damage, Date.now());
+
+          EventBus.emit('playerHit', {
+            player,
+            damage,
+            // TODO add explosion source type handling
+            source: 'explosion',
+          });
+        }
+      }
+    }
 
     // Find enemies in explosion radius
     const enemies = this.entityManager.getEnemiesInRadius(position, radius);
@@ -447,6 +470,7 @@ export class CombatSystem {
           damage: enemy.explosionDamage,
           visualEffect: VisualEffect.FIRE,
           sourceId: enemy.id,
+          isEnemyExplosion: true,
         },
         damageMultiplier,
       );

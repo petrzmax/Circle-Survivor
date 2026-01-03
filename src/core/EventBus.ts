@@ -14,7 +14,7 @@ export interface GameEvents {
   // Combat events
   enemyDeath: { enemy: Enemy; killer: 'player' | 'explosion'; position: Vector2 };
   enemyDamaged: { enemy: Enemy; damage: number; source: Vector2 };
-  playerHit: { player: Player; damage: number; source: Enemy | Projectile };
+  playerHit: { player: Player; damage: number; source: Enemy | Projectile | 'explosion' };
   playerDeath: { player: Player; killedBy: Enemy | null };
   playerDodged: void;
   thornsTriggered: void;

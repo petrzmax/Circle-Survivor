@@ -24,6 +24,7 @@ export const BOSS_NAME_PREFIXES: readonly string[] = [
   'Gniew',
   'Imperator',
   'Imperatorka',
+  'Janusz',
   'Kapłan',
   'Kieł',
   'Król',

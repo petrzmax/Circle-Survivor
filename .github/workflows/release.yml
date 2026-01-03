@@ -15,5 +15,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: googleapis/release-please-action@v4.4.0
+        id: release
         with:
           target-branch: develop
+
+      # Merge develop into master when a release is created
+      - name: Merge to master
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          git fetch origin master
+          git checkout master
+          git merge origin/develop --ff-only
+          git push origin master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -450,11 +450,11 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   kijBejsbolowyByczka: {
     type: 'item',
     name: 'Kij Bejsbolowy Byczka',
-    description: 'WUUUUUU! +100% odrzut wrogów!',
+    description: 'WUUUUUU! +50% odrzut wrogów!',
     price: 120,
     emoji: '🏏',
     effect: {
-      knockback: 1.0,
+      knockback: 0.5,
     },
   },
 

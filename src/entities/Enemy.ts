@@ -7,7 +7,7 @@ import { AttackPattern, ENEMY_TYPES, EnemyConfig, GAME_BALANCE, generateBossName
 import { IHealth } from '@/types/components';
 import { EnemyType } from '@/types/enums';
 import { clamp, randomElement, Vector2 } from '@/utils';
-import { distance } from '@/utils/math';
+import { distance, TWO_PI } from '@/utils/math';
 import { Entity } from './Entity';
 
 /**
@@ -316,22 +316,8 @@ export class Enemy extends Entity implements IHealth {
 
     switch (pattern) {
       case 'spread': {
-        const bullets: EnemyBulletData[] = [];
-        const spreadCount = 5;
-        const spreadAngle = Math.PI / 3; // 60 degrees
-
-        for (let i = 0; i < spreadCount; i++) {
-          const angle = baseAngle - spreadAngle / 2 + (spreadAngle / (spreadCount - 1)) * i;
-          bullets.push({
-            x: this.position.x,
-            y: this.position.y,
-            vx: Math.cos(angle) * this.bulletSpeed,
-            vy: Math.sin(angle) * this.bulletSpeed,
-            damage: this.bulletDamage * 0.6,
-            color: this.color,
-          });
-        }
-        return { type: 'bullets', bullets };
+        // 60 degree spread of 5 projectiles
+        return this.createSpreadProjectiles(baseAngle, 5, Math.PI / 3);
       }
 
       case 'shockwave':
@@ -343,6 +329,16 @@ export class Enemy extends Entity implements IHealth {
           damage: this.bulletDamage * 1.5,
           color: this.color,
         };
+
+      case 'double': {
+        // 20 degree spread of 2 projectiles
+        return this.createSpreadProjectiles(baseAngle, 2, Math.PI / 9);
+      }
+
+      case 'around': {
+        // 360 degree spread of 26 projectiles
+        return this.createSpreadProjectiles(baseAngle, 26, TWO_PI);
+      }
 
       case 'single':
       default:
@@ -360,5 +356,26 @@ export class Enemy extends Entity implements IHealth {
           ],
         };
     }
+  }
+
+  private createSpreadProjectiles(
+    baseAngle: number,
+    spreadCount: number,
+    spreadAngle: number,
+  ): AttackResult {
+    const bullets: EnemyBulletData[] = [];
+
+    for (let i = 0; i < spreadCount; i++) {
+      const angle = baseAngle - spreadAngle / 2 + (spreadAngle / (spreadCount - 1)) * i;
+      bullets.push({
+        x: this.position.x,
+        y: this.position.y,
+        vx: Math.cos(angle) * this.bulletSpeed,
+        vy: Math.sin(angle) * this.bulletSpeed,
+        damage: this.bulletDamage * 0.6,
+        color: this.color,
+      });
+    }
+    return { type: 'bullets', bullets };
   }
 }

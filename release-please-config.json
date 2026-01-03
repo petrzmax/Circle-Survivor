@@ -1,0 +1,24 @@
+{
+  "release-type": "simple",
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": true,
+  "include-v-in-tag": true,
+  "pull-request-header": "Release Notes",
+  "pull-request-footer": " ",
+  "pull-request-title-pattern": "🚀 Release ${version}",
+  "packages": {
+    ".": {}
+  },
+  "changelog-sections": [
+    { "type": "feat", "section": "✨ Features" },
+    { "type": "fix", "scope": "balance", "section": "⚖️ Balance Changes" },
+    { "type": "balance", "section": "⚖️ Balance Changes" },
+    { "type": "fix", "section": "🐛 Bug Fixes" },
+    { "type": "refactor", "section": "♻️ Refactoring" },
+    { "type": "perf", "section": "⚡ Performance" },
+    { "type": "docs", "section": "📚 Documentation" },
+    { "type": "test", "section": "🧪 Tests" },
+    { "type": "chore", "section": "📦 Other Changes" },
+    { "type": "ci", "section": "🔧 CI/CD", "hidden": true }
+  ]
+}

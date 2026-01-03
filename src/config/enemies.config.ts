@@ -24,6 +24,7 @@ export const BOSS_NAME_PREFIXES: readonly string[] = [
   'Gniew',
   'Imperator',
   'Imperatorka',
+  'Janusz',
   'Kapłan',
   'Kieł',
   'Król',
@@ -111,7 +112,7 @@ export function generateBossName(): string {
 /**
  * Attack pattern types for shooting enemies
  */
-export type AttackPattern = 'single' | 'spread' | 'shockwave';
+export type AttackPattern = 'single' | 'double' | 'spread' | 'shockwave' | 'around';
 
 /**
  * Enemy configuration interface
@@ -267,9 +268,9 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     isBoss: true,
     canShoot: true,
     fireRate: 1300,
-    bulletSpeed: 4,
+    bulletSpeed: 6,
     bulletDamage: 20,
-    attackPatterns: ['single', 'spread'],
+    attackPatterns: ['single', 'double', 'spread'],
   },
   [EnemyType.BOSS_SWARM]: {
     color: '#00ff00',
@@ -284,9 +285,9 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     splitCount: 8,
     canShoot: true,
     fireRate: 1000,
-    bulletSpeed: 5,
+    bulletSpeed: 8,
     bulletDamage: 10,
-    attackPatterns: ['single', 'spread'],
+    attackPatterns: ['single', 'around', 'spread'],
   },
   [EnemyType.BOSS_TANK]: {
     color: '#8b00ff',
@@ -299,9 +300,9 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     isBoss: true,
     canShoot: true,
     fireRate: 2000,
-    bulletSpeed: 3,
+    bulletSpeed: 5,
     bulletDamage: 35,
-    attackPatterns: ['single', 'shockwave'],
+    attackPatterns: ['single', 'double', 'shockwave'],
   },
   [EnemyType.BOSS_SPEED]: {
     color: '#00ffff',
@@ -315,7 +316,7 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     zigzag: true,
     canShoot: true,
     fireRate: 550,
-    bulletSpeed: 7,
+    bulletSpeed: 8,
     bulletDamage: 12,
     attackPatterns: ['single', 'spread'],
   },
@@ -333,9 +334,9 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     explosionDamage: 50,
     canShoot: true,
     fireRate: 1600,
-    bulletSpeed: 4,
+    bulletSpeed: 6,
     bulletDamage: 25,
-    attackPatterns: ['spread', 'shockwave'],
+    attackPatterns: ['spread', 'around', 'shockwave'],
   },
   [EnemyType.BOSS_GHOST]: {
     color: 'rgba(255, 255, 255, 0.7)',
@@ -349,8 +350,8 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     phasing: true,
     canShoot: true,
     fireRate: 1200,
-    bulletSpeed: 5,
+    bulletSpeed: 8,
     bulletDamage: 18,
-    attackPatterns: ['single', 'spread'],
+    attackPatterns: ['single', 'double', 'spread', 'around'],
   },
 } as const;

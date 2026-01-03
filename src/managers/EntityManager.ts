@@ -64,111 +64,69 @@ export class EntityManager {
 
   // ========== Enemies ==========
 
-  /**
-   * Add an enemy
-   */
   public addEnemy(enemy: Enemy): void {
     this.enemies.set(enemy.id, enemy);
     this.log(`Enemy added: ${enemy.id} (type: ${enemy.type})`);
   }
 
-  /**
-   * Get all enemies
-   */
   public getEnemies(): Enemy[] {
     return Array.from(this.enemies.values());
   }
 
-  /**
-   * Get active enemies only
-   */
   public getActiveEnemies(): Enemy[] {
     return this.getEnemies().filter((e) => e.isActive && !e.isDead());
   }
 
-  /**
-   * Get enemy by ID
-   */
   public getEnemy(id: number): Enemy | undefined {
     return this.enemies.get(id);
   }
 
-  /**
-   * Remove an enemy
-   */
   public removeEnemy(id: number): boolean {
     const removed = this.enemies.delete(id);
     if (removed) this.log(`Enemy removed: ${id}`);
     return removed;
   }
 
-  /**
-   * Get enemy count
-   */
   public getEnemyCount(): number {
     return this.enemies.size;
   }
 
-  /**
-   * Get active enemy count
-   */
   public getActiveEnemyCount(): number {
     return this.getActiveEnemies().length;
   }
 
   // ========== Projectiles ==========
 
-  /**
-   * Add a projectile
-   */
   public addProjectile(projectile: Projectile): void {
     this.projectiles.set(projectile.id, projectile);
     this.log(`Projectile added: ${projectile.id} (type: ${projectile.type})`);
   }
 
-  /**
-   * Add multiple projectiles at once
-   */
   public addProjectiles(projectiles: Projectile[]): void {
     projectiles.forEach((p) => {
       this.addProjectile(p);
     });
   }
 
-  /**
-   * Get all projectiles
-   */
   public getProjectiles(): Projectile[] {
     return Array.from(this.projectiles.values());
   }
 
-  /**
-   * Get active projectiles only
-   */
   public getActiveProjectiles(): Projectile[] {
     return this.getProjectiles().filter((p) => p.isActive);
   }
 
-  /**
-   * Get player projectiles (ownerId matches player)
-   */
   public getPlayerProjectiles(): Projectile[] {
     const playerId = this.player?.id;
     if (playerId === undefined) return [];
     return this.getActiveProjectiles().filter((p) => p.ownerId === playerId);
   }
 
-  /**
-   * Get enemy projectiles
-   */
   public getEnemyProjectiles(): Projectile[] {
     const playerId = this.player?.id;
     return this.getActiveProjectiles().filter((p) => p.ownerId !== playerId);
   }
 
-  /**
-   * Remove a projectile
-   */
   public removeProjectile(id: number): boolean {
     const removed = this.projectiles.delete(id);
     if (removed) this.log(`Projectile removed: ${id}`);

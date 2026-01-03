@@ -13,7 +13,7 @@ export class RenderSystem {
 
   public renderAll(ctx: CanvasRenderingContext2D, currentTime: number): void {
     renderBackground(ctx);
-    // render effects
+    // TODO render effects
     this.renderPickups(ctx);
     this.renderDeployables(ctx, currentTime);
     this.renderProjectiles(ctx);

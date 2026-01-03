@@ -85,25 +85,19 @@ export const GAME_BALANCE = {
    * Controls gold sink and progression pacing.
    */
   economy: {
-    /** Shop price scaling factors. Final price = base × wave × item × weapon multipliers. */
+    /** Shop price scaling factors. Final price = base × wave multipliers. */
     priceScale: {
       /** Price increase per wave after startWave. 0.15 = +15% per wave. */
-      perWave: 0.15,
-      /** Price increase per owned item. 0.08 = +8% per item owned. */
-      perItem: 0.08,
-      /** Price increase per owned weapon. 0.10 = +10% per weapon owned. */
-      perWeapon: 0.1,
-      /** Wave when price scaling begins. Before this, prices are base values. */
-      startWave: 5,
+      perWave: 0.2,
     },
     /** Reroll cost scaling. Discourages excessive rerolling. */
     reroll: {
       /** Base reroll cost in gold. */
-      baseCost: 4,
+      baseCost: 3,
       /** Cost increase per wave. 0.2 = +20% per wave. */
-      perWave: 0.2,
+      perWave: 0.1,
       /** Cost increase per reroll used this shop visit. 0.5 = +50% per reroll. */
-      perReroll: 0.5,
+      perReroll: 0.3,
     },
   },
 

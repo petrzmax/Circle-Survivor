@@ -288,12 +288,6 @@ export class Game {
     this.leaderboardUI.closeMenuLeaderboard();
   }
 
-  // TODO: remove if not needed
-  // @ts-expect-error - kept for potential future use
-  private async _showMenuLeaderboard(tab: string = 'local'): Promise<void> {
-    await this.leaderboardUI.showMenuLeaderboard(tab);
-  }
-
   private switchMenuLeaderboardTab(tab: string): void {
     this.leaderboardUI.switchMenuLeaderboardTab(tab);
   }

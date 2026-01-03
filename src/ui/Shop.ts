@@ -3,9 +3,9 @@
  * Generates items, renders shop UI, handles purchases
  */
 
-import { EventBus } from '@/core/EventBus';
-import { SHOP_ITEMS } from '@/config/shop.config';
 import { GAME_BALANCE } from '@/config/balance.config';
+import { SHOP_ITEMS } from '@/config/shop.config';
+import { EventBus } from '@/core/EventBus';
 import { WeaponType } from '@/types';
 import { randomElementStrict, shuffleArray } from '@/utils';
 
@@ -60,9 +60,9 @@ export class Shop {
     const waveNumber = this.callbacks?.getWaveNumber() ?? 1;
     const basePrice = GAME_BALANCE.economy.reroll.baseCost;
     // Price = base * (1 + wave*perWave) * (1 + reroll*perReroll)
-    const waveMultiplier = 1 + (waveNumber - 1) * GAME_BALANCE.economy.reroll.perWave;
+    const waveMultiplier = 1 + (waveNumber - 2) * GAME_BALANCE.economy.reroll.perWave;
     const rerollMultiplier = 1 + this.rerollCount * GAME_BALANCE.economy.reroll.perReroll;
-    return Math.round((basePrice * waveMultiplier * rerollMultiplier) / 5) * 5;
+    return Math.round(basePrice * waveMultiplier * rerollMultiplier);
   }
 
   /**
@@ -92,29 +92,15 @@ export class Shop {
   /**
    * Dynamic price scaling
    */
-  private calculatePrice(basePrice: number, player: ShopPlayer): number {
+  private calculatePrice(basePrice: number): number {
     const waveNumber = this.callbacks?.getWaveNumber() ?? 1;
 
-    // Scaling with wave number (after startWave, +perWave% per wave)
-    let waveMultiplier = 1;
-    if (waveNumber > GAME_BALANCE.economy.priceScale.startWave) {
-      waveMultiplier =
-        1 +
-        (waveNumber - GAME_BALANCE.economy.priceScale.startWave) *
-          GAME_BALANCE.economy.priceScale.perWave;
-    }
+    // Scaling with wave number (+perWave% per wave)
+    const waveMultiplier = 1 + (waveNumber - 2) * GAME_BALANCE.economy.priceScale.perWave;
 
-    // Scaling with owned items (+perItem% per item)
-    const itemCount = player.items ? player.items.length : 0;
-    const itemMultiplier = 1 + itemCount * GAME_BALANCE.economy.priceScale.perItem;
-
-    // Scaling with weapon count (+perWeapon% per weapon)
-    const weaponCount = player.weapons.length;
-    const weaponMultiplier = 1 + weaponCount * GAME_BALANCE.economy.priceScale.perWeapon;
-
-    // Final price (rounded to 5)
-    const finalPrice = basePrice * waveMultiplier * itemMultiplier * weaponMultiplier;
-    return Math.round(finalPrice / 5) * 5;
+    // Final price
+    const finalPrice = basePrice * waveMultiplier;
+    return Math.round(finalPrice);
   }
 
   /**
@@ -200,7 +186,7 @@ export class Shop {
       const item = SHOP_ITEMS[itemKey];
       if (!item) return;
 
-      const currentPrice = this.calculatePrice(item.price, player);
+      const currentPrice = this.calculatePrice(item.price);
       const canAfford = gold >= currentPrice;
 
       // Check if weapon is locked (full slots and don't have this weapon)
@@ -283,7 +269,7 @@ export class Shop {
     const item = SHOP_ITEMS[itemKey];
     if (!item) return;
 
-    const price = currentPrice ?? this.calculatePrice(item.price, player);
+    const price = currentPrice ?? this.calculatePrice(item.price);
 
     if (this.callbacks.getGold() < price) {
       EventBus.emit('shopError', undefined);

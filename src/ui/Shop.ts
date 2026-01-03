@@ -92,7 +92,7 @@ export class Shop {
   /**
    * Dynamic price scaling
    */
-  private calculatePrice(basePrice: number, player: ShopPlayer): number {
+  private calculatePrice(basePrice: number): number {
     const waveNumber = this.callbacks?.getWaveNumber() ?? 1;
 
     // Scaling with wave number (+perWave% per wave)
@@ -186,7 +186,7 @@ export class Shop {
       const item = SHOP_ITEMS[itemKey];
       if (!item) return;
 
-      const currentPrice = this.calculatePrice(item.price, player);
+      const currentPrice = this.calculatePrice(item.price);
       const canAfford = gold >= currentPrice;
 
       // Check if weapon is locked (full slots and don't have this weapon)
@@ -269,7 +269,7 @@ export class Shop {
     const item = SHOP_ITEMS[itemKey];
     if (!item) return;
 
-    const price = currentPrice ?? this.calculatePrice(item.price, player);
+    const price = currentPrice ?? this.calculatePrice(item.price);
 
     if (this.callbacks.getGold() < price) {
       EventBus.emit('shopError', undefined);

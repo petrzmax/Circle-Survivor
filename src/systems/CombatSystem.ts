@@ -535,10 +535,8 @@ export class CombatSystem {
    */
   private processPickupCollection(pickup: Pickup): void {
     const value = pickup.collect();
-    const player = this.entityManager.getPlayer();
-
     if (pickup.type === PickupType.GOLD) {
-      // TODO should only pickup, multiply gold when receiving the event?
+      // TODO should only pickup, multiply gold in reward system
       // Apply goldMultiplier from runtimeConfig
       const goldAmount = Math.floor(value * this.runtimeConfig.goldMultiplier);
       EventBus.emit('goldCollected', {
@@ -546,10 +544,6 @@ export class CombatSystem {
         position: pickup.position,
       });
     } else if (pickup.type === PickupType.HEALTH) {
-      if (player) {
-        player.heal(value);
-      }
-      // TODO why emit this event if we already healed the player directly?
       EventBus.emit('healthCollected', {
         amount: value,
         position: pickup.position,

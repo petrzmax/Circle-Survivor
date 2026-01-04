@@ -1024,22 +1024,6 @@ export class Game {
    * Setup EventBus listeners for combat events from CombatSystem
    */
   private setupCombatEventListeners(): void {
-    // Handle gold collection from CombatSystem
-    EventBus.on('goldCollected', ({ amount }) => {
-      // TODO move to reward system
-      const player = this.entityManager.getPlayer();
-      if (!player) return;
-      player.gold += amount;
-    });
-
-    // Handle XP awards
-    EventBus.on('xpAwarded', ({ amount }) => {
-      // TODO move to reward system
-      const player = this.entityManager.getPlayer();
-      if (!player) return;
-      player.xp += amount;
-    });
-
     // Handle player death
     EventBus.on('playerDeath', () => {
       this.gameOver();

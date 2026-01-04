@@ -359,7 +359,7 @@ export class CombatSystem {
   public processEnemyDeath(
     enemy: Enemy,
     killer: 'player' | 'explosion' = 'player',
-    currentTime: number = Date.now(),
+    currentTime: number = performance.now(),
   ): void {
     this.handleEnemyDeath(enemy, killer, currentTime);
   }
@@ -492,7 +492,7 @@ export class CombatSystem {
       visualEffect,
       sourceId: -1,
     });
-    this.processExplosions(Date.now());
+    this.processExplosions(performance.now());
   }
 
   /**
@@ -516,7 +516,7 @@ export class CombatSystem {
       isBanana,
       isMini,
     });
-    this.processExplosions(Date.now());
+    this.processExplosions(performance.now());
   }
 
   /**

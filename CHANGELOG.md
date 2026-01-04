@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.5.1](https://github.com/petrzmax/Circle-Survivor/compare/v1.5.0...v1.5.1) (2026-01-04)
+
+
+### ⚖️ Balance Changes
+
+* faster per wave roll price scaling ([7e0482a](https://github.com/petrzmax/Circle-Survivor/commit/7e0482addb497fac49b1fe15f17f15d9a635bb13))
+* revert enemie bullet speed ([0b38559](https://github.com/petrzmax/Circle-Survivor/commit/0b38559e5e71155a4b37dda81a90300cde851367))
+
+
+### 🐛 Bug Fixes
+
+* invisible player loop ([f044fc0](https://github.com/petrzmax/Circle-Survivor/commit/f044fc003ac72d77ae7da383880057c0366795f4))
+* shop disables mostly available items ([2d858fe](https://github.com/petrzmax/Circle-Survivor/commit/2d858feb890802cf80bfd21b579b380aed286c4e))
+
 ## [1.5.0](https://github.com/petrzmax/Circle-Survivor/compare/v1.4.4...v1.5.0) (2026-01-03)
 
 

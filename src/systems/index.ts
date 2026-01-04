@@ -2,7 +2,7 @@ export { CollisionSystem } from './CollisionSystem';
 export type { CollisionResult, CollisionSystemConfig } from './CollisionSystem';
 
 export { CombatSystem } from './CombatSystem';
-export type { CombatSystemConfig, ExplosionEvent } from './CombatSystem';
+export type { ExplosionEvent } from './CombatSystem';
 
 export { AudioSystem } from './AudioSystem';
 

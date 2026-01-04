@@ -12,8 +12,7 @@ import { Entity } from './Entity';
  * Pickup configuration
  */
 export interface PickupConfig {
-  x: number;
-  y: number;
+  position: Vector2;
   type: PickupType;
   value: number;
   /** Lifetime in seconds (default: 30) */
@@ -54,7 +53,7 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
 
   public constructor(config: PickupConfig) {
     super({
-      position: { x: config.x, y: config.y },
+      position: config.position,
       radius: 8,
     });
 
@@ -63,7 +62,7 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
 
     // Gold: 3s, Health: 15s
     this.lifetime = config.lifetime ?? (this.type === PickupType.GOLD ? 3 : 15);
-    this.baseY = config.y;
+    this.baseY = config.position.y;
   }
 
   // ============ IExpirable ============
@@ -145,28 +144,4 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
       this.baseY = this.position.y; // Update base position
     }
   }
-}
-
-/**
- * Factory function to create gold pickup
- */
-export function createGoldPickup(position: Vector2, value: number): Pickup {
-  return new Pickup({
-    x: position.x,
-    y: position.y,
-    type: PickupType.GOLD,
-    value,
-  });
-}
-
-/**
- * Factory function to create health pickup
- */
-export function createHealthPickup(x: number, y: number, value: number): Pickup {
-  return new Pickup({
-    x,
-    y,
-    type: PickupType.HEALTH,
-    value,
-  });
 }

@@ -41,6 +41,11 @@ export interface PlayerStats {
   thorns: number;
   regen: number;
   maxWeapons: number;
+
+  // Health drop chances
+  healthDropChance: number;
+  healthDropValue: number;
+  healthDropLuckMultiplier: number;
 }
 
 /**
@@ -115,6 +120,11 @@ export class Player extends Entity implements IHealth {
   public thorns: number = 0;
   public regen: number = 0;
 
+  // Drop chances
+  public healthDropChance: number = 0;
+  public healthDropValue: number = 0;
+  public healthDropLuckMultiplier: number = 0;
+
   // Debug
   public godMode: boolean = false;
 
@@ -164,6 +174,11 @@ export class Player extends Entity implements IHealth {
     this.critDamage = GAME_BALANCE.player.baseCritMultiplier;
     this.invincibilityDuration = GAME_BALANCE.player.invincibilityMs;
     this.pickupRange = 50;
+
+    // Health drop chances
+    this.healthDropChance = GAME_BALANCE.drops.healthDropChance;
+    this.healthDropValue = GAME_BALANCE.drops.healthDropValue;
+    this.healthDropLuckMultiplier = GAME_BALANCE.drops.healthDropLuckMultiplier;
   }
 
   // ============ Health Interface ============
@@ -361,35 +376,6 @@ export class Player extends Entity implements IHealth {
   }
 
   // ============ Stats Helpers ============
-
-  /**
-   * Gets all stats as object
-   */
-  public getStats(): PlayerStats {
-    return {
-      maxHp: this.maxHp,
-      speed: this.speed,
-      pickupRange: this.pickupRange,
-      armor: this.armor,
-      damageMultiplier: this.damageMultiplier,
-      attackSpeedMultiplier: this.attackSpeedMultiplier,
-      critChance: this.critChance,
-      critDamage: this.critDamage,
-      lifesteal: this.lifesteal,
-      knockback: this.knockback,
-      explosionRadius: this.explosionRadius,
-      projectileCount: this.projectileCount,
-      pierce: this.pierce,
-      attackRange: this.attackRange,
-      luck: this.luck,
-      xpMultiplier: this.xpMultiplier,
-      goldMultiplier: this.goldMultiplier,
-      dodge: this.dodge,
-      thorns: this.thorns,
-      regen: this.regen,
-      maxWeapons: this.maxWeapons,
-    };
-  }
 
   /**
    * Applies stat bonuses from item effect

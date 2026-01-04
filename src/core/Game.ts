@@ -1,3 +1,4 @@
+import { PickupSpawnSystem } from './../systems/PickupSpawnSystem';
 import { RenderSystem } from './../systems/RenderSystem';
 import { RewardSystem } from './../systems/RewardSystem';
 /**
@@ -76,6 +77,8 @@ export class Game {
   private inputHandler: InputHandler;
   private leaderboard: Leaderboard;
   private leaderboardUI: LeaderboardUI;
+  // @ts-expect-error - initialized in constructor
+  private pickupSpawnSystem: PickupSpawnSystem;
   private renderSystem: RenderSystem;
   // @ts-expect-error - initialized in constructor
   private rewardSystem: RewardSystem;
@@ -117,6 +120,7 @@ export class Game {
     this.audio = new AudioSystem();
     this.leaderboard = new Leaderboard();
     this.leaderboardUI = new LeaderboardUI(this.leaderboard);
+    this.pickupSpawnSystem = new PickupSpawnSystem(this.entityManager);
     this.rewardSystem = new RewardSystem(this.entityManager);
     this.inputHandler = new InputHandler({
       onPause: () => {
@@ -563,7 +567,6 @@ export class Game {
 
     // Update CombatSystem runtime config with current player stats
     this.combatSystem.updateRuntimeConfig({
-      luck: player.luck,
       goldMultiplier: player.goldMultiplier,
       damageMultiplier: player.damageMultiplier,
       explosionRadius: player.explosionRadius,
@@ -1024,22 +1027,6 @@ export class Game {
    * Setup EventBus listeners for combat events from CombatSystem
    */
   private setupCombatEventListeners(): void {
-    // Handle gold collection from CombatSystem
-    EventBus.on('goldCollected', ({ amount }) => {
-      // TODO move to reward system
-      const player = this.entityManager.getPlayer();
-      if (!player) return;
-      player.gold += amount;
-    });
-
-    // Handle XP awards
-    EventBus.on('xpAwarded', ({ amount }) => {
-      // TODO move to reward system
-      const player = this.entityManager.getPlayer();
-      if (!player) return;
-      player.xp += amount;
-    });
-
     // Handle player death
     EventBus.on('playerDeath', () => {
       this.gameOver();

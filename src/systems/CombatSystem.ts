@@ -2,18 +2,16 @@
  * CombatSystem - Handles damage, explosions, and combat effects.
  * Processes collision results and applies damage, knockback, etc.
  */
-
 import { GAME_BALANCE } from '@/config/balance.config';
 import { WEAPON_TYPES } from '@/config/weapons.config';
 import { EventBus } from '@/core/EventBus';
 import { Enemy } from '@/entities/Enemy';
-import { createGoldPickup, createHealthPickup, Pickup } from '@/entities/Pickup';
+import { Pickup } from '@/entities/Pickup';
 import { Projectile } from '@/entities/Projectile';
 import { EntityManager } from '@/managers/EntityManager';
 import { EnemyType, PickupType, ProjectileType, VisualEffect } from '@/types/enums';
-import { vectorFromAngle } from '@/utils';
-import { addVectors, distance, TWO_PI, Vector2 } from '@/utils/math';
-import { randomChance, randomInt, randomPointInCircle, randomRange } from '@/utils/random';
+import { distance, TWO_PI, Vector2 } from '@/utils/math';
+import { randomChance, randomInt, randomRange } from '@/utils/random';
 import { CollisionResult } from './CollisionSystem';
 import { EffectsState, EffectsSystem } from './EffectsSystem';
 
@@ -34,24 +32,11 @@ export interface ExplosionEvent {
 }
 
 /**
- * CombatSystem configuration
- */
-export interface CombatSystemConfig {
-  /** Health drop chance (0-1) */
-  healthDropChance?: number;
-  /** Base health drop value */
-  healthDropValue?: number;
-  /** Luck multiplier for health drops */
-  healthDropLuckMultiplier?: number;
-}
-
-/**
  * Runtime config passed to processCollisions
  * Contains player-dependent values that can change
  */
+// TODO all these are stored in Player, remove
 export interface CombatRuntimeConfig {
-  /** Player luck stat for bonus drops */
-  luck: number;
   /** Player gold multiplier */
   goldMultiplier: number;
   /** Player damage multiplier */
@@ -64,7 +49,7 @@ export interface CombatRuntimeConfig {
 
 /**
  * Handles all combat-related logic.
- * Processes damage, spawns pickups, and handles explosions.
+ * Processes damage, and handles explosions.
  *
  * @example
  * ```typescript
@@ -78,33 +63,21 @@ export interface CombatRuntimeConfig {
 export class CombatSystem {
   private entityManager: EntityManager;
   private effects: EffectsState;
-  private healthDropChance: number;
-  private healthDropValue: number;
-  private healthDropLuckMultiplier: number;
 
   /** Pending explosions to process */
   private pendingExplosions: ExplosionEvent[] = [];
 
   /** Runtime config - updated each frame from player stats */
   private runtimeConfig: CombatRuntimeConfig = {
-    luck: 0,
     goldMultiplier: 1,
     damageMultiplier: 1,
     explosionRadius: 1,
     knockback: 0,
   };
 
-  public constructor(
-    entityManager: EntityManager,
-    effects: EffectsState,
-    config: CombatSystemConfig = {},
-  ) {
+  public constructor(entityManager: EntityManager, effects: EffectsState) {
     this.entityManager = entityManager;
     this.effects = effects;
-    this.healthDropChance = config.healthDropChance ?? GAME_BALANCE.drops.healthDropChance;
-    this.healthDropValue = config.healthDropValue ?? GAME_BALANCE.drops.healthDropValue;
-    this.healthDropLuckMultiplier =
-      config.healthDropLuckMultiplier ?? GAME_BALANCE.drops.healthDropLuckMultiplier;
   }
 
   /**
@@ -112,7 +85,6 @@ export class CombatSystem {
    * Call this before processCollisions each frame
    */
   public updateRuntimeConfig(config: Partial<CombatRuntimeConfig>): void {
-    if (config.luck !== undefined) this.runtimeConfig.luck = config.luck;
     if (config.goldMultiplier !== undefined)
       this.runtimeConfig.goldMultiplier = config.goldMultiplier;
     if (config.damageMultiplier !== undefined)
@@ -400,8 +372,6 @@ export class CombatSystem {
     killer: 'player' | 'explosion',
     currentTime: number,
   ): void {
-    const { luck } = this.runtimeConfig;
-
     // Create death effect
     EffectsSystem.createDeathEffect(this.effects, {
       position: enemy.position,
@@ -415,51 +385,6 @@ export class CombatSystem {
       amount: enemy.xpValue,
       source: enemy,
     });
-
-    // Drop gold - bosses drop multiple bags for satisfying effect
-    // Note: goldMultiplier is applied during pickup collection in Game.ts, not here
-    if (enemy.isBoss) {
-      // One large bag (50% of value) in center
-      const bigPickup = createGoldPickup(enemy.position, Math.floor(enemy.goldValue * 0.5));
-      this.entityManager.addPickup(bigPickup);
-
-      // 6-8 small bags scattered around
-      const smallBags = randomInt(6, 8);
-      const smallValue = Math.floor((enemy.goldValue * 0.5) / smallBags);
-      for (let i = 0; i < smallBags; i++) {
-        const angle = (TWO_PI / smallBags) * i;
-        const dist = randomInt(20, 50);
-        const offset = vectorFromAngle(angle, dist);
-        const smallPickup = createGoldPickup(addVectors(enemy.position, offset), smallValue);
-        this.entityManager.addPickup(smallPickup);
-      }
-    } else {
-      // Normal enemy - one bag with random offset
-      const goldPosition = randomPointInCircle(enemy.position, 10);
-      if (enemy.goldValue > 0) {
-        const goldPickup = createGoldPickup(goldPosition, enemy.goldValue);
-        this.entityManager.addPickup(goldPickup);
-      }
-    }
-
-    // Bonus gold from luck
-    // TODO verify luck is it float or int?
-    if (randomChance(luck)) {
-      const bonusPosition = randomPointInCircle(enemy.position, 15);
-      const bonusPickup = createGoldPickup(bonusPosition, Math.floor(enemy.goldValue * 0.5));
-      this.entityManager.addPickup(bonusPickup);
-    }
-
-    // Chance for health drop (base + luck bonus)
-    const healthDropChance = this.healthDropChance + luck * this.healthDropLuckMultiplier;
-    if (randomChance(healthDropChance)) {
-      const healthPickup = createHealthPickup(
-        enemy.position.x + 20,
-        enemy.position.y,
-        this.healthDropValue,
-      );
-      this.entityManager.addPickup(healthPickup);
-    }
 
     // Boss death - special explosion sound via event
     if (enemy.isBoss) {
@@ -489,6 +414,7 @@ export class CombatSystem {
       );
     }
 
+    // TODO move to SpawnSystem
     // Handle splitOnDeath
     if (enemy.splitOnDeath) {
       this.spawnSplitEnemies(enemy);
@@ -498,7 +424,6 @@ export class CombatSystem {
     EventBus.emit('enemyDeath', {
       enemy,
       killer,
-      position: enemy.position,
     });
 
     // Remove from manager
@@ -552,16 +477,6 @@ export class CombatSystem {
   }
 
   /**
-   * Apply damage to player directly (for special cases)
-   */
-  public applyDamageToPlayer(damage: number, currentTime: number): boolean {
-    const player = this.entityManager.getPlayer();
-    if (!player) return false;
-
-    return player.takeDamage(damage, currentTime);
-  }
-
-  /**
    * Apply damage to all enemies in area
    */
   public applyAreaDamage(
@@ -602,13 +517,6 @@ export class CombatSystem {
       isMini,
     });
     this.processExplosions(Date.now());
-  }
-
-  /**
-   * Set health drop chance
-   */
-  public setHealthDropChance(chance: number): void {
-    this.healthDropChance = Math.max(0, Math.min(1, chance));
   }
 
   /**

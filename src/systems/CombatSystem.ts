@@ -365,7 +365,7 @@ export class CombatSystem {
   }
 
   /**
-   * Handle enemy death - spawn pickups, effects, emit events
+   * Handle enemy death - spawn pickups, emit events
    */
   private handleEnemyDeath(
     enemy: Enemy,
@@ -378,12 +378,6 @@ export class CombatSystem {
       color: enemy.color,
       isBoss: enemy.isBoss,
       type: enemy.type,
-    });
-
-    // Award XP via event
-    EventBus.emit('xpAwarded', {
-      amount: enemy.xpValue,
-      source: enemy,
     });
 
     // Boss death - special explosion sound via event

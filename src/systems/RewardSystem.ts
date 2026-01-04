@@ -47,8 +47,8 @@ export class RewardSystem {
       this.addGold(amount);
     });
 
-    EventBus.on('xpAwarded', ({ amount }) => {
-      this.addXp(amount);
+    EventBus.on('enemyDeath', ({ enemy }) => {
+      this.addXp(enemy.xpValue);
     });
 
     EventBus.on('healthCollected', ({ amount }) => {

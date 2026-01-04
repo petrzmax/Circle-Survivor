@@ -6,6 +6,7 @@
 import { ENEMY_TYPES } from '@/config/enemies.config';
 import { SHOP_ITEMS } from '@/config/shop.config';
 import { WEAPON_TYPES } from '@/config/weapons.config';
+import { EventBus } from '@/core/EventBus';
 import { EnemyType, WeaponType } from '@/types/enums';
 import { getEnemyDisplayName, getSpawnPoint } from '@/utils';
 import './devMenuStyles.css';
@@ -18,8 +19,6 @@ import devMenuTemplate from './devMenuTemplate.html?raw';
 export interface DevMenuDependencies {
   // State
   getState: () => string;
-  getGold: () => number;
-  setGold: (value: number) => void;
   getCanvasSize: () => { width: number; height: number };
 
   // Debug display options
@@ -391,9 +390,8 @@ export class DevMenu {
    * Add gold to the player
    */
   private addGold(amount: number): void {
-    const currentGold = this.deps.getGold();
-    this.deps.setGold(currentGold + amount);
-    console.log(`[DevMenu] Added ${amount} gold (total: ${currentGold + amount})`);
+    EventBus.emit('goldCollected', { amount, position: { x: 0, y: 0 } });
+    console.log(`[DevMenu] Added ${amount} gold`);
   }
 
   /**

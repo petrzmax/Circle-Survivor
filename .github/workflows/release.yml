@@ -20,6 +20,12 @@ jobs:
           target-branch: develop
 
       # Merge develop into master when a release is created
+      - name: Checkout repository
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
       - name: Merge to master
         if: ${{ steps.release.outputs.release_created }}
         run: |

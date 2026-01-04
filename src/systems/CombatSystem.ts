@@ -156,7 +156,7 @@ export class CombatSystem {
         EventBus.emit('thornsTriggered', undefined);
         const thornsKilled = enemy.takeDamage(player.thorns, enemy.position, player.knockback);
         if (thornsKilled) {
-          this.handleEnemyDeath(enemy, 'player');
+          this.handleEnemyDeath(enemy, 'player', currentTime);
         }
       }
 
@@ -190,7 +190,7 @@ export class CombatSystem {
 
     // Process projectile-enemy collisions
     for (const { projectile, enemy } of collisions.projectileEnemyCollisions) {
-      this.processProjectileHit(projectile, enemy);
+      this.processProjectileHit(projectile, enemy, currentTime);
     }
 
     // Process pickup collisions
@@ -213,14 +213,14 @@ export class CombatSystem {
     }
 
     // Process any pending explosions
-    this.processExplosions();
+    this.processExplosions(currentTime);
   }
 
   /**
    * Process a projectile hitting an enemy
    * Uses runtimeConfig for damageMultiplier, explosionRadius, and knockback
    */
-  private processProjectileHit(projectile: Projectile, enemy: Enemy): void {
+  private processProjectileHit(projectile: Projectile, enemy: Enemy, currentTime: number): void {
     // Skip if enemy already dead (prevents multiple death events from shotgun pellets in same frame)
     if (enemy.isDead()) {
       return;
@@ -249,7 +249,7 @@ export class CombatSystem {
 
     // Handle enemy death
     if (isDead) {
-      this.handleEnemyDeath(enemy, 'player');
+      this.handleEnemyDeath(enemy, 'player', currentTime);
     }
 
     // Handle explosive projectiles
@@ -290,14 +290,14 @@ export class CombatSystem {
   /**
    * Process all pending explosions
    */
-  private processExplosions(): void {
+  private processExplosions(currentTime: number): void {
     const player = this.entityManager.getPlayer();
     const damageMultiplier = player?.damageMultiplier ?? 1;
 
     while (this.pendingExplosions.length > 0) {
       const explosion = this.pendingExplosions.shift();
       if (explosion) {
-        this.processExplosion(explosion, damageMultiplier);
+        this.processExplosion(explosion, damageMultiplier, currentTime);
       }
     }
   }
@@ -305,7 +305,11 @@ export class CombatSystem {
   /**
    * Process a single explosion
    */
-  private processExplosion(explosion: ExplosionEvent, damageMultiplier: number): void {
+  private processExplosion(
+    explosion: ExplosionEvent,
+    damageMultiplier: number,
+    currentTime: number,
+  ): void {
     const { position, radius, damage, visualEffect, isBanana, isMini, isEnemyExplosion } =
       explosion;
 
@@ -332,7 +336,7 @@ export class CombatSystem {
 
         if (distToPlayer <= radius) {
           // Player in explosion radius - deal damage
-          player.takeDamage(damage, Date.now());
+          player.takeDamage(damage, currentTime);
 
           EventBus.emit('playerHit', {
             player,
@@ -357,7 +361,7 @@ export class CombatSystem {
       });
 
       if (isDead) {
-        this.handleEnemyDeath(enemy, 'explosion');
+        this.handleEnemyDeath(enemy, 'explosion', currentTime);
       }
     }
 
@@ -380,14 +384,22 @@ export class CombatSystem {
    * Process enemy death from external source (e.g. collision in Game.ts)
    * Use this when enemy dies outside of CombatSystem collision processing
    */
-  public processEnemyDeath(enemy: Enemy, killer: 'player' | 'explosion' = 'player'): void {
-    this.handleEnemyDeath(enemy, killer);
+  public processEnemyDeath(
+    enemy: Enemy,
+    killer: 'player' | 'explosion' = 'player',
+    currentTime: number = Date.now(),
+  ): void {
+    this.handleEnemyDeath(enemy, killer, currentTime);
   }
 
   /**
    * Handle enemy death - spawn pickups, effects, emit events
    */
-  private handleEnemyDeath(enemy: Enemy, killer: 'player' | 'explosion'): void {
+  private handleEnemyDeath(
+    enemy: Enemy,
+    killer: 'player' | 'explosion',
+    currentTime: number,
+  ): void {
     const { luck } = this.runtimeConfig;
 
     // Create death effect
@@ -473,6 +485,7 @@ export class CombatSystem {
           isEnemyExplosion: true,
         },
         damageMultiplier,
+        currentTime,
       );
     }
 
@@ -570,7 +583,7 @@ export class CombatSystem {
       visualEffect,
       sourceId: -1,
     });
-    this.processExplosions();
+    this.processExplosions(Date.now());
   }
 
   /**
@@ -594,7 +607,7 @@ export class CombatSystem {
       isBanana,
       isMini,
     });
-    this.processExplosions();
+    this.processExplosions(Date.now());
   }
 
   /**

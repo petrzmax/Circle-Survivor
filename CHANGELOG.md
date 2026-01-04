@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.5.2](https://github.com/petrzmax/Circle-Survivor/compare/v1.5.1...v1.5.2) (2026-01-04)
+
+
+### 🐛 Bug Fixes
+
+* player sometimes invincible bug ([ce34560](https://github.com/petrzmax/Circle-Survivor/commit/ce34560e11465faf76e11bc774dc1068085507f2))
+
+
+### ♻️ Refactoring
+
+* extract  pickup spawn logic to spawn system ([aff08ee](https://github.com/petrzmax/Circle-Survivor/commit/aff08eeae222c5cc91d51971fd0e962e527088d8))
+* extract reward logic to reward system ([80bf969](https://github.com/petrzmax/Circle-Survivor/commit/80bf969ab44959026c8042dad4102f6db33b2e37))
+* move pickup creation to pickup factory ([09b2024](https://github.com/petrzmax/Circle-Survivor/commit/09b20246b5bb6632e69e560dd9f56cc69f2f493b))
+
 ## [1.5.1](https://github.com/petrzmax/Circle-Survivor/compare/v1.5.0...v1.5.1) (2026-01-04)
 
 

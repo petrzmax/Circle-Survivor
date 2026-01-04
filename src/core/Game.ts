@@ -1,4 +1,5 @@
 import { RenderSystem } from './../systems/RenderSystem';
+import { RewardSystem } from './../systems/RewardSystem';
 /**
  * Main Game Controller
  */
@@ -30,12 +31,12 @@ import { Leaderboard } from '@/ui/Leaderboard';
 import { LeaderboardUI } from '@/ui/LeaderboardUI';
 import { Shop, ShopPlayer, ShopWeapon } from '@/ui/Shop';
 import {
+  copyVector,
   degreesToRadians,
   distance,
   randomChance,
   randomRange,
   vectorFromAngle,
-  copyVector,
 } from '@/utils';
 
 // ============ Types ============
@@ -76,15 +77,13 @@ export class Game {
   private leaderboard: Leaderboard;
   private leaderboardUI: LeaderboardUI;
   private renderSystem: RenderSystem;
+  // @ts-expect-error - initialized in constructor
+  private rewardSystem: RewardSystem;
   private shop: Shop;
   private waveManager: WaveManager;
 
   // Effects
   private effects: EffectsState;
-
-  // Resources
-  private gold: number = 0;
-  private xp: number = 0;
 
   // Regeneration tracking
   private lastRegenTime: number = 0;
@@ -118,6 +117,7 @@ export class Game {
     this.audio = new AudioSystem();
     this.leaderboard = new Leaderboard();
     this.leaderboardUI = new LeaderboardUI(this.leaderboard);
+    this.rewardSystem = new RewardSystem(this.entityManager);
     this.inputHandler = new InputHandler({
       onPause: () => {
         this.pauseGame();
@@ -170,10 +170,6 @@ export class Game {
 
     // Setup shop callbacks
     this.shop.setCallbacks({
-      getGold: () => this.gold,
-      setGold: (value: number) => {
-        this.gold = value;
-      },
       getWaveNumber: () => this.waveManager.waveNumber,
       showNotification: (message: string) => {
         this.showNotification(message);
@@ -200,10 +196,6 @@ export class Game {
     this._devMenu = new DevMenu({
       // State
       getState: () => this.state,
-      getGold: () => this.gold,
-      setGold: (value) => {
-        this.gold = value;
-      },
       getCanvasSize: () => ({ width: this.canvas.width, height: this.canvas.height }),
 
       // Debug display options
@@ -295,7 +287,7 @@ export class Game {
   private async submitScore(): Promise<void> {
     await this.leaderboardUI.submitScore(
       this.waveManager.waveNumber,
-      this.xp,
+      this.entityManager.getPlayer()?.xp ?? 0,
       this.selectedCharacter,
     );
   }
@@ -407,8 +399,6 @@ export class Game {
     this.addWeapon(charConfig.startingWeapon);
 
     // Reset game state
-    this.gold = 0;
-    this.xp = 0;
     this.effects = createEffectsState();
     this.waveManager = new WaveManager();
 
@@ -970,7 +960,7 @@ export class Game {
   private updateHUD(): void {
     const player = this.entityManager.getPlayer();
     if (!player) return;
-    HUD.update(player, this.waveManager, this.gold, this.xp);
+    HUD.update(player, this.waveManager);
   }
 
   // ============ Shop ============
@@ -986,7 +976,7 @@ export class Game {
       // Create shop-compatible player wrapper
       const shopPlayer = this.createShopPlayer(player);
       this.shop.generateItems(shopPlayer);
-      this.shop.renderShop(this.gold, shopPlayer);
+      this.shop.renderShop(shopPlayer);
     }
   }
 
@@ -1036,12 +1026,18 @@ export class Game {
   private setupCombatEventListeners(): void {
     // Handle gold collection from CombatSystem
     EventBus.on('goldCollected', ({ amount }) => {
-      this.gold += amount;
+      // TODO move to reward system
+      const player = this.entityManager.getPlayer();
+      if (!player) return;
+      player.gold += amount;
     });
 
     // Handle XP awards
     EventBus.on('xpAwarded', ({ amount }) => {
-      this.xp += amount;
+      // TODO move to reward system
+      const player = this.entityManager.getPlayer();
+      if (!player) return;
+      player.xp += amount;
     });
 
     // Handle player death
@@ -1056,7 +1052,7 @@ export class Game {
     this.state = 'gameover';
     // gameOver sound is played via EventBus listener
     EventBus.emit('gameOver', {
-      score: this.xp,
+      score: this.entityManager.getPlayer()?.xp ?? 0,
       wave: this.waveManager.waveNumber,
       time: 0,
     });
@@ -1064,7 +1060,7 @@ export class Game {
     const finalWave = document.getElementById('final-wave');
     const finalXp = document.getElementById('final-xp');
     if (finalWave) finalWave.textContent = String(this.waveManager.waveNumber);
-    if (finalXp) finalXp.textContent = String(this.xp);
+    if (finalXp) finalXp.textContent = String(this.entityManager.getPlayer()?.xp ?? 0);
     document.getElementById('game-over')?.classList.remove('hidden');
 
     // Load saved player name

@@ -12,6 +12,7 @@ import { randomElementStrict, shuffleArray } from '@/utils';
 // ============ Types ============
 
 export interface ShopPlayer {
+  gold: number;
   weapons: ShopWeapon[];
   maxWeapons: number;
   items?: string[];
@@ -32,8 +33,6 @@ export interface ShopWeapon {
 }
 
 export interface ShopCallbacks {
-  getGold(): number;
-  setGold(value: number): void;
   getWaveNumber(): number;
   showNotification(message: string): void;
   updateHUD(): void;
@@ -73,19 +72,17 @@ export class Shop {
 
     const price = this.getRerollPrice();
 
-    if (this.callbacks.getGold() < price) {
+    if (player.gold < price) {
       EventBus.emit('shopError', undefined);
       return;
     }
-
-    this.callbacks.setGold(this.callbacks.getGold() - price);
     this.rerollCount++;
 
     EventBus.emit('itemPurchased', { itemId: 'reroll', cost: price });
 
     // Generate new items
     this.generateItems(player);
-    this.renderShop(this.callbacks.getGold(), player);
+    this.renderShop(player);
     this.callbacks.updateHUD();
   }
 
@@ -114,9 +111,10 @@ export class Shop {
     Object.keys(SHOP_ITEMS).forEach((key) => {
       const item = SHOP_ITEMS[key];
       if (!item) return;
-
-      // Don't offer weapon bonus if no weapons
-      if (item.type === 'weaponBonus' && player.weapons.length === 0) return;
+      if (player.gold < item.price) return; // Skip too expensive items
+      if (item.type === 'weaponBonus' && player.weapons.length === 0)
+        // Don't offer weapon bonus if no weapons
+        return;
 
       if (item.type === 'weapon') weapons.push(key);
       else if (item.type === 'item' || item.type === 'weaponBonus') items.push(key);
@@ -152,7 +150,8 @@ export class Shop {
     if (extras.length > 0 && extras[0]) {
       this.availableItems.push(extras[0]);
     }
-
+    // eslint-disable-next-line no-debugger
+    debugger;
     // Shuffle final list
     shuffleArray(this.availableItems);
   }
@@ -167,7 +166,7 @@ export class Shop {
   /**
    * Render shop UI
    */
-  public renderShop(gold: number, player: ShopPlayer): void {
+  public renderShop(player: ShopPlayer): void {
     const shopEl = document.getElementById('shop');
     const itemsEl = document.getElementById('shop-items');
 
@@ -179,7 +178,7 @@ export class Shop {
     const waveNumber = this.callbacks?.getWaveNumber() ?? 1;
     const infoEl = document.createElement('div');
     infoEl.className = 'shop-info';
-    infoEl.innerHTML = `<small>Fala ${waveNumber} | Bronie: ${player.weapons.length}/${player.maxWeapons} | Przedmioty: ${player.items ? player.items.length : 0} | <span style="color: #ffd700">💰 ${gold}</span></small>`;
+    infoEl.innerHTML = `<small>Fala ${waveNumber} | Bronie: ${player.weapons.length}/${player.maxWeapons} | Przedmioty: ${player.items ? player.items.length : 0} | <span style="color: #ffd700">💰 ${player.gold}</span></small>`;
     itemsEl.appendChild(infoEl);
 
     this.availableItems.forEach((itemKey) => {
@@ -187,7 +186,7 @@ export class Shop {
       if (!item) return;
 
       const currentPrice = this.calculatePrice(item.price);
-      const canAfford = gold >= currentPrice;
+      const canAfford = player.gold >= currentPrice;
 
       // Check if weapon is locked (full slots and don't have this weapon)
       let isWeaponLocked = false;
@@ -238,7 +237,7 @@ export class Shop {
 
     // Reroll button
     const rerollPrice = this.getRerollPrice();
-    const canReroll = gold >= rerollPrice;
+    const canReroll = player.gold >= rerollPrice;
 
     const rerollEl = document.createElement('div');
     rerollEl.className = `shop-item reroll-btn ${canReroll ? '' : 'disabled'}`;
@@ -271,12 +270,11 @@ export class Shop {
 
     const price = currentPrice ?? this.calculatePrice(item.price);
 
-    if (this.callbacks.getGold() < price) {
+    if (player.gold < price) {
       EventBus.emit('shopError', undefined);
       return;
     }
 
-    this.callbacks.setGold(this.callbacks.getGold() - price);
     EventBus.emit('itemPurchased', { itemId: itemKey, cost: price });
 
     switch (item.type) {
@@ -295,9 +293,8 @@ export class Shop {
             this.callbacks.showNotification(`⬆️ ${item.name} +${randomWeapon.level}`);
           } else {
             // No weapon of this type - refund (shouldn't happen)
-            this.callbacks.setGold(this.callbacks.getGold() + price);
             EventBus.emit('shopError', undefined);
-            return;
+            throw new Error('No weapon of this type to upgrade');
           }
         } else {
           // Add new weapon
@@ -310,9 +307,8 @@ export class Shop {
         const bonusItem = item;
         // Bonus to random weapon (e.g., multishot)
         if (player.weapons.length === 0) {
-          this.callbacks.setGold(this.callbacks.getGold() + price);
           EventBus.emit('shopError', undefined);
-          return;
+          throw new Error('No weapons to apply bonus to');
         }
         // Add item to inventory
         player.addItem(itemKey);
@@ -352,7 +348,7 @@ export class Shop {
 
     // Remove bought item and regenerate
     this.availableItems = this.availableItems.filter((k) => k !== itemKey);
-    this.renderShop(this.callbacks.getGold(), player);
+    this.renderShop(player);
     this.callbacks.updateHUD();
   }
 

@@ -85,6 +85,10 @@ export class Player extends Entity implements IHealth {
   public maxHp: number;
   public hp: number;
 
+  // Resources
+  public gold: number = 0;
+  public xp: number = 0;
+
   // ============ Stats ============
 
   public speed: number;

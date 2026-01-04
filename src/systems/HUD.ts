@@ -6,6 +6,8 @@
 // ============ Types ============
 
 export interface HUDPlayer {
+  gold: number;
+  xp: number;
   hp: number;
   maxHp: number;
   armor: number;
@@ -36,10 +38,10 @@ export const HUD = {
   /**
    * Update all HUD elements
    */
-  update(player: HUDPlayer, waveManager: HUDWaveManager, gold: number, xp: number): void {
+  update(player: HUDPlayer, waveManager: HUDWaveManager): void {
     this.updateHealthBar(player);
     this.updateWaveInfo(waveManager);
-    this.updateResources(gold, xp);
+    this.updateResources(player);
     this.updateStatsPanel(player);
   },
 
@@ -80,11 +82,11 @@ export const HUD = {
   /**
    * Update resources display (gold, XP)
    */
-  updateResources(gold: number, xp: number): void {
+  updateResources(player: HUDPlayer): void {
     const goldAmount = document.getElementById('gold-amount');
     const xpAmount = document.getElementById('xp-amount');
-    if (goldAmount) goldAmount.textContent = String(gold);
-    if (xpAmount) xpAmount.textContent = String(xp);
+    if (goldAmount) goldAmount.textContent = String(player.gold);
+    if (xpAmount) xpAmount.textContent = String(player.xp);
   },
 
   /**

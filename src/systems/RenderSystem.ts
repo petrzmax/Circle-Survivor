@@ -23,10 +23,8 @@ export class RenderSystem {
 
   private renderPlayer(ctx: CanvasRenderingContext2D, currentTime: number): void {
     const player = this.entityManager.getPlayer();
-    if (player) {
-      renderPlayer(ctx, player, currentTime);
-      renderWeapons(ctx, player);
-    }
+    renderPlayer(ctx, player, currentTime);
+    renderWeapons(ctx, player);
   }
 
   private renderEnemies(ctx: CanvasRenderingContext2D): void {

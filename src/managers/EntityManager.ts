@@ -58,7 +58,8 @@ export class EntityManager {
   /**
    * Get the current player
    */
-  public getPlayer(): Player | null {
+  public getPlayer(): Player {
+    if (!this.player) throw new Error('No player entity found!');
     return this.player;
   }
 

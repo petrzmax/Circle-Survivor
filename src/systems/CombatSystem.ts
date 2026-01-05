@@ -96,7 +96,6 @@ export class CombatSystem {
    */
   public processCollisions(collisions: CollisionResult, currentTime: number): void {
     const player = this.entityManager.getPlayer();
-    if (!player) return;
 
     // Process player-enemy collisions
     for (const enemy of collisions.playerEnemyCollisions) {
@@ -261,7 +260,7 @@ export class CombatSystem {
    */
   private processExplosions(currentTime: number): void {
     const player = this.entityManager.getPlayer();
-    const damageMultiplier = player?.damageMultiplier ?? 1;
+    const damageMultiplier = player.damageMultiplier;
 
     while (this.pendingExplosions.length > 0) {
       const explosion = this.pendingExplosions.shift();
@@ -285,7 +284,7 @@ export class CombatSystem {
     // Damage player if this is an enemy explosion
     if (isEnemyExplosion) {
       const player = this.entityManager.getPlayer();
-      if (player?.isActive) {
+      if (player.isActive) {
         const distToPlayer = distance(player.position, position);
 
         if (distToPlayer <= radius) {
@@ -367,7 +366,7 @@ export class CombatSystem {
     // Handle explodeOnDeath - process immediately, not queued
     if (enemy.explodeOnDeath && enemy.explosionRadius > 0) {
       const player = this.entityManager.getPlayer();
-      const damageMultiplier = player?.damageMultiplier ?? 1;
+      const damageMultiplier = player.damageMultiplier;
       this.processExplosion(
         {
           position: enemy.position,
@@ -491,8 +490,8 @@ export class CombatSystem {
   private spawnMiniBananas(x: number, y: number, count: number, damageMultiplier: number): void {
     const config = WEAPON_TYPES.minibanana;
     const player = this.entityManager.getPlayer();
-    const explosionRadiusMultiplier = player?.explosionRadius ?? 1;
-    const playerId = player?.id ?? -1;
+    const explosionRadiusMultiplier = player.explosionRadius;
+    const playerId = player.id;
 
     for (let i = 0; i < count; i++) {
       const angle = (TWO_PI / count) * i + randomRange(-0.25, 0.25);

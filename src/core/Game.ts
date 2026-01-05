@@ -1,9 +1,3 @@
-import { PickupSpawnSystem } from './../systems/PickupSpawnSystem';
-import { RenderSystem } from './../systems/RenderSystem';
-import { RewardSystem } from './../systems/RewardSystem';
-/**
- * Main Game Controller
- */
 import { GAME_BALANCE } from '@/config/balance.config';
 import { CHARACTER_TYPES } from '@/config/characters.config';
 import { WeaponConfig } from '@/config/weapons.config';
@@ -39,6 +33,9 @@ import {
   randomRange,
   vectorFromAngle,
 } from '@/utils';
+import { PickupSpawnSystem } from './../systems/PickupSpawnSystem';
+import { RenderSystem } from './../systems/RenderSystem';
+import { RewardSystem } from './../systems/RewardSystem';
 
 // ============ Types ============
 export type GameState = 'start' | 'playing' | 'shop' | 'gameover' | 'paused';
@@ -222,7 +219,6 @@ export class Game {
       // Player actions
       getPlayer: () => {
         const player = this.entityManager.getPlayer();
-        if (!player) return null;
         return {
           hp: player.hp,
           maxHp: player.maxHp,
@@ -289,7 +285,7 @@ export class Game {
   private async submitScore(): Promise<void> {
     await this.leaderboardUI.submitScore(
       this.waveManager.waveNumber,
-      this.entityManager.getPlayer()?.xp ?? 0,
+      this.entityManager.getPlayer().xp,
       this.selectedCharacter,
     );
   }
@@ -400,9 +396,7 @@ export class Game {
     // Initialize weapons
     this.addWeapon(charConfig.startingWeapon);
 
-    // TODO - if needed, do on event
     // Reset game state
-    // this.effects = createEffectsState();
     this.waveManager = new WaveManager();
 
     // Hide overlays
@@ -423,12 +417,10 @@ export class Game {
     this.state = 'playing';
 
     const player = this.entityManager.getPlayer();
-    if (player) {
-      player.hp = player.maxHp;
-      // Reset player position to center
-      player.position.x = this.canvas.width / 2;
-      player.position.y = this.canvas.height / 2;
-    }
+    player.hp = player.maxHp;
+    // Reset player position to center
+    player.position.x = this.canvas.width / 2;
+    player.position.y = this.canvas.height / 2;
 
     // Clear entities except player
     this.entityManager.clearExceptPlayer();
@@ -440,7 +432,6 @@ export class Game {
 
   private addWeapon(type: WeaponType): void {
     const player = this.entityManager.getPlayer();
-    if (!player) return;
 
     // Let player handle weapon creation and management
     const added = player.addWeapon(type);
@@ -456,7 +447,6 @@ export class Game {
    */
   private recalculateFireOffsets(): void {
     const player = this.entityManager.getPlayer();
-    if (!player) return;
 
     // Group weapons by type
     const weaponsByType: Record<string, WeaponInstance[]> = {};
@@ -515,7 +505,6 @@ export class Game {
 
   private update(deltaTime: number, currentTime: number): void {
     const player = this.entityManager.getPlayer();
-    if (!player) return;
 
     const deltaSeconds = deltaTime / 1000;
 
@@ -904,7 +893,6 @@ export class Game {
 
   private updateShockwaves(currentTime: number): void {
     const player = this.entityManager.getPlayer();
-    if (!player) return;
 
     const playerDied = this.effectsSystem.updateShockwaves(
       {
@@ -957,7 +945,6 @@ export class Game {
 
   private updateHUD(): void {
     const player = this.entityManager.getPlayer();
-    if (!player) return;
     HUD.update(player, this.waveManager);
   }
 
@@ -970,12 +957,10 @@ export class Game {
     this.shop.resetReroll();
 
     const player = this.entityManager.getPlayer();
-    if (player) {
-      // Create shop-compatible player wrapper
-      const shopPlayer = this.createShopPlayer(player);
-      this.shop.generateItems(shopPlayer);
-      this.shop.renderShop(shopPlayer);
-    }
+    // Create shop-compatible player wrapper
+    const shopPlayer = this.createShopPlayer(player);
+    this.shop.generateItems(shopPlayer);
+    this.shop.renderShop(shopPlayer);
   }
 
   private createShopPlayer(player: Player): ShopPlayer {
@@ -1034,7 +1019,7 @@ export class Game {
     this.state = 'gameover';
     // gameOver sound is played via EventBus listener
     EventBus.emit('gameOver', {
-      score: this.entityManager.getPlayer()?.xp ?? 0,
+      score: this.entityManager.getPlayer().xp,
       wave: this.waveManager.waveNumber,
       time: 0,
     });
@@ -1042,7 +1027,7 @@ export class Game {
     const finalWave = document.getElementById('final-wave');
     const finalXp = document.getElementById('final-xp');
     if (finalWave) finalWave.textContent = String(this.waveManager.waveNumber);
-    if (finalXp) finalXp.textContent = String(this.entityManager.getPlayer()?.xp ?? 0);
+    if (finalXp) finalXp.textContent = String(this.entityManager.getPlayer().xp);
     document.getElementById('game-over')?.classList.remove('hidden');
 
     // Load saved player name

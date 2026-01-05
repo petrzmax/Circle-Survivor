@@ -5,8 +5,9 @@
  * Sound definitions are in sounds.config.ts - this class only plays them.
  */
 
+import { OscillatorType, SOUND_DEFINITIONS, SoundStep } from '@/config/sounds.config';
 import { EventBus } from '@/core/EventBus';
-import { SOUND_DEFINITIONS, SoundStep, OscillatorType } from '@/config/sounds.config';
+import { VisualEffect } from '@/types';
 import { randomRange } from '@/utils';
 
 /**
@@ -246,12 +247,16 @@ export class AudioSystem {
 
     // Explosions
     EventBus.on('explosionTriggered', (data) => {
-      if (data.visualEffect === 'nuke') {
-        this.play('nukeExplosion');
-      } else if (data.visualEffect === 'holy') {
-        this.play('holyExplosion');
-      } else {
-        this.play('explosion');
+      // TODO change enum string values to match sound names
+      switch (data.visualEffect) {
+        case VisualEffect.NUKE:
+          this.play('nukeExplosion');
+          break;
+        case VisualEffect.HOLY:
+          this.play('holyExplosion');
+          break;
+        default:
+          this.play('explosion');
       }
     });
   }

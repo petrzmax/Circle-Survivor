@@ -16,7 +16,7 @@ import { EntityManager } from '@/managers/EntityManager';
 import { AudioSystem } from '@/systems/AudioSystem';
 import { CollisionSystem } from '@/systems/CollisionSystem';
 import { CombatSystem } from '@/systems/CombatSystem';
-import { createEffectsState, EffectsState, EffectsSystem } from '@/systems/EffectsSystem';
+import { EffectsSystem } from '@/systems/EffectsSystem';
 import { HUD } from '@/systems/HUD';
 import { InputHandler } from '@/systems/InputHandler';
 import { WaveManager } from '@/systems/WaveManager';
@@ -74,6 +74,7 @@ export class Game {
   private audio: AudioSystem;
   private collisionSystem: CollisionSystem;
   private combatSystem!: CombatSystem;
+  private effectsSystem: EffectsSystem;
   private inputHandler: InputHandler;
   private leaderboard: Leaderboard;
   private leaderboardUI: LeaderboardUI;
@@ -84,9 +85,6 @@ export class Game {
   private rewardSystem: RewardSystem;
   private shop: Shop;
   private waveManager: WaveManager;
-
-  // Effects
-  private effects: EffectsState;
 
   // Regeneration tracking
   private lastRegenTime: number = 0;
@@ -114,6 +112,7 @@ export class Game {
     // Initialize systems
     this.entityManager = new EntityManager();
     this.collisionSystem = new CollisionSystem(this.entityManager);
+    this.effectsSystem = new EffectsSystem();
     this.renderSystem = new RenderSystem(this.entityManager);
     this.waveManager = new WaveManager();
     this.shop = new Shop();
@@ -161,10 +160,9 @@ export class Game {
       },
       getState: () => this.state,
     });
-    this.effects = createEffectsState();
 
     // Initialize CombatSystem (requires effects)
-    this.combatSystem = new CombatSystem(this.entityManager, this.effects);
+    this.combatSystem = new CombatSystem(this.entityManager);
 
     // Setup EventBus listeners for combat events
     this.setupCombatEventListeners();
@@ -402,12 +400,10 @@ export class Game {
     // Initialize weapons
     this.addWeapon(charConfig.startingWeapon);
 
+    // TODO - if needed, do on event
     // Reset game state
-    this.effects = createEffectsState();
+    // this.effects = createEffectsState();
     this.waveManager = new WaveManager();
-
-    // Reset CombatSystem with fresh effects
-    this.combatSystem = new CombatSystem(this.entityManager, this.effects);
 
     // Hide overlays
     document.getElementById('start-screen')?.classList.add('hidden');
@@ -614,7 +610,7 @@ export class Game {
               this.entityManager.addProjectile(projectile);
             }
           } else if (attackResult.type === 'shockwave') {
-            EffectsSystem.createShockwave(this.effects, attackResult);
+            this.effectsSystem.createShockwave(attackResult);
           }
         }
       }
@@ -910,8 +906,7 @@ export class Game {
     const player = this.entityManager.getPlayer();
     if (!player) return;
 
-    const playerDied = EffectsSystem.updateShockwaves(
-      this.effects,
+    const playerDied = this.effectsSystem.updateShockwaves(
       {
         x: player.position.x,
         y: player.position.y,
@@ -933,7 +928,7 @@ export class Game {
     // Render effects
     this.renderSystem.renderAll(this.ctx, this.lastTime);
     // TODO: integrate EffectsSystem rendering into RenderSystem
-    EffectsSystem.renderAll(this.ctx, this.effects);
+    this.effectsSystem.renderAll(this.ctx);
 
     // Render boss health bar
     this.renderBossHealthBar();

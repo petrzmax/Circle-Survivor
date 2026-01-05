@@ -1,22 +1,28 @@
 import { Explosion } from '@/systems/EffectsSystem';
+import { VisualEffect } from '@/types';
 import { TWO_PI } from '@/utils/math';
 
 export function renderExplosion(ctx: CanvasRenderingContext2D, explosion: Explosion): void {
   ctx.save();
-  ctx.translate(explosion.x, explosion.y);
+  ctx.translate(explosion.position.x, explosion.position.y);
   ctx.globalAlpha = explosion.alpha;
   ctx.beginPath();
   ctx.arc(0, 0, explosion.radius * (1 - explosion.alpha * 0.3), 0, TWO_PI);
 
-  if (explosion.isNuke) {
-    drawNukeExplosion(ctx, explosion);
-  } else if (explosion.isHolyGrenade) {
-    drawHolyExplosion(ctx, explosion);
-  } else if (explosion.isBanana) {
-    drawBananaExplosion(ctx, explosion);
-  } else {
-    drawExplosion(ctx);
+  switch (explosion.visualEffect) {
+    case VisualEffect.NUKE:
+      drawNukeExplosion(ctx, explosion);
+      break;
+    case VisualEffect.HOLY:
+      drawHolyExplosion(ctx, explosion);
+      break;
+    case VisualEffect.BANANA:
+      drawBananaExplosion(ctx, explosion);
+      break;
+    default:
+      drawExplosion(ctx);
   }
+
   ctx.restore();
 }
 // Normal explosion

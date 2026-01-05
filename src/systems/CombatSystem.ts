@@ -13,7 +13,6 @@ import { EnemyType, PickupType, ProjectileType, VisualEffect } from '@/types/enu
 import { distance, TWO_PI, Vector2 } from '@/utils/math';
 import { randomChance, randomInt, randomRange } from '@/utils/random';
 import { CollisionResult } from './CollisionSystem';
-import { EffectsState, EffectsSystem } from './EffectsSystem';
 
 /**
  * Explosion event data
@@ -62,7 +61,6 @@ export interface CombatRuntimeConfig {
  */
 export class CombatSystem {
   private entityManager: EntityManager;
-  private effects: EffectsState;
 
   /** Pending explosions to process */
   private pendingExplosions: ExplosionEvent[] = [];
@@ -75,9 +73,8 @@ export class CombatSystem {
     knockback: 0,
   };
 
-  public constructor(entityManager: EntityManager, effects: EffectsState) {
+  public constructor(entityManager: EntityManager) {
     this.entityManager = entityManager;
-    this.effects = effects;
   }
 
   /**
@@ -285,21 +282,6 @@ export class CombatSystem {
     const { position, radius, damage, visualEffect, isBanana, isMini, isEnemyExplosion } =
       explosion;
 
-    // Determine explosion type flags
-    const isNuke = visualEffect === VisualEffect.NUKE;
-    const isHolyGrenade = visualEffect === VisualEffect.HOLY;
-    const isBananaEffect = visualEffect === VisualEffect.BANANA;
-
-    // Create visual effect
-    EffectsSystem.createExplosion(
-      this.effects,
-      position,
-      radius,
-      isNuke,
-      isHolyGrenade,
-      isBananaEffect,
-    );
-
     // Damage player if this is an enemy explosion
     if (isEnemyExplosion) {
       const player = this.entityManager.getPlayer();
@@ -347,8 +329,7 @@ export class CombatSystem {
       position,
       radius,
       damage,
-      visualEffect: isNuke ? 'nuke' : isHolyGrenade ? 'holy' : 'standard',
-      isBanana,
+      visualEffect,
     });
   }
 
@@ -372,21 +353,14 @@ export class CombatSystem {
     killer: 'player' | 'explosion',
     currentTime: number,
   ): void {
-    // Create death effect
-    EffectsSystem.createDeathEffect(this.effects, {
-      position: enemy.position,
-      color: enemy.color,
-      isBoss: enemy.isBoss,
-      type: enemy.type,
-    });
-
+    // TODO, reconsider, maybe some special boss effect, or data in enemy dead event
     // Boss death - special explosion sound via event
     if (enemy.isBoss) {
       EventBus.emit('explosionTriggered', {
         position: enemy.position,
         radius: 0,
         damage: 0,
-        visualEffect: 'nuke',
+        visualEffect: VisualEffect.NUKE,
       });
     }
 
@@ -414,13 +388,11 @@ export class CombatSystem {
       this.spawnSplitEnemies(enemy);
     }
 
-    // Emit death event (audio plays via EventBus listener)
     EventBus.emit('enemyDeath', {
       enemy,
       killer,
     });
 
-    // Remove from manager
     enemy.destroy();
   }
 
@@ -450,7 +422,7 @@ export class CombatSystem {
 
   /**
    * Process pickup collection
-   * Applies goldMultiplier for gold pickups and heals player for health pickups
+   * Applies goldMultiplier for gold pickups
    */
   private processPickupCollection(pickup: Pickup): void {
     const value = pickup.collect();

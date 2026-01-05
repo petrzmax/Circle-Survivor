@@ -4,7 +4,7 @@
  */
 
 import { Enemy, Pickup, Player, Projectile } from '@/entities';
-import { WeaponType } from '@/types/enums';
+import { VisualEffect, WeaponType } from '@/types/enums';
 import { Vector2 } from '@/utils';
 
 /**
@@ -29,8 +29,7 @@ export interface GameEvents {
     position: Vector2;
     radius: number;
     damage: number;
-    visualEffect: string;
-    isBanana?: boolean;
+    visualEffect: VisualEffect;
   };
 
   // Pickup events

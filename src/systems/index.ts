@@ -9,7 +9,7 @@ export { AudioSystem } from './AudioSystem';
 export { InputHandler } from './InputHandler';
 export type { InputHandlerCallbacks, KeyState } from './InputHandler';
 
-export { createEffectsState, EffectsSystem } from './EffectsSystem';
+export { EffectsSystem } from './EffectsSystem';
 export type { DeathParticle, EffectsState, Explosion, Shockwave } from './EffectsSystem';
 
 export { HUD } from './HUD';

@@ -3,8 +3,8 @@
  * Emits events when collisions are detected for other systems to handle.
  */
 
+import { Enemy } from '@/enemies';
 import { Deployable } from '@/entities/Deployable';
-import { Enemy } from '@/entities/Enemy';
 import { Pickup } from '@/entities/Pickup';
 import { Projectile } from '@/entities/Projectile';
 import { EntityManager } from '@/managers/EntityManager';

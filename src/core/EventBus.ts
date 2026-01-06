@@ -3,7 +3,8 @@
  * Enables loose coupling between systems through events.
  */
 
-import { Enemy, Pickup, Player, Projectile } from '@/entities';
+import { Enemy } from '@/enemies';
+import { Pickup, Player, Projectile } from '@/entities';
 import { VisualEffect, WeaponType } from '@/types/enums';
 import { Vector2 } from '@/utils';
 

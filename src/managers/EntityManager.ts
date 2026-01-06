@@ -5,8 +5,8 @@
  * Future: Object pooling can be added here to reduce GC pressure.
  */
 
+import { Enemy } from '@/enemies';
 import { Deployable } from '@/entities/Deployable';
-import { Enemy } from '@/entities/Enemy';
 import { Entity } from '@/entities/Entity';
 import { Pickup } from '@/entities/Pickup';
 import { Player } from '@/entities/Player';

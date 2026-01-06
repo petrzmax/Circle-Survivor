@@ -21,14 +21,8 @@ import {
 export class Enemy extends Entity implements IHealth {
   /** Enemy type */
   public readonly type: EnemyType;
-
-  /** Type configuration reference */
   public readonly config: EnemyConfig;
-
-  /** Enemy color */
   public color: string;
-
-  /** Movement speed */
   public speed: number;
 
   // ============ Health Component ============
@@ -36,11 +30,7 @@ export class Enemy extends Entity implements IHealth {
   public maxHp: number;
 
   // ============ Rewards ============
-
-  /** XP value when killed */
   public xpValue: number;
-
-  /** Gold value when killed */
   public goldValue: number;
 
   /** Contact damage */

@@ -1,4 +1,4 @@
-export * from './AudioSystem';
+export * from '../audio/AudioSystem';
 export * from './CollisionSystem';
 export * from './CombatSystem';
 export * from './EffectsSystem';

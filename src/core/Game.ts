@@ -1,3 +1,4 @@
+import { AudioSystem } from '@/audio/AudioSystem';
 import { GAME_BALANCE } from '@/config/balance.config';
 import { CHARACTER_TYPES } from '@/config/characters.config';
 import { WeaponConfig } from '@/config/weapons.config';
@@ -7,7 +8,6 @@ import { Deployable, DeployableConfig } from '@/entities/Deployable';
 import { InputState, Player } from '@/entities/Player';
 import { Projectile } from '@/entities/Projectile';
 import { EntityManager } from '@/managers/EntityManager';
-import { AudioSystem } from '@/systems/AudioSystem';
 import { CollisionSystem } from '@/systems/CollisionSystem';
 import { CombatSystem } from '@/systems/CombatSystem';
 import { EffectsSystem } from '@/systems/EffectsSystem';

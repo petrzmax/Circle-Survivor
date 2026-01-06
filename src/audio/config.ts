@@ -1,39 +1,11 @@
+import { SoundDefinition } from './type';
+
 /**
  * Sound definitions for AudioSystem.
  * All game sounds are defined here as data - AudioSystem just plays them.
  *
  * Keys for weapon sounds MUST match WeaponType enum values!
  */
-
-// ============ TYPES ============
-
-export type OscillatorType = 'sine' | 'square' | 'sawtooth' | 'triangle';
-
-export interface ToneDefinition {
-  type: 'tone';
-  frequency: number;
-  duration: number;
-  oscillator: OscillatorType;
-  volume: number;
-  delay?: number;
-}
-
-export interface NoiseDefinition {
-  type: 'noise';
-  duration: number;
-  volume: number;
-}
-
-export type SoundStep = ToneDefinition | NoiseDefinition;
-
-export interface SoundDefinition {
-  steps: SoundStep[];
-  /** Cooldown in ms - prevents sound spam */
-  cooldown?: number;
-}
-
-// ============ SOUND DEFINITIONS ============
-
 export const SOUND_DEFINITIONS: Record<string, SoundDefinition> = {
   // ========== Weapon Sounds (keys = WeaponType values) ==========
 

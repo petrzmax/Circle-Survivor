@@ -5,17 +5,11 @@
  * Sound definitions are in sounds.config.ts - this class only plays them.
  */
 
-import { OscillatorType, SOUND_DEFINITIONS, SoundStep } from '@/config/sounds.config';
+import { SOUND_DEFINITIONS } from '@/audio/config';
 import { EventBus } from '@/core/EventBus';
 import { VisualEffect } from '@/types';
 import { randomRange } from '@/utils';
-
-/**
- * Extend Window interface to include webkit prefixed AudioContext
- */
-interface WindowWithWebkit extends Window {
-  webkitAudioContext?: typeof AudioContext;
-}
+import { SoundStep, WindowWithWebkit } from './type';
 
 /**
  * Handles all game audio using Web Audio API.

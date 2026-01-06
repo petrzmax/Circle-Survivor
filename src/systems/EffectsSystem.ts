@@ -4,7 +4,7 @@
  */
 
 import { EventBus } from '@/core';
-import { Enemy } from '@/enemies';
+import { Enemy } from '@/domain/enemies';
 import { renderExplosion } from '@/rendering';
 import { EnemyType, VisualEffect } from '@/types';
 import { distance, randomAngle, randomChance, randomRange } from '@/utils';

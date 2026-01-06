@@ -1,6 +1,6 @@
 import { GAME_BALANCE } from '@/config';
 import { EventBus } from '@/core';
-import { Enemy } from '@/enemies';
+import { Enemy } from '@/domain/enemies';
 import { createGoldPickup, createHealthPickup } from '@/factories';
 import { EntityManager } from '@/managers';
 import { randomChance, randomInt, randomPointInCircle, vectorFromAngle } from '@/utils';

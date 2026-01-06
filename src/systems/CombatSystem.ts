@@ -5,7 +5,7 @@
 import { GAME_BALANCE } from '@/config/balance.config';
 import { WEAPON_TYPES } from '@/config/weapons.config';
 import { EventBus } from '@/core/EventBus';
-import { Enemy } from '@/enemies';
+import { Enemy } from '@/domain/enemies';
 import { Pickup } from '@/entities/Pickup';
 import { Projectile } from '@/entities/Projectile';
 import { EntityManager } from '@/managers/EntityManager';

@@ -5,8 +5,8 @@
  * Sound definitions are in sounds.config.ts - this class only plays them.
  */
 
-import { SOUND_DEFINITIONS } from '@/audio/config';
 import { EventBus } from '@/core/EventBus';
+import { SOUND_DEFINITIONS } from '@/domain/audio/config';
 import { VisualEffect } from '@/types';
 import { randomRange } from '@/utils';
 import { SoundStep, WindowWithWebkit } from './type';

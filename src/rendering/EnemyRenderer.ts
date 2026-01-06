@@ -1,4 +1,4 @@
-import { Enemy } from '@/enemies';
+import { Enemy } from '@/domain/enemies';
 import { TWO_PI } from '@/utils/math';
 
 /**

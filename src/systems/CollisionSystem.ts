@@ -3,7 +3,7 @@
  * Emits events when collisions are detected for other systems to handle.
  */
 
-import { Enemy } from '@/enemies';
+import { Enemy } from '@/domain/enemies';
 import { Deployable } from '@/entities/Deployable';
 import { Pickup } from '@/entities/Pickup';
 import { Projectile } from '@/entities/Projectile';

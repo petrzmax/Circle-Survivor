@@ -1,9 +1,9 @@
-import { AudioSystem } from '@/audio/AudioSystem';
 import { GAME_BALANCE } from '@/config/balance.config';
 import { CHARACTER_TYPES } from '@/config/characters.config';
 import { WeaponConfig } from '@/config/weapons.config';
 import { EventBus } from '@/core/EventBus';
-import { Enemy } from '@/enemies';
+import { AudioSystem } from '@/domain/audio/AudioSystem';
+import { Enemy } from '@/domain/enemies';
 import { Deployable, DeployableConfig } from '@/entities/Deployable';
 import { InputState, Player } from '@/entities/Player';
 import { Projectile } from '@/entities/Projectile';

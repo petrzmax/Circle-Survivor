@@ -651,9 +651,10 @@ export class Game {
 
       if (!pickup.isActive) continue;
 
-      // Magnet attraction - move towards player if in range
+      // Magnet attraction - only works if player has magnet item
+      const hasMagnet = player.items.includes('magnet');
       const distToPlayer = distance(pickup.position, player.position);
-      if (distToPlayer < player.pickupRange || pickup.isAttracted) {
+      if (hasMagnet && (distToPlayer < player.pickupRange || pickup.isAttracted)) {
         pickup.isAttracted = true;
         const dx = player.position.x - pickup.position.x;
         const dy = player.position.y - pickup.position.y;

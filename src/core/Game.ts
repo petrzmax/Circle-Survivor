@@ -587,7 +587,7 @@ export class Game {
                   x: bulletData.x,
                   y: bulletData.y,
                 },
-                radius: 6,
+                radius: Math.floor(enemy.radius * 0.15), // default 6
                 type: ProjectileType.ENEMY_BULLET,
                 damage: bulletData.damage,
                 ownerId: enemy.id,

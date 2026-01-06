@@ -36,8 +36,6 @@ export interface ExplosionEvent {
  */
 // TODO all these are stored in Player, remove
 export interface CombatRuntimeConfig {
-  /** Player gold multiplier */
-  goldMultiplier: number;
   /** Player damage multiplier */
   damageMultiplier: number;
   /** Player explosion radius multiplier */
@@ -67,7 +65,6 @@ export class CombatSystem {
 
   /** Runtime config - updated each frame from player stats */
   private runtimeConfig: CombatRuntimeConfig = {
-    goldMultiplier: 1,
     damageMultiplier: 1,
     explosionRadius: 1,
     knockback: 0,
@@ -82,8 +79,6 @@ export class CombatSystem {
    * Call this before processCollisions each frame
    */
   public updateRuntimeConfig(config: Partial<CombatRuntimeConfig>): void {
-    if (config.goldMultiplier !== undefined)
-      this.runtimeConfig.goldMultiplier = config.goldMultiplier;
     if (config.damageMultiplier !== undefined)
       this.runtimeConfig.damageMultiplier = config.damageMultiplier;
     if (config.explosionRadius !== undefined)
@@ -419,25 +414,24 @@ export class CombatSystem {
     }
   }
 
-  /**
-   * Process pickup collection
-   * Applies goldMultiplier for gold pickups
-   */
   private processPickupCollection(pickup: Pickup): void {
-    const value = pickup.collect();
-    if (pickup.type === PickupType.GOLD) {
-      // TODO should only pickup, multiply gold in reward system
-      // Apply goldMultiplier from runtimeConfig
-      const goldAmount = Math.floor(value * this.runtimeConfig.goldMultiplier);
-      EventBus.emit('goldCollected', {
-        amount: goldAmount,
-        position: pickup.position,
-      });
-    } else if (pickup.type === PickupType.HEALTH) {
-      EventBus.emit('healthCollected', {
-        amount: value,
-        position: pickup.position,
-      });
+    const amount = pickup.collect();
+
+    switch (pickup.type) {
+      case PickupType.GOLD:
+        EventBus.emit('goldCollected', {
+          amount,
+          position: pickup.position,
+        });
+        break;
+      case PickupType.HEALTH:
+        EventBus.emit('healthCollected', {
+          amount,
+          position: pickup.position,
+        });
+        break;
+      default:
+        throw new Error('Not supported pickup type');
     }
   }
 

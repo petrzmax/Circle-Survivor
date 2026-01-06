@@ -552,7 +552,6 @@ export class Game {
 
     // Update CombatSystem runtime config with current player stats
     this.combatSystem.updateRuntimeConfig({
-      goldMultiplier: player.goldMultiplier,
       damageMultiplier: player.damageMultiplier,
       explosionRadius: player.explosionRadius,
       knockback: player.knockback,

@@ -15,9 +15,9 @@ export class RewardSystem {
   }
 
   private addGold(amount: number): void {
-    // TODO Apply gold multipliers
     const player = this.entityManager.getPlayer();
-    player.gold += amount;
+    const goldAmount = Math.floor(amount * player.goldMultiplier);
+    player.gold += goldAmount;
   }
 
   private addXp(amount: number): void {

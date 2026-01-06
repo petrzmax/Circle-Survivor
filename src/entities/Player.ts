@@ -115,7 +115,7 @@ export class Player extends Entity implements IHealth {
   // Utility
   public luck: number = 0;
   public xpMultiplier: number = 1;
-  public goldMultiplier: number;
+  public goldMultiplier: number = 1;
   public dodge: number = 0;
   public thorns: number = 0;
   public regen: number = 0;

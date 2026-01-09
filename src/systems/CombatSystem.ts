@@ -3,9 +3,9 @@
  * Processes collision results and applies damage, knockback, etc.
  */
 import { GAME_BALANCE } from '@/config/balance.config';
-import { WEAPON_TYPES } from '@/config/weapons.config';
 import { EventBus } from '@/core/EventBus';
 import { Enemy } from '@/domain/enemies';
+import { WEAPON_TYPES } from '@/domain/weapons/config';
 import { Pickup } from '@/entities/Pickup';
 import { Projectile } from '@/entities/Projectile';
 import { EntityManager } from '@/managers/EntityManager';

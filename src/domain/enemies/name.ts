@@ -37,6 +37,7 @@ const BOSS_NAME_PREFIXES: readonly string[] = [
   'Płacz',
   'Pogromca',
   'Potężny',
+  'Powrót',
   'Pożeracz',
   'Rzeźniczka',
   'Rzeźnik',

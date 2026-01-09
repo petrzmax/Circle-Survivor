@@ -4,7 +4,7 @@
  */
 
 import { CHARACTER_TYPES, CharacterConfig, GAME_BALANCE, WEAPON_TYPES } from '@/config';
-import type { WeaponInstance } from '@/core/Game';
+import type { WeaponInstance } from '@/domain/weapons/type';
 import { IHealth } from '@/types/components';
 import { CharacterType, WeaponType } from '@/types/enums';
 import { clamp, Vector2 } from '@/utils';

@@ -1,9 +1,5 @@
-/**
- * Weapon class.
- * Handles weapon stats, firing logic, and projectile creation.
- */
-
 import { GAME_BALANCE, WEAPON_TYPES } from '@/config';
+import { Deployable, DeployableConfig, Projectile, ProjectileConfig } from '@/entities';
 import {
   DeployableType,
   ProjectileType,
@@ -12,25 +8,7 @@ import {
   WeaponType,
 } from '@/types/enums';
 import { degreesToRadians, randomChance, randomRange } from '@/utils';
-import { Deployable, DeployableConfig } from './Deployable';
-import { Projectile, ProjectileConfig } from './Projectile';
-
-/**
- * Fire result - can be projectiles or deployables
- */
-export interface FireResult {
-  projectiles: Projectile[];
-  deployables: Deployable[];
-}
-
-/**
- * Weapon configuration for constructor
- */
-export interface WeaponEntityConfig {
-  type: WeaponType;
-  /** Fire offset for staggered shooting (milliseconds) */
-  fireOffset?: number;
-}
+import { FireResult, WeaponEntityConfig } from './type';
 
 /**
  * Weapon class
@@ -379,6 +357,7 @@ export class Weapon {
     return new Deployable(config);
   }
 
+  // TODO, visual effect should be tied to projectile type?
   /**
    * Get visual effect type based on weapon
    */

@@ -1,9 +1,9 @@
 import { GAME_BALANCE } from '@/config/balance.config';
 import { CHARACTER_TYPES } from '@/config/characters.config';
-import { WeaponConfig } from '@/config/weapons.config';
 import { EventBus } from '@/core/EventBus';
 import { AudioSystem } from '@/domain/audio/AudioSystem';
 import { Enemy } from '@/domain/enemies';
+import { WeaponConfig, WeaponInstance } from '@/domain/weapons/type';
 import { Deployable, DeployableConfig } from '@/entities/Deployable';
 import { InputState, Player } from '@/entities/Player';
 import { Projectile } from '@/entities/Projectile';
@@ -37,22 +37,8 @@ import { PickupSpawnSystem } from './../systems/PickupSpawnSystem';
 import { RenderSystem } from './../systems/RenderSystem';
 import { RewardSystem } from './../systems/RewardSystem';
 
-// ============ Types ============
+// TODO rewrite to finite game state
 export type GameState = 'start' | 'playing' | 'shop' | 'gameover' | 'paused';
-
-// TODO move to separate file
-// Weapon runtime instance (tracks cooldowns, levels)
-export interface WeaponInstance {
-  type: WeaponType;
-  config: WeaponConfig;
-  level: number;
-  lastFireTime: number;
-  multishot: number;
-  name: string;
-  fireOffset: number; // Staggered shooting offset
-}
-
-// ============ Game Class ============
 
 export class Game {
   // Canvas
@@ -158,10 +144,7 @@ export class Game {
       getState: () => this.state,
     });
 
-    // Initialize CombatSystem (requires effects)
     this.combatSystem = new CombatSystem(this.entityManager);
-
-    // Setup EventBus listeners for combat events
     this.setupCombatEventListeners();
 
     // Setup input handler
@@ -520,7 +503,7 @@ export class Game {
     // Update player movement
     player.updateMovement(input, this.canvas.width, this.canvas.height, deltaSeconds);
 
-    // Regeneration
+    // TODO handle in passivesSystem?
     if (player.regen > 0) {
       if (!this.lastRegenTime) this.lastRegenTime = currentTime;
       if (currentTime - this.lastRegenTime >= 1000) {

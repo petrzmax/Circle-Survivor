@@ -4,9 +4,9 @@
  */
 
 import { SHOP_ITEMS } from '@/config/shop.config';
-import { WEAPON_TYPES } from '@/config/weapons.config';
 import { EventBus } from '@/core/EventBus';
 import { ENEMY_TYPES } from '@/domain/enemies/config';
+import { WEAPON_TYPES } from '@/domain/weapons/config';
 import { EnemyType, WeaponType } from '@/types/enums';
 import { getEnemyDisplayName, getSpawnPoint } from '@/utils';
 import './devMenuStyles.css';

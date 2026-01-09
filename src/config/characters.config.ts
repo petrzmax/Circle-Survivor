@@ -5,9 +5,6 @@
 
 import { CharacterType, WeaponType } from '@/types/enums';
 
-/**
- * Character configuration interface
- */
 export interface CharacterConfig {
   name: string;
   description: string;

@@ -5,7 +5,7 @@
 
 import { Enemy } from '@/domain/enemies';
 import { Pickup, Player, Projectile } from '@/entities';
-import { VisualEffect, WeaponType } from '@/types/enums';
+import { CharacterType, GameState, VisualEffect, WeaponType } from '@/types/enums';
 import { Vector2 } from '@/utils';
 
 /**
@@ -63,6 +63,18 @@ export interface GameEvents {
   goldChanged: { gold: number; delta: number };
   healthChanged: { current: number; max: number };
   countdownTick: { seconds: number };
+
+  // State transition requests (triggers for StateManager)
+  characterSelected: { characterType: CharacterType };
+  startGameRequested: void;
+  waveCleared: void;
+  pauseRequested: void;
+  resumeRequested: void;
+  quitToMenuRequested: void;
+  restartRequested: void;
+
+  // State change notification (emitted by StateManager)
+  stateEntered: { state: GameState; from: GameState };
 }
 
 /**

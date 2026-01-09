@@ -7,7 +7,7 @@ import { WeaponConfig, WeaponInstance } from '@/domain/weapons/type';
 import { Deployable, DeployableConfig } from '@/entities/Deployable';
 import { InputState, Player } from '@/entities/Player';
 import { Projectile } from '@/entities/Projectile';
-import { EntityManager } from '@/managers/EntityManager';
+import { EntityManager, StateManager } from '@/managers';
 import { CollisionSystem } from '@/systems/CollisionSystem';
 import { CombatSystem } from '@/systems/CombatSystem';
 import { EffectsSystem } from '@/systems/EffectsSystem';
@@ -18,6 +18,7 @@ import {
   CharacterType,
   DeployableType,
   EnemyType,
+  GameState,
   ProjectileType,
   VisualEffect,
   WeaponType,
@@ -37,16 +38,13 @@ import { PickupSpawnSystem } from './../systems/PickupSpawnSystem';
 import { RenderSystem } from './../systems/RenderSystem';
 import { RewardSystem } from './../systems/RewardSystem';
 
-// TODO rewrite to finite game state
-export type GameState = 'start' | 'playing' | 'shop' | 'gameover' | 'paused';
-
 export class Game {
   // Canvas
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
 
-  // Game state
-  private state: GameState = 'start';
+  // State Manager (FSM)
+  private stateManager: StateManager;
   private lastTime: number = 0;
   private selectedCharacter: CharacterType | null = null;
 
@@ -92,6 +90,9 @@ export class Game {
     this.canvas.width = 900;
     this.canvas.height = 700;
 
+    // Initialize StateManager (FSM) first
+    this.stateManager = new StateManager();
+
     // Initialize systems
     this.entityManager = new EntityManager();
     this.collisionSystem = new CollisionSystem(this.entityManager);
@@ -104,48 +105,34 @@ export class Game {
     this.leaderboardUI = new LeaderboardUI(this.leaderboard);
     this.pickupSpawnSystem = new PickupSpawnSystem(this.entityManager);
     this.rewardSystem = new RewardSystem(this.entityManager);
-    this.inputHandler = new InputHandler({
-      onPause: () => {
-        this.pauseGame();
+    this.inputHandler = new InputHandler(
+      {
+        onToggleSound: () => {
+          this.toggleSound();
+        },
+        onSubmitScore: () => {
+          void this.submitScore();
+        },
+        onSwitchLeaderboardTab: (tab: string) => {
+          this.switchLeaderboardTab(tab);
+        },
+        onOpenMenuLeaderboard: () => {
+          void this.openMenuLeaderboard();
+        },
+        onCloseMenuLeaderboard: () => {
+          this.closeMenuLeaderboard();
+        },
+        onSwitchMenuLeaderboardTab: (tab: string) => {
+          this.switchMenuLeaderboardTab(tab);
+        },
       },
-      onResume: () => {
-        this.resumeGame();
-      },
-      onSelectCharacter: (type: string) => {
-        this.selectCharacter(type as CharacterType);
-      },
-      onRestart: () => {
-        this.showCharacterSelect();
-      },
-      onStartWave: () => {
-        this.startNextWave();
-      },
-      onQuitToMenu: () => {
-        this.quitToMenu();
-      },
-      onToggleSound: () => {
-        this.toggleSound();
-      },
-      onSubmitScore: () => {
-        void this.submitScore();
-      },
-      onSwitchLeaderboardTab: (tab: string) => {
-        this.switchLeaderboardTab(tab);
-      },
-      onOpenMenuLeaderboard: () => {
-        void this.openMenuLeaderboard();
-      },
-      onCloseMenuLeaderboard: () => {
-        this.closeMenuLeaderboard();
-      },
-      onSwitchMenuLeaderboardTab: (tab: string) => {
-        this.switchMenuLeaderboardTab(tab);
-      },
-      getState: () => this.state,
-    });
+      this.stateManager,
+    );
 
     this.combatSystem = new CombatSystem(this.entityManager);
-    this.setupCombatEventListeners();
+
+    // Setup state change listeners
+    this.setupStateListeners();
 
     // Setup input handler
     this.inputHandler.setup();
@@ -171,26 +158,185 @@ export class Game {
   }
 
   /**
+   * Setup state change listeners for UI updates.
+   * StateManager emits 'stateEntered' events when state transitions occur.
+   */
+  private setupStateListeners(): void {
+    EventBus.on('stateEntered', ({ state, from }) => {
+      switch (state) {
+        case GameState.MENU:
+          this.onEnterMenu();
+          break;
+        case GameState.PLAYING:
+          this.onEnterPlaying(from);
+          break;
+        case GameState.SHOP:
+          this.onEnterShop();
+          break;
+        case GameState.PAUSED:
+          this.onEnterPaused();
+          break;
+        case GameState.GAME_OVER:
+          this.onEnterGameOver();
+          break;
+      }
+    });
+
+    // Listen for characterSelected: store character, update UI, then trigger game start
+    EventBus.on('characterSelected', ({ characterType }) => {
+      this.selectedCharacter = characterType;
+
+      document.querySelectorAll('.character-card').forEach((card) => {
+        card.classList.remove('selected');
+      });
+      const selectedCard = document.querySelector(`[data-character="${characterType}"]`);
+      if (selectedCard) selectedCard.classList.add('selected');
+
+      // Now that character is stored, request game start
+      EventBus.emit('startGameRequested', undefined);
+    });
+  }
+
+  // ============ State Enter Handlers ============
+
+  private onEnterMenu(): void {
+    document.getElementById('game-over')?.classList.add('hidden');
+    document.getElementById('pause-menu')?.classList.add('hidden');
+    document.getElementById('shop')?.classList.add('hidden');
+    document.getElementById('start-screen')?.classList.remove('hidden');
+    document.querySelectorAll('.character-card').forEach((card) => {
+      card.classList.remove('selected');
+    });
+    this.selectedCharacter = null;
+
+    // Reset score submit form
+    const scoreSubmit = document.getElementById('score-submit');
+    if (scoreSubmit) scoreSubmit.style.display = 'flex';
+    const submitBtn = document.getElementById('submit-score-btn') as HTMLButtonElement;
+    submitBtn.disabled = false;
+    submitBtn.textContent = '📊 Zapisz wynik';
+  }
+
+  private onEnterPlaying(from: GameState): void {
+    document.getElementById('start-screen')?.classList.add('hidden');
+    document.getElementById('game-over')?.classList.add('hidden');
+    document.getElementById('shop')?.classList.add('hidden');
+    document.getElementById('pause-menu')?.classList.add('hidden');
+
+    // Initialize new game only when coming from menu
+    if (from === GameState.MENU) {
+      this.initializeNewGame();
+    }
+
+    // If coming from PAUSED, emit resume event for AudioSystem etc.
+    if (from === GameState.PAUSED) {
+      EventBus.emit('gameResume', undefined);
+    }
+
+    // If coming from SHOP, start next wave
+    if (from === GameState.SHOP) {
+      this.startNextWave();
+    }
+
+    this.startGameLoop();
+  }
+
+  private onEnterShop(): void {
+    this.waveManager.endWave();
+
+    const player = this.entityManager.getPlayer();
+    player.hp = player.maxHp; // Full heal
+    player.position.x = this.canvas.width / 2; // Center player
+    player.position.y = this.canvas.height / 2;
+
+    this.entityManager.clearExceptPlayer();
+    this.shop.resetReroll();
+
+    const shopPlayer = this.createShopPlayer(player);
+    this.shop.generateItems(shopPlayer);
+    this.shop.renderShop(shopPlayer);
+
+    EventBus.emit('shopOpened', { gold: player.gold });
+  }
+
+  private onEnterPaused(): void {
+    document.getElementById('pause-menu')?.classList.remove('hidden');
+    EventBus.emit('gamePause', undefined);
+  }
+
+  private onEnterGameOver(): void {
+    const player = this.entityManager.getPlayer();
+    const finalWave = document.getElementById('final-wave');
+    const finalXp = document.getElementById('final-xp');
+    if (finalWave) finalWave.textContent = String(this.waveManager.waveNumber);
+    if (finalXp) finalXp.textContent = String(player.xp);
+    document.getElementById('game-over')?.classList.remove('hidden');
+
+    // Load saved player name
+    const savedName = localStorage.getItem('circle_survivor_player_name') ?? '';
+    const playerNameInput = document.getElementById('player-name') as HTMLInputElement;
+    playerNameInput.value = savedName;
+
+    void this.showLeaderboard('local');
+
+    EventBus.emit('gameOver', {
+      score: player.xp,
+      wave: this.waveManager.waveNumber,
+      time: 0,
+    });
+  }
+
+  /**
+   * Initialize a new game (called when entering PLAYING from MENU)
+   */
+  private initializeNewGame(): void {
+    this.selectedCharacter ??= CharacterType.NORMIK;
+
+    // Get character config
+    const charConfig = CHARACTER_TYPES[this.selectedCharacter];
+
+    // Create player
+    const player = new Player({
+      x: this.canvas.width / 2,
+      y: this.canvas.height / 2,
+      characterType: this.selectedCharacter,
+    });
+
+    // Apply character-specific stats
+    player.maxHp = charConfig.maxHp;
+    player.hp = charConfig.maxHp;
+    player.speed = charConfig.speed;
+    player.damageMultiplier = charConfig.damageMultiplier;
+    player.goldMultiplier = charConfig.goldMultiplier;
+    player.color = charConfig.color;
+
+    // Reset entity manager and set player
+    this.entityManager.clear();
+    this.entityManager.setPlayer(player);
+
+    // Initialize weapons
+    this.addWeapon(charConfig.startingWeapon);
+
+    // Reset game state
+    this.waveManager = new WaveManager();
+
+    this.waveManager.startWave();
+    this.updateHUD();
+  }
+
+  /**
    * Initialize dev menu with dependency injection
    */
   private async initDevMenu(): Promise<void> {
     const { DevMenu } = await import('@/debug/DevMenu');
     this._devMenu = new DevMenu({
-      // State
-      getState: () => this.state,
+      // State Manager
+      stateManager: this.stateManager,
       getCanvasSize: () => ({ width: this.canvas.width, height: this.canvas.height }),
 
       // Debug display options
       setShowEnemyCount: (show) => {
         this.showEnemyCount = show;
-      },
-
-      // Game control
-      pauseGame: () => {
-        this.pauseGame();
-      },
-      resumeGame: () => {
-        this.resumeGame();
       },
 
       // Wave control
@@ -284,44 +430,6 @@ export class Game {
     this.leaderboardUI.switchLeaderboardTab(tab);
   }
 
-  // ============ Character Selection ============
-
-  private selectCharacter(characterType: CharacterType): void {
-    // Prevent multiple game starts from rapid clicking
-    if (this.state !== 'start') return;
-    this.state = 'playing';
-
-    this.selectedCharacter = characterType;
-
-    // Mark selected card
-    document.querySelectorAll('.character-card').forEach((card) => {
-      card.classList.remove('selected');
-    });
-    const selectedCard = document.querySelector(`[data-character="${characterType}"]`);
-    if (selectedCard) selectedCard.classList.add('selected');
-
-    this.startGame();
-  }
-
-  private showCharacterSelect(): void {
-    this.state = 'start';
-    document.getElementById('game-over')?.classList.add('hidden');
-    document.getElementById('start-screen')?.classList.remove('hidden');
-    document.querySelectorAll('.character-card').forEach((card) => {
-      card.classList.remove('selected');
-    });
-    this.selectedCharacter = null;
-
-    // Reset score submit form
-    const scoreSubmit = document.getElementById('score-submit');
-    if (scoreSubmit) scoreSubmit.style.display = 'flex';
-    const submitBtn = document.getElementById('submit-score-btn') as HTMLButtonElement;
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = '📊 Zapisz wynik';
-    }
-  }
-
   private toggleSound(): void {
     this.audio.toggle();
     const btn = document.getElementById('sound-toggle');
@@ -330,84 +438,10 @@ export class Game {
     }
   }
 
-  // ============ Pause Menu ============
-
-  private pauseGame(): void {
-    this.state = 'paused';
-    document.getElementById('pause-menu')?.classList.remove('hidden');
-  }
-
-  private resumeGame(): void {
-    this.state = 'playing';
-    document.getElementById('pause-menu')?.classList.add('hidden');
-    this.startGameLoop();
-  }
-
-  private quitToMenu(): void {
-    this.state = 'start';
-    document.getElementById('pause-menu')?.classList.add('hidden');
-    this.showCharacterSelect();
-  }
-
-  // ============ Game Start ============
-
-  private startGame(): void {
-    this.selectedCharacter ??= CharacterType.NORMIK;
-
-    // Get character config
-    const charConfig = CHARACTER_TYPES[this.selectedCharacter];
-
-    // Create player
-    const player = new Player({
-      x: this.canvas.width / 2,
-      y: this.canvas.height / 2,
-      characterType: this.selectedCharacter,
-    });
-
-    // Apply character-specific stats
-    player.maxHp = charConfig.maxHp;
-    player.hp = charConfig.maxHp;
-    player.speed = charConfig.speed;
-    player.damageMultiplier = charConfig.damageMultiplier;
-    player.goldMultiplier = charConfig.goldMultiplier;
-    player.color = charConfig.color;
-
-    // Reset entity manager and set player
-    this.entityManager.clear();
-    this.entityManager.setPlayer(player);
-
-    // Initialize weapons
-    this.addWeapon(charConfig.startingWeapon);
-
-    // Reset game state
-    this.waveManager = new WaveManager();
-
-    // Hide overlays
-    document.getElementById('start-screen')?.classList.add('hidden');
-    document.getElementById('game-over')?.classList.add('hidden');
-    document.getElementById('shop')?.classList.add('hidden');
-
-    this.state = 'playing';
-    this.waveManager.startWave();
-    this.updateHUD();
-
-    // Start game loop
-    this.startGameLoop();
-  }
+  // ============ Wave Management ============
 
   private startNextWave(): void {
     this.shop.hideShop();
-    this.state = 'playing';
-
-    const player = this.entityManager.getPlayer();
-    player.hp = player.maxHp;
-    // Reset player position to center
-    player.position.x = this.canvas.width / 2;
-    player.position.y = this.canvas.height / 2;
-
-    // Clear entities except player
-    this.entityManager.clearExceptPlayer();
-
     this.waveManager.startWave();
   }
 
@@ -455,14 +489,16 @@ export class Game {
     const deltaTime = timestamp - this.lastTime;
     this.lastTime = timestamp;
 
-    if (this.state === 'playing') {
+    const currentState = this.stateManager.getCurrentState();
+
+    if (currentState === GameState.PLAYING) {
       this.update(deltaTime, timestamp);
     }
 
     this.render();
 
     // Continue loop only for active game states
-    if (this.state === 'playing' || this.state === 'shop') {
+    if (currentState === GameState.PLAYING || currentState === GameState.SHOP) {
       requestAnimationFrame((t) => {
         this.gameLoop(t);
       });
@@ -529,7 +565,7 @@ export class Game {
     }
 
     if (waveResult.waveEnded) {
-      this.openShop();
+      EventBus.emit('waveCleared', undefined);
       return;
     }
 
@@ -890,7 +926,10 @@ export class Game {
       },
     );
 
-    if (playerDied) this.gameOver();
+    if (playerDied) {
+      // TODO: killed by, shockwave, maybe Killed by, could be displayed
+      EventBus.emit('playerDeath', { player, killedBy: null });
+    }
   }
 
   // ============ Render ============
@@ -933,19 +972,6 @@ export class Game {
 
   // ============ Shop ============
 
-  private openShop(): void {
-    this.state = 'shop';
-    this.waveManager.endWave();
-    this.entityManager.clearExceptPlayer();
-    this.shop.resetReroll();
-
-    const player = this.entityManager.getPlayer();
-    // Create shop-compatible player wrapper
-    const shopPlayer = this.createShopPlayer(player);
-    this.shop.generateItems(shopPlayer);
-    this.shop.renderShop(shopPlayer);
-  }
-
   private createShopPlayer(player: Player): ShopPlayer {
     const weapons = player.weapons;
     // Use a Proxy on the real player, only overriding what's needed for Shop
@@ -982,43 +1008,5 @@ export class Game {
       },
       multishot: weapon.multishot,
     };
-  }
-
-  // ============ Combat Event Listeners ============
-
-  /**
-   * Setup EventBus listeners for combat events from CombatSystem
-   */
-  private setupCombatEventListeners(): void {
-    // Handle player death
-    EventBus.on('playerDeath', () => {
-      this.gameOver();
-    });
-  }
-
-  // ============ Game Over ============
-
-  private gameOver(): void {
-    this.state = 'gameover';
-    // gameOver sound is played via EventBus listener
-    EventBus.emit('gameOver', {
-      score: this.entityManager.getPlayer().xp,
-      wave: this.waveManager.waveNumber,
-      time: 0,
-    });
-
-    const finalWave = document.getElementById('final-wave');
-    const finalXp = document.getElementById('final-xp');
-    if (finalWave) finalWave.textContent = String(this.waveManager.waveNumber);
-    if (finalXp) finalXp.textContent = String(this.entityManager.getPlayer().xp);
-    document.getElementById('game-over')?.classList.remove('hidden');
-
-    // Load saved player name
-    const savedName = localStorage.getItem('circle_survivor_player_name') ?? '';
-    const playerNameInput = document.getElementById('player-name') as HTMLInputElement;
-    playerNameInput.value = savedName;
-
-    // Show leaderboard
-    void this.showLeaderboard('local');
   }
 }

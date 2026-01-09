@@ -150,8 +150,7 @@ export class Shop {
     if (extras.length > 0 && extras[0]) {
       this.availableItems.push(extras[0]);
     }
-    // eslint-disable-next-line no-debugger
-    debugger;
+
     // Shuffle final list
     shuffleArray(this.availableItems);
   }

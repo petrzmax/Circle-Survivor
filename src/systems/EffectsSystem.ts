@@ -124,9 +124,10 @@ export class EffectsSystem {
         }
       }
 
-      // Remove finished ones
+      // Remove finished ones (swap-and-pop for O(1) removal)
       if (sw.alpha <= 0) {
-        this.effects.shockwaves.splice(i, 1);
+        this.effects.shockwaves[i] = this.effects.shockwaves[this.effects.shockwaves.length - 1]!;
+        this.effects.shockwaves.pop();
       }
     }
     return false;
@@ -145,7 +146,8 @@ export class EffectsSystem {
       exp.alpha = 1 - age / duration;
 
       if (exp.alpha <= 0) {
-        explosions.splice(i, 1);
+        explosions[i] = explosions[explosions.length - 1]!;
+        explosions.pop();
         continue;
       }
 
@@ -171,7 +173,8 @@ export class EffectsSystem {
       p.alpha = p.life;
 
       if (p.life <= 0) {
-        deathEffects.splice(i, 1);
+        deathEffects[i] = deathEffects[deathEffects.length - 1]!;
+        deathEffects.pop();
         continue;
       }
 

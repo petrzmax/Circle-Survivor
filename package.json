@@ -26,6 +26,8 @@
   "homepage": "https://github.com/petrzmax/Circle-Survivor#readme",
   "devDependencies": {
     "@types/node": "^25.0.6",
+    "@preact/preset-vite": "^2.10.2",
+    "@testing-library/preact": "^3.2.4",
     "@typescript-eslint/eslint-plugin": "^8.50.1",
     "@typescript-eslint/parser": "^8.51.0",
     "@vitest/ui": "^4.0.16",
@@ -36,5 +38,8 @@
     "typescript-eslint": "^8.52.0",
     "vite": "^7.3.0",
     "vitest": "^4.0.15"
+  },
+  "dependencies": {
+    "preact": "^10.28.2"
   }
 }

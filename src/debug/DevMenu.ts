@@ -86,11 +86,11 @@ export class DevMenu {
    * Populate dropdown menus with available options
    */
   private populateDropdowns(): void {
-    // Items dropdown - include both 'item' and 'weaponBonus' types
+    // Items dropdown
     const itemSelect = document.getElementById('dev-item-select') as HTMLSelectElement;
     itemSelect.innerHTML = '';
     for (const [id, item] of Object.entries(SHOP_ITEMS)) {
-      if (item.type === 'item' || item.type === 'weaponBonus') {
+      if (item.type === 'item') {
         const option = document.createElement('option');
         option.value = id;
         option.textContent = `${item.emoji || ''} ${item.name}`;

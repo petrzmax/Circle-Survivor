@@ -23,8 +23,6 @@ import {
   VisualEffect,
   WeaponType,
 } from '@/types/enums';
-import { Leaderboard } from '@/ui/Leaderboard';
-import { LeaderboardUI } from '@/ui/LeaderboardUI';
 import { Shop, ShopPlayer, ShopWeapon } from '@/ui/Shop';
 import {
   copyVector,
@@ -52,13 +50,10 @@ export class Game {
   private entityManager: EntityManager;
 
   // Systems
-  private audio: AudioSystem;
   private collisionSystem: CollisionSystem;
   private combatSystem!: CombatSystem;
   private effectsSystem: EffectsSystem;
   private inputHandler: InputHandler;
-  private leaderboard: Leaderboard;
-  private leaderboardUI: LeaderboardUI;
   // @ts-expect-error - initialized in constructor
   private pickupSpawnSystem: PickupSpawnSystem;
   private renderSystem: RenderSystem;
@@ -100,34 +95,11 @@ export class Game {
     this.renderSystem = new RenderSystem(this.entityManager);
     this.waveManager = new WaveManager();
     this.shop = new Shop();
-    this.audio = new AudioSystem();
-    this.leaderboard = new Leaderboard();
-    this.leaderboardUI = new LeaderboardUI(this.leaderboard);
+    // AudioSystem initializes itself via EventBus - no reference needed
+    new AudioSystem();
     this.pickupSpawnSystem = new PickupSpawnSystem(this.entityManager);
     this.rewardSystem = new RewardSystem(this.entityManager);
-    this.inputHandler = new InputHandler(
-      {
-        onToggleSound: () => {
-          this.toggleSound();
-        },
-        onSubmitScore: () => {
-          void this.submitScore();
-        },
-        onSwitchLeaderboardTab: (tab: string) => {
-          this.switchLeaderboardTab(tab);
-        },
-        onOpenMenuLeaderboard: () => {
-          void this.openMenuLeaderboard();
-        },
-        onCloseMenuLeaderboard: () => {
-          this.closeMenuLeaderboard();
-        },
-        onSwitchMenuLeaderboardTab: (tab: string) => {
-          this.switchMenuLeaderboardTab(tab);
-        },
-      },
-      this.stateManager,
-    );
+    this.inputHandler = new InputHandler(this.stateManager);
 
     this.combatSystem = new CombatSystem(this.entityManager);
 
@@ -182,46 +154,37 @@ export class Game {
       }
     });
 
-    // Listen for characterSelected: store character, update UI, then trigger game start
+    // Listen for characterSelected: store character, then trigger game start
     EventBus.on('characterSelected', ({ characterType }) => {
       this.selectedCharacter = characterType;
-
-      document.querySelectorAll('.character-card').forEach((card) => {
-        card.classList.remove('selected');
-      });
-      const selectedCard = document.querySelector(`[data-character="${characterType}"]`);
-      if (selectedCard) selectedCard.classList.add('selected');
-
-      // Now that character is stored, request game start
+      // Preact CharacterSelect handles visual selection
       EventBus.emit('startGameRequested', undefined);
+    });
+
+    // Listen for Preact shop item purchases and apply effects
+    EventBus.on('itemPurchased', ({ itemId }) => {
+      // Skip reroll - it's just for UI refresh, gold is deducted by RewardSystem
+      if (itemId === 'reroll') {
+        this.emitShopPlayerUpdate();
+        return;
+      }
+
+      // Apply item effects to player (gold already deducted by RewardSystem)
+      this.applyShopPurchase(itemId);
+      this.emitShopPlayerUpdate();
+      this.updateHUD();
     });
   }
 
   // ============ State Enter Handlers ============
 
   private onEnterMenu(): void {
-    document.getElementById('game-over')?.classList.add('hidden');
-    document.getElementById('pause-menu')?.classList.add('hidden');
-    document.getElementById('shop')?.classList.add('hidden');
-    document.getElementById('start-screen')?.classList.remove('hidden');
-    document.querySelectorAll('.character-card').forEach((card) => {
-      card.classList.remove('selected');
-    });
+    // Preact App handles all UI state based on stateEntered event
     this.selectedCharacter = null;
-
-    // Reset score submit form
-    const scoreSubmit = document.getElementById('score-submit');
-    if (scoreSubmit) scoreSubmit.style.display = 'flex';
-    const submitBtn = document.getElementById('submit-score-btn') as HTMLButtonElement;
-    submitBtn.disabled = false;
-    submitBtn.textContent = '📊 Zapisz wynik';
   }
 
   private onEnterPlaying(from: GameState): void {
-    document.getElementById('start-screen')?.classList.add('hidden');
-    document.getElementById('game-over')?.classList.add('hidden');
-    document.getElementById('shop')?.classList.add('hidden');
-    document.getElementById('pause-menu')?.classList.add('hidden');
+    // Preact App handles all UI state based on stateEntered event
 
     // Initialize new game only when coming from menu
     if (from === GameState.MENU) {
@@ -250,35 +213,29 @@ export class Game {
     player.position.y = this.canvas.height / 2;
 
     this.entityManager.clearExceptPlayer();
-    this.shop.resetReroll();
 
-    const shopPlayer = this.createShopPlayer(player);
-    this.shop.generateItems(shopPlayer);
-    this.shop.renderShop(shopPlayer);
-
-    EventBus.emit('shopOpened', { gold: player.gold });
+    // Preact Shop component handles rendering via shopOpened event
+    EventBus.emit('shopOpened', {
+      gold: player.gold,
+      waveNumber: this.waveManager.waveNumber,
+      playerState: {
+        gold: player.gold,
+        weapons: player.weapons.map((w) => ({ type: w.type, name: w.name, level: w.level })),
+        maxWeapons: player.maxWeapons,
+        items: [...player.items],
+      },
+    });
   }
 
   private onEnterPaused(): void {
-    document.getElementById('pause-menu')?.classList.remove('hidden');
+    // Preact App handles pause menu visibility based on stateEntered event
     EventBus.emit('gamePause', undefined);
   }
 
   private onEnterGameOver(): void {
     const player = this.entityManager.getPlayer();
-    const finalWave = document.getElementById('final-wave');
-    const finalXp = document.getElementById('final-xp');
-    if (finalWave) finalWave.textContent = String(this.waveManager.waveNumber);
-    if (finalXp) finalXp.textContent = String(player.xp);
-    document.getElementById('game-over')?.classList.remove('hidden');
 
-    // Load saved player name
-    const savedName = localStorage.getItem('circle_survivor_player_name') ?? '';
-    const playerNameInput = document.getElementById('player-name') as HTMLInputElement;
-    playerNameInput.value = savedName;
-
-    void this.showLeaderboard('local');
-
+    // Preact App handles game over UI based on gameOver event
     EventBus.emit('gameOver', {
       score: player.xp,
       wave: this.waveManager.waveNumber,
@@ -397,51 +354,10 @@ export class Game {
     // TODO: Implement visual notification
   }
 
-  // ============ Leaderboard Methods ============
-
-  private async openMenuLeaderboard(): Promise<void> {
-    await this.leaderboardUI.openMenuLeaderboard();
-  }
-
-  private closeMenuLeaderboard(): void {
-    this.leaderboardUI.closeMenuLeaderboard();
-  }
-
-  private switchMenuLeaderboardTab(tab: string): void {
-    this.leaderboardUI.switchMenuLeaderboardTab(tab);
-  }
-
-  private async submitScore(): Promise<void> {
-    await this.leaderboardUI.submitScore(
-      this.waveManager.waveNumber,
-      this.entityManager.getPlayer().xp,
-      this.selectedCharacter,
-    );
-  }
-
-  private async showLeaderboard(
-    tab: string = 'local',
-    highlightName: string | null = null,
-  ): Promise<void> {
-    await this.leaderboardUI.showLeaderboard(tab, highlightName);
-  }
-
-  private switchLeaderboardTab(tab: string): void {
-    this.leaderboardUI.switchLeaderboardTab(tab);
-  }
-
-  private toggleSound(): void {
-    this.audio.toggle();
-    const btn = document.getElementById('sound-toggle');
-    if (btn) {
-      btn.textContent = this.audio.isEnabled() ? '🔊 Dźwięk: WŁ' : '🔇 Dźwięk: WYŁ';
-    }
-  }
-
   // ============ Wave Management ============
 
   private startNextWave(): void {
-    this.shop.hideShop();
+    // Preact handles shop visibility via state changes
     this.waveManager.startWave();
   }
 
@@ -967,7 +883,22 @@ export class Game {
 
   private updateHUD(): void {
     const player = this.entityManager.getPlayer();
-    HUD.update(player, this.waveManager);
+
+    // Emit HUD update for Preact UI
+    EventBus.emit('hudUpdate', {
+      hp: player.hp,
+      maxHp: player.maxHp,
+      gold: player.gold,
+      xp: player.xp,
+      armor: player.armor,
+      damageMultiplier: player.damageMultiplier,
+      critChance: player.critChance,
+      dodge: player.dodge,
+      regen: player.regen,
+      waveNumber: this.waveManager.waveNumber,
+      timeRemaining: this.waveManager.timeRemaining,
+      isWaveActive: this.waveManager.isWaveActive,
+    });
   }
 
   // ============ Shop ============
@@ -1008,5 +939,32 @@ export class Game {
       },
       multishot: weapon.multishot,
     };
+  }
+
+  /**
+   * Apply shop purchase effects to player.
+   * Called when Preact Shop emits itemPurchased event.
+   * Gold deduction is handled by RewardSystem.
+   */
+  private applyShopPurchase(itemId: string): void {
+    const player = this.entityManager.getPlayer();
+    const shopPlayer = this.createShopPlayer(player);
+
+    // Use existing shop buyItem logic but skip the price check & event emission
+    // since those are already handled
+    this.shop.applyItemEffect(itemId, shopPlayer);
+  }
+
+  /**
+   * Emit updated player state to Shop component after purchases
+   */
+  private emitShopPlayerUpdate(): void {
+    const player = this.entityManager.getPlayer();
+    EventBus.emit('shopPlayerUpdated', {
+      gold: player.gold,
+      weapons: player.weapons.map((w) => ({ type: w.type, name: w.name, level: w.level })),
+      maxWeapons: player.maxWeapons,
+      items: [...player.items],
+    });
   }
 }

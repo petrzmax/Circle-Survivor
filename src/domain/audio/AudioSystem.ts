@@ -180,6 +180,13 @@ export class AudioSystem {
    * All sounds are triggered through events - no direct method calls needed.
    */
   private connectToEventBus(): void {
+    // TODO - refactor, not cool two events
+    // Audio toggle from UI
+    EventBus.on('audioToggleRequested', () => {
+      this.toggle();
+      EventBus.emit('audioStateChanged', { enabled: this.enabled });
+    });
+
     // Pickups
     EventBus.on('goldCollected', () => {
       this.play('collectGold');

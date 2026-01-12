@@ -27,6 +27,20 @@ body {
     display: block;
 }
 
+/* Preact UI root - overlay layer */
+#ui-root {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none; /* Let clicks pass through to canvas */
+}
+
+#ui-root > * {
+    pointer-events: auto; /* Re-enable for actual UI elements */
+}
+
 /* Overlays */
 #shop, #game-over, #start-screen, #pause-menu, #menu-leaderboard {
     position: absolute;

@@ -5,6 +5,7 @@
 
 import { Game } from '@/core/Game';
 import { GAME_VERSION } from '@/version';
+import { mountUI } from '@/ui';
 
 // Start when page loads
 window.addEventListener('load', () => {
@@ -17,6 +18,9 @@ window.addEventListener('load', () => {
       versionElement.href = `https://github.com/petrzmax/Circle-Survivor/releases/tag/v${GAME_VERSION}`;
     }
   }
+
+  // Mount Preact UI layer
+  mountUI();
 
   // Initialize game
   new Game();

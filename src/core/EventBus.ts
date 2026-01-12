@@ -46,9 +46,24 @@ export interface GameEvents {
   bossDefeated: { enemy: Enemy; bossName: string };
 
   // Shop events
-  shopOpened: { gold: number };
+  shopOpened: {
+    gold: number;
+    waveNumber: number;
+    playerState: {
+      gold: number;
+      weapons: Array<{ type: string; name: string; level: number }>;
+      maxWeapons: number;
+      items?: string[];
+    };
+  };
   shopClosed: void;
   itemPurchased: { itemId: string; cost: number };
+  shopPlayerUpdated: {
+    gold: number;
+    weapons: Array<{ type: string; name: string; level: number }>;
+    maxWeapons: number;
+    items: string[];
+  };
   weaponPurchased: { weaponType: string; cost: number };
   shopError: void;
 
@@ -59,10 +74,24 @@ export interface GameEvents {
   gameOver: { score: number; wave: number; time: number };
 
   // UI events
-  scoreChanged: { score: number; delta: number };
-  goldChanged: { gold: number; delta: number };
-  healthChanged: { current: number; max: number };
   countdownTick: { seconds: number };
+  audioToggleRequested: void;
+  audioStateChanged: { enabled: boolean };
+  // TODO use it as trigger only, data get from systems, and managers or remove part of these as it will be on different screen.
+  hudUpdate: {
+    hp: number;
+    maxHp: number;
+    gold: number;
+    xp: number;
+    armor: number;
+    damageMultiplier: number;
+    critChance: number;
+    dodge: number;
+    regen: number;
+    waveNumber: number;
+    timeRemaining: number;
+    isWaveActive: boolean;
+  };
 
   // State transition requests (triggers for StateManager)
   characterSelected: { characterType: CharacterType };

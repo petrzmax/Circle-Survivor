@@ -5,14 +5,14 @@ import { AudioSystem } from '@/domain/audio/AudioSystem';
 import { Enemy } from '@/domain/enemies';
 import { WeaponConfig, WeaponInstance } from '@/domain/weapons/type';
 import { Deployable, DeployableConfig } from '@/entities/Deployable';
-import { InputState, Player } from '@/entities/Player';
+import { Player } from '@/entities/Player';
 import { Projectile } from '@/entities/Projectile';
 import { EntityManager, StateManager } from '@/managers';
 import { CollisionSystem } from '@/systems/CollisionSystem';
 import { CombatSystem } from '@/systems/CombatSystem';
 import { EffectsSystem } from '@/systems/EffectsSystem';
 import { HUD } from '@/systems/HUD';
-import { InputHandler } from '@/systems/InputHandler';
+import { InputSystem } from '@/systems/InputSystem';
 import { WaveManager } from '@/systems/WaveManager';
 import {
   CharacterType,
@@ -53,7 +53,7 @@ export class Game {
   private collisionSystem: CollisionSystem;
   private combatSystem!: CombatSystem;
   private effectsSystem: EffectsSystem;
-  private inputHandler: InputHandler;
+  private inputSystem: InputSystem;
   // @ts-expect-error - initialized in constructor
   private pickupSpawnSystem: PickupSpawnSystem;
   private renderSystem: RenderSystem;
@@ -99,15 +99,12 @@ export class Game {
     new AudioSystem();
     this.pickupSpawnSystem = new PickupSpawnSystem(this.entityManager);
     this.rewardSystem = new RewardSystem(this.entityManager);
-    this.inputHandler = new InputHandler(this.stateManager);
+    this.inputSystem = new InputSystem(this.stateManager);
 
     this.combatSystem = new CombatSystem(this.entityManager);
 
     // Setup state change listeners
     this.setupStateListeners();
-
-    // Setup input handler
-    this.inputHandler.setup();
 
     // Setup shop callbacks
     this.shop.setCallbacks({
@@ -443,14 +440,9 @@ export class Game {
 
     const deltaSeconds = deltaTime / 1000;
 
-    // Get input state from InputHandler
-    const keys = this.inputHandler.getKeys();
-    const input: InputState = {
-      up: keys.w === true || keys.arrowup === true,
-      down: keys.s === true || keys.arrowdown === true,
-      left: keys.a === true || keys.arrowleft === true,
-      right: keys.d === true || keys.arrowright === true,
-    };
+    // Poll gamepad state and get unified input
+    this.inputSystem.poll();
+    const input = this.inputSystem.getInputState();
 
     // Update player movement
     player.updateMovement(input, this.canvas.width, this.canvas.height, deltaSeconds);

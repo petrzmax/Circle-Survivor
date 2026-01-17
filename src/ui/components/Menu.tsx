@@ -1,10 +1,10 @@
-import { JSX } from 'preact';
 import { EventBus } from '@/core/EventBus';
 import { GameState } from '@/types/enums';
+import { GAME_VERSION } from '@/version';
+import { JSX } from 'preact';
+import { useEffect, useState } from 'preact/hooks';
 import { CharacterSelect } from './CharacterSelect';
 import { LeaderboardComponent } from './Leaderboard';
-import { useState, useEffect } from 'preact/hooks';
-import { GAME_VERSION } from '@/version';
 
 interface MenuProps {
   gameState: GameState;
@@ -67,7 +67,7 @@ export function Menu({ gameState, finalWave, finalXp, character }: MenuProps): J
             href={
               GAME_VERSION === 'dev'
                 ? 'https://github.com/petrzmax/Circle-Survivor/releases'
-                : `https://github.com/petrzmax/Circle-Survivor/releases/tag/${GAME_VERSION}`
+                : `https://github.com/petrzmax/Circle-Survivor/releases/tag/v${GAME_VERSION}`
             }
             target="_blank"
             rel="noopener noreferrer"

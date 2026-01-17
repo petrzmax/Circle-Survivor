@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.7.0](https://github.com/petrzmax/Circle-Survivor/compare/v1.6.0...v1.7.0) (2026-01-17)
+
+
+### ✨ Features
+
+* enhance item generation and add inline reroll button with styling ([4d2d738](https://github.com/petrzmax/Circle-Survivor/commit/4d2d7385529b6a47faa0b5dc3ab73af87c5ad947))
+
+
+### 🐛 Bug Fixes
+
+* game version link ([34c0477](https://github.com/petrzmax/Circle-Survivor/commit/34c047715b17c820592d461ade8742c5469647f1))
+* update score submission to use active tab instead of hardcoded value ([a90e20e](https://github.com/petrzmax/Circle-Survivor/commit/a90e20e5bd624559bafba8d5678b9390dd2c3958))
+
+
+### 📦 Other Changes
+
+* **ci:** update release workflow to create PR for merging develop into master ([109b2e3](https://github.com/petrzmax/Circle-Survivor/commit/109b2e3c3f875f5a905d9deb09e72f70348c1670))
+
 ## [1.6.0](https://github.com/petrzmax/Circle-Survivor/compare/v1.5.2...v1.6.0) (2026-01-17)
 
 

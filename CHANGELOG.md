@@ -1,5 +1,46 @@
 # Changelog
 
+## [1.6.0](https://github.com/petrzmax/Circle-Survivor/compare/v1.5.2...v1.6.0) (2026-01-17)
+
+
+### ✨ Features
+
+* Add gamepad support ([f103a71](https://github.com/petrzmax/Circle-Survivor/commit/f103a71d3b04846d094cb9480a6ccdda05a198fc))
+* adjust enemy bullet radius based on enemy size ([d235a81](https://github.com/petrzmax/Circle-Survivor/commit/d235a81c0322dc566879f65a01be2af4c4a3944a))
+* implement StateManager for game state management and refactor related components ([dc1d41e](https://github.com/petrzmax/Circle-Survivor/commit/dc1d41ecfe329d720c124f6e6f99fe75702223bd))
+* Migrate to Preact UI components and hooks ([abecee3](https://github.com/petrzmax/Circle-Survivor/commit/abecee3d0891192e1f0989fa64d0f0f0a054b9ad))
+
+
+### 🐛 Bug Fixes
+
+* gamepad support ([7cf0f89](https://github.com/petrzmax/Circle-Survivor/commit/7cf0f89cca57282faeb447de1b4848e66fb81c18))
+* magnet attraction works only when player has magnet ([aafb258](https://github.com/petrzmax/Circle-Survivor/commit/aafb258bea77182d37d0d049bcd01f26f11afc45))
+
+
+### ♻️ Refactoring
+
+* optimize removal of finished effects using swap-and-pop technique ([0c40bbd](https://github.com/petrzmax/Circle-Survivor/commit/0c40bbdb6a43db802d9f06c09937523b978a2f70))
+* remove goldMultiplier from CombatSystem and streamline gold handling in RewardSystem ([a8b2a89](https://github.com/petrzmax/Circle-Survivor/commit/a8b2a8980c2b914913fc60ef20e649188049bad6))
+* remove xpAwarded event and handle XP directly in RewardSystem ([bf5c04e](https://github.com/petrzmax/Circle-Survivor/commit/bf5c04e2eb14abe40334e96fe01a847aa8c93997))
+* reorganize audio for better concert separation ([93305b8](https://github.com/petrzmax/Circle-Survivor/commit/93305b8153ebadf7bba4dbbf012d7ef1d28e618a))
+* reorganize enemy-related code and streamline imports across the project ([982112e](https://github.com/petrzmax/Circle-Survivor/commit/982112ebe86da3a68c8daa5abb6742320abdc495))
+* reorganize project structure ([c73cefb](https://github.com/petrzmax/Circle-Survivor/commit/c73cefbd1704e2061b81793a879b808dc633ac79))
+* reorganize weapons code ([7c34c69](https://github.com/petrzmax/Circle-Survivor/commit/7c34c698b2ffa71b18b99afd1c02bb8daa21c42d))
+* streamline player retrieval and error handling across systems ([b3ecb97](https://github.com/petrzmax/Circle-Survivor/commit/b3ecb979632d749985f1b78364a251b555c40974))
+* update visual effect handling across systems and improve event management ([c69f02d](https://github.com/petrzmax/Circle-Survivor/commit/c69f02df2d4dd5c2b818e787d50f56d1b42a2eea))
+
+
+### 📦 Other Changes
+
+* **deps:** bump @types/node from 25.0.3 to 25.0.6 ([#37](https://github.com/petrzmax/Circle-Survivor/issues/37)) ([485a44f](https://github.com/petrzmax/Circle-Survivor/commit/485a44f0a12459ba7bc72008ac7e00cf19332b35))
+* **deps:** bump @typescript-eslint/parser from 8.50.1 to 8.51.0 ([#33](https://github.com/petrzmax/Circle-Survivor/issues/33)) ([2a7da54](https://github.com/petrzmax/Circle-Survivor/commit/2a7da54903d9ab0c063f43ecc3b9fd615373047c))
+* **deps:** bump @typescript-eslint/parser from 8.51.0 to 8.52.0 ([#41](https://github.com/petrzmax/Circle-Survivor/issues/41)) ([7e1f791](https://github.com/petrzmax/Circle-Survivor/commit/7e1f7915fe0fbc5ec4a259bf3edef94ff7b71e01))
+* **deps:** bump typescript-eslint from 8.50.1 to 8.51.0 ([#34](https://github.com/petrzmax/Circle-Survivor/issues/34)) ([e716689](https://github.com/petrzmax/Circle-Survivor/commit/e71668917f2ff6d19ee4c37628e256e7b546c791))
+* **deps:** bump typescript-eslint from 8.51.0 to 8.52.0 ([#38](https://github.com/petrzmax/Circle-Survivor/issues/38)) ([0388608](https://github.com/petrzmax/Circle-Survivor/commit/03886086b66781ce91a0ee7300efbde648b37444))
+* **deps:** bump vite from 7.3.0 to 7.3.1 ([#40](https://github.com/petrzmax/Circle-Survivor/issues/40)) ([a483e6b](https://github.com/petrzmax/Circle-Survivor/commit/a483e6bb31c3b02de2eeac41c68f78557de9abe8))
+* update .gitignore to include build output and local files ([d4287de](https://github.com/petrzmax/Circle-Survivor/commit/d4287de85464f4fe0b55f85bcb3dc273d2241e5d))
+* update package lock ([c28b083](https://github.com/petrzmax/Circle-Survivor/commit/c28b083b6207e861a28087dbca297de46e281fca))
+
 ## [1.5.2](https://github.com/petrzmax/Circle-Survivor/compare/v1.5.1...v1.5.2) (2026-01-04)
 
 

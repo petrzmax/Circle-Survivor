@@ -19,21 +19,20 @@ jobs:
         with:
           target-branch: develop
 
-      # Merge develop into master when a release is created
-      - name: Checkout repository
+      # Create PR to merge develop into master when a release is created
+      - name: Create Pull Request to master
         if: ${{ steps.release.outputs.release_created }}
-        uses: actions/checkout@v6
+        uses: peter-evans/create-pull-request@v7
         with:
-          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: develop
+          base: master
+          title: 'Sync release ${{ steps.release.outputs.tag_name }} to master'
+          body: |
+            Automated PR to sync release `${{ steps.release.outputs.tag_name }}` from develop to master.
 
-      - name: Merge to master
-        if: ${{ steps.release.outputs.release_created }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git fetch origin master
-          git checkout master
-          git merge origin/develop --no-edit
-          git push origin master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            **Release Notes:** https://github.com/${{ github.repository }}/releases/tag/${{ steps.release.outputs.tag_name }}
+
+            This PR will auto-merge once all checks pass.
+          labels: release,automated
+          draft: false

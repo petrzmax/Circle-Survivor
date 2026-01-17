@@ -22,17 +22,16 @@ jobs:
       # Create PR to merge develop into master when a release is created
       - name: Create Pull Request to master
         if: ${{ steps.release.outputs.release_created }}
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: develop
-          base: master
-          title: 'Sync release ${{ steps.release.outputs.tag_name }} to master'
-          body: |
-            Automated PR to sync release `${{ steps.release.outputs.tag_name }}` from develop to master.
+        run: |
+          gh pr create \
+            --base master \
+            --head develop \
+            --title "Sync release ${{ steps.release.outputs.tag_name }} to master" \
+            --body "Automated PR to sync release \`${{ steps.release.outputs.tag_name }}\` from develop to master.
 
-            **Release Notes:** https://github.com/${{ github.repository }}/releases/tag/${{ steps.release.outputs.tag_name }}
+          **Release Notes:** https://github.com/${{ github.repository }}/releases/tag/${{ steps.release.outputs.tag_name }}
 
-            This PR will auto-merge once all checks pass.
-          labels: release,automated
-          draft: false
+          This PR will auto-merge once all checks pass." \
+            --label "release,automated"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

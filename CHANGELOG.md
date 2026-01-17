@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.2](https://github.com/petrzmax/Circle-Survivor/compare/v1.7.1...v1.7.2) (2026-01-17)
+
+
+### 🐛 Bug Fixes
+
+* replace create-pull-request action with gh CLI command for release PR creation ([93dc08a](https://github.com/petrzmax/Circle-Survivor/commit/93dc08acb176f020cc9b585eea578a30c5a8cc14))
+
 ## [1.7.1](https://github.com/petrzmax/Circle-Survivor/compare/v1.7.0...v1.7.1) (2026-01-17)
 
 

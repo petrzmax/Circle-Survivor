@@ -1,3 +1,5 @@
+import { CHARACTER_TYPES } from '@/config/characters.config';
+import { CharacterType } from '@/types/enums';
 import { JSX } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { Leaderboard as LeaderboardService } from '../Leaderboard';
@@ -6,14 +8,14 @@ interface LeaderboardProps {
   mode: 'gameOver' | 'menu';
   finalWave?: number;
   finalXp?: number;
-  character?: string;
+  character?: CharacterType;
 }
 
 interface LeaderboardEntry {
   name: string;
   wave: number;
   xp: number;
-  character?: string;
+  character?: CharacterType;
 }
 
 // Shared leaderboard service instance
@@ -26,16 +28,10 @@ function getMedal(index: number): string {
   return `${index + 1}.`;
 }
 
-function getCharacterEmoji(character?: string): string {
-  // TODO, these are also in config, why not use?
-  const emojis: Record<string, string> = {
-    janusz: '💼',
-    wypaleniec: '🔥',
-    cwaniak: '😎',
-    grazyna: '👩',
-    normik: '🙂',
-  };
-  return character ? (emojis[character] ?? '🎮') : '🎮';
+function getCharacterEmoji(character?: CharacterType): string {
+  if (!character) return '🎮';
+  const config = CHARACTER_TYPES[character];
+  return config?.emoji ?? '🎮';
 }
 
 export function LeaderboardComponent({
@@ -79,7 +75,7 @@ export function LeaderboardComponent({
         playerName.trim(),
         finalWave,
         finalXp,
-        character ?? 'normik',
+        character ?? CharacterType.NORMIK,
       );
       localStorage.setItem('circle_survivor_player_name', playerName.trim());
       setHasSubmitted(true);

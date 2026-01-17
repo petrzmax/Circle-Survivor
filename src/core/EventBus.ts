@@ -68,7 +68,6 @@ export interface GameEvents {
   shopError: void;
 
   // Game state events
-  gameStart: { characterType: string };
   gamePause: void;
   gameResume: void;
   gameOver: { score: number; wave: number; time: number };

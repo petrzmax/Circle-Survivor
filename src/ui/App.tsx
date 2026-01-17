@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'preact/hooks';
-import { JSX } from 'preact';
-import { GameState } from '@/types/enums';
-import { useGameState } from './hooks/useGameState';
-import { HUD } from './components/HUD';
-import { Shop } from './components/Shop';
-import { Menu } from './components/Menu';
 import { EventBus } from '@/core/EventBus';
+import { CharacterType, GameState } from '@/types/enums';
+import { JSX } from 'preact';
+import { useEffect, useState } from 'preact/hooks';
+import { HUD } from './components/HUD';
+import { Menu } from './components/Menu';
+import { Shop } from './components/Shop';
+import { useGameState } from './hooks/useGameState';
 
 /**
  * Root Preact component for all UI overlays.
@@ -38,7 +38,7 @@ export function App(): JSX.Element {
   // Game over stats
   const [finalWave, setFinalWave] = useState(1);
   const [finalXp, setFinalXp] = useState(0);
-  const [character, setCharacter] = useState<string>('normik');
+  const [character, setCharacter] = useState<CharacterType>(CharacterType.NORMIK);
 
   // Listen to events that update player state
   useEffect(() => {
@@ -68,7 +68,7 @@ export function App(): JSX.Element {
         setFinalWave(wave);
         setFinalXp(score);
       }),
-      EventBus.on('gameStart', ({ characterType }) => {
+      EventBus.on('characterSelected', ({ characterType }) => {
         setCharacter(characterType);
       }),
       // Shop opened - receive player state for shop

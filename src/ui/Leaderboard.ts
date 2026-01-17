@@ -3,13 +3,15 @@
  * Matches original js/leaderboard.js exactly.
  */
 
+import { CharacterType } from '@/types/enums';
+
 // ============ Types ============
 
 export interface LeaderboardEntry {
   name: string;
   wave: number;
   xp: number;
-  character: string;
+  character: CharacterType;
   date: string;
 }
 
@@ -156,7 +158,7 @@ export class Leaderboard {
     playerName: string,
     wave: number,
     xp: number,
-    character: string,
+    character: CharacterType,
   ): Promise<LeaderboardEntry[]> {
     const entry: LeaderboardEntry = {
       name: playerName.substring(0, 20), // Limit name length

@@ -1,5 +1,5 @@
 import { EventBus } from '@/core/EventBus';
-import { GameState } from '@/types/enums';
+import { CharacterType, GameState } from '@/types/enums';
 import { GAME_VERSION } from '@/version';
 import { JSX } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
@@ -10,7 +10,7 @@ interface MenuProps {
   gameState: GameState;
   finalWave?: number;
   finalXp?: number;
-  character?: string;
+  character?: CharacterType;
 }
 
 export function Menu({ gameState, finalWave, finalXp, character }: MenuProps): JSX.Element | null {

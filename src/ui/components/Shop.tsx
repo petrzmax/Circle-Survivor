@@ -1,9 +1,9 @@
-import { JSX } from 'preact';
-import { useState, useEffect, useCallback } from 'preact/hooks';
-import { EventBus } from '@/core/EventBus';
 import { GAME_BALANCE } from '@/config/balance.config';
 import { SHOP_ITEMS, ShopItem } from '@/config/shop.config';
+import { EventBus } from '@/core/EventBus';
 import { shuffleArray } from '@/utils';
+import { JSX } from 'preact';
+import { useCallback, useEffect, useState } from 'preact/hooks';
 
 interface PlayerState {
   gold: number;
@@ -55,48 +55,64 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
 
   const generateItemsWithGold = useCallback(
     (gold: number): void => {
-      const weapons: string[] = [];
-      const items: string[] = [];
+      const affordableWeapons: string[] = [];
+      const unaffordableWeapons: string[] = [];
+      const affordableItems: string[] = [];
+      const unaffordableItems: string[] = [];
 
       Object.keys(SHOP_ITEMS).forEach((key) => {
         const item = SHOP_ITEMS[key];
         if (!item) return;
-        if (gold < item.price) return;
 
-        if (item.type === 'weapon') weapons.push(key);
-        else items.push(key);
+        const price = calculatePrice(item.price);
+        const canAfford = gold >= price;
+
+        if (item.type === 'weapon') {
+          if (canAfford) affordableWeapons.push(key);
+          else unaffordableWeapons.push(key);
+        } else {
+          if (canAfford) affordableItems.push(key);
+          else unaffordableItems.push(key);
+        }
       });
 
-      shuffleArray(weapons);
-      shuffleArray(items);
+      shuffleArray(affordableWeapons);
+      shuffleArray(unaffordableWeapons);
+      shuffleArray(affordableItems);
+      shuffleArray(unaffordableItems);
 
       const newItems: string[] = [];
 
-      // 2 weapons
-      const weaponCount = Math.min(2, weapons.length);
-      for (let i = 0; i < weaponCount; i++) {
-        const key = weapons[i];
+      // 2 weapons - prioritize affordable
+      const allWeapons = [...affordableWeapons, ...unaffordableWeapons];
+      for (let i = 0; i < 2 && i < allWeapons.length; i++) {
+        const key = allWeapons[i];
         if (key) newItems.push(key);
       }
 
-      // 2 items
-      const itemCount = Math.min(2, items.length);
-      for (let i = 0; i < itemCount; i++) {
-        const key = items[i];
+      // 2 items - prioritize affordable
+      const allItems = [...affordableItems, ...unaffordableItems];
+      for (let i = 0; i < 2 && i < allItems.length; i++) {
+        const key = allItems[i];
         if (key) newItems.push(key);
       }
 
-      // 1 extra random
-      const extras: string[] = [];
-      if (weapons.length > weaponCount && weapons[weaponCount]) extras.push(weapons[weaponCount]);
-      if (items.length > itemCount && items[itemCount]) extras.push(items[itemCount]);
+      // 2 extra random - prioritize affordable
+      const usedWeapons = allWeapons.slice(0, 2);
+      const usedItems = allItems.slice(0, 2);
+      const extraWeapons = allWeapons.filter((w) => !usedWeapons.includes(w));
+      const extraItems = allItems.filter((i) => !usedItems.includes(i));
+      const extras = [...extraWeapons, ...extraItems];
       shuffleArray(extras);
-      if (extras[0]) newItems.push(extras[0]);
+      
+      for (let i = 0; i < 2 && i < extras.length; i++) {
+        if (extras[i]) newItems.push(extras[i]);
+      }
 
       shuffleArray(newItems);
       setAvailableItems(newItems);
     },
-    [playerState.weapons.length],
+    [calculatePrice],
   );
 
   const handleBuy = (itemKey: string, price: number): void => {
@@ -149,6 +165,13 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
             Fala {waveNumber} | Bronie: {playerState.weapons.length}/{playerState.maxWeapons} | Przedmioty:{' '}
             {playerState.items?.length ?? 0} | <span style={{ color: '#ffd700' }}>💰 {playerState.gold}</span>
           </small>
+          <button
+            class={`reroll-inline-btn ${playerState.gold < rerollPrice ? 'disabled' : ''}`}
+            onClick={playerState.gold >= rerollPrice ? handleReroll : undefined}
+            disabled={playerState.gold < rerollPrice}
+          >
+            🎲 Losuj (💰 {rerollPrice})
+          </button>
         </div>
 
         {/* Items */}
@@ -197,17 +220,6 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
             />
           );
         })}
-
-        {/* Reroll button */}
-        <div
-          class={`shop-item reroll-btn ${playerState.gold < rerollPrice ? 'disabled' : ''}`}
-          onClick={playerState.gold >= rerollPrice ? handleReroll : undefined}
-        >
-          <div style={{ fontSize: '24px' }}>🎲</div>
-          <h3>Losuj</h3>
-          <p>Nowe przedmioty</p>
-          <div class="price">💰 {rerollPrice}</div>
-        </div>
       </div>
 
       <button id="start-wave-btn" onClick={handleStartWave}>

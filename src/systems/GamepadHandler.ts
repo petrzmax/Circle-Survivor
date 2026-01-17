@@ -60,12 +60,22 @@ export class GamepadHandler {
   /** Cached gamepad reference (updated each poll) */
   private currentGamepad: Gamepad | null = null;
 
+  /** Bound event handlers (for proper cleanup) */
+  private boundOnConnect: (e: GamepadEvent) => void;
+  private boundOnDisconnect: (e: GamepadEvent) => void;
+
+  public constructor() {
+    // Bind event handlers once in constructor
+    this.boundOnConnect = this.onConnect.bind(this);
+    this.boundOnDisconnect = this.onDisconnect.bind(this);
+  }
+
   /**
    * Initialize gamepad event listeners
    */
   public setup(): void {
-    window.addEventListener('gamepadconnected', this.onConnect.bind(this));
-    window.addEventListener('gamepaddisconnected', this.onDisconnect.bind(this));
+    window.addEventListener('gamepadconnected', this.boundOnConnect);
+    window.addEventListener('gamepaddisconnected', this.boundOnDisconnect);
 
     // Check for already-connected gamepads (Safari workaround)
     this.pollForNewGamepads();
@@ -230,7 +240,7 @@ export class GamepadHandler {
    * Cleanup event listeners
    */
   public destroy(): void {
-    window.removeEventListener('gamepadconnected', this.onConnect.bind(this));
-    window.removeEventListener('gamepaddisconnected', this.onDisconnect.bind(this));
+    window.removeEventListener('gamepadconnected', this.boundOnConnect);
+    window.removeEventListener('gamepaddisconnected', this.boundOnDisconnect);
   }
 }

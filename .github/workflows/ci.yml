@@ -4,7 +4,7 @@ on:
   push:
     branches: [develop]
   pull_request:
-    branches: [develop]
+    branches: [develop, master] # Run CI on PRs to master (release PRs)
 
 jobs:
   build-and-test:

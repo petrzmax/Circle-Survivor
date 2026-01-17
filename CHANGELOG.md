@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.1](https://github.com/petrzmax/Circle-Survivor/compare/v1.7.0...v1.7.1) (2026-01-17)
+
+
+### 🐛 Bug Fixes
+
+* build error ([b001bf3](https://github.com/petrzmax/Circle-Survivor/commit/b001bf3c73745faee8cae677278426c57eab4c56))
+
+
+### 📦 Other Changes
+
+* **ci:** update CI configuration to run on pull requests to master ([5a67396](https://github.com/petrzmax/Circle-Survivor/commit/5a67396c760109784365c0669efeffaa75a388a5))
+
 ## [1.7.0](https://github.com/petrzmax/Circle-Survivor/compare/v1.6.0...v1.7.0) (2026-01-17)
 
 

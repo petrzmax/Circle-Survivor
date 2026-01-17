@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.3](https://github.com/petrzmax/Circle-Survivor/compare/v1.7.2...v1.7.3) (2026-01-17)
+
+
+### 🐛 Bug Fixes
+
+* add checkout step for repository before creating release PR ([4375ca7](https://github.com/petrzmax/Circle-Survivor/commit/4375ca7dfeb94e2d19b810c9be9c1568f4b033df))
+
 ## [1.7.2](https://github.com/petrzmax/Circle-Survivor/compare/v1.7.1...v1.7.2) (2026-01-17)
 
 

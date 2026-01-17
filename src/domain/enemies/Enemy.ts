@@ -1,71 +1,28 @@
-/**
- * Enemy entity class.
- * Represents all enemy types including basic enemies and bosses.
- */
-
-import { AttackPattern, ENEMY_TYPES, EnemyConfig, GAME_BALANCE, generateBossName } from '@/config';
+import { GAME_BALANCE } from '@/config';
+import { Entity } from '@/entities';
 import { IHealth } from '@/types/components';
 import { EnemyType } from '@/types/enums';
 import { clamp, randomElement, Vector2 } from '@/utils';
 import { distance, TWO_PI } from '@/utils/math';
-import { Entity } from './Entity';
+import { ENEMY_TYPES } from './config';
+import { generateBossName } from './name';
+import {
+  AttackPattern,
+  AttackResult,
+  EnemyBulletData,
+  EnemyConfig,
+  EnemyEntityConfig,
+} from './type';
 
 /**
- * Attack result types
- */
-export interface BulletAttackResult {
-  type: 'bullets';
-  bullets: EnemyBulletData[];
-}
-
-export interface ShockwaveAttackResult {
-  type: 'shockwave';
-  x: number;
-  y: number;
-  radius: number;
-  damage: number;
-  color: string;
-}
-
-export type AttackResult = BulletAttackResult | ShockwaveAttackResult | null;
-
-/**
- * Enemy bullet data (to be created by weapon system)
- */
-export interface EnemyBulletData {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  damage: number;
-  color: string;
-}
-
-/**
- * Enemy configuration for constructor
- */
-export interface EnemyEntityConfig {
-  position: Vector2;
-  type: EnemyType;
-  /** Scale multiplier for split enemies */
-  scale?: number;
-}
-
-/**
- * Enemy entity
- * Uses config from ENEMY_TYPES for stats.
+ * Enemy entity class.
+ * Represents all enemy types including basic enemies and bosses.
  */
 export class Enemy extends Entity implements IHealth {
   /** Enemy type */
   public readonly type: EnemyType;
-
-  /** Type configuration reference */
   public readonly config: EnemyConfig;
-
-  /** Enemy color */
   public color: string;
-
-  /** Movement speed */
   public speed: number;
 
   // ============ Health Component ============
@@ -73,11 +30,7 @@ export class Enemy extends Entity implements IHealth {
   public maxHp: number;
 
   // ============ Rewards ============
-
-  /** XP value when killed */
   public xpValue: number;
-
-  /** Gold value when killed */
   public goldValue: number;
 
   /** Contact damage */

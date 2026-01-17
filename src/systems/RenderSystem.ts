@@ -1,8 +1,13 @@
 import { EntityManager } from '@/managers';
-import { renderDeployable, renderPickup, renderPlayer, renderProjectile } from '@/rendering';
+import {
+  renderDeployable,
+  renderPickup,
+  renderPlayer,
+  renderProjectile,
+  renderWeapons,
+} from '@/rendering';
 import { renderBackground } from '@/rendering/BackgroundRenderer';
 import { renderEnemy } from '@/rendering/EnemyRenderer';
-import { renderWeapons } from '.';
 
 export class RenderSystem {
   private entityManager: EntityManager;
@@ -23,10 +28,8 @@ export class RenderSystem {
 
   private renderPlayer(ctx: CanvasRenderingContext2D, currentTime: number): void {
     const player = this.entityManager.getPlayer();
-    if (player) {
-      renderPlayer(ctx, player, currentTime);
-      renderWeapons(ctx, player);
-    }
+    renderPlayer(ctx, player, currentTime);
+    renderWeapons(ctx, player);
   }
 
   private renderEnemies(ctx: CanvasRenderingContext2D): void {

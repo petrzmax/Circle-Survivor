@@ -111,7 +111,6 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
     this.lifetime -= deltaTime;
 
     // Up-down animation (only when not being collected)
-    // TODO is it possible to animate it with css?
     if (!this.isAttracted) {
       const time = (Date.now() - this.spawnTime) / 1000;
       this.position.y = this.baseY + Math.sin(time * 3 + this.animationOffset) * 1.5;

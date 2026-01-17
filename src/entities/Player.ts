@@ -4,7 +4,7 @@
  */
 
 import { CHARACTER_TYPES, CharacterConfig, GAME_BALANCE, WEAPON_TYPES } from '@/config';
-import type { WeaponInstance } from '@/core/Game';
+import type { WeaponInstance } from '@/domain/weapons/type';
 import { IHealth } from '@/types/components';
 import { CharacterType, WeaponType } from '@/types/enums';
 import { clamp, Vector2 } from '@/utils';
@@ -49,13 +49,18 @@ export interface PlayerStats {
 }
 
 /**
- * Input state interface
+ * Input state interface.
+ * Digital booleans for keyboard, optional analog for gamepad.
  */
 export interface InputState {
   up: boolean;
   down: boolean;
   left: boolean;
   right: boolean;
+
+  // Analog input (-1 to 1) - optional, provided by gamepad
+  analogX?: number;
+  analogY?: number;
 }
 
 /**
@@ -115,7 +120,7 @@ export class Player extends Entity implements IHealth {
   // Utility
   public luck: number = 0;
   public xpMultiplier: number = 1;
-  public goldMultiplier: number;
+  public goldMultiplier: number = 1;
   public dodge: number = 0;
   public thorns: number = 0;
   public regen: number = 0;
@@ -262,15 +267,23 @@ export class Player extends Entity implements IHealth {
     let vx = 0;
     let vy = 0;
 
-    if (input.up) vy = -1;
-    if (input.down) vy = 1;
-    if (input.left) vx = -1;
-    if (input.right) vx = 1;
+    // Prefer analog input if available (gamepad)
+    if (input.analogX !== undefined && input.analogY !== undefined) {
+      // Analog stick provides normalized direction with magnitude
+      vx = input.analogX;
+      vy = input.analogY;
+    } else {
+      // Digital input (keyboard)
+      if (input.up) vy = -1;
+      if (input.down) vy = 1;
+      if (input.left) vx = -1;
+      if (input.right) vx = 1;
 
-    // Normalize diagonal movement
-    if (vx !== 0 && vy !== 0) {
-      vx *= 0.707;
-      vy *= 0.707;
+      // Normalize diagonal movement for digital input
+      if (vx !== 0 && vy !== 0) {
+        vx *= 0.707;
+        vy *= 0.707;
+      }
     }
 
     // Apply movement

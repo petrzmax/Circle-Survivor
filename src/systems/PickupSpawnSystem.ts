@@ -1,6 +1,6 @@
 import { GAME_BALANCE } from '@/config';
 import { EventBus } from '@/core';
-import { Enemy } from '@/entities';
+import { Enemy } from '@/domain/enemies';
 import { createGoldPickup, createHealthPickup } from '@/factories';
 import { EntityManager } from '@/managers';
 import { randomChance, randomInt, randomPointInCircle, vectorFromAngle } from '@/utils';
@@ -42,9 +42,7 @@ export class PickupSpawnSystem {
   }
 
   private spawnHealthPickup(enemy: Enemy): void {
-    // TODO pass through event when doing multiplayer
     const player = this.entityManager.getPlayer();
-    if (!player) throw new Error('No player entity found in PickupSpawnSystem.spawnHealthPickup');
 
     // Chance for health drop (base + luck bonus)
     const healthDropChance =

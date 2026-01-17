@@ -5,7 +5,7 @@
 
 import { GAME_BALANCE } from '@/config/balance.config';
 import { EventBus } from '@/core/EventBus';
-import { Enemy } from '@/entities/Enemy';
+import { Enemy } from '@/domain/enemies';
 import { EnemyType } from '@/types/enums';
 import { CanvasBounds, getSpawnPoint } from '@/utils/random';
 

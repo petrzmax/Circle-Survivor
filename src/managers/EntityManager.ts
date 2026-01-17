@@ -5,8 +5,8 @@
  * Future: Object pooling can be added here to reduce GC pressure.
  */
 
+import { Enemy } from '@/domain/enemies';
 import { Deployable } from '@/entities/Deployable';
-import { Enemy } from '@/entities/Enemy';
 import { Entity } from '@/entities/Entity';
 import { Pickup } from '@/entities/Pickup';
 import { Player } from '@/entities/Player';
@@ -58,7 +58,8 @@ export class EntityManager {
   /**
    * Get the current player
    */
-  public getPlayer(): Player | null {
+  public getPlayer(): Player {
+    if (!this.player) throw new Error('No player entity found!');
     return this.player;
   }
 

@@ -5,12 +5,10 @@
 
 import { CharacterType, WeaponType } from '@/types/enums';
 
-/**
- * Character configuration interface
- */
 export interface CharacterConfig {
   name: string;
   description: string;
+  emoji: string;
   color: string;
   maxHp: number;
   speed: number;
@@ -23,6 +21,7 @@ export const CHARACTER_TYPES: Record<CharacterType, CharacterConfig> = {
   [CharacterType.WYPALENIEC]: {
     name: 'Wypaleniec',
     description: 'Były pracownik korpo. Wypalony, ale wściekły.',
+    emoji: '🔥',
     color: '#ff6600',
     maxHp: 80,
     speed: 3.2, // -20%
@@ -33,6 +32,7 @@ export const CHARACTER_TYPES: Record<CharacterType, CharacterConfig> = {
   [CharacterType.CWANIAK]: {
     name: 'Cwaniak',
     description: 'Zawsze znajdzie lukę w systemie.',
+    emoji: '😎',
     color: '#00ff88',
     maxHp: 70,
     speed: 4.8, // +20%
@@ -43,6 +43,7 @@ export const CHARACTER_TYPES: Record<CharacterType, CharacterConfig> = {
   [CharacterType.NORMIK]: {
     name: 'Normik',
     description: 'Przeciętny Kowalski. Zbalansowany we wszystkim.',
+    emoji: '🙂',
     color: '#4a9eff',
     maxHp: 100,
     speed: 4,

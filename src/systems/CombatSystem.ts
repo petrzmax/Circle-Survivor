@@ -3,9 +3,9 @@
  * Processes collision results and applies damage, knockback, etc.
  */
 import { GAME_BALANCE } from '@/config/balance.config';
-import { WEAPON_TYPES } from '@/config/weapons.config';
 import { EventBus } from '@/core/EventBus';
-import { Enemy } from '@/entities/Enemy';
+import { Enemy } from '@/domain/enemies';
+import { WEAPON_TYPES } from '@/domain/weapons/config';
 import { Pickup } from '@/entities/Pickup';
 import { Projectile } from '@/entities/Projectile';
 import { EntityManager } from '@/managers/EntityManager';
@@ -13,7 +13,6 @@ import { EnemyType, PickupType, ProjectileType, VisualEffect } from '@/types/enu
 import { distance, TWO_PI, Vector2 } from '@/utils/math';
 import { randomChance, randomInt, randomRange } from '@/utils/random';
 import { CollisionResult } from './CollisionSystem';
-import { EffectsState, EffectsSystem } from './EffectsSystem';
 
 /**
  * Explosion event data
@@ -37,8 +36,6 @@ export interface ExplosionEvent {
  */
 // TODO all these are stored in Player, remove
 export interface CombatRuntimeConfig {
-  /** Player gold multiplier */
-  goldMultiplier: number;
   /** Player damage multiplier */
   damageMultiplier: number;
   /** Player explosion radius multiplier */
@@ -62,22 +59,19 @@ export interface CombatRuntimeConfig {
  */
 export class CombatSystem {
   private entityManager: EntityManager;
-  private effects: EffectsState;
 
   /** Pending explosions to process */
   private pendingExplosions: ExplosionEvent[] = [];
 
   /** Runtime config - updated each frame from player stats */
   private runtimeConfig: CombatRuntimeConfig = {
-    goldMultiplier: 1,
     damageMultiplier: 1,
     explosionRadius: 1,
     knockback: 0,
   };
 
-  public constructor(entityManager: EntityManager, effects: EffectsState) {
+  public constructor(entityManager: EntityManager) {
     this.entityManager = entityManager;
-    this.effects = effects;
   }
 
   /**
@@ -85,8 +79,6 @@ export class CombatSystem {
    * Call this before processCollisions each frame
    */
   public updateRuntimeConfig(config: Partial<CombatRuntimeConfig>): void {
-    if (config.goldMultiplier !== undefined)
-      this.runtimeConfig.goldMultiplier = config.goldMultiplier;
     if (config.damageMultiplier !== undefined)
       this.runtimeConfig.damageMultiplier = config.damageMultiplier;
     if (config.explosionRadius !== undefined)
@@ -99,7 +91,6 @@ export class CombatSystem {
    */
   public processCollisions(collisions: CollisionResult, currentTime: number): void {
     const player = this.entityManager.getPlayer();
-    if (!player) return;
 
     // Process player-enemy collisions
     for (const enemy of collisions.playerEnemyCollisions) {
@@ -264,7 +255,7 @@ export class CombatSystem {
    */
   private processExplosions(currentTime: number): void {
     const player = this.entityManager.getPlayer();
-    const damageMultiplier = player?.damageMultiplier ?? 1;
+    const damageMultiplier = player.damageMultiplier;
 
     while (this.pendingExplosions.length > 0) {
       const explosion = this.pendingExplosions.shift();
@@ -285,25 +276,10 @@ export class CombatSystem {
     const { position, radius, damage, visualEffect, isBanana, isMini, isEnemyExplosion } =
       explosion;
 
-    // Determine explosion type flags
-    const isNuke = visualEffect === VisualEffect.NUKE;
-    const isHolyGrenade = visualEffect === VisualEffect.HOLY;
-    const isBananaEffect = visualEffect === VisualEffect.BANANA;
-
-    // Create visual effect
-    EffectsSystem.createExplosion(
-      this.effects,
-      position,
-      radius,
-      isNuke,
-      isHolyGrenade,
-      isBananaEffect,
-    );
-
     // Damage player if this is an enemy explosion
     if (isEnemyExplosion) {
       const player = this.entityManager.getPlayer();
-      if (player?.isActive) {
+      if (player.isActive) {
         const distToPlayer = distance(player.position, position);
 
         if (distToPlayer <= radius) {
@@ -347,8 +323,7 @@ export class CombatSystem {
       position,
       radius,
       damage,
-      visualEffect: isNuke ? 'nuke' : isHolyGrenade ? 'holy' : 'standard',
-      isBanana,
+      visualEffect,
     });
   }
 
@@ -365,41 +340,28 @@ export class CombatSystem {
   }
 
   /**
-   * Handle enemy death - spawn pickups, effects, emit events
+   * Handle enemy death - spawn pickups, emit events
    */
   private handleEnemyDeath(
     enemy: Enemy,
     killer: 'player' | 'explosion',
     currentTime: number,
   ): void {
-    // Create death effect
-    EffectsSystem.createDeathEffect(this.effects, {
-      position: enemy.position,
-      color: enemy.color,
-      isBoss: enemy.isBoss,
-      type: enemy.type,
-    });
-
-    // Award XP via event
-    EventBus.emit('xpAwarded', {
-      amount: enemy.xpValue,
-      source: enemy,
-    });
-
+    // TODO, reconsider, maybe some special boss effect, or data in enemy dead event
     // Boss death - special explosion sound via event
     if (enemy.isBoss) {
       EventBus.emit('explosionTriggered', {
         position: enemy.position,
         radius: 0,
         damage: 0,
-        visualEffect: 'nuke',
+        visualEffect: VisualEffect.NUKE,
       });
     }
 
     // Handle explodeOnDeath - process immediately, not queued
     if (enemy.explodeOnDeath && enemy.explosionRadius > 0) {
       const player = this.entityManager.getPlayer();
-      const damageMultiplier = player?.damageMultiplier ?? 1;
+      const damageMultiplier = player.damageMultiplier;
       this.processExplosion(
         {
           position: enemy.position,
@@ -420,13 +382,11 @@ export class CombatSystem {
       this.spawnSplitEnemies(enemy);
     }
 
-    // Emit death event (audio plays via EventBus listener)
     EventBus.emit('enemyDeath', {
       enemy,
       killer,
     });
 
-    // Remove from manager
     enemy.destroy();
   }
 
@@ -454,25 +414,24 @@ export class CombatSystem {
     }
   }
 
-  /**
-   * Process pickup collection
-   * Applies goldMultiplier for gold pickups and heals player for health pickups
-   */
   private processPickupCollection(pickup: Pickup): void {
-    const value = pickup.collect();
-    if (pickup.type === PickupType.GOLD) {
-      // TODO should only pickup, multiply gold in reward system
-      // Apply goldMultiplier from runtimeConfig
-      const goldAmount = Math.floor(value * this.runtimeConfig.goldMultiplier);
-      EventBus.emit('goldCollected', {
-        amount: goldAmount,
-        position: pickup.position,
-      });
-    } else if (pickup.type === PickupType.HEALTH) {
-      EventBus.emit('healthCollected', {
-        amount: value,
-        position: pickup.position,
-      });
+    const amount = pickup.collect();
+
+    switch (pickup.type) {
+      case PickupType.GOLD:
+        EventBus.emit('goldCollected', {
+          amount,
+          position: pickup.position,
+        });
+        break;
+      case PickupType.HEALTH:
+        EventBus.emit('healthCollected', {
+          amount,
+          position: pickup.position,
+        });
+        break;
+      default:
+        throw new Error('Not supported pickup type');
     }
   }
 
@@ -525,8 +484,8 @@ export class CombatSystem {
   private spawnMiniBananas(x: number, y: number, count: number, damageMultiplier: number): void {
     const config = WEAPON_TYPES.minibanana;
     const player = this.entityManager.getPlayer();
-    const explosionRadiusMultiplier = player?.explosionRadius ?? 1;
-    const playerId = player?.id ?? -1;
+    const explosionRadiusMultiplier = player.explosionRadius;
+    const playerId = player.id;
 
     for (let i = 0; i < count; i++) {
       const angle = (TWO_PI / count) * i + randomRange(-0.25, 0.25);

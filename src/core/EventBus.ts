@@ -3,8 +3,9 @@
  * Enables loose coupling between systems through events.
  */
 
-import { Enemy, Pickup, Player, Projectile } from '@/entities';
-import { WeaponType } from '@/types/enums';
+import { Enemy } from '@/domain/enemies';
+import { Pickup, Player, Projectile } from '@/entities';
+import { CharacterType, GameState, VisualEffect, WeaponType } from '@/types/enums';
 import { Vector2 } from '@/utils';
 
 /**
@@ -18,7 +19,6 @@ export interface GameEvents {
   playerDeath: { player: Player; killedBy: Enemy | null };
   playerDodged: void;
   thornsTriggered: void;
-  xpAwarded: { amount: number; source: Enemy };
 
   // Weapon events
   weaponFired: { weaponType: WeaponType };
@@ -30,8 +30,7 @@ export interface GameEvents {
     position: Vector2;
     radius: number;
     damage: number;
-    visualEffect: string;
-    isBanana?: boolean;
+    visualEffect: VisualEffect;
   };
 
   // Pickup events
@@ -47,9 +46,24 @@ export interface GameEvents {
   bossDefeated: { enemy: Enemy; bossName: string };
 
   // Shop events
-  shopOpened: { gold: number };
+  shopOpened: {
+    gold: number;
+    waveNumber: number;
+    playerState: {
+      gold: number;
+      weapons: Array<{ type: string; name: string; level: number }>;
+      maxWeapons: number;
+      items?: string[];
+    };
+  };
   shopClosed: void;
   itemPurchased: { itemId: string; cost: number };
+  shopPlayerUpdated: {
+    gold: number;
+    weapons: Array<{ type: string; name: string; level: number }>;
+    maxWeapons: number;
+    items: string[];
+  };
   weaponPurchased: { weaponType: string; cost: number };
   shopError: void;
 
@@ -60,10 +74,36 @@ export interface GameEvents {
   gameOver: { score: number; wave: number; time: number };
 
   // UI events
-  scoreChanged: { score: number; delta: number };
-  goldChanged: { gold: number; delta: number };
-  healthChanged: { current: number; max: number };
   countdownTick: { seconds: number };
+  audioToggleRequested: void;
+  audioStateChanged: { enabled: boolean };
+  // TODO use it as trigger only, data get from systems, and managers or remove part of these as it will be on different screen.
+  hudUpdate: {
+    hp: number;
+    maxHp: number;
+    gold: number;
+    xp: number;
+    armor: number;
+    damageMultiplier: number;
+    critChance: number;
+    dodge: number;
+    regen: number;
+    waveNumber: number;
+    timeRemaining: number;
+    isWaveActive: boolean;
+  };
+
+  // State transition requests (triggers for StateManager)
+  characterSelected: { characterType: CharacterType };
+  startGameRequested: void;
+  waveCleared: void;
+  pauseRequested: void;
+  resumeRequested: void;
+  quitToMenuRequested: void;
+  restartRequested: void;
+
+  // State change notification (emitted by StateManager)
+  stateEntered: { state: GameState; from: GameState };
 }
 
 /**

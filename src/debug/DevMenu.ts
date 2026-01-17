@@ -3,11 +3,12 @@
  * Only available in development mode (import.meta.env.DEV).
  */
 
-import { ENEMY_TYPES } from '@/config/enemies.config';
 import { SHOP_ITEMS } from '@/config/shop.config';
-import { WEAPON_TYPES } from '@/config/weapons.config';
 import { EventBus } from '@/core/EventBus';
-import { EnemyType, WeaponType } from '@/types/enums';
+import { ENEMY_TYPES } from '@/domain/enemies/config';
+import { WEAPON_TYPES } from '@/domain/weapons/config';
+import { StateManager } from '@/managers/StateManager';
+import { EnemyType, GameState, WeaponType } from '@/types/enums';
 import { getEnemyDisplayName, getSpawnPoint } from '@/utils';
 import './devMenuStyles.css';
 import devMenuTemplate from './devMenuTemplate.html?raw';
@@ -17,16 +18,12 @@ import devMenuTemplate from './devMenuTemplate.html?raw';
  * This decouples DevMenu from Game implementation details
  */
 export interface DevMenuDependencies {
-  // State
-  getState: () => string;
+  // State Manager
+  stateManager: StateManager;
   getCanvasSize: () => { width: number; height: number };
 
   // Debug display options
   setShowEnemyCount: (show: boolean) => void;
-
-  // Game control
-  pauseGame: () => void;
-  resumeGame: () => void;
 
   // Wave control
   getCurrentWave: () => number;
@@ -53,7 +50,6 @@ export class DevMenu {
   private container: HTMLElement | null = null;
   private isVisible: boolean = false;
   private deps: DevMenuDependencies;
-  private previousState: string = 'playing';
 
   // Drag state
   private isDragging: boolean = false;
@@ -90,11 +86,11 @@ export class DevMenu {
    * Populate dropdown menus with available options
    */
   private populateDropdowns(): void {
-    // Items dropdown - include both 'item' and 'weaponBonus' types
+    // Items dropdown
     const itemSelect = document.getElementById('dev-item-select') as HTMLSelectElement;
     itemSelect.innerHTML = '';
     for (const [id, item] of Object.entries(SHOP_ITEMS)) {
-      if (item.type === 'item' || item.type === 'weaponBonus') {
+      if (item.type === 'item') {
         const option = document.createElement('option');
         option.value = id;
         option.textContent = `${item.emoji || ''} ${item.name}`;
@@ -292,13 +288,10 @@ export class DevMenu {
     this.isVisible = true;
     this.container?.classList.add('visible');
 
-    // Store current state and pause if playing
-    const currentState = this.deps.getState();
-    if (currentState === 'playing') {
-      this.previousState = 'playing';
-      this.deps.pauseGame();
-    } else {
-      this.previousState = currentState;
+    // Pause if playing (emit event for StateManager)
+    const currentState = this.deps.stateManager.getCurrentState();
+    if (currentState === GameState.PLAYING) {
+      EventBus.emit('pauseRequested', undefined);
     }
 
     // Update wave input to current wave
@@ -322,9 +315,10 @@ export class DevMenu {
     this.isVisible = false;
     this.container?.classList.remove('visible');
 
-    // Resume game if it was playing before
-    if (this.previousState === 'playing') {
-      this.deps.resumeGame();
+    // Resume game if it was paused (emit event for StateManager)
+    const currentState = this.deps.stateManager.getCurrentState();
+    if (currentState === GameState.PAUSED) {
+      EventBus.emit('resumeRequested', undefined);
     }
   }
 

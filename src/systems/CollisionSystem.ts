@@ -3,8 +3,8 @@
  * Emits events when collisions are detected for other systems to handle.
  */
 
+import { Enemy } from '@/domain/enemies';
 import { Deployable } from '@/entities/Deployable';
-import { Enemy } from '@/entities/Enemy';
 import { Pickup } from '@/entities/Pickup';
 import { Projectile } from '@/entities/Projectile';
 import { EntityManager } from '@/managers/EntityManager';
@@ -64,7 +64,7 @@ export class CollisionSystem {
     };
 
     const player = this.entityManager.getPlayer();
-    if (!player?.isActive) {
+    if (!player.isActive) {
       return result;
     }
 
@@ -91,7 +91,6 @@ export class CollisionSystem {
    */
   private checkPlayerEnemyCollisions(): Enemy[] {
     const player = this.entityManager.getPlayer();
-    if (!player) return [];
 
     const collisions: Enemy[] = [];
     const enemies = this.entityManager.getActiveEnemies();
@@ -114,7 +113,6 @@ export class CollisionSystem {
    */
   private checkPlayerProjectileCollisions(): Projectile[] {
     const player = this.entityManager.getPlayer();
-    if (!player) return [];
 
     const collisions: Projectile[] = [];
     const enemyProjectiles = this.entityManager.getEnemyProjectiles();
@@ -169,7 +167,6 @@ export class CollisionSystem {
    */
   private checkPickupCollisions(): Pickup[] {
     const player = this.entityManager.getPlayer();
-    if (!player) return [];
 
     const collisions: Pickup[] = [];
     const pickups = this.entityManager.getActivePickups();
@@ -219,8 +216,6 @@ export class CollisionSystem {
    */
   public updatePickupAttraction(deltaTime: number): void {
     const player = this.entityManager.getPlayer();
-    if (!player) return;
-
     const pickups = this.entityManager.getActivePickups();
     const playerPos = player.getPosition();
 

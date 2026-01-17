@@ -3,23 +3,22 @@
  * Rendering and updating of temporary visual effects.
  */
 
+import { EventBus } from '@/core';
+import { Enemy } from '@/domain/enemies';
 import { renderExplosion } from '@/rendering';
+import { EnemyType, VisualEffect } from '@/types';
 import { distance, randomAngle, randomChance, randomRange } from '@/utils';
 import { TWO_PI, Vector2 } from '@/utils/math';
 
 // ============ Effect Interfaces ============
 
 export interface Explosion {
-  x: number;
-  y: number;
+  position: Vector2;
   radius: number;
   maxRadius: number;
   alpha: number;
   created: number;
-  // TODO refactor to enum or type
-  isNuke: boolean;
-  isHolyGrenade: boolean;
-  isBanana: boolean;
+  visualEffect: VisualEffect;
 }
 
 export interface DeathParticle {
@@ -56,26 +55,42 @@ export interface EffectsState {
   shockwaves: Shockwave[];
 }
 
-/**
- * Creates empty effects state
- */
-export function createEffectsState(): EffectsState {
-  return {
-    explosions: [],
-    deathEffects: [],
-    shockwaves: [],
-  };
-}
-
 // ============ Effects System ============
 
-export const EffectsSystem = {
+export class EffectsSystem {
+  // TODO analyse if these should be in entity manager
+  private effects: EffectsState = this.createEffectsState();
+
+  public constructor() {
+    this.connectToEventBus();
+  }
+
+  private connectToEventBus(): void {
+    EventBus.on('explosionTriggered', (data) => {
+      this.createExplosion(data.position, data.radius, data.visualEffect);
+    });
+
+    EventBus.on('enemyDeath', (data) => {
+      this.createDeathEffect(data.enemy);
+    });
+  }
+
+  /**
+   * Creates empty effects state
+   */
+  private createEffectsState(): EffectsState {
+    return {
+      explosions: [],
+      deathEffects: [],
+      shockwaves: [],
+    };
+  }
+
   /**
    * Update shockwaves (boss attack effect)
    * @returns True if player died from shockwave
    */
-  updateShockwaves(
-    effects: EffectsState,
+  public updateShockwaves(
     player: {
       x: number;
       y: number;
@@ -85,8 +100,8 @@ export const EffectsSystem = {
     currentTime: number,
     onDodge: () => void,
   ): boolean {
-    for (let i = effects.shockwaves.length - 1; i >= 0; i--) {
-      const sw = effects.shockwaves[i]!;
+    for (let i = this.effects.shockwaves.length - 1; i >= 0; i--) {
+      const sw = this.effects.shockwaves[i]!;
       const age = Date.now() - sw.created;
       const duration = 400; // ms
 
@@ -109,38 +124,43 @@ export const EffectsSystem = {
         }
       }
 
-      // Remove finished ones
+      // Remove finished ones (swap-and-pop for O(1) removal)
       if (sw.alpha <= 0) {
-        effects.shockwaves.splice(i, 1);
+        this.effects.shockwaves[i] = this.effects.shockwaves[this.effects.shockwaves.length - 1]!;
+        this.effects.shockwaves.pop();
       }
     }
     return false;
-  },
+  }
 
+  // TODO move to rendering
   /**
    * Render explosions
    */
-  renderExplosions(ctx: CanvasRenderingContext2D, explosions: Explosion[]): void {
+  private renderExplosions(ctx: CanvasRenderingContext2D): void {
+    const explosions = this.effects.explosions;
     for (let i = explosions.length - 1; i >= 0; i--) {
       const exp = explosions[i]!;
       const age = Date.now() - exp.created;
-      const duration = exp.isNuke ? 600 : 300;
+      const duration = exp.visualEffect === VisualEffect.NUKE ? 600 : 300;
       exp.alpha = 1 - age / duration;
 
       if (exp.alpha <= 0) {
-        explosions.splice(i, 1);
+        explosions[i] = explosions[explosions.length - 1]!;
+        explosions.pop();
         continue;
       }
 
       renderExplosion(ctx, exp);
     }
-  },
+  }
 
   /**
    * Render death particle effects
    */
   // TODO optimize - explosins bottleneck
-  renderDeathEffects(ctx: CanvasRenderingContext2D, deathEffects: DeathParticle[]): void {
+  private renderDeathEffects(ctx: CanvasRenderingContext2D): void {
+    const deathEffects = this.effects.deathEffects;
     for (let i = deathEffects.length - 1; i >= 0; i--) {
       const p = deathEffects[i]!;
 
@@ -153,7 +173,8 @@ export const EffectsSystem = {
       p.alpha = p.life;
 
       if (p.life <= 0) {
-        deathEffects.splice(i, 1);
+        deathEffects[i] = deathEffects[deathEffects.length - 1]!;
+        deathEffects.pop();
         continue;
       }
 
@@ -172,12 +193,13 @@ export const EffectsSystem = {
       ctx.fill();
       ctx.restore();
     }
-  },
+  }
 
   /**
    * Render shockwave effects
    */
-  renderShockwaves(ctx: CanvasRenderingContext2D, shockwaves: Shockwave[]): void {
+  private renderShockwaves(ctx: CanvasRenderingContext2D): void {
+    const shockwaves = this.effects.shockwaves;
     for (const sw of shockwaves) {
       if (sw.alpha <= 0) continue;
 
@@ -201,15 +223,12 @@ export const EffectsSystem = {
 
       ctx.restore();
     }
-  },
+  }
 
   /**
    * Create death particle effect for enemy
    */
-  createDeathEffect(
-    effects: EffectsState,
-    enemy: { position: Vector2; color: string; isBoss: boolean; type: string },
-  ): void {
+  public createDeathEffect(enemy: Enemy): void {
     // Particle count depends on enemy type
     let particleCount = 8;
     let particleSize = 4;
@@ -218,10 +237,10 @@ export const EffectsSystem = {
     if (enemy.isBoss) {
       particleCount = 30;
       particleSize = 8;
-    } else if (enemy.type === 'tank' || enemy.type === 'brute') {
+    } else if (enemy.type === EnemyType.TANK || enemy.type === EnemyType.BRUTE) {
       particleCount = 15;
       particleSize = 6;
-    } else if (enemy.type === 'swarm') {
+    } else if (enemy.type === EnemyType.SWARM) {
       particleCount = 5;
       particleSize = 3;
     }
@@ -231,7 +250,7 @@ export const EffectsSystem = {
       const angle = (TWO_PI / particleCount) * i + randomRange(0, 0.5);
       const speed = randomRange(2, 6);
 
-      effects.deathEffects.push({
+      this.effects.deathEffects.push({
         x: enemy.position.x,
         y: enemy.position.y,
         vx: Math.cos(angle) * speed,
@@ -251,7 +270,7 @@ export const EffectsSystem = {
         const angle = randomAngle();
         const speed = randomRange(1, 3);
 
-        effects.deathEffects.push({
+        this.effects.deathEffects.push({
           x: enemy.position.x,
           y: enemy.position.y,
           vx: Math.cos(angle) * speed,
@@ -265,40 +284,33 @@ export const EffectsSystem = {
         });
       }
     }
-  },
+  }
 
   /**
    * Create explosion visual effect
    */
-  createExplosion(
-    effects: EffectsState,
-    position: Vector2,
-    radius: number,
-    isNuke: boolean = false,
-    isHolyGrenade: boolean = false,
-    isBanana: boolean = false,
-  ): void {
-    effects.explosions.push({
-      x: position.x,
-      y: position.y,
+  private createExplosion(position: Vector2, radius: number, visualEffect: VisualEffect): void {
+    this.effects.explosions.push({
+      position,
       radius,
       maxRadius: radius,
       alpha: 1,
       created: Date.now(),
-      isNuke,
-      isHolyGrenade,
-      isBanana,
+      visualEffect,
     });
-  },
+  }
 
   /**
    * Create shockwave effect (boss attack)
    */
-  createShockwave(
-    effects: EffectsState,
-    shockwave: { x: number; y: number; radius: number; damage: number; color?: string },
-  ): void {
-    effects.shockwaves.push({
+  public createShockwave(shockwave: {
+    x: number;
+    y: number;
+    radius: number;
+    damage: number;
+    color?: string;
+  }): void {
+    this.effects.shockwaves.push({
       x: shockwave.x,
       y: shockwave.y,
       maxRadius: shockwave.radius,
@@ -309,15 +321,15 @@ export const EffectsSystem = {
       damageDealt: false,
       alpha: 1,
     });
-  },
+  }
 
   /**
    * Render all effects
    */
-  renderAll(ctx: CanvasRenderingContext2D, effects: EffectsState): void {
+  public renderAll(ctx: CanvasRenderingContext2D): void {
     // TODO move to rendering
-    this.renderExplosions(ctx, effects.explosions);
-    this.renderDeathEffects(ctx, effects.deathEffects);
-    this.renderShockwaves(ctx, effects.shockwaves);
-  },
-};
+    this.renderExplosions(ctx);
+    this.renderDeathEffects(ctx);
+    this.renderShockwaves(ctx);
+  }
+}

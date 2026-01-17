@@ -40,9 +40,9 @@ export enum VisualEffect {
 // ============ GAME STATE ============
 
 /**
- * Game state machine states
+ * Game state machine states.
+ * Managed by StateManager via EventBus events.
  */
-// TODO Use these
 export enum GameState {
   MENU = 'menu',
   PLAYING = 'playing',

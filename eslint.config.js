@@ -6,6 +6,7 @@ export default [
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
   {
+    files: ['src/**/*.ts', 'src/**/*.tsx'],
     languageOptions: {
       parserOptions: {
         projectService: true,
@@ -80,6 +81,17 @@ export default [
     // Disable type-checked rules for config files
     files: ['*.config.js', '*.config.ts', 'vite.config.ts'],
     extends: [tseslint.configs.disableTypeChecked],
+  },
+  {
+    // Allow JSX in .tsx files
+    files: ['src/**/*.tsx'],
+    languageOptions: {
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
   },
   {
     ignores: ['dist/**', 'node_modules/**', 'js/**'],

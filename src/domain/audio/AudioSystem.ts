@@ -6,15 +6,10 @@
  */
 
 import { EventBus } from '@/core/EventBus';
-import { SOUND_DEFINITIONS, SoundStep, OscillatorType } from '@/config/sounds.config';
+import { SOUND_DEFINITIONS } from '@/domain/audio/config';
+import { VisualEffect } from '@/types';
 import { randomRange } from '@/utils';
-
-/**
- * Extend Window interface to include webkit prefixed AudioContext
- */
-interface WindowWithWebkit extends Window {
-  webkitAudioContext?: typeof AudioContext;
-}
+import { SoundStep, WindowWithWebkit } from './type';
 
 /**
  * Handles all game audio using Web Audio API.
@@ -185,6 +180,13 @@ export class AudioSystem {
    * All sounds are triggered through events - no direct method calls needed.
    */
   private connectToEventBus(): void {
+    // TODO - refactor, not cool two events
+    // Audio toggle from UI
+    EventBus.on('audioToggleRequested', () => {
+      this.toggle();
+      EventBus.emit('audioStateChanged', { enabled: this.enabled });
+    });
+
     // Pickups
     EventBus.on('goldCollected', () => {
       this.play('collectGold');
@@ -246,12 +248,16 @@ export class AudioSystem {
 
     // Explosions
     EventBus.on('explosionTriggered', (data) => {
-      if (data.visualEffect === 'nuke') {
-        this.play('nukeExplosion');
-      } else if (data.visualEffect === 'holy') {
-        this.play('holyExplosion');
-      } else {
-        this.play('explosion');
+      // TODO change enum string values to match sound names
+      switch (data.visualEffect) {
+        case VisualEffect.NUKE:
+          this.play('nukeExplosion');
+          break;
+        case VisualEffect.HOLY:
+          this.play('holyExplosion');
+          break;
+        default:
+          this.play('explosion');
       }
     });
   }

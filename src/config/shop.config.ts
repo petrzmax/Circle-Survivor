@@ -65,16 +65,7 @@ export interface StatShopItem extends BaseShopItem {
   effect: ItemEffect;
 }
 
-/**
- * Weapon bonus shop item (like multishot)
- */
-export interface WeaponBonusShopItem extends BaseShopItem {
-  type: 'weaponBonus';
-  bonusType: string;
-  bonusValue: number;
-}
-
-export type ShopItem = WeaponShopItem | StatShopItem | WeaponBonusShopItem;
+export type ShopItem = WeaponShopItem | StatShopItem;
 
 /**
  * All shop items configuration

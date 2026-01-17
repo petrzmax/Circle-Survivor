@@ -1,10 +1,5 @@
-import { EntityManager } from '@/managers';
-// TODO, implement, extract from CombatSystem.ts
-// Listen to pickupCollected events
-// Apply gold multipliers
-// Update player gold/health
-
 import { EventBus } from '@/core';
+import { EntityManager } from '@/managers';
 
 export class RewardSystem {
   private entityManager: EntityManager;
@@ -16,25 +11,22 @@ export class RewardSystem {
 
   private reduceGold(cost: number): void {
     const player = this.entityManager.getPlayer();
-    if (!player) throw new Error('No player entity found in RewardSystem.decreaseGold');
     player.gold -= cost;
   }
 
   private addGold(amount: number): void {
     const player = this.entityManager.getPlayer();
-    if (!player) throw new Error('No player entity found in RewardSystem.applyReward');
-    player.gold += amount;
+    const goldAmount = Math.floor(amount * player.goldMultiplier);
+    player.gold += goldAmount;
   }
 
   private addXp(amount: number): void {
     const player = this.entityManager.getPlayer();
-    if (!player) throw new Error('No player entity found in RewardSystem.addXp');
     player.xp += amount;
   }
 
   private addHealth(amount: number): void {
     const player = this.entityManager.getPlayer();
-    if (!player) throw new Error('No player entity found in RewardSystem.addHealth');
     player.heal(amount);
   }
 
@@ -47,8 +39,8 @@ export class RewardSystem {
       this.addGold(amount);
     });
 
-    EventBus.on('xpAwarded', ({ amount }) => {
-      this.addXp(amount);
+    EventBus.on('enemyDeath', ({ enemy }) => {
+      this.addXp(enemy.xpValue);
     });
 
     EventBus.on('healthCollected', ({ amount }) => {

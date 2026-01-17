@@ -1,35 +1,28 @@
-import { PickupSpawnSystem } from './../systems/PickupSpawnSystem';
-import { RenderSystem } from './../systems/RenderSystem';
-import { RewardSystem } from './../systems/RewardSystem';
-/**
- * Main Game Controller
- */
 import { GAME_BALANCE } from '@/config/balance.config';
 import { CHARACTER_TYPES } from '@/config/characters.config';
-import { WeaponConfig } from '@/config/weapons.config';
 import { EventBus } from '@/core/EventBus';
+import { AudioSystem } from '@/domain/audio/AudioSystem';
+import { Enemy } from '@/domain/enemies';
+import { WeaponConfig, WeaponInstance } from '@/domain/weapons/type';
 import { Deployable, DeployableConfig } from '@/entities/Deployable';
-import { Enemy } from '@/entities/Enemy';
-import { InputState, Player } from '@/entities/Player';
+import { Player } from '@/entities/Player';
 import { Projectile } from '@/entities/Projectile';
-import { EntityManager } from '@/managers/EntityManager';
-import { AudioSystem } from '@/systems/AudioSystem';
+import { EntityManager, StateManager } from '@/managers';
 import { CollisionSystem } from '@/systems/CollisionSystem';
 import { CombatSystem } from '@/systems/CombatSystem';
-import { createEffectsState, EffectsState, EffectsSystem } from '@/systems/EffectsSystem';
+import { EffectsSystem } from '@/systems/EffectsSystem';
 import { HUD } from '@/systems/HUD';
-import { InputHandler } from '@/systems/InputHandler';
+import { InputSystem } from '@/systems/InputSystem';
 import { WaveManager } from '@/systems/WaveManager';
 import {
   CharacterType,
   DeployableType,
   EnemyType,
+  GameState,
   ProjectileType,
   VisualEffect,
   WeaponType,
 } from '@/types/enums';
-import { Leaderboard } from '@/ui/Leaderboard';
-import { LeaderboardUI } from '@/ui/LeaderboardUI';
 import { Shop, ShopPlayer, ShopWeapon } from '@/ui/Shop';
 import {
   copyVector,
@@ -39,31 +32,17 @@ import {
   randomRange,
   vectorFromAngle,
 } from '@/utils';
-
-// ============ Types ============
-export type GameState = 'start' | 'playing' | 'shop' | 'gameover' | 'paused';
-
-// TODO move to separate file
-// Weapon runtime instance (tracks cooldowns, levels)
-export interface WeaponInstance {
-  type: WeaponType;
-  config: WeaponConfig;
-  level: number;
-  lastFireTime: number;
-  multishot: number;
-  name: string;
-  fireOffset: number; // Staggered shooting offset
-}
-
-// ============ Game Class ============
+import { PickupSpawnSystem } from './../systems/PickupSpawnSystem';
+import { RenderSystem } from './../systems/RenderSystem';
+import { RewardSystem } from './../systems/RewardSystem';
 
 export class Game {
   // Canvas
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
 
-  // Game state
-  private state: GameState = 'start';
+  // State Manager (FSM)
+  private stateManager: StateManager;
   private lastTime: number = 0;
   private selectedCharacter: CharacterType | null = null;
 
@@ -71,12 +50,10 @@ export class Game {
   private entityManager: EntityManager;
 
   // Systems
-  private audio: AudioSystem;
   private collisionSystem: CollisionSystem;
   private combatSystem!: CombatSystem;
-  private inputHandler: InputHandler;
-  private leaderboard: Leaderboard;
-  private leaderboardUI: LeaderboardUI;
+  private effectsSystem: EffectsSystem;
+  private inputSystem: InputSystem;
   // @ts-expect-error - initialized in constructor
   private pickupSpawnSystem: PickupSpawnSystem;
   private renderSystem: RenderSystem;
@@ -84,9 +61,6 @@ export class Game {
   private rewardSystem: RewardSystem;
   private shop: Shop;
   private waveManager: WaveManager;
-
-  // Effects
-  private effects: EffectsState;
 
   // Regeneration tracking
   private lastRegenTime: number = 0;
@@ -111,66 +85,26 @@ export class Game {
     this.canvas.width = 900;
     this.canvas.height = 700;
 
+    // Initialize StateManager (FSM) first
+    this.stateManager = new StateManager();
+
     // Initialize systems
     this.entityManager = new EntityManager();
     this.collisionSystem = new CollisionSystem(this.entityManager);
+    this.effectsSystem = new EffectsSystem();
     this.renderSystem = new RenderSystem(this.entityManager);
     this.waveManager = new WaveManager();
     this.shop = new Shop();
-    this.audio = new AudioSystem();
-    this.leaderboard = new Leaderboard();
-    this.leaderboardUI = new LeaderboardUI(this.leaderboard);
+    // AudioSystem initializes itself via EventBus - no reference needed
+    new AudioSystem();
     this.pickupSpawnSystem = new PickupSpawnSystem(this.entityManager);
     this.rewardSystem = new RewardSystem(this.entityManager);
-    this.inputHandler = new InputHandler({
-      onPause: () => {
-        this.pauseGame();
-      },
-      onResume: () => {
-        this.resumeGame();
-      },
-      onSelectCharacter: (type: string) => {
-        this.selectCharacter(type as CharacterType);
-      },
-      onRestart: () => {
-        this.showCharacterSelect();
-      },
-      onStartWave: () => {
-        this.startNextWave();
-      },
-      onQuitToMenu: () => {
-        this.quitToMenu();
-      },
-      onToggleSound: () => {
-        this.toggleSound();
-      },
-      onSubmitScore: () => {
-        void this.submitScore();
-      },
-      onSwitchLeaderboardTab: (tab: string) => {
-        this.switchLeaderboardTab(tab);
-      },
-      onOpenMenuLeaderboard: () => {
-        void this.openMenuLeaderboard();
-      },
-      onCloseMenuLeaderboard: () => {
-        this.closeMenuLeaderboard();
-      },
-      onSwitchMenuLeaderboardTab: (tab: string) => {
-        this.switchMenuLeaderboardTab(tab);
-      },
-      getState: () => this.state,
-    });
-    this.effects = createEffectsState();
+    this.inputSystem = new InputSystem(this.stateManager);
 
-    // Initialize CombatSystem (requires effects)
-    this.combatSystem = new CombatSystem(this.entityManager, this.effects);
+    this.combatSystem = new CombatSystem(this.entityManager);
 
-    // Setup EventBus listeners for combat events
-    this.setupCombatEventListeners();
-
-    // Setup input handler
-    this.inputHandler.setup();
+    // Setup state change listeners
+    this.setupStateListeners();
 
     // Setup shop callbacks
     this.shop.setCallbacks({
@@ -193,26 +127,170 @@ export class Game {
   }
 
   /**
+   * Setup state change listeners for UI updates.
+   * StateManager emits 'stateEntered' events when state transitions occur.
+   */
+  private setupStateListeners(): void {
+    EventBus.on('stateEntered', ({ state, from }) => {
+      switch (state) {
+        case GameState.MENU:
+          this.onEnterMenu();
+          break;
+        case GameState.PLAYING:
+          this.onEnterPlaying(from);
+          break;
+        case GameState.SHOP:
+          this.onEnterShop();
+          break;
+        case GameState.PAUSED:
+          this.onEnterPaused();
+          break;
+        case GameState.GAME_OVER:
+          this.onEnterGameOver();
+          break;
+      }
+    });
+
+    // Listen for characterSelected: store character, then trigger game start
+    EventBus.on('characterSelected', ({ characterType }) => {
+      this.selectedCharacter = characterType;
+      // Preact CharacterSelect handles visual selection
+      EventBus.emit('startGameRequested', undefined);
+    });
+
+    // Listen for Preact shop item purchases and apply effects
+    EventBus.on('itemPurchased', ({ itemId }) => {
+      // Skip reroll - it's just for UI refresh, gold is deducted by RewardSystem
+      if (itemId === 'reroll') {
+        this.emitShopPlayerUpdate();
+        return;
+      }
+
+      // Apply item effects to player (gold already deducted by RewardSystem)
+      this.applyShopPurchase(itemId);
+      this.emitShopPlayerUpdate();
+      this.updateHUD();
+    });
+  }
+
+  // ============ State Enter Handlers ============
+
+  private onEnterMenu(): void {
+    // Preact App handles all UI state based on stateEntered event
+    this.selectedCharacter = null;
+  }
+
+  private onEnterPlaying(from: GameState): void {
+    // Preact App handles all UI state based on stateEntered event
+
+    // Initialize new game only when coming from menu
+    if (from === GameState.MENU) {
+      this.initializeNewGame();
+    }
+
+    // If coming from PAUSED, emit resume event for AudioSystem etc.
+    if (from === GameState.PAUSED) {
+      EventBus.emit('gameResume', undefined);
+    }
+
+    // If coming from SHOP, start next wave
+    if (from === GameState.SHOP) {
+      this.startNextWave();
+    }
+
+    this.startGameLoop();
+  }
+
+  private onEnterShop(): void {
+    this.waveManager.endWave();
+
+    const player = this.entityManager.getPlayer();
+    player.hp = player.maxHp; // Full heal
+    player.position.x = this.canvas.width / 2; // Center player
+    player.position.y = this.canvas.height / 2;
+
+    this.entityManager.clearExceptPlayer();
+
+    // Preact Shop component handles rendering via shopOpened event
+    EventBus.emit('shopOpened', {
+      gold: player.gold,
+      waveNumber: this.waveManager.waveNumber,
+      playerState: {
+        gold: player.gold,
+        weapons: player.weapons.map((w) => ({ type: w.type, name: w.name, level: w.level })),
+        maxWeapons: player.maxWeapons,
+        items: [...player.items],
+      },
+    });
+  }
+
+  private onEnterPaused(): void {
+    // Preact App handles pause menu visibility based on stateEntered event
+    EventBus.emit('gamePause', undefined);
+  }
+
+  private onEnterGameOver(): void {
+    const player = this.entityManager.getPlayer();
+
+    // Preact App handles game over UI based on gameOver event
+    EventBus.emit('gameOver', {
+      score: player.xp,
+      wave: this.waveManager.waveNumber,
+      time: 0,
+    });
+  }
+
+  /**
+   * Initialize a new game (called when entering PLAYING from MENU)
+   */
+  private initializeNewGame(): void {
+    this.selectedCharacter ??= CharacterType.NORMIK;
+
+    // Get character config
+    const charConfig = CHARACTER_TYPES[this.selectedCharacter];
+
+    // Create player
+    const player = new Player({
+      x: this.canvas.width / 2,
+      y: this.canvas.height / 2,
+      characterType: this.selectedCharacter,
+    });
+
+    // Apply character-specific stats
+    player.maxHp = charConfig.maxHp;
+    player.hp = charConfig.maxHp;
+    player.speed = charConfig.speed;
+    player.damageMultiplier = charConfig.damageMultiplier;
+    player.goldMultiplier = charConfig.goldMultiplier;
+    player.color = charConfig.color;
+
+    // Reset entity manager and set player
+    this.entityManager.clear();
+    this.entityManager.setPlayer(player);
+
+    // Initialize weapons
+    this.addWeapon(charConfig.startingWeapon);
+
+    // Reset game state
+    this.waveManager = new WaveManager();
+
+    this.waveManager.startWave();
+    this.updateHUD();
+  }
+
+  /**
    * Initialize dev menu with dependency injection
    */
   private async initDevMenu(): Promise<void> {
     const { DevMenu } = await import('@/debug/DevMenu');
     this._devMenu = new DevMenu({
-      // State
-      getState: () => this.state,
+      // State Manager
+      stateManager: this.stateManager,
       getCanvasSize: () => ({ width: this.canvas.width, height: this.canvas.height }),
 
       // Debug display options
       setShowEnemyCount: (show) => {
         this.showEnemyCount = show;
-      },
-
-      // Game control
-      pauseGame: () => {
-        this.pauseGame();
-      },
-      resumeGame: () => {
-        this.resumeGame();
       },
 
       // Wave control
@@ -224,7 +302,6 @@ export class Game {
       // Player actions
       getPlayer: () => {
         const player = this.entityManager.getPlayer();
-        if (!player) return null;
         return {
           hp: player.hp,
           maxHp: player.maxHp,
@@ -274,169 +351,10 @@ export class Game {
     // TODO: Implement visual notification
   }
 
-  // ============ Leaderboard Methods ============
-
-  private async openMenuLeaderboard(): Promise<void> {
-    await this.leaderboardUI.openMenuLeaderboard();
-  }
-
-  private closeMenuLeaderboard(): void {
-    this.leaderboardUI.closeMenuLeaderboard();
-  }
-
-  private switchMenuLeaderboardTab(tab: string): void {
-    this.leaderboardUI.switchMenuLeaderboardTab(tab);
-  }
-
-  private async submitScore(): Promise<void> {
-    await this.leaderboardUI.submitScore(
-      this.waveManager.waveNumber,
-      this.entityManager.getPlayer()?.xp ?? 0,
-      this.selectedCharacter,
-    );
-  }
-
-  private async showLeaderboard(
-    tab: string = 'local',
-    highlightName: string | null = null,
-  ): Promise<void> {
-    await this.leaderboardUI.showLeaderboard(tab, highlightName);
-  }
-
-  private switchLeaderboardTab(tab: string): void {
-    this.leaderboardUI.switchLeaderboardTab(tab);
-  }
-
-  // ============ Character Selection ============
-
-  private selectCharacter(characterType: CharacterType): void {
-    // Prevent multiple game starts from rapid clicking
-    if (this.state !== 'start') return;
-    this.state = 'playing';
-
-    this.selectedCharacter = characterType;
-
-    // Mark selected card
-    document.querySelectorAll('.character-card').forEach((card) => {
-      card.classList.remove('selected');
-    });
-    const selectedCard = document.querySelector(`[data-character="${characterType}"]`);
-    if (selectedCard) selectedCard.classList.add('selected');
-
-    this.startGame();
-  }
-
-  private showCharacterSelect(): void {
-    this.state = 'start';
-    document.getElementById('game-over')?.classList.add('hidden');
-    document.getElementById('start-screen')?.classList.remove('hidden');
-    document.querySelectorAll('.character-card').forEach((card) => {
-      card.classList.remove('selected');
-    });
-    this.selectedCharacter = null;
-
-    // Reset score submit form
-    const scoreSubmit = document.getElementById('score-submit');
-    if (scoreSubmit) scoreSubmit.style.display = 'flex';
-    const submitBtn = document.getElementById('submit-score-btn') as HTMLButtonElement;
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = '📊 Zapisz wynik';
-    }
-  }
-
-  private toggleSound(): void {
-    this.audio.toggle();
-    const btn = document.getElementById('sound-toggle');
-    if (btn) {
-      btn.textContent = this.audio.isEnabled() ? '🔊 Dźwięk: WŁ' : '🔇 Dźwięk: WYŁ';
-    }
-  }
-
-  // ============ Pause Menu ============
-
-  private pauseGame(): void {
-    this.state = 'paused';
-    document.getElementById('pause-menu')?.classList.remove('hidden');
-  }
-
-  private resumeGame(): void {
-    this.state = 'playing';
-    document.getElementById('pause-menu')?.classList.add('hidden');
-    this.startGameLoop();
-  }
-
-  private quitToMenu(): void {
-    this.state = 'start';
-    document.getElementById('pause-menu')?.classList.add('hidden');
-    this.showCharacterSelect();
-  }
-
-  // ============ Game Start ============
-
-  private startGame(): void {
-    this.selectedCharacter ??= CharacterType.NORMIK;
-
-    // Get character config
-    const charConfig = CHARACTER_TYPES[this.selectedCharacter];
-
-    // Create player
-    const player = new Player({
-      x: this.canvas.width / 2,
-      y: this.canvas.height / 2,
-      characterType: this.selectedCharacter,
-    });
-
-    // Apply character-specific stats
-    player.maxHp = charConfig.maxHp;
-    player.hp = charConfig.maxHp;
-    player.speed = charConfig.speed;
-    player.damageMultiplier = charConfig.damageMultiplier;
-    player.goldMultiplier = charConfig.goldMultiplier;
-    player.color = charConfig.color;
-
-    // Reset entity manager and set player
-    this.entityManager.clear();
-    this.entityManager.setPlayer(player);
-
-    // Initialize weapons
-    this.addWeapon(charConfig.startingWeapon);
-
-    // Reset game state
-    this.effects = createEffectsState();
-    this.waveManager = new WaveManager();
-
-    // Reset CombatSystem with fresh effects
-    this.combatSystem = new CombatSystem(this.entityManager, this.effects);
-
-    // Hide overlays
-    document.getElementById('start-screen')?.classList.add('hidden');
-    document.getElementById('game-over')?.classList.add('hidden');
-    document.getElementById('shop')?.classList.add('hidden');
-
-    this.state = 'playing';
-    this.waveManager.startWave();
-    this.updateHUD();
-
-    // Start game loop
-    this.startGameLoop();
-  }
+  // ============ Wave Management ============
 
   private startNextWave(): void {
-    this.shop.hideShop();
-    this.state = 'playing';
-
-    const player = this.entityManager.getPlayer();
-    if (player) {
-      player.hp = player.maxHp;
-      // Reset player position to center
-      player.position.x = this.canvas.width / 2;
-      player.position.y = this.canvas.height / 2;
-    }
-
-    // Clear entities except player
-    this.entityManager.clearExceptPlayer();
-
+    // Preact handles shop visibility via state changes
     this.waveManager.startWave();
   }
 
@@ -444,7 +362,6 @@ export class Game {
 
   private addWeapon(type: WeaponType): void {
     const player = this.entityManager.getPlayer();
-    if (!player) return;
 
     // Let player handle weapon creation and management
     const added = player.addWeapon(type);
@@ -460,7 +377,6 @@ export class Game {
    */
   private recalculateFireOffsets(): void {
     const player = this.entityManager.getPlayer();
-    if (!player) return;
 
     // Group weapons by type
     const weaponsByType: Record<string, WeaponInstance[]> = {};
@@ -486,14 +402,16 @@ export class Game {
     const deltaTime = timestamp - this.lastTime;
     this.lastTime = timestamp;
 
-    if (this.state === 'playing') {
+    const currentState = this.stateManager.getCurrentState();
+
+    if (currentState === GameState.PLAYING) {
       this.update(deltaTime, timestamp);
     }
 
     this.render();
 
     // Continue loop only for active game states
-    if (this.state === 'playing' || this.state === 'shop') {
+    if (currentState === GameState.PLAYING || currentState === GameState.SHOP) {
       requestAnimationFrame((t) => {
         this.gameLoop(t);
       });
@@ -519,23 +437,17 @@ export class Game {
 
   private update(deltaTime: number, currentTime: number): void {
     const player = this.entityManager.getPlayer();
-    if (!player) return;
 
     const deltaSeconds = deltaTime / 1000;
 
-    // Get input state from InputHandler
-    const keys = this.inputHandler.getKeys();
-    const input: InputState = {
-      up: keys.w === true || keys.arrowup === true,
-      down: keys.s === true || keys.arrowdown === true,
-      left: keys.a === true || keys.arrowleft === true,
-      right: keys.d === true || keys.arrowright === true,
-    };
+    // Poll gamepad state and get unified input
+    this.inputSystem.poll();
+    const input = this.inputSystem.getInputState();
 
     // Update player movement
     player.updateMovement(input, this.canvas.width, this.canvas.height, deltaSeconds);
 
-    // Regeneration
+    // TODO handle in passivesSystem?
     if (player.regen > 0) {
       if (!this.lastRegenTime) this.lastRegenTime = currentTime;
       if (currentTime - this.lastRegenTime >= 1000) {
@@ -561,13 +473,12 @@ export class Game {
     }
 
     if (waveResult.waveEnded) {
-      this.openShop();
+      EventBus.emit('waveCleared', undefined);
       return;
     }
 
     // Update CombatSystem runtime config with current player stats
     this.combatSystem.updateRuntimeConfig({
-      goldMultiplier: player.goldMultiplier,
       damageMultiplier: player.damageMultiplier,
       explosionRadius: player.explosionRadius,
       knockback: player.knockback,
@@ -603,7 +514,7 @@ export class Game {
                   x: bulletData.x,
                   y: bulletData.y,
                 },
-                radius: 6,
+                radius: Math.floor(enemy.radius * 0.15), // default 6
                 type: ProjectileType.ENEMY_BULLET,
                 damage: bulletData.damage,
                 ownerId: enemy.id,
@@ -614,7 +525,7 @@ export class Game {
               this.entityManager.addProjectile(projectile);
             }
           } else if (attackResult.type === 'shockwave') {
-            EffectsSystem.createShockwave(this.effects, attackResult);
+            this.effectsSystem.createShockwave(attackResult);
           }
         }
       }
@@ -667,9 +578,10 @@ export class Game {
 
       if (!pickup.isActive) continue;
 
-      // Magnet attraction - move towards player if in range
+      // Magnet attraction - only works if player has magnet item
+      const hasMagnet = player.items.includes('magnet');
       const distToPlayer = distance(pickup.position, player.position);
-      if (distToPlayer < player.pickupRange || pickup.isAttracted) {
+      if (hasMagnet && (distToPlayer < player.pickupRange || pickup.isAttracted)) {
         pickup.isAttracted = true;
         const dx = player.position.x - pickup.position.x;
         const dy = player.position.y - pickup.position.y;
@@ -908,10 +820,8 @@ export class Game {
 
   private updateShockwaves(currentTime: number): void {
     const player = this.entityManager.getPlayer();
-    if (!player) return;
 
-    const playerDied = EffectsSystem.updateShockwaves(
-      this.effects,
+    const playerDied = this.effectsSystem.updateShockwaves(
       {
         x: player.position.x,
         y: player.position.y,
@@ -924,7 +834,10 @@ export class Game {
       },
     );
 
-    if (playerDied) this.gameOver();
+    if (playerDied) {
+      // TODO: killed by, shockwave, maybe Killed by, could be displayed
+      EventBus.emit('playerDeath', { player, killedBy: null });
+    }
   }
 
   // ============ Render ============
@@ -933,7 +846,7 @@ export class Game {
     // Render effects
     this.renderSystem.renderAll(this.ctx, this.lastTime);
     // TODO: integrate EffectsSystem rendering into RenderSystem
-    EffectsSystem.renderAll(this.ctx, this.effects);
+    this.effectsSystem.renderAll(this.ctx);
 
     // Render boss health bar
     this.renderBossHealthBar();
@@ -962,26 +875,25 @@ export class Game {
 
   private updateHUD(): void {
     const player = this.entityManager.getPlayer();
-    if (!player) return;
-    HUD.update(player, this.waveManager);
+
+    // Emit HUD update for Preact UI
+    EventBus.emit('hudUpdate', {
+      hp: player.hp,
+      maxHp: player.maxHp,
+      gold: player.gold,
+      xp: player.xp,
+      armor: player.armor,
+      damageMultiplier: player.damageMultiplier,
+      critChance: player.critChance,
+      dodge: player.dodge,
+      regen: player.regen,
+      waveNumber: this.waveManager.waveNumber,
+      timeRemaining: this.waveManager.timeRemaining,
+      isWaveActive: this.waveManager.isWaveActive,
+    });
   }
 
   // ============ Shop ============
-
-  private openShop(): void {
-    this.state = 'shop';
-    this.waveManager.endWave();
-    this.entityManager.clearExceptPlayer();
-    this.shop.resetReroll();
-
-    const player = this.entityManager.getPlayer();
-    if (player) {
-      // Create shop-compatible player wrapper
-      const shopPlayer = this.createShopPlayer(player);
-      this.shop.generateItems(shopPlayer);
-      this.shop.renderShop(shopPlayer);
-    }
-  }
 
   private createShopPlayer(player: Player): ShopPlayer {
     const weapons = player.weapons;
@@ -1021,41 +933,30 @@ export class Game {
     };
   }
 
-  // ============ Combat Event Listeners ============
-
   /**
-   * Setup EventBus listeners for combat events from CombatSystem
+   * Apply shop purchase effects to player.
+   * Called when Preact Shop emits itemPurchased event.
+   * Gold deduction is handled by RewardSystem.
    */
-  private setupCombatEventListeners(): void {
-    // Handle player death
-    EventBus.on('playerDeath', () => {
-      this.gameOver();
-    });
+  private applyShopPurchase(itemId: string): void {
+    const player = this.entityManager.getPlayer();
+    const shopPlayer = this.createShopPlayer(player);
+
+    // Use existing shop buyItem logic but skip the price check & event emission
+    // since those are already handled
+    this.shop.applyItemEffect(itemId, shopPlayer);
   }
 
-  // ============ Game Over ============
-
-  private gameOver(): void {
-    this.state = 'gameover';
-    // gameOver sound is played via EventBus listener
-    EventBus.emit('gameOver', {
-      score: this.entityManager.getPlayer()?.xp ?? 0,
-      wave: this.waveManager.waveNumber,
-      time: 0,
+  /**
+   * Emit updated player state to Shop component after purchases
+   */
+  private emitShopPlayerUpdate(): void {
+    const player = this.entityManager.getPlayer();
+    EventBus.emit('shopPlayerUpdated', {
+      gold: player.gold,
+      weapons: player.weapons.map((w) => ({ type: w.type, name: w.name, level: w.level })),
+      maxWeapons: player.maxWeapons,
+      items: [...player.items],
     });
-
-    const finalWave = document.getElementById('final-wave');
-    const finalXp = document.getElementById('final-xp');
-    if (finalWave) finalWave.textContent = String(this.waveManager.waveNumber);
-    if (finalXp) finalXp.textContent = String(this.entityManager.getPlayer()?.xp ?? 0);
-    document.getElementById('game-over')?.classList.remove('hidden');
-
-    // Load saved player name
-    const savedName = localStorage.getItem('circle_survivor_player_name') ?? '';
-    const playerNameInput = document.getElementById('player-name') as HTMLInputElement;
-    playerNameInput.value = savedName;
-
-    // Show leaderboard
-    void this.showLeaderboard('local');
   }
 }

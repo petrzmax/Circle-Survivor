@@ -1,44 +1,5 @@
-/**
- * Weapon type definitions.
- * Each weapon has unique stats and behavior.
- */
-
 import { DeployableType, ProjectileType, WeaponCategory, WeaponType } from '@/types/enums';
-
-/**
- * Weapon configuration interface
- */
-export interface WeaponConfig {
-  name: string;
-  emoji: string;
-  fireRate: number;
-  damage: number;
-  bulletSpeed: number;
-  bulletCount: number;
-  spread: number;
-  price: number;
-  color: string;
-  range: number;
-  weaponCategory: WeaponCategory;
-
-  // Optional properties
-  pierce?: boolean;
-  pierceCount?: number;
-  explosive?: boolean;
-  explosionRadius?: number;
-  bulletRadius?: number;
-  knockbackMultiplier?: number;
-  shortRange?: boolean;
-  maxDistance?: number;
-
-  // Projectile/Deployable type mapping
-  projectileType?: ProjectileType;
-  deployableType?: DeployableType;
-  explosiveRange?: number;
-
-  // Projectile behavior
-  rotationSpeed?: number; // radians per second
-}
+import { WeaponConfig } from './type';
 
 export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   [WeaponType.PISTOL]: {

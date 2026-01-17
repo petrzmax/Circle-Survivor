@@ -1,1 +1,1 @@
-export { createGoldPickup, createHealthPickup } from './PickupFactory';
+export * from './PickupFactory';

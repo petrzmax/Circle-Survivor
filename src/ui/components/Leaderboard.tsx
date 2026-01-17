@@ -1,5 +1,5 @@
 import { JSX } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { Leaderboard as LeaderboardService } from '../Leaderboard';
 
 interface LeaderboardProps {
@@ -84,7 +84,7 @@ export function LeaderboardComponent({
       localStorage.setItem('circle_survivor_player_name', playerName.trim());
       setHasSubmitted(true);
       setHighlightedName(playerName.trim());
-      await loadScores('local');
+      await loadScores(activeTab); // Use activeTab instead of hardcoded 'local'
     } catch (error) {
       console.error('Failed to submit score:', error);
     }

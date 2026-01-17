@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.4](https://github.com/petrzmax/Circle-Survivor/compare/v1.7.3...v1.7.4) (2026-01-17)
+
+
+### 🐛 Bug Fixes
+
+* remove unnecessary label from automated PR creation ([60b118a](https://github.com/petrzmax/Circle-Survivor/commit/60b118a8754b4c91511f655fdf44363a5106fe67))
+
 ## [1.7.3](https://github.com/petrzmax/Circle-Survivor/compare/v1.7.2...v1.7.3) (2026-01-17)
 
 

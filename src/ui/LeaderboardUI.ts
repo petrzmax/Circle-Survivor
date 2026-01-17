@@ -3,6 +3,7 @@
  * Matches original js/systems/leaderboard-ui.js exactly.
  */
 
+import { CharacterType } from '@/types/enums';
 import { Leaderboard } from './Leaderboard';
 
 // ============ LeaderboardUI Class ============
@@ -69,11 +70,13 @@ export class LeaderboardUI {
   /**
    * Submit score to leaderboard
    */
-  public async submitScore(wave: number, xp: number, character: string | null): Promise<void> {
+  public async submitScore(
+    wave: number,
+    xp: number,
+    character: CharacterType | null,
+  ): Promise<void> {
     const nameInput = document.getElementById('player-name') as HTMLInputElement;
     const submitBtn = document.getElementById('submit-score-btn') as HTMLButtonElement;
-
-    if (!nameInput || !submitBtn) return;
 
     const name = nameInput.value.trim();
 
@@ -89,7 +92,7 @@ export class LeaderboardUI {
     submitBtn.textContent = '⏳ Saving...';
 
     try {
-      await this.leaderboard.submitScore(name, wave, xp, character ?? 'normik');
+      await this.leaderboard.submitScore(name, wave, xp, character ?? CharacterType.NORMIK);
 
       // Hide submit form, show leaderboard
       const scoreSubmit = document.getElementById('score-submit');

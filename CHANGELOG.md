@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.7.5](https://github.com/petrzmax/Circle-Survivor/compare/v1.7.4...v1.7.5) (2026-01-17)
+
+
+### 🐛 Bug Fixes
+
+* ensure character emoji is always returned correctly ([d71922c](https://github.com/petrzmax/Circle-Survivor/commit/d71922c8bf9364bbeb73d7c84f615a4495eb0c01))
+* handling and saving character data ([45961e4](https://github.com/petrzmax/Circle-Survivor/commit/45961e4225ece48e872d75e59c5174f9758d5a4b))
+
+
+### 📦 Other Changes
+
+* **ci:** auto merge sync pr ([60fda22](https://github.com/petrzmax/Circle-Survivor/commit/60fda226f55883725b627b2705eab0ef8b74aa50))
+* **ci:** simplify release workflow ([2e5ad67](https://github.com/petrzmax/Circle-Survivor/commit/2e5ad675df82655650aea701af3f31a11dc992dd))
+
 ## [1.7.4](https://github.com/petrzmax/Circle-Survivor/compare/v1.7.3...v1.7.4) (2026-01-17)
 
 

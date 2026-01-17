@@ -104,9 +104,10 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
       const extraItems = allItems.filter((i) => !usedItems.includes(i));
       const extras = [...extraWeapons, ...extraItems];
       shuffleArray(extras);
-      
+
       for (let i = 0; i < 2 && i < extras.length; i++) {
-        if (extras[i]) newItems.push(extras[i]);
+        const key = extras[i];
+        if (key) newItems.push(key);
       }
 
       shuffleArray(newItems);
@@ -162,8 +163,9 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
         {/* Info bar */}
         <div class="shop-info">
           <small>
-            Fala {waveNumber} | Bronie: {playerState.weapons.length}/{playerState.maxWeapons} | Przedmioty:{' '}
-            {playerState.items?.length ?? 0} | <span style={{ color: '#ffd700' }}>💰 {playerState.gold}</span>
+            Fala {waveNumber} | Bronie: {playerState.weapons.length}/{playerState.maxWeapons} |
+            Przedmioty: {playerState.items?.length ?? 0} |{' '}
+            <span style={{ color: '#ffd700' }}>💰 {playerState.gold}</span>
           </small>
           <button
             class={`reroll-inline-btn ${playerState.gold < rerollPrice ? 'disabled' : ''}`}

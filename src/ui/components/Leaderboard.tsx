@@ -31,7 +31,7 @@ function getMedal(index: number): string {
 function getCharacterEmoji(character?: CharacterType): string {
   if (!character) return '🎮';
   const config = CHARACTER_TYPES[character];
-  return config?.emoji ?? '🎮';
+  return config.emoji;
 }
 
 export function LeaderboardComponent({

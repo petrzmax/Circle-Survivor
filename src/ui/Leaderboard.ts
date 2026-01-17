@@ -15,6 +15,13 @@ export interface LeaderboardEntry {
   date: string;
 }
 
+// JSONBin API response types
+interface JSONBinFetchResponse {
+  record: {
+    scores: LeaderboardEntry[];
+  };
+}
+
 // ============ Leaderboard Class ============
 
 export class Leaderboard {
@@ -41,7 +48,8 @@ export class Leaderboard {
   public getLocalScores(): LeaderboardEntry[] {
     try {
       const data = localStorage.getItem(this.LOCAL_STORAGE_KEY);
-      return data ? JSON.parse(data) : [];
+      if (!data) return [];
+      return JSON.parse(data) as LeaderboardEntry[];
     } catch (e) {
       console.error('Error reading local leaderboard:', e);
       return [];
@@ -86,20 +94,25 @@ export class Leaderboard {
     }
 
     try {
+      if (!this.JSONBIN_API_KEY) {
+        throw new Error('JSONBin API key not configured');
+      }
       const response = await fetch(`https://api.jsonbin.io/v3/b/${this.JSONBIN_BIN_ID}/latest`, {
         headers: {
-          'X-Access-Key': this.JSONBIN_API_KEY!,
+          'X-Access-Key': this.JSONBIN_API_KEY,
         },
       });
 
       if (!response.ok) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const errorData = await response.json().catch(() => ({}));
         if (this.DEBUG) console.log('JSONBin response:', response.status, errorData);
         throw new Error(`Failed to fetch global scores: ${response.status}`);
       }
 
-      const data = await response.json();
-      this.globalScores = data.record?.scores ?? [];
+      const data = (await response.json()) as JSONBinFetchResponse;
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      this.globalScores = data.record.scores || [];
       this.lastFetch = Date.now();
 
       return this.globalScores;
@@ -127,16 +140,20 @@ export class Leaderboard {
       const topScores = scores.slice(0, this.MAX_ENTRIES);
 
       // Save back to JSONBin
+      if (!this.JSONBIN_API_KEY) {
+        throw new Error('JSONBin API key not configured');
+      }
       const response = await fetch(`https://api.jsonbin.io/v3/b/${this.JSONBIN_BIN_ID}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'X-Access-Key': this.JSONBIN_API_KEY!,
+          'X-Access-Key': this.JSONBIN_API_KEY,
         },
         body: JSON.stringify({ scores: topScores }),
       });
 
       if (!response.ok) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const errorData = await response.json().catch(() => ({}));
         if (this.DEBUG) console.log('JSONBin save response:', response.status, errorData);
         throw new Error(`Failed to save global score: ${response.status}`);

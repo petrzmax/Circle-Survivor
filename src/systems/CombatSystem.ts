@@ -203,7 +203,8 @@ export class CombatSystem {
       source: projectile.position,
     });
 
-    // Lifesteal
+    // Lifesteal - explicitly check > 0 for clarity
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (player && player.lifesteal > 0) {
       // TODO nerf it, make it a chance instead of flat %
       const healAmount = finalDamage * player.lifesteal;

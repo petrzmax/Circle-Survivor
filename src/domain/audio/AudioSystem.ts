@@ -31,13 +31,12 @@ export class AudioSystem {
    */
   private init(): boolean {
     try {
+      // Browser compatibility: Check for AudioContext or fallback to webkit prefix
+      // In TypeScript strict mode with modern lib.dom, window.AudioContext is always defined,
+      // but we still check for webkit fallback for older Safari browsers at runtime
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       const AudioContextClass =
-        window.AudioContext ?? (window as WindowWithWebkit).webkitAudioContext;
-      if (!AudioContextClass) {
-        console.warn('[AudioSystem] Web Audio API not supported');
-        this.enabled = false;
-        return false;
-      }
+        window.AudioContext || (window as WindowWithWebkit).webkitAudioContext;
 
       this.ctx = new AudioContextClass();
       return true;

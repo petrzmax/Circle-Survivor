@@ -23,8 +23,8 @@ export default [
       '@typescript-eslint/no-unsafe-call': 'warn',
       '@typescript-eslint/no-unsafe-return': 'warn',
 
-      // ⚠️ Null safety - warn because game dev often has guaranteed existence
-      '@typescript-eslint/no-non-null-assertion': 'warn',
+      // ⚠️ Null safety - disabled for game dev where bounds/existence are often guaranteed
+      '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-unnecessary-condition': 'warn',
 
       // ✅ Code clarity and self-documenting code

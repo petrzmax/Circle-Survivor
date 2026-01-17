@@ -323,10 +323,6 @@ export class Player extends Entity implements IHealth {
     }
 
     const config = WEAPON_TYPES[type];
-    if (!config) {
-      console.error(`Unknown weapon type: ${type}`);
-      return false;
-    }
 
     // Create full weapon instance
     this.weapons.push({

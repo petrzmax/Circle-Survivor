@@ -36,6 +36,8 @@ function createPickupCache(type: PickupType, radius: number): CachedCanvas {
 
   if (type === PickupType.GOLD) {
     drawGold(ctx, tempPickup);
+    // Currently only GOLD and HEALTH types exist, but may have more pickup types in future
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   } else if (type === PickupType.HEALTH) {
     drawHealth(ctx, tempPickup);
   }

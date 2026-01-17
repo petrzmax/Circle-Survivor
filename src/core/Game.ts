@@ -524,6 +524,8 @@ export class Game {
               projectile.setVelocity(bulletData.vx, bulletData.vy);
               this.entityManager.addProjectile(projectile);
             }
+            // Currently only shockwave type exists, but may have more attack types in future
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           } else if (attackResult.type === 'shockwave') {
             this.effectsSystem.createShockwave(attackResult);
           }
@@ -649,7 +651,7 @@ export class Game {
 
       // Get weapon position (use currentTarget for positioning only)
       const weaponPos = player.getWeaponPosition(i, player.currentTarget);
-      const maxRange = (config.range ?? 300) * player.attackRange;
+      const maxRange = config.range * player.attackRange;
 
       // Find nearest enemy from weapon position within map bounds
       const canvasBounds = { width: this.canvas.width, height: this.canvas.height };
@@ -674,7 +676,7 @@ export class Game {
       const baseDamage = config.damage * (1 + (weapon.level - 1) * 0.15);
 
       // Calculate projectile count (bulletCount is base, multishot and projectileCount are bonuses)
-      const projectileCount = (config.bulletCount ?? 1) + weapon.multishot + player.projectileCount;
+      const projectileCount = config.bulletCount + weapon.multishot + player.projectileCount;
 
       // Fire based on weapon type - pass target position for correct aiming
       this.fireWeaponProjectiles(weapon, weaponPos, target, baseDamage, projectileCount, player);

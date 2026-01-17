@@ -316,6 +316,6 @@ export class WaveManager {
 
     // Cyclically select boss, but each next one has +50% HP
     const bossIndex = (bossWave - 1) % bossTypes.length;
-    return bossTypes[bossIndex]!;
+    return bossTypes[bossIndex]!; // Safe: modulo guarantees valid index
   }
 }

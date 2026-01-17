@@ -37,7 +37,6 @@ jobs:
 
           **Release Notes:** https://github.com/${{ github.repository }}/releases/tag/${{ steps.release.outputs.tag_name }}
 
-          This PR will auto-merge once all checks pass." \
-            --label "release,automated"
+          This PR will auto-merge once all checks pass."
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

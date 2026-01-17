@@ -19,29 +19,3 @@ jobs:
         with:
           target-branch: develop
 
-      # Create PR to merge develop into master when a release is created
-      - name: Checkout repository
-        if: ${{ steps.release.outputs.release_created }}
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Create Pull Request to master
-        if: ${{ steps.release.outputs.release_created }}
-        run: |
-          PR_URL=$(gh pr create \
-            --base master \
-            --head develop \
-            --title "Sync release ${{ steps.release.outputs.tag_name }} to master" \
-            --body "Automated PR to sync release \`${{ steps.release.outputs.tag_name }}\` from develop to master.
-
-          **Release Notes:** https://github.com/${{ github.repository }}/releases/tag/${{ steps.release.outputs.tag_name }}
-
-          This PR will auto-merge once all checks pass.")
-
-          echo "Created PR: $PR_URL"
-
-          # Enable auto-merge on the PR
-          gh pr merge "$PR_URL" --auto --merge
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

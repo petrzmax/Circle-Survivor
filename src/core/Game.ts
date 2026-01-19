@@ -32,6 +32,7 @@ import {
   randomRange,
   vectorFromAngle,
 } from '@/utils';
+import toast from 'react-hot-toast';
 import { PickupSpawnSystem } from './../systems/PickupSpawnSystem';
 import { RenderSystem } from './../systems/RenderSystem';
 import { RewardSystem } from './../systems/RewardSystem';
@@ -346,9 +347,10 @@ export class Game {
 
   // ============ Setup ============
 
-  private showNotification(message: string): void {
-    console.log('Notification:', message);
-    // TODO: Implement visual notification
+  private showNotification(message: string, type?: 'success' | 'error' | 'info'): void {
+    if (type === 'success') toast.success(message);
+    else if (type === 'error') toast.error(message);
+    else toast(message);
   }
 
   // ============ Wave Management ============

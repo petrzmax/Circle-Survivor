@@ -51,7 +51,7 @@ export interface GameEvents {
     waveNumber: number;
     playerState: {
       gold: number;
-      weapons: Array<{ type: string; name: string; level: number }>;
+      weapons: Array<{ type: WeaponType; name: string; level: number }>;
       maxWeapons: number;
       items?: string[];
     };
@@ -60,7 +60,7 @@ export interface GameEvents {
   itemPurchased: { itemId: string; cost: number };
   shopPlayerUpdated: {
     gold: number;
-    weapons: Array<{ type: string; name: string; level: number }>;
+    weapons: Array<{ type: WeaponType; name: string; level: number }>;
     maxWeapons: number;
     items: string[];
   };

@@ -1,13 +1,14 @@
 import { GAME_BALANCE } from '@/config/balance.config';
 import { SHOP_ITEMS, ShopItem } from '@/config/shop.config';
 import { EventBus } from '@/core/EventBus';
+import { WeaponType } from '@/types/enums';
 import { shuffleArray } from '@/utils';
 import { JSX } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
 
 interface PlayerState {
   gold: number;
-  weapons: Array<{ type: string; name: string; level: number }>;
+  weapons: Array<{ type: WeaponType; name: string; level: number }>;
   maxWeapons: number;
   items?: string[];
 }
@@ -176,52 +177,47 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
           </button>
         </div>
 
-        {/* Items */}
-        {availableItems.map((itemKey) => {
-          const item = SHOP_ITEMS[itemKey];
-          if (!item) return null;
+        {/* Items - filter out sold items before mapping to avoid DOM diffing issues */}
+        {availableItems
+          .filter((itemKey) => !soldItems.has(itemKey) && SHOP_ITEMS[itemKey])
+          .map((itemKey, index) => {
+            const item = SHOP_ITEMS[itemKey]!;
+            const currentPrice = calculatePrice(item.price);
+            const canAfford = playerState.gold >= currentPrice;
 
-          // Hide sold items
-          if (soldItems.has(itemKey)) {
-            return null;
-          }
+            // Check weapon lock
+            let isWeaponLocked = false;
+            let upgradeInfo = '';
 
-          const currentPrice = calculatePrice(item.price);
-          const canAfford = playerState.gold >= currentPrice;
-
-          // Check weapon lock
-          let isWeaponLocked = false;
-          let upgradeInfo = '';
-
-          if (item.type === 'weapon') {
-            const hasThisWeapon = playerState.weapons.some(
-              (w) => w.type === (item.weaponType as string),
-            );
-            if (playerState.weapons.length >= playerState.maxWeapons) {
-              if (!hasThisWeapon) {
-                isWeaponLocked = true;
-              } else {
-                upgradeInfo = '⬆️ Upgrade';
+            if (item.type === 'weapon') {
+              const hasThisWeapon = playerState.weapons.some(
+                (w) => w.type === item.weaponType,
+              );
+              if (playerState.weapons.length >= playerState.maxWeapons) {
+                if (!hasThisWeapon) {
+                  isWeaponLocked = true;
+                } else {
+                  upgradeInfo = '⬆️ Upgrade';
+                }
               }
             }
-          }
 
-          const canBuy = canAfford && !isWeaponLocked;
+            const canBuy = canAfford && !isWeaponLocked;
 
-          return (
-            <ShopItemCard
-              key={itemKey}
-              item={item}
-              price={currentPrice}
-              canBuy={canBuy}
-              isLocked={isWeaponLocked}
-              upgradeInfo={upgradeInfo}
-              onBuy={(): void => {
-                handleBuy(itemKey, currentPrice);
-              }}
-            />
-          );
-        })}
+            return (
+              <ShopItemCard
+                key={`${itemKey}-${index}`}
+                item={item}
+                price={currentPrice}
+                canBuy={canBuy}
+                isLocked={isWeaponLocked}
+                upgradeInfo={upgradeInfo}
+                onBuy={(): void => {
+                  handleBuy(itemKey, currentPrice);
+                }}
+              />
+            );
+          })}
       </div>
 
       <button id="start-wave-btn" onClick={handleStartWave}>

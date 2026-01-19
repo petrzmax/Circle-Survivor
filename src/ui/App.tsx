@@ -1,5 +1,5 @@
 import { EventBus } from '@/core/EventBus';
-import { CharacterType, GameState } from '@/types/enums';
+import { CharacterType, GameState, WeaponType } from '@/types/enums';
 import { JSX } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { HUD } from './components/HUD';
@@ -25,7 +25,7 @@ export function App(): JSX.Element {
     critChance: 0,
     dodge: 0,
     regen: 0,
-    weapons: [] as Array<{ type: string; name: string; level: number }>,
+    weapons: [] as Array<{ type: WeaponType; name: string; level: number }>,
     maxWeapons: 3,
     items: [] as string[],
   });

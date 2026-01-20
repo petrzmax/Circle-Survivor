@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/petrzmax/Circle-Survivor/compare/v1.8.0...v1.8.1) (2026-01-20)
+
+
+### 🐛 Bug Fixes
+
+* dodge cap ([1060437](https://github.com/petrzmax/Circle-Survivor/commit/106043784581fee7b1f4c388edf638c54d8604af))
+
 ## [1.8.0](https://github.com/petrzmax/Circle-Survivor/compare/v1.7.4...v1.8.0) (2026-01-20)
 
 

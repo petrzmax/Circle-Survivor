@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.8.0](https://github.com/petrzmax/Circle-Survivor/compare/v1.7.4...v1.8.0) (2026-01-20)
+
+
+### ✨ Features
+
+* integrate react-hot-toast for notifications and error handling ([a05fe55](https://github.com/petrzmax/Circle-Survivor/commit/a05fe5571073ba5ce4a9113eab8883d032dd97f2))
+* weapon selling functionality ([c03be00](https://github.com/petrzmax/Circle-Survivor/commit/c03be008509cb464080e98de7b43ea33fc59c3bc))
+
+
+### 🐛 Bug Fixes
+
+* correct XP calculation by applying multiplier ([41cf3b2](https://github.com/petrzmax/Circle-Survivor/commit/41cf3b2b46993ef43474c5f5a399d1ccd9570612))
+* ensure character emoji is always returned correctly ([d71922c](https://github.com/petrzmax/Circle-Survivor/commit/d71922c8bf9364bbeb73d7c84f615a4495eb0c01))
+* handling and saving character data ([45961e4](https://github.com/petrzmax/Circle-Survivor/commit/45961e4225ece48e872d75e59c5174f9758d5a4b))
+* leaderboard character handling ([092c0a2](https://github.com/petrzmax/Circle-Survivor/commit/092c0a2d51fcc7e0d66ef400321047d34c9fdbda))
+* shop item display logic ([f79f4bb](https://github.com/petrzmax/Circle-Survivor/commit/f79f4bb7df1cacd8ff5b48b07a348d2b032797e0))
+
+
+### 📦 Other Changes
+
+* **ci:** auto merge sync pr ([60fda22](https://github.com/petrzmax/Circle-Survivor/commit/60fda226f55883725b627b2705eab0ef8b74aa50))
+* **ci:** simplify release workflow ([2e5ad67](https://github.com/petrzmax/Circle-Survivor/commit/2e5ad675df82655650aea701af3f31a11dc992dd))
+* **ci:** update permissions to include actions write access ([d9d3447](https://github.com/petrzmax/Circle-Survivor/commit/d9d3447738a7742c369fc654309f2b1e7eaea17c))
+* **ci:** update pull request branches for CI workflow ([96383ba](https://github.com/petrzmax/Circle-Survivor/commit/96383bab724b94b98d3ceb9c4530a83f3073d1b3))
+* **deps:** bump @types/node from 25.0.6 to 25.0.9 ([#50](https://github.com/petrzmax/Circle-Survivor/issues/50)) ([7786846](https://github.com/petrzmax/Circle-Survivor/commit/7786846b4268085e79589acc8772828a5249b5b4))
+* **deps:** bump @typescript-eslint/eslint-plugin from 8.52.0 to 8.53.0 ([#52](https://github.com/petrzmax/Circle-Survivor/issues/52)) ([a40d727](https://github.com/petrzmax/Circle-Survivor/commit/a40d727ef40408fbbe595eb5227f623ac86f8f60))
+* **deps:** bump @vitest/ui from 4.0.16 to 4.0.17 ([#51](https://github.com/petrzmax/Circle-Survivor/issues/51)) ([0e1e0a1](https://github.com/petrzmax/Circle-Survivor/commit/0e1e0a1309ba6ab1a839e29a9a0a22a96c9d78e3))
+* **deps:** bump prettier from 3.7.4 to 3.8.0 ([#53](https://github.com/petrzmax/Circle-Survivor/issues/53)) ([8b2345a](https://github.com/petrzmax/Circle-Survivor/commit/8b2345aaa7d458850f47b01df71e617bb3455b1b))
+* **deps:** bump typescript-eslint from 8.52.0 to 8.53.0 ([#54](https://github.com/petrzmax/Circle-Survivor/issues/54)) ([3f0ed7b](https://github.com/petrzmax/Circle-Survivor/commit/3f0ed7bd5d45e7e893b54041cdf6863ac47fabd1))
+* improve null safety, fix lint warnings ([86047b1](https://github.com/petrzmax/Circle-Survivor/commit/86047b15a948871868472224e53b2ada42fe92d5))
+
 ## [1.7.4](https://github.com/petrzmax/Circle-Survivor/compare/v1.7.3...v1.7.4) (2026-01-17)
 
 

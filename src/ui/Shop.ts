@@ -3,7 +3,8 @@
  * UI rendering is handled by Preact Shop component
  */
 
-import { SHOP_ITEMS } from '@/config/shop.config';
+import { GAME_BALANCE } from '@/config/balance.config';
+import { SHOP_ITEMS, WeaponShopItem } from '@/config/shop.config';
 import { WeaponType } from '@/types/enums';
 import { randomElementStrict } from '@/utils';
 
@@ -90,5 +91,25 @@ export class Shop {
         break;
       }
     }
+  }
+
+  /**
+   * Calculate sell price for a weapon based on its type and current wave
+   * @param weaponType The type of weapon to sell
+   * @param waveNumber Current wave number (affects price scaling)
+   * @returns Sell price in gold (30% of buy price, scaled by wave)
+   */
+  public static calculateSellPrice(weaponType: WeaponType, waveNumber: number): number {
+    const shopItem = Object.values(SHOP_ITEMS).find(
+      (item) => item.type === 'weapon' && item.weaponType === weaponType,
+    ) as WeaponShopItem | undefined;
+
+    if (!shopItem) return 0;
+
+    const basePrice = shopItem.price;
+    const waveMultiplier = 1 + (waveNumber - 2) * GAME_BALANCE.economy.priceScale.perWave;
+    const scaledPrice = basePrice * waveMultiplier;
+
+    return Math.round(scaledPrice * GAME_BALANCE.economy.sell.priceMultiplier);
   }
 }

@@ -339,6 +339,17 @@ export class Player extends Entity implements IHealth {
   }
 
   /**
+   * Removes a weapon at specified index
+   * @returns The removed weapon instance or null if index invalid
+   */
+  public removeWeaponAt(index: number): WeaponInstance | null {
+    if (index < 0 || index >= this.weapons.length) return null;
+
+    const [removed] = this.weapons.splice(index, 1);
+    return removed ?? null;
+  }
+
+  /**
    * Adds an item
    */
   public addItem(itemId: string): void {

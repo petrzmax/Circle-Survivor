@@ -231,6 +231,9 @@ export class AudioSystem {
     EventBus.on('weaponPurchased', () => {
       this.play('purchase');
     });
+    EventBus.on('weaponSold', () => {
+      this.play('sell');
+    });
     EventBus.on('shopError', () => {
       this.play('error');
     });

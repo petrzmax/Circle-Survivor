@@ -99,6 +99,11 @@ export const GAME_BALANCE = {
       /** Cost increase per reroll used this shop visit. 0.5 = +50% per reroll. */
       perReroll: 0.3,
     },
+    /** Weapon selling configuration. */
+    sell: {
+      /** Sell price multiplier (0.3 = 30% of buy price). */
+      priceMultiplier: 0.3,
+    },
   },
 
   /**

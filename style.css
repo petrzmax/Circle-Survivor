@@ -214,8 +214,10 @@ button:hover {
     gap: 15px;
     flex-wrap: wrap;
     justify-content: center;
+    align-content: flex-start;
     max-width: 600px;
-    margin: 20px 0;
+    height: 340px;
+    margin: 0;
 }
 
 .shop-item {
@@ -262,7 +264,7 @@ button:hover {
     font-size: 11px;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
     white-space: nowrap;
     flex-shrink: 0;
     line-height: 1.2;
@@ -648,4 +650,104 @@ button:hover {
 .menu-tab-btn.active {
     background: linear-gradient(135deg, #e94560, #0f3460);
     border-color: #e94560;
+}
+
+/* ============ SHOP TABS & WEAPON INVENTORY ============ */
+
+.shop-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.shop-tab {
+    padding: 8px 20px;
+    background: rgba(15, 52, 96, 0.5);
+    border: 2px solid #0f3460;
+    border-radius: 5px;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    margin: 0;
+}
+
+.shop-tab:hover {
+    border-color: #4ecdc4;
+    color: #ccc;
+    transform: none;
+    box-shadow: none;
+}
+
+.shop-tab.active {
+    background: rgba(15, 52, 96, 1);
+    border-color: #e94560;
+    color: #fff;
+}
+
+.weapon-inventory {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    align-content: flex-start;
+    max-width: 600px;
+    height: 340px;
+    margin: 0;
+    overflow-y: auto;
+}
+
+.weapon-card {
+    background: #1a1a2e;
+    border: 2px solid #0f3460;
+    border-radius: 10px;
+    padding: 12px;
+    width: 140px;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.weapon-card:hover {
+    border-color: #4ecdc4;
+}
+
+.weapon-card .weapon-emoji {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.weapon-card h4 {
+    font-size: 13px;
+    margin-bottom: 3px;
+    color: #fff;
+}
+
+.weapon-card .level {
+    color: #4ecdc4;
+    font-size: 11px;
+    margin-bottom: 8px;
+}
+
+.weapon-card .sell-btn {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+    padding: 6px 12px;
+    margin-top: 5px;
+    font-size: 11px;
+    border-radius: 5px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.weapon-card .sell-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.4);
+}
+
+.weapon-inventory-empty {
+    color: #666;
+    font-style: italic;
+    padding: 40px 20px;
+    text-align: center;
 }

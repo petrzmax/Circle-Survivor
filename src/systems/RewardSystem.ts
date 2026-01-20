@@ -22,6 +22,7 @@ export class RewardSystem {
 
   private addXp(amount: number): void {
     const player = this.entityManager.getPlayer();
+    // TODO fix xp multiplier
     player.xp += amount;
   }
 
@@ -33,6 +34,11 @@ export class RewardSystem {
   private connectToEventBus(): void {
     EventBus.on('itemPurchased', ({ cost }) => {
       this.reduceGold(cost);
+    });
+
+    EventBus.on('weaponSold', ({ sellPrice }) => {
+      const player = this.entityManager.getPlayer();
+      player.gold += sellPrice;
     });
 
     EventBus.on('goldCollected', ({ amount }) => {

@@ -172,6 +172,18 @@ export class Game {
       this.emitShopPlayerUpdate();
       this.updateHUD();
     });
+
+    // Listen for weapon sell events from shop
+    EventBus.on('weaponSold', ({ weaponIndex }) => {
+      const player = this.entityManager.getPlayer();
+      const removed = player.removeWeaponAt(weaponIndex);
+
+      if (removed) {
+        this.showNotification(`💰 Sprzedano ${removed.name}`);
+        this.emitShopPlayerUpdate();
+        this.updateHUD();
+      }
+    });
   }
 
   // ============ State Enter Handlers ============

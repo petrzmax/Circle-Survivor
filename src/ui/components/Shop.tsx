@@ -2,9 +2,13 @@ import { GAME_BALANCE } from '@/config/balance.config';
 import { SHOP_ITEMS, ShopItem } from '@/config/shop.config';
 import { EventBus } from '@/core/EventBus';
 import { WeaponType } from '@/types/enums';
+import { Shop as ShopService } from '@/ui/Shop';
 import { shuffleArray } from '@/utils';
 import { JSX } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
+import { WeaponInventory } from './WeaponInventory';
+
+type ShopTab = 'buy' | 'inventory';
 
 interface PlayerState {
   gold: number;
@@ -25,12 +29,14 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
   const [rerollCount, setRerollCount] = useState(0);
   const [shopInitialized, setShopInitialized] = useState(false);
   const [pendingReroll, setPendingReroll] = useState(false);
+  const [activeTab, setActiveTab] = useState<ShopTab>('buy');
 
   // Generate items only when shop first opens (visible changes from false to true)
   useEffect(() => {
     if (visible && !shopInitialized) {
       setRerollCount(0);
       setSoldItems(new Set());
+      setActiveTab('buy');
       generateItemsWithGold(playerState.gold);
       setShopInitialized(true);
     } else if (!visible && shopInitialized) {
@@ -151,74 +157,116 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
     EventBus.emit('startGameRequested', undefined);
   };
 
+  const handleSellWeapon = (weaponIndex: number, sellPrice: number): void => {
+    EventBus.emit('weaponSold', { weaponIndex, sellPrice });
+  };
+
+  const getSellPrice = useCallback(
+    (weaponType: WeaponType): number => ShopService.calculateSellPrice(weaponType, waveNumber),
+    [waveNumber],
+  );
+
   if (!visible) return null;
 
   const rerollPrice = getRerollPrice();
 
+  // Prepare weapons with index for inventory
+  const weaponsWithIndex = playerState.weapons.map((w, index) => ({
+    ...w,
+    index,
+  }));
+
   return (
     <div id="shop">
       <h2>🛒 SKLEP</h2>
-      <p>Wybierz ulepszenie przed kolejną falą!</p>
 
-      <div id="shop-items">
-        {/* Info bar */}
-        <div class="shop-info">
-          <small>
-            Fala {waveNumber} | Bronie: {playerState.weapons.length}/{playerState.maxWeapons} |
-            Przedmioty: {playerState.items?.length ?? 0} |{' '}
-            <span style={{ color: '#ffd700' }}>💰 {playerState.gold}</span>
-          </small>
-          <button
-            class={`reroll-inline-btn ${playerState.gold < rerollPrice ? 'disabled' : ''}`}
-            onClick={playerState.gold >= rerollPrice ? handleReroll : undefined}
-            disabled={playerState.gold < rerollPrice}
-          >
-            🎲 Losuj (💰 {rerollPrice})
-          </button>
-        </div>
+      {/* Tab Navigation */}
+      <div class="shop-tabs">
+        <button
+          class={`shop-tab ${activeTab === 'buy' ? 'active' : ''}`}
+          onClick={(): void => {
+            setActiveTab('buy');
+          }}
+        >
+          🛍️ Kup
+        </button>
+        <button
+          class={`shop-tab ${activeTab === 'inventory' ? 'active' : ''}`}
+          onClick={(): void => {
+            setActiveTab('inventory');
+          }}
+        >
+          ⚔️ Ekwipunek ({playerState.weapons.length})
+        </button>
+      </div>
 
-        {/* Items - filter out sold items before mapping to avoid DOM diffing issues */}
-        {availableItems
-          .filter((itemKey) => !soldItems.has(itemKey) && SHOP_ITEMS[itemKey])
-          .map((itemKey, index) => {
-            const item = SHOP_ITEMS[itemKey]!;
-            const currentPrice = calculatePrice(item.price);
-            const canAfford = playerState.gold >= currentPrice;
+      {/* Info bar - always visible */}
+      <div class="shop-info">
+        <small>
+          Fala {waveNumber} | Bronie: {playerState.weapons.length}/{playerState.maxWeapons} |
+          Przedmioty: {playerState.items?.length ?? 0} |{' '}
+          <span style={{ color: '#ffd700' }}>💰 {playerState.gold}</span>
+        </small>
+        <button
+          class={`reroll-inline-btn ${playerState.gold < rerollPrice ? 'disabled' : ''}`}
+          onClick={playerState.gold >= rerollPrice ? handleReroll : undefined}
+          disabled={playerState.gold < rerollPrice || activeTab !== 'buy'}
+          style={activeTab !== 'buy' ? { opacity: 0, pointerEvents: 'none' } : undefined}
+        >
+          🎲 Losuj (💰 {rerollPrice})
+        </button>
+      </div>
 
-            // Check weapon lock
-            let isWeaponLocked = false;
-            let upgradeInfo = '';
+      {/* Tab Content */}
+      {activeTab === 'buy' && (
+        <div id="shop-items">
+          {availableItems
+            .filter((itemKey) => !soldItems.has(itemKey) && SHOP_ITEMS[itemKey])
+            .map((itemKey, index) => {
+              const item = SHOP_ITEMS[itemKey]!;
+              const currentPrice = calculatePrice(item.price);
+              const canAfford = playerState.gold >= currentPrice;
 
-            if (item.type === 'weapon') {
-              const hasThisWeapon = playerState.weapons.some(
-                (w) => w.type === item.weaponType,
-              );
-              if (playerState.weapons.length >= playerState.maxWeapons) {
-                if (!hasThisWeapon) {
-                  isWeaponLocked = true;
-                } else {
-                  upgradeInfo = '⬆️ Upgrade';
+              let isWeaponLocked = false;
+              let upgradeInfo = '';
+
+              if (item.type === 'weapon') {
+                const hasThisWeapon = playerState.weapons.some((w) => w.type === item.weaponType);
+                if (playerState.weapons.length >= playerState.maxWeapons) {
+                  if (!hasThisWeapon) {
+                    isWeaponLocked = true;
+                  } else {
+                    upgradeInfo = '⬆️ Upgrade';
+                  }
                 }
               }
-            }
 
-            const canBuy = canAfford && !isWeaponLocked;
+              const canBuy = canAfford && !isWeaponLocked;
 
-            return (
-              <ShopItemCard
-                key={`${itemKey}-${index}`}
-                item={item}
-                price={currentPrice}
-                canBuy={canBuy}
-                isLocked={isWeaponLocked}
-                upgradeInfo={upgradeInfo}
-                onBuy={(): void => {
-                  handleBuy(itemKey, currentPrice);
-                }}
-              />
-            );
-          })}
-      </div>
+              return (
+                <ShopItemCard
+                  key={`${itemKey}-${index}`}
+                  item={item}
+                  price={currentPrice}
+                  canBuy={canBuy}
+                  isLocked={isWeaponLocked}
+                  upgradeInfo={upgradeInfo}
+                  onBuy={(): void => {
+                    handleBuy(itemKey, currentPrice);
+                  }}
+                />
+              );
+            })}
+        </div>
+      )}
+
+      {activeTab === 'inventory' && (
+        <WeaponInventory
+          weapons={weaponsWithIndex}
+          onSell={handleSellWeapon}
+          getSellPrice={getSellPrice}
+        />
+      )}
 
       <button id="start-wave-btn" onClick={handleStartWave}>
         ▶ Rozpocznij falę

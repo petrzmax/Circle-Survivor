@@ -65,6 +65,7 @@ export interface GameEvents {
     items: string[];
   };
   weaponPurchased: { weaponType: string; cost: number };
+  weaponSold: { weaponIndex: number; sellPrice: number };
   shopError: void;
 
   // Game state events

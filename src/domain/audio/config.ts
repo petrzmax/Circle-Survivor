@@ -198,6 +198,20 @@ export const SOUND_DEFINITIONS: Record<string, SoundDefinition> = {
     ],
   },
 
+  sell: {
+    steps: [
+      { type: 'tone', frequency: 600, duration: 0.08, oscillator: 'triangle', volume: 0.3 },
+      {
+        type: 'tone',
+        frequency: 400,
+        duration: 0.1,
+        oscillator: 'triangle',
+        volume: 0.25,
+        delay: 60,
+      },
+    ],
+  },
+
   error: {
     steps: [
       { type: 'tone', frequency: 200, duration: 0.1, oscillator: 'square', volume: 0.3 },

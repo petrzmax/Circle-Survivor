@@ -19,6 +19,7 @@ export interface ShopPlayer {
   hp: number;
   addWeapon(type: string): void;
   addItem(itemKey: string): void;
+  applyStat(stat: string, value: number): void;
   heal(amount: number): void;
   [stat: string]: unknown;
 }
@@ -81,12 +82,7 @@ export class Shop {
         player.addItem(itemId);
         for (const [stat, valueRaw] of Object.entries(statItem.effect)) {
           const value = valueRaw as number;
-          if (stat === 'maxHp') {
-            player.maxHp += value;
-            player.hp += value;
-          } else if (player[stat] !== undefined) {
-            (player[stat] as number) += value;
-          }
+          player.applyStat(stat, value);
         }
         break;
       }

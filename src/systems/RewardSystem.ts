@@ -22,8 +22,8 @@ export class RewardSystem {
 
   private addXp(amount: number): void {
     const player = this.entityManager.getPlayer();
-    // TODO fix xp multiplier
-    player.xp += amount;
+    const xpAmount = Math.floor(amount * player.xpMultiplier);
+    player.xp += xpAmount;
   }
 
   private addHealth(amount: number): void {

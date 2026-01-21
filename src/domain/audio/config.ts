@@ -181,6 +181,7 @@ export const SOUND_DEFINITIONS: Record<string, SoundDefinition> = {
       { type: 'tone', frequency: 1000, duration: 0.05, oscillator: 'sine', volume: 0.2 },
       { type: 'tone', frequency: 1200, duration: 0.05, oscillator: 'sine', volume: 0.15 },
     ],
+    cooldown: 25,
   },
 
   thorns: {

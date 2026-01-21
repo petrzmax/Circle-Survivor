@@ -34,7 +34,7 @@ export class AudioSystem {
       // Browser compatibility: Check for AudioContext or fallback to webkit prefix
       // In TypeScript strict mode with modern lib.dom, window.AudioContext is always defined,
       // but we still check for webkit fallback for older Safari browsers at runtime
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+       
       const AudioContextClass =
         window.AudioContext || (window as WindowWithWebkit).webkitAudioContext;
 

@@ -1,4 +1,5 @@
 import { injectable } from 'tsyringe';
+import toast from 'react-hot-toast';
 import { GAME_BALANCE } from '@/config/balance.config';
 import { CHARACTER_TYPES } from '@/config/characters.config';
 import { EventBus } from '@/core/EventBus';
@@ -153,7 +154,7 @@ export class Game {
       const removed = player.removeWeaponAt(weaponIndex);
 
       if (removed) {
-        this.showNotification(`💰 Sprzedano ${removed.name}`);
+        toast(`💰 Sprzedano ${removed.name}`);
         this.emitShopPlayerUpdate();
         this.updateHUD();
       }

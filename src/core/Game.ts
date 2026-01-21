@@ -1,3 +1,4 @@
+import { injectable } from 'tsyringe';
 import { GAME_BALANCE } from '@/config/balance.config';
 import { CHARACTER_TYPES } from '@/config/characters.config';
 import { EventBus } from '@/core/EventBus';
@@ -23,7 +24,7 @@ import {
   VisualEffect,
   WeaponType,
 } from '@/types/enums';
-import { Shop, ShopPlayer, ShopWeapon } from '@/ui/Shop';
+import { Shop, ShopPlayer, ShopWeapon } from '@/systems/Shop';
 import {
   copyVector,
   degreesToRadians,
@@ -32,36 +33,22 @@ import {
   randomRange,
   vectorFromAngle,
 } from '@/utils';
-import toast from 'react-hot-toast';
 import { PickupSpawnSystem } from './../systems/PickupSpawnSystem';
 import { RenderSystem } from './../systems/RenderSystem';
 import { RewardSystem } from './../systems/RewardSystem';
 
+@injectable()
 export class Game {
   // Canvas
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
 
-  // State Manager (FSM)
-  private stateManager: StateManager;
+  // State
   private lastTime: number = 0;
   private selectedCharacter: CharacterType | null = null;
 
-  // Entity Manager
-  private entityManager: EntityManager;
-
-  // Systems
-  private collisionSystem: CollisionSystem;
-  private combatSystem!: CombatSystem;
+  // Systems (not injected - no deps or special cases)
   private effectsSystem: EffectsSystem;
-  private inputSystem: InputSystem;
-  // @ts-expect-error - initialized in constructor
-  private pickupSpawnSystem: PickupSpawnSystem;
-  private renderSystem: RenderSystem;
-  // @ts-expect-error - initialized in constructor
-  private rewardSystem: RewardSystem;
-  private shop: Shop;
-  private waveManager: WaveManager;
 
   // Regeneration tracking
   private lastRegenTime: number = 0;
@@ -75,48 +62,35 @@ export class Game {
   // Debug display options
   private showEnemyCount: boolean = false;
 
-  // Dev menu (development only) - stored for potential future use
-  // @ts-expect-error - stored for future use
-  private _devMenu?: InstanceType<typeof import('@/debug/DevMenu').DevMenu>;
-
-  public constructor() {
+  public constructor(
+    private stateManager: StateManager,
+    private entityManager: EntityManager,
+    private collisionSystem: CollisionSystem,
+    private combatSystem: CombatSystem,
+    private inputSystem: InputSystem,
+    private renderSystem: RenderSystem,
+    pickupSpawnSystem: PickupSpawnSystem,
+    rewardSystem: RewardSystem,
+    private waveManager: WaveManager,
+    private shop: Shop,
+  ) {
+    // These systems auto-connect to EventBus - instantiation is enough
+    void pickupSpawnSystem;
+    void rewardSystem;
     // Get canvas
     this.canvas = document.getElementById('game') as HTMLCanvasElement;
     this.ctx = this.canvas.getContext('2d')!;
     this.canvas.width = 900;
     this.canvas.height = 700;
 
-    // Initialize StateManager (FSM) first
-    this.stateManager = new StateManager();
-
-    // Initialize systems
-    this.entityManager = new EntityManager();
-    this.collisionSystem = new CollisionSystem(this.entityManager);
+    // Initialize systems without DI (no deps or special cases)
     this.effectsSystem = new EffectsSystem();
-    this.renderSystem = new RenderSystem(this.entityManager);
-    this.waveManager = new WaveManager();
-    this.shop = new Shop();
+
     // AudioSystem initializes itself via EventBus - no reference needed
     new AudioSystem();
-    this.pickupSpawnSystem = new PickupSpawnSystem(this.entityManager);
-    this.rewardSystem = new RewardSystem(this.entityManager);
-    this.inputSystem = new InputSystem(this.stateManager);
-
-    this.combatSystem = new CombatSystem(this.entityManager);
 
     // Setup state change listeners
     this.setupStateListeners();
-
-    // Setup shop callbacks
-    this.shop.setCallbacks({
-      getWaveNumber: () => this.waveManager.waveNumber,
-      showNotification: (message: string) => {
-        this.showNotification(message);
-      },
-      updateHUD: () => {
-        this.updateHUD();
-      },
-    });
 
     // Bind to window for global access
     (window as unknown as { game: Game }).game = this;
@@ -296,7 +270,7 @@ export class Game {
    */
   private async initDevMenu(): Promise<void> {
     const { DevMenu } = await import('@/debug/DevMenu');
-    this._devMenu = new DevMenu({
+    new DevMenu({
       // State Manager
       stateManager: this.stateManager,
       getCanvasSize: () => ({ width: this.canvas.width, height: this.canvas.height }),
@@ -355,14 +329,6 @@ export class Game {
     for (const enemy of enemies) {
       enemy.destroy();
     }
-  }
-
-  // ============ Setup ============
-
-  private showNotification(message: string, type?: 'success' | 'error' | 'info'): void {
-    if (type === 'success') toast.success(message);
-    else if (type === 'error') toast.error(message);
-    else toast(message);
   }
 
   // ============ Wave Management ============

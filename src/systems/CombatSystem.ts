@@ -2,6 +2,7 @@
  * CombatSystem - Handles damage, explosions, and combat effects.
  * Processes collision results and applies damage, knockback, etc.
  */
+import { singleton } from 'tsyringe';
 import { GAME_BALANCE } from '@/config/balance.config';
 import { EventBus } from '@/core/EventBus';
 import { Enemy } from '@/domain/enemies';
@@ -57,6 +58,7 @@ export interface CombatRuntimeConfig {
  * combatSystem.processCollisions(collisions, currentTime);
  * ```
  */
+@singleton()
 export class CombatSystem {
   private entityManager: EntityManager;
 

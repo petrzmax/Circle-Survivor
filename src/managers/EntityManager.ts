@@ -5,6 +5,7 @@
  * Future: Object pooling can be added here to reduce GC pressure.
  */
 
+import { singleton } from 'tsyringe';
 import { Enemy } from '@/domain/enemies';
 import { Deployable } from '@/entities/Deployable';
 import { Entity } from '@/entities/Entity';
@@ -19,18 +20,11 @@ import { distanceSquared, pointInRect, Vector2 } from '@/utils';
 export type EntityCategory = 'player' | 'enemy' | 'projectile' | 'deployable' | 'pickup';
 
 /**
- * EntityManager configuration
- */
-export interface EntityManagerConfig {
-  /** Enable debug logging */
-  debug?: boolean;
-}
-
-/**
  * Manages all game entities with typed collections.
  * Provides efficient add/remove/query operations.
  *
  */
+@singleton()
 export class EntityManager {
   /** Current player (single instance) */
   private player: Player | null = null;
@@ -39,11 +33,8 @@ export class EntityManager {
   private deployables = new Map<number, Deployable>();
   private pickups = new Map<number, Pickup>();
   /** Debug mode */
-  private debug: boolean;
-
-  public constructor(config: EntityManagerConfig = {}) {
-    this.debug = config.debug ?? false;
-  }
+  // TODO - create better approach
+  private debug: boolean = false;
 
   // ========== Player ==========
 

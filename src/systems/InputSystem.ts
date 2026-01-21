@@ -4,6 +4,7 @@
  * Provides analog input values when gamepad is used.
  */
 
+import { singleton } from 'tsyringe';
 import { StateManager } from '@/managers/StateManager';
 import { InputHandler, KeyState } from './InputHandler';
 import { GamepadHandler } from './GamepadHandler';
@@ -28,6 +29,7 @@ export interface ExtendedInputState {
 /**
  * InputSystem - coordinates keyboard and gamepad input.
  */
+@singleton()
 export class InputSystem {
   private keyboardHandler: InputHandler;
   private gamepadHandler: GamepadHandler;

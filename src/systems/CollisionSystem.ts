@@ -3,6 +3,7 @@
  * Emits events when collisions are detected for other systems to handle.
  */
 
+import { singleton } from 'tsyringe';
 import { Enemy } from '@/domain/enemies';
 import { Deployable } from '@/entities/Deployable';
 import { Pickup } from '@/entities/Pickup';
@@ -27,28 +28,17 @@ export interface CollisionResult {
 }
 
 /**
- * CollisionSystem configuration
- */
-export interface CollisionSystemConfig {
-  /** Player pickup collection radius */
-  pickupRadius?: number;
-  /** Player pickup attraction radius */
-  attractionRadius?: number;
-}
-
-/**
  * Handles all collision detection in the game.
  * Uses spatial queries from EntityManager for efficiency.
  */
+@singleton()
 export class CollisionSystem {
-  private entityManager: EntityManager;
-  private pickupRadius: number;
-  private attractionRadius: number;
+  // TODO these should not, be stored here, verify
+  private pickupRadius: number = 25;
+  private attractionRadius: number = 100;
 
-  public constructor(entityManager: EntityManager, config: CollisionSystemConfig = {}) {
-    this.entityManager = entityManager;
-    this.pickupRadius = config.pickupRadius ?? 25;
-    this.attractionRadius = config.attractionRadius ?? 100;
+  public constructor(private entityManager: EntityManager) {
+    // Config values use defaults - can add setters if needed
   }
 
   /**

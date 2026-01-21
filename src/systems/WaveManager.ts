@@ -3,6 +3,7 @@
  * Controls wave progression, enemy spawning, boss spawning
  */
 
+import { singleton } from 'tsyringe';
 import { GAME_BALANCE } from '@/config/balance.config';
 import { EventBus } from '@/core/EventBus';
 import { Enemy } from '@/domain/enemies';
@@ -19,6 +20,7 @@ export interface WaveUpdateResult {
 
 // ============ Wave Manager Class ============
 
+@singleton()
 export class WaveManager {
   public waveNumber: number = 1;
   private waveTime: number = 30; // seconds

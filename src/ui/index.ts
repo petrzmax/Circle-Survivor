@@ -3,8 +3,8 @@
  */
 
 // TODO Legacy exports (to be removed after Preact migration)
-export { Shop } from './Shop';
-export type { ShopPlayer, ShopWeapon, ShopCallbacks } from './Shop';
+export { Shop } from '@/systems/Shop';
+export type { ShopPlayer, ShopWeapon } from '@/systems/Shop';
 
 export { Leaderboard } from './Leaderboard';
 export type { LeaderboardEntry } from './Leaderboard';

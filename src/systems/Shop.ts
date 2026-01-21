@@ -3,10 +3,12 @@
  * UI rendering is handled by Preact Shop component
  */
 
-import { GAME_BALANCE } from '@/config/balance.config';
+import { singleton } from 'tsyringe';
+import toast from 'react-hot-toast';
 import { SHOP_ITEMS, WeaponShopItem } from '@/config/shop.config';
 import { WeaponType } from '@/types/enums';
 import { randomElementStrict } from '@/utils';
+import { GAME_BALANCE } from '@/config';
 
 // ============ Types ============
 
@@ -32,23 +34,10 @@ export interface ShopWeapon {
   [bonusType: string]: unknown;
 }
 
-export interface ShopCallbacks {
-  getWaveNumber(): number;
-  showNotification(message: string): void;
-  updateHUD(): void;
-}
-
 // ============ Shop Class ============
 
+@singleton()
 export class Shop {
-  private callbacks: ShopCallbacks | null = null;
-
-  /**
-   * Set callbacks for game integration
-   */
-  public setCallbacks(callbacks: ShopCallbacks): void {
-    this.callbacks = callbacks;
-  }
 
   /**
    * Apply item effect to player.
@@ -56,8 +45,6 @@ export class Shop {
    * No price check or event emission - those are handled by caller.
    */
   public applyItemEffect(itemId: string, player: ShopPlayer): void {
-    if (!this.callbacks) return;
-
     const item = SHOP_ITEMS[itemId];
     if (!item) return;
 
@@ -69,7 +56,7 @@ export class Shop {
           if (sameTypeWeapons.length > 0) {
             const randomWeapon = randomElementStrict(sameTypeWeapons);
             randomWeapon.upgrade();
-            this.callbacks.showNotification(`⬆️ ${item.name} +${randomWeapon.level}`);
+            toast(`⬆️ ${item.name} +${randomWeapon.level}`);
           }
         } else {
           player.addWeapon(weaponItem.weaponType);

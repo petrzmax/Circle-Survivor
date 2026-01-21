@@ -1,6 +1,8 @@
+import { singleton } from 'tsyringe';
 import { EventBus } from '@/core';
 import { EntityManager } from '@/managers';
 
+@singleton()
 export class RewardSystem {
   private entityManager: EntityManager;
 

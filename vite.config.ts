@@ -3,7 +3,23 @@ import { resolve } from 'path';
 import preact from '@preact/preset-vite';
 
 export default defineConfig({
-  plugins: [preact()],
+  plugins: [
+    preact({
+      /**
+       * Babel plugins required for TSyringe dependency injection.
+       * - transform-typescript-metadata: Emits runtime type metadata for constructor params
+       *   (enables TSyringe to auto-resolve class dependencies without @inject())
+       * - plugin-proposal-decorators: Enables @singleton()/@injectable() decorator syntax
+       *   (legacy: true required for compatibility with metadata reflection)
+       */
+      babel: {
+        plugins: [
+          'babel-plugin-transform-typescript-metadata',
+          ['@babel/plugin-proposal-decorators', { legacy: true }],
+        ],
+      },
+    }),
+  ],
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),

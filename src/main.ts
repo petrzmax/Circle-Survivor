@@ -3,6 +3,8 @@
  * Initializes the game when page loads
  */
 
+import 'reflect-metadata';
+import { container } from 'tsyringe';
 import { Game } from '@/core/Game';
 import { mountUI } from '@/ui';
 
@@ -11,6 +13,6 @@ window.addEventListener('load', () => {
   // Mount Preact UI layer
   mountUI();
 
-  // Initialize game
-  new Game();
+  // Initialize game via DI container
+  container.resolve(Game);
 });

@@ -24,6 +24,10 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
 
+    /* TSyringe DI */
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
     /* Paths */
     "baseUrl": ".",
     "paths": {

@@ -4,6 +4,7 @@
  * Validates and enforces valid state transitions.
  */
 
+import { singleton } from 'tsyringe';
 import { EventBus } from '@/core/EventBus';
 import { GameState } from '@/types/enums';
 
@@ -11,6 +12,7 @@ import { GameState } from '@/types/enums';
  * Finite State Machine for game state management.
  * All state changes are triggered via EventBus events.
  */
+@singleton()
 export class StateManager {
   private currentState: GameState = GameState.MENU;
   private validTransitions: Map<GameState, Set<GameState>>;

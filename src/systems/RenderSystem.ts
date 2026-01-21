@@ -1,3 +1,4 @@
+import { singleton } from 'tsyringe';
 import { EntityManager } from '@/managers';
 import {
   renderDeployable,
@@ -9,6 +10,7 @@ import {
 import { renderBackground } from '@/rendering/BackgroundRenderer';
 import { renderEnemy } from '@/rendering/EnemyRenderer';
 
+@singleton()
 export class RenderSystem {
   private entityManager: EntityManager;
 

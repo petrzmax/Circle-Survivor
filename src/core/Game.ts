@@ -2,7 +2,7 @@ import { injectable } from 'tsyringe';
 import toast from 'react-hot-toast';
 import { GAME_BALANCE } from '@/config/balance.config';
 import { CHARACTER_TYPES } from '@/config/characters.config';
-import { EventBus } from '@/core/EventBus';
+import { EventBus } from '@/events/EventBus';
 import { AudioSystem } from '@/domain/audio/AudioSystem';
 import { Enemy } from '@/domain/enemies';
 import { WeaponConfig, WeaponInstance } from '@/domain/weapons/type';

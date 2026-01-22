@@ -1,4 +1,4 @@
-import { EventBus } from '@/core/EventBus';
+import { EventBus } from '@/events/EventBus';
 import { CharacterType, GameState } from '@/types/enums';
 import { GAME_VERSION } from '@/version';
 import { JSX } from 'preact';

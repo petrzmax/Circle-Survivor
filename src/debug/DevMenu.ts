@@ -4,7 +4,7 @@
  */
 
 import { SHOP_ITEMS } from '@/config/shop.config';
-import { EventBus } from '@/core/EventBus';
+import { EventBus } from '@/events/EventBus';
 import { ENEMY_TYPES } from '@/domain/enemies/config';
 import { WEAPON_TYPES } from '@/domain/weapons/config';
 import { StateManager } from '@/managers/StateManager';

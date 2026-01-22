@@ -1,5 +1,5 @@
 import { JSX } from 'preact';
-import { EventBus } from '@/core/EventBus';
+import { EventBus } from '@/events/EventBus';
 import { CharacterType } from '@/types/enums';
 import { CHARACTER_TYPES, CharacterConfig } from '@/config/characters.config';
 import { WEAPON_TYPES } from '@/domain/weapons/config';

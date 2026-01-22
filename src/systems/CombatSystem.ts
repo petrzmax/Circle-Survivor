@@ -4,7 +4,7 @@
  */
 import { singleton } from 'tsyringe';
 import { GAME_BALANCE } from '@/config/balance.config';
-import { EventBus } from '@/core/EventBus';
+import { EventBus } from '@/events/EventBus';
 import { Enemy } from '@/domain/enemies';
 import { WEAPON_TYPES } from '@/domain/weapons/config';
 import { Pickup } from '@/entities/Pickup';

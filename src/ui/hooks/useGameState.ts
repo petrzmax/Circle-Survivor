@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { EventBus } from '@/core/EventBus';
+import { EventBus } from '@/events/EventBus';
 import { GameState } from '@/types/enums';
 
 /**

@@ -4,7 +4,7 @@
  * UI button handling is done by Preact components via EventBus.
  */
 
-import { EventBus } from '@/core/EventBus';
+import { EventBus } from '@/events/EventBus';
 import { StateManager } from '@/managers/StateManager';
 import { GameState } from '@/types/enums';
 

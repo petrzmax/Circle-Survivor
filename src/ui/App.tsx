@@ -1,4 +1,4 @@
-import { EventBus } from '@/core/EventBus';
+import { EventBus } from '@/events/EventBus';
 import { CharacterType, GameState, WeaponType } from '@/types/enums';
 import { JSX } from 'preact';
 import { useEffect, useState } from 'preact/hooks';

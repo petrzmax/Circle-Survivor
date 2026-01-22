@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
-import { EventBus, GameEvents } from '@/core/EventBus';
+import { EventBus } from '@/events/EventBus';
+import { GameEvents } from '@/events/GameEvents';
 
 /**
  * Hook to subscribe to EventBus events and get the latest payload.

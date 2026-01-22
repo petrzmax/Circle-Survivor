@@ -1,6 +1,6 @@
 import { GAME_BALANCE } from '@/config/balance.config';
 import { SHOP_ITEMS, ShopItem } from '@/config/shop.config';
-import { EventBus } from '@/core/EventBus';
+import { EventBus } from '@/events/EventBus';
 import { WeaponType } from '@/types/enums';
 import { Shop as ShopService } from '@/systems/Shop';
 import { shuffleArray } from '@/utils';

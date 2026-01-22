@@ -94,6 +94,7 @@ export const SOUND_DEFINITIONS: Record<string, SoundDefinition> = {
 
   crossbow: {
     steps: [{ type: 'tone', frequency: 250, duration: 0.1, oscillator: 'triangle', volume: 0.4 }],
+    cooldown: 20,
   },
 
   // ========== Explosion Sounds ==========

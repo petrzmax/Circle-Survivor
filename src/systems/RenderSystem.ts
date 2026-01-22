@@ -1,4 +1,3 @@
-import { singleton } from 'tsyringe';
 import { EntityManager } from '@/managers';
 import {
   renderDeployable,
@@ -9,13 +8,26 @@ import {
 } from '@/rendering';
 import { renderBackground } from '@/rendering/BackgroundRenderer';
 import { renderEnemy } from '@/rendering/EnemyRenderer';
+import { singleton } from 'tsyringe';
+import { HUD } from './HUD';
 
 @singleton()
 export class RenderSystem {
   private entityManager: EntityManager;
 
+  // Debug display flags
+  private showEnemyCount: boolean = false;
+
   public constructor(entityManager: EntityManager) {
     this.entityManager = entityManager;
+  }
+
+  /**
+   * Set whether to show enemy count on canvas (dev tool)
+   */
+  // TODO consider event instead, to decouple
+  public setShowEnemyCount(show: boolean): void {
+    this.showEnemyCount = show;
   }
 
   public renderAll(ctx: CanvasRenderingContext2D, currentTime: number): void {
@@ -26,6 +38,11 @@ export class RenderSystem {
     this.renderProjectiles(ctx);
     this.renderEnemies(ctx);
     this.renderPlayer(ctx, currentTime);
+
+    // Debug overlays
+    if (this.showEnemyCount) {
+      HUD.renderEnemyCount(ctx, this.entityManager.getActiveEnemyCount(), ctx.canvas.height);
+    }
   }
 
   private renderPlayer(ctx: CanvasRenderingContext2D, currentTime: number): void {

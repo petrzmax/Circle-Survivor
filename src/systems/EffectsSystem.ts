@@ -3,8 +3,8 @@
  * Rendering and updating of temporary visual effects.
  */
 
-import { EventBus } from '@/core';
 import { Enemy } from '@/domain/enemies';
+import { EventBus } from '@/events/EventBus';
 import { renderExplosion } from '@/rendering';
 import { EnemyType, VisualEffect } from '@/types';
 import { distance, randomAngle, randomChance, randomRange } from '@/utils';

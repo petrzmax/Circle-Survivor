@@ -1,20 +1,19 @@
-import { injectable } from 'tsyringe';
-import toast from 'react-hot-toast';
 import { GAME_BALANCE } from '@/config/balance.config';
 import { CHARACTER_TYPES } from '@/config/characters.config';
-import { EventBus } from '@/events/EventBus';
 import { AudioSystem } from '@/domain/audio/AudioSystem';
 import { Enemy } from '@/domain/enemies';
 import { WeaponConfig, WeaponInstance } from '@/domain/weapons/type';
 import { Deployable, DeployableConfig } from '@/entities/Deployable';
 import { Player } from '@/entities/Player';
 import { Projectile } from '@/entities/Projectile';
+import { EventBus } from '@/events/EventBus';
 import { EntityManager, StateManager } from '@/managers';
 import { CollisionSystem } from '@/systems/CollisionSystem';
 import { CombatSystem } from '@/systems/CombatSystem';
 import { EffectsSystem } from '@/systems/EffectsSystem';
 import { HUD } from '@/systems/HUD';
 import { InputSystem } from '@/systems/InputSystem';
+import { Shop, ShopPlayer, ShopWeapon } from '@/systems/Shop';
 import { WaveManager } from '@/systems/WaveManager';
 import {
   CharacterType,
@@ -25,7 +24,6 @@ import {
   VisualEffect,
   WeaponType,
 } from '@/types/enums';
-import { Shop, ShopPlayer, ShopWeapon } from '@/systems/Shop';
 import {
   copyVector,
   degreesToRadians,
@@ -34,6 +32,8 @@ import {
   randomRange,
   vectorFromAngle,
 } from '@/utils';
+import toast from 'react-hot-toast';
+import { injectable } from 'tsyringe';
 import { PickupSpawnSystem } from './../systems/PickupSpawnSystem';
 import { RenderSystem } from './../systems/RenderSystem';
 import { RewardSystem } from './../systems/RewardSystem';
@@ -59,9 +59,6 @@ export class Game {
 
   // Game loop tracking - prevents multiple loops
   private isGameLoopRunning: boolean = false;
-
-  // Debug display options
-  private showEnemyCount: boolean = false;
 
   public constructor(
     private stateManager: StateManager,
@@ -95,11 +92,6 @@ export class Game {
 
     // Bind to window for global access
     (window as unknown as { game: Game }).game = this;
-
-    // Initialize dev menu (development only)
-    if (import.meta.env.DEV) {
-      void this.initDevMenu();
-    }
   }
 
   /**
@@ -260,72 +252,24 @@ export class Game {
     this.addWeapon(charConfig.startingWeapon);
 
     // Reset game state
-    this.waveManager = new WaveManager();
+    this.waveManager.reset();
 
     this.waveManager.startWave();
     this.updateHUD();
   }
 
   /**
-   * Initialize dev menu with dependency injection
+   * Get canvas dimensions (used by DevMenu)
    */
-  private async initDevMenu(): Promise<void> {
-    const { DevMenu } = await import('@/debug/DevMenu');
-    new DevMenu({
-      // State Manager
-      stateManager: this.stateManager,
-      getCanvasSize: () => ({ width: this.canvas.width, height: this.canvas.height }),
-
-      // Debug display options
-      setShowEnemyCount: (show) => {
-        this.showEnemyCount = show;
-      },
-
-      // Wave control
-      getCurrentWave: () => this.waveManager.currentWave,
-      skipToWave: (wave) => {
-        this.waveManager.skipToWave(wave);
-      },
-
-      // Player actions
-      getPlayer: () => {
-        const player = this.entityManager.getPlayer();
-        return {
-          hp: player.hp,
-          maxHp: player.maxHp,
-          godMode: player.godMode,
-          setGodMode: (enabled) => {
-            player.godMode = enabled;
-          },
-          heal: (amount) => {
-            player.heal(amount);
-          },
-          addItem: (itemId) => {
-            player.addItem(itemId);
-          },
-          applyStat: (stat, value) => {
-            player.applyStat(stat as keyof import('@/entities/Player').PlayerStats, value);
-          },
-        };
-      },
-
-      // Entity actions
-      addWeapon: (type) => {
-        this.addWeapon(type);
-      },
-      spawnEnemy: (type, x, y) => {
-        this.spawnEnemy(type, x, y);
-      },
-      killAllEnemies: () => {
-        this.killAllEnemies();
-      },
-    });
+  // TODO probably some Canvas provide / service should be added fo these
+  public getCanvasSize(): { width: number; height: number } {
+    return { width: this.canvas.width, height: this.canvas.height };
   }
 
   /**
    * Kill all active enemies (dev tool)
    */
-  private killAllEnemies(): void {
+  public killAllEnemies(): void {
     const enemies = this.entityManager.getActiveEnemies();
     for (const enemy of enemies) {
       enemy.destroy();
@@ -341,7 +285,8 @@ export class Game {
 
   // ============ Weapon Management ============
 
-  private addWeapon(type: WeaponType): void {
+  // TODO player / weapon manager?
+  public addWeapon(type: WeaponType): void {
     const player = this.entityManager.getPlayer();
 
     // Let player handle weapon creation and management
@@ -790,7 +735,7 @@ export class Game {
    * Spawn enemy at position (used by DevMenu)
    * TODO: When SpawnSystem is fully integrated, delegate to SpawnSystem.spawnEnemyAt()
    */
-  private spawnEnemy(type: EnemyType, x: number, y: number): void {
+  public spawnEnemy(type: EnemyType, x: number, y: number): void {
     const enemy = new Enemy({ position: { x, y }, type });
     this.entityManager.addEnemy(enemy);
 
@@ -833,11 +778,6 @@ export class Game {
 
     // Render boss health bar
     this.renderBossHealthBar();
-
-    // Render enemy count (dev mode only, when enabled)
-    if (this.showEnemyCount) {
-      HUD.renderEnemyCount(this.ctx, this.entityManager.getActiveEnemyCount(), this.canvas.height);
-    }
   }
 
   private renderBossHealthBar(): void {

@@ -1,5 +1,5 @@
 import { singleton } from 'tsyringe';
-import { EventBus } from '@/core';
+import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers';
 
 @singleton()

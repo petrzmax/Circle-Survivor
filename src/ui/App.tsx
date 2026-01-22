@@ -1,3 +1,4 @@
+import { DevMenu } from '@/debug/DevMenu';
 import { EventBus } from '@/events/EventBus';
 import { CharacterType, GameState, WeaponType } from '@/types/enums';
 import { JSX } from 'preact';
@@ -147,6 +148,7 @@ export function App(): JSX.Element {
       />
       <Shop visible={showShop} playerState={playerState} waveNumber={waveNumber} />
       <Menu gameState={gameState} finalWave={finalWave} finalXp={finalXp} character={character} />
+      {import.meta.env.DEV && <DevMenu />}
     </>
   );
 }

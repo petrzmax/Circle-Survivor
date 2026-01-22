@@ -3,12 +3,12 @@
  * Controls wave progression, enemy spawning, boss spawning
  */
 
-import { singleton } from 'tsyringe';
 import { GAME_BALANCE } from '@/config/balance.config';
-import { EventBus } from '@/events/EventBus';
 import { Enemy } from '@/domain/enemies';
+import { EventBus } from '@/events/EventBus';
 import { EnemyType } from '@/types/enums';
 import { CanvasBounds, getSpawnPoint } from '@/utils/random';
+import { singleton } from 'tsyringe';
 
 // ============ Types ============
 
@@ -34,6 +34,20 @@ export class WaveManager {
 
   public constructor() {
     this.timeRemaining = this.waveTime;
+  }
+
+  /**
+   * Reset wave manager to initial state (for new game)
+   */
+  public reset(): void {
+    this.waveNumber = 1;
+    this.timeRemaining = this.waveTime;
+    this.isWaveActive = false;
+    this.spawnTimer = 0;
+    this.spawnInterval = 800;
+    this.enemiesPerSpawn = 2;
+    this.bossSpawned = false;
+    this.lastCountdownSecond = -1;
   }
 
   /**

@@ -1,11 +1,11 @@
-import { singleton } from 'tsyringe';
 import { GAME_BALANCE } from '@/config';
-import { EventBus } from '@/core';
 import { Enemy } from '@/domain/enemies';
+import { EventBus } from '@/events/EventBus';
 import { createGoldPickup, createHealthPickup } from '@/factories';
 import { EntityManager } from '@/managers';
 import { randomChance, randomInt, randomPointInCircle, vectorFromAngle } from '@/utils';
 import { addVectors, TWO_PI } from '@/utils/math';
+import { singleton } from 'tsyringe';
 
 @singleton()
 export class PickupSpawnSystem {

@@ -1,5 +1,5 @@
-import { DeployableType, ProjectileType, WeaponCategory, WeaponType } from '@/types/enums';
-import { WeaponConfig } from './type';
+import { DeployableType, ProjectileType, VisualEffect } from '@/types/enums';
+import { WeaponCategory, WeaponConfig, WeaponType } from './type';
 
 export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   [WeaponType.PISTOL]: {
@@ -101,6 +101,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     spread: 0,
     explosive: true,
     explosionRadius: 80,
+    explosionEffect: VisualEffect.STANDARD,
     price: 180,
     color: '#ff0000',
     bulletRadius: 10,
@@ -136,6 +137,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     spread: 0,
     explosive: true,
     explosionRadius: 70,
+    explosionEffect: VisualEffect.STANDARD,
     price: 130,
     color: '#333333',
     bulletRadius: 12,
@@ -153,6 +155,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     spread: 0,
     explosive: true,
     explosionRadius: 200,
+    explosionEffect: VisualEffect.NUKE,
     price: 500,
     color: '#00ff00',
     bulletRadius: 15,
@@ -207,6 +210,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     spread: 0,
     explosive: true,
     explosionRadius: 120,
+    explosionEffect: VisualEffect.HOLY,
     price: 250,
     color: '#ffd700',
     bulletRadius: 12,
@@ -225,6 +229,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     spread: 0,
     explosive: true,
     explosionRadius: 90,
+    explosionEffect: VisualEffect.BANANA,
     price: 220,
     color: '#ffff00',
     bulletRadius: 10,
@@ -263,6 +268,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     spread: 0,
     explosive: true,
     explosionRadius: 45,
+    explosionEffect: VisualEffect.BANANA,
     price: 0,
     color: '#ffff00',
     bulletRadius: 6,

@@ -1,4 +1,3 @@
-
 /**
  * Event callback type
  */

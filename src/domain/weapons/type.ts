@@ -1,5 +1,5 @@
 import { Deployable, Projectile } from '@/entities';
-import { DeployableType, ProjectileType, WeaponCategory, WeaponType } from '@/types';
+import { DeployableType, ProjectileType, VisualEffect } from '@/types';
 
 export interface WeaponConfig {
   name: string;
@@ -19,6 +19,7 @@ export interface WeaponConfig {
   pierceCount?: number;
   explosive?: boolean;
   explosionRadius?: number;
+  explosionEffect?: VisualEffect;
   bulletRadius?: number;
   knockbackMultiplier?: number;
   shortRange?: boolean;
@@ -51,4 +52,34 @@ export interface WeaponEntityConfig {
   type: WeaponType;
   /** Fire offset for staggered shooting (milliseconds) */
   fireOffset?: number;
+}
+
+export enum WeaponType {
+  PISTOL = 'pistol',
+  SMG = 'smg',
+  SHOTGUN = 'shotgun',
+  SNIPER = 'sniper',
+  LASER = 'laser',
+  MINIGUN = 'minigun',
+  BAZOOKA = 'bazooka',
+  FLAMETHROWER = 'flamethrower',
+  MINES = 'mines',
+  NUKE = 'nuke',
+  SCYTHE = 'scythe',
+  SWORD = 'sword',
+  HOLY_GRENADE = 'holyGrenade',
+  BANANA = 'banana',
+  CROSSBOW = 'crossbow',
+}
+
+/**
+ * Weapon categories for behavior grouping
+ */
+export enum WeaponCategory {
+  GUN = 'gun',
+  ROCKET = 'rocket',
+  SPECIAL = 'special',
+  MELEE = 'melee',
+  GRENADE = 'grenade',
+  DEPLOYABLE = 'deployable',
 }

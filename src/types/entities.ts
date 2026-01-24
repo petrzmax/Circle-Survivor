@@ -2,25 +2,19 @@
  * Entity interfaces defining the shape of game objects.
  */
 
+import type { WeaponType } from '@/domain/weapons/type';
 import type {
-  ITransform,
-  IVelocity,
   ICircleCollider,
-  IRenderable,
-  IUpdatable,
-  IHealth,
   IDamageDealer,
-  IKnockbackable,
   IExpirable,
+  IHealth,
+  IKnockbackable,
+  IRenderable,
+  ITransform,
+  IUpdatable,
+  IVelocity,
 } from './components';
-import type {
-  ProjectileType,
-  DeployableType,
-  EnemyType,
-  PickupType,
-  WeaponType,
-  VisualEffect,
-} from './enums';
+import type { DeployableType, EnemyType, PickupType, ProjectileType, VisualEffect } from './enums';
 
 // ============ BASE ENTITY ============
 

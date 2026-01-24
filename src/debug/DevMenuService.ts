@@ -1,12 +1,15 @@
 import { SHOP_ITEMS } from '@/config/shop.config';
 import { Game } from '@/core/Game';
+import { WeaponType } from '@/domain/weapons/type';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
+import { WeaponManager } from '@/managers/WeaponManager';
 import { RenderSystem } from '@/systems/RenderSystem';
 import { WaveManager } from '@/systems/WaveManager';
-import { EnemyType, WeaponType } from '@/types/enums';
+import { EnemyType } from '@/types/enums';
 import { getSpawnPoint } from '@/utils';
 import { singleton } from 'tsyringe';
+import { ConfigService } from './../core/ConfigService';
 
 /**
  * Player state snapshot for DevMenu display
@@ -32,13 +35,11 @@ export class DevMenuService {
     private entityManager: EntityManager,
     private waveManager: WaveManager,
     private renderSystem: RenderSystem,
+    private weaponManager: WeaponManager,
+    private configService: ConfigService,
   ) {}
 
   // ============ Wave Control ============
-
-  public getCanvasSize(): { width: number; height: number } {
-    return getGame().getCanvasSize();
-  }
 
   public getCurrentWave(): number {
     return this.waveManager.currentWave;
@@ -108,13 +109,13 @@ export class DevMenuService {
   // ============ Entity Actions ============
 
   public addWeapon(type: WeaponType): void {
-    getGame().addWeapon(type);
+    this.weaponManager.addWeapon(type);
     console.log(`[DevMenu] Added weapon: ${type}`);
   }
 
   // TODO should be delegated to spawn system when ready
   public spawnEnemy(type: EnemyType, count: number = 1): void {
-    const canvas = this.getCanvasSize();
+    const canvas = this.configService.getCanvasBounds();
     const game = getGame();
     for (let i = 0; i < count; i++) {
       const point = getSpawnPoint(canvas, 30);

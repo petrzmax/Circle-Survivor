@@ -3,7 +3,7 @@
  */
 
 import { SHOP_ITEMS, WeaponShopItem } from '@/config/shop.config';
-import { WeaponType } from '@/types/enums';
+import { WeaponType } from '@/domain/weapons/type';
 import { JSX } from 'preact';
 
 interface WeaponData {

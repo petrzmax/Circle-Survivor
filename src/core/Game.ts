@@ -2,8 +2,7 @@ import { GAME_BALANCE } from '@/config/balance.config';
 import { CHARACTER_TYPES } from '@/config/characters.config';
 import { AudioSystem } from '@/domain/audio/AudioSystem';
 import { Enemy } from '@/domain/enemies';
-import { WeaponConfig, WeaponInstance } from '@/domain/weapons/type';
-import { Deployable, DeployableConfig } from '@/entities/Deployable';
+import { WeaponInstance, WeaponType } from '@/domain/weapons/type';
 import { Player } from '@/entities/Player';
 import { Projectile } from '@/entities/Projectile';
 import { EventBus } from '@/events/EventBus';
@@ -15,28 +14,15 @@ import { HUD } from '@/systems/HUD';
 import { InputSystem } from '@/systems/InputSystem';
 import { Shop, ShopPlayer, ShopWeapon } from '@/systems/Shop';
 import { WaveManager } from '@/systems/WaveManager';
-import {
-  CharacterType,
-  DeployableType,
-  EnemyType,
-  GameState,
-  ProjectileType,
-  VisualEffect,
-  WeaponType,
-} from '@/types/enums';
-import {
-  copyVector,
-  degreesToRadians,
-  distance,
-  randomChance,
-  randomRange,
-  vectorFromAngle,
-} from '@/utils';
+import { CharacterType, EnemyType, GameState, ProjectileType } from '@/types/enums';
+import { distance } from '@/utils';
 import toast from 'react-hot-toast';
 import { injectable } from 'tsyringe';
+import { WeaponManager } from './../managers/WeaponManager';
 import { PickupSpawnSystem } from './../systems/PickupSpawnSystem';
 import { RenderSystem } from './../systems/RenderSystem';
 import { RewardSystem } from './../systems/RewardSystem';
+import { ConfigService } from './ConfigService';
 
 @injectable()
 export class Game {
@@ -61,16 +47,18 @@ export class Game {
   private isGameLoopRunning: boolean = false;
 
   public constructor(
-    private stateManager: StateManager,
-    private entityManager: EntityManager,
+    pickupSpawnSystem: PickupSpawnSystem,
     private collisionSystem: CollisionSystem,
     private combatSystem: CombatSystem,
+    private configService: ConfigService,
+    private entityManager: EntityManager,
     private inputSystem: InputSystem,
     private renderSystem: RenderSystem,
-    pickupSpawnSystem: PickupSpawnSystem,
-    rewardSystem: RewardSystem,
-    private waveManager: WaveManager,
     private shop: Shop,
+    private stateManager: StateManager,
+    private waveManager: WaveManager,
+    private weaponManager: WeaponManager,
+    rewardSystem: RewardSystem,
   ) {
     // These systems auto-connect to EventBus - instantiation is enough
     void pickupSpawnSystem;
@@ -78,8 +66,9 @@ export class Game {
     // Get canvas
     this.canvas = document.getElementById('game') as HTMLCanvasElement;
     this.ctx = this.canvas.getContext('2d')!;
-    this.canvas.width = 900;
-    this.canvas.height = 700;
+    const canvasBounds = this.configService.getCanvasBounds();
+    this.canvas.width = canvasBounds.width;
+    this.canvas.height = canvasBounds.height;
 
     // Initialize systems without DI (no deps or special cases)
     this.effectsSystem = new EffectsSystem();
@@ -249,7 +238,7 @@ export class Game {
     this.entityManager.setPlayer(player);
 
     // Initialize weapons
-    this.addWeapon(charConfig.startingWeapon);
+    this.weaponManager.addWeapon(charConfig.startingWeapon);
 
     // Reset game state
     this.waveManager.reset();
@@ -281,45 +270,6 @@ export class Game {
   private startNextWave(): void {
     // Preact handles shop visibility via state changes
     this.waveManager.startWave();
-  }
-
-  // ============ Weapon Management ============
-
-  // TODO player / weapon manager?
-  public addWeapon(type: WeaponType): void {
-    const player = this.entityManager.getPlayer();
-
-    // Let player handle weapon creation and management
-    const added = player.addWeapon(type);
-    if (!added) return;
-
-    // Recalculate fire offsets for staggered shooting
-    this.recalculateFireOffsets();
-  }
-
-  /**
-   * Spread shots evenly for weapons of the same type.
-   * Assigns staggered offsets so weapons don't all fire at once.
-   */
-  private recalculateFireOffsets(): void {
-    const player = this.entityManager.getPlayer();
-
-    // Group weapons by type
-    const weaponsByType: Record<string, WeaponInstance[]> = {};
-    for (const weapon of player.weapons) {
-      weaponsByType[weapon.type] ??= [];
-      weaponsByType[weapon.type]?.push(weapon);
-    }
-
-    // Assign staggered offsets within each type group
-    for (const type in weaponsByType) {
-      const weapons = weaponsByType[type]!;
-      const count = weapons.length;
-      for (let i = 0; i < count; i++) {
-        // Offset each weapon by fraction of fire rate
-        weapons[i]!.fireOffset = (i / count) * weapons[i]!.config.fireRate;
-      }
-    }
   }
 
   // ============ Game Loop ============
@@ -420,7 +370,7 @@ export class Game {
     player.setTarget(nearestEnemy ? nearestEnemy.position : null);
 
     // Fire weapons
-    this.fireWeapons(currentTime, player);
+    this.weaponManager.fireWeapons(currentTime, player);
 
     // Update enemies (movement, boss shooting)
     const enemies = this.entityManager.getActiveEnemies();
@@ -551,186 +501,6 @@ export class Game {
     }
   }
 
-  // ============ Weapon Firing ============
-
-  private fireWeapons(currentTime: number, player: Player): void {
-    for (let i = 0; i < player.weapons.length; i++) {
-      const weapon = player.weapons[i]!;
-      const config = weapon.config;
-
-      // Calculate fire rate with level and player multiplier
-      const levelMultiplier = 1 + (weapon.level - 1) * 0.1;
-      const fireRate = config.fireRate / levelMultiplier / player.attackSpeedMultiplier;
-
-      // Include fire offset for staggered shooting
-      if (currentTime - weapon.lastFireTime < fireRate + weapon.fireOffset) continue;
-
-      // Reset offset after first shot (staggering only applies to initial burst)
-      weapon.fireOffset = 0;
-
-      // Handle deployable weapons (mines) - they don't need a target
-      if (config.deployableType === DeployableType.MINE) {
-        weapon.lastFireTime = currentTime;
-        this.deployMine(config, player, weapon.level);
-        continue;
-      }
-
-      // Get weapon position (use currentTarget for positioning only)
-      const weaponPos = player.getWeaponPosition(i, player.currentTarget);
-      const maxRange = config.range * player.attackRange;
-
-      // Find nearest enemy from weapon position within map bounds
-      const canvasBounds = { width: this.canvas.width, height: this.canvas.height };
-      let target = this.entityManager.getNearestEnemy(weaponPos, maxRange, canvasBounds);
-
-      // Fallback to main target if within range
-      if (!target && player.currentTarget) {
-        const dx = player.currentTarget.x - weaponPos.x;
-        const dy = player.currentTarget.y - weaponPos.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist <= maxRange) {
-          // Find the actual enemy at currentTarget position within map bounds
-          target = this.entityManager.getNearestEnemy(player.currentTarget, 50, canvasBounds);
-        }
-      }
-
-      if (!target) continue;
-
-      weapon.lastFireTime = currentTime;
-
-      // Calculate damage with level
-      const baseDamage = config.damage * (1 + (weapon.level - 1) * 0.15);
-
-      // Calculate projectile count (bulletCount is base, multishot and projectileCount are bonuses)
-      const projectileCount = config.bulletCount + weapon.multishot + player.projectileCount;
-
-      // Fire based on weapon type - pass target position for correct aiming
-      this.fireWeaponProjectiles(weapon, weaponPos, target, baseDamage, projectileCount, player);
-    }
-  }
-
-  private fireWeaponProjectiles(
-    weapon: WeaponInstance,
-    pos: { x: number; y: number; angle: number },
-    target: Enemy,
-    damage: number,
-    projectileCount: number,
-    player: Player,
-  ): void {
-    const config = weapon.config;
-    // Always calculate angle to target - not using pos.angle fallback
-    const targetAngle = Math.atan2(target.position.y - pos.y, target.position.x - pos.x);
-
-    // Critical hit check
-    const isCrit = randomChance(player.critChance);
-    const finalDamage = isCrit ? damage * player.critDamage : damage;
-
-    for (let i = 0; i < projectileCount; i++) {
-      // Spread angle for multiple projectiles (spread is in degrees)
-      let angle = targetAngle;
-      if (projectileCount > 1) {
-        const spreadRad = degreesToRadians(config.spread);
-        // Distribute bullets evenly across spread
-        angle = targetAngle - spreadRad / 2 + (spreadRad / (projectileCount - 1)) * i;
-      } else if (config.spread > 0) {
-        // Random spread for single bullet
-        const spreadRad = randomRange(-0.5, 0.5) * degreesToRadians(config.spread);
-        angle += spreadRad;
-      }
-
-      const speed = config.bulletSpeed;
-      const velocityVector = vectorFromAngle(angle, speed);
-
-      const projectile = new Projectile({
-        position: { x: pos.x, y: pos.y },
-        radius: config.bulletRadius ?? 4, // Default 4 like original
-        type: this.getProjectileType(weapon.type),
-        damage: finalDamage,
-        ownerId: player.id,
-        color: config.color,
-        maxDistance: config.shortRange ? (config.maxDistance ?? config.range) : 0, // 0 = infinite
-        pierce: config.pierce
-          ? { pierceCount: (config.pierceCount ?? 1) + player.pierce, hitEnemies: new Set() }
-          : undefined,
-        explosive: config.explosive
-          ? {
-              explosionRadius: config.explosionRadius ?? 50,
-              explosionDamage: finalDamage,
-              visualEffect: this.getExplosionEffect(weapon.type),
-            }
-          : undefined,
-        // Grenade properties for slowdown/explosion behavior
-        weaponCategory: config.weaponCategory,
-        explosiveRange: config.explosiveRange,
-        bulletSpeed: speed,
-        // Projectile rotation (e.g., scythe)
-        rotationSpeed: config.rotationSpeed,
-      });
-
-      projectile.setVelocityVector(velocityVector);
-      projectile.isCrit = isCrit;
-      projectile.knockbackMultiplier = config.knockbackMultiplier ?? 1;
-
-      this.entityManager.addProjectile(projectile);
-    }
-
-    // Play weapon sound
-    EventBus.emit('weaponFired', { weaponType: weapon.type });
-  }
-
-  private getProjectileType(weaponType: WeaponType): ProjectileType {
-    const mapping: Partial<Record<WeaponType, ProjectileType>> = {
-      [WeaponType.SCYTHE]: ProjectileType.SCYTHE,
-      [WeaponType.SWORD]: ProjectileType.SWORD,
-      [WeaponType.BAZOOKA]: ProjectileType.ROCKET,
-      [WeaponType.NUKE]: ProjectileType.NUKE,
-      [WeaponType.FLAMETHROWER]: ProjectileType.FLAMETHROWER,
-      [WeaponType.LASER]: ProjectileType.STANDARD, // Laser uses standard projectile type
-      [WeaponType.BANANA]: ProjectileType.BANANA,
-      [WeaponType.HOLY_GRENADE]: ProjectileType.HOLY_GRENADE,
-      [WeaponType.CROSSBOW]: ProjectileType.CROSSBOW_BOLT,
-    };
-    return mapping[weaponType] ?? ProjectileType.STANDARD;
-  }
-
-  private getExplosionEffect(weaponType: WeaponType): VisualEffect {
-    if (weaponType === WeaponType.NUKE) return VisualEffect.NUKE;
-    if (weaponType === WeaponType.HOLY_GRENADE) return VisualEffect.HOLY;
-    if (weaponType === WeaponType.BANANA) return VisualEffect.BANANA;
-    return VisualEffect.STANDARD;
-  }
-
-  /**
-   * Deploy a mine at the player's position
-   */
-  private deployMine(config: WeaponConfig, player: Player, level: number): void {
-    // Calculate damage with level
-    const levelMultiplier = 1 + (level - 1) * 0.15;
-    const damage = config.damage * levelMultiplier * player.damageMultiplier;
-
-    // Create deployable config
-    const deployableConfig: DeployableConfig = {
-      position: copyVector(player.position), // Copy position so mine doesn't follow player
-      radius: config.bulletRadius ?? 12,
-      type: DeployableType.MINE,
-      damage: damage,
-      ownerId: player.id,
-      color: config.color,
-      explosionRadius: (config.explosionRadius ?? 70) * player.explosionRadius,
-      explosionDamage: damage,
-      visualEffect: VisualEffect.STANDARD,
-      armingTime: 0.5, // 500ms arming time
-    };
-
-    const mine = new Deployable(deployableConfig);
-    this.entityManager.addDeployable(mine);
-
-    // Play mine deploy sound
-    EventBus.emit('weaponFired', { weaponType: WeaponType.MINES });
-  }
-
-  // ============ Dev Tools ============
-
   /**
    * Spawn enemy at position (used by DevMenu)
    * TODO: When SpawnSystem is fully integrated, delegate to SpawnSystem.spawnEnemyAt()
@@ -830,7 +600,7 @@ export class Game {
         // Override addWeapon to call Game.addWeapon
         if (prop === 'addWeapon') {
           return (type: string) => {
-            this.addWeapon(type as WeaponType);
+            this.weaponManager.addWeapon(type as WeaponType);
           };
         }
         // Everything else comes from the real player

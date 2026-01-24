@@ -1,7 +1,7 @@
 import { GAME_BALANCE } from '@/config/balance.config';
 import { SHOP_ITEMS, ShopItem } from '@/config/shop.config';
+import { WeaponType } from '@/domain/weapons/type';
 import { EventBus } from '@/events/EventBus';
-import { WeaponType } from '@/types/enums';
 import { Shop as ShopService } from '@/systems/Shop';
 import { shuffleArray } from '@/utils';
 import { JSX } from 'preact';

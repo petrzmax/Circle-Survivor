@@ -78,38 +78,6 @@ export enum PickupType {
   HEALTH = 'health',
 }
 
-// ============ WEAPON TYPES ============
-
-export enum WeaponType {
-  PISTOL = 'pistol',
-  SMG = 'smg',
-  SHOTGUN = 'shotgun',
-  SNIPER = 'sniper',
-  LASER = 'laser',
-  MINIGUN = 'minigun',
-  BAZOOKA = 'bazooka',
-  FLAMETHROWER = 'flamethrower',
-  MINES = 'mines',
-  NUKE = 'nuke',
-  SCYTHE = 'scythe',
-  SWORD = 'sword',
-  HOLY_GRENADE = 'holyGrenade',
-  BANANA = 'banana',
-  CROSSBOW = 'crossbow',
-}
-
-/**
- * Weapon categories for behavior grouping
- */
-export enum WeaponCategory {
-  GUN = 'gun',
-  ROCKET = 'rocket',
-  SPECIAL = 'special',
-  MELEE = 'melee',
-  GRENADE = 'grenade',
-  DEPLOYABLE = 'deployable',
-}
-
 // ============ CHARACTER TYPES ============
 
 /**

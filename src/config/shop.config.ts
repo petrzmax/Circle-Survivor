@@ -3,7 +3,7 @@
  * Includes weapons, items, and legendary items available in the shop.
  */
 
-import { WeaponType } from '@/types/enums';
+import { WeaponType } from '@/domain/weapons/type';
 
 /**
  * Item effect interface - stat bonuses from items

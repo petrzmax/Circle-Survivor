@@ -1,6 +1,7 @@
 import { DevMenu } from '@/debug/DevMenu';
+import { WeaponType } from '@/domain/weapons/type';
 import { EventBus } from '@/events/EventBus';
-import { CharacterType, GameState, WeaponType } from '@/types/enums';
+import { CharacterType, GameState } from '@/types/enums';
 import { JSX } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import toast, { Toaster } from 'react-hot-toast';

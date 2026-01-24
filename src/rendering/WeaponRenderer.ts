@@ -2,8 +2,8 @@
  * Weapon Renderer - draws weapons around the player
  */
 
+import { WeaponType } from '@/domain/weapons';
 import { Player } from '@/entities/Player';
-import { WeaponType } from '@/types';
 import { TWO_PI } from '@/utils/math';
 
 /**

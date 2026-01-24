@@ -1,14 +1,8 @@
 import { GAME_BALANCE, WEAPON_TYPES } from '@/config';
 import { Deployable, DeployableConfig, Projectile, ProjectileConfig } from '@/entities';
-import {
-  DeployableType,
-  ProjectileType,
-  VisualEffect,
-  WeaponCategory,
-  WeaponType,
-} from '@/types/enums';
+import { DeployableType, ProjectileType, VisualEffect } from '@/types/enums';
 import { degreesToRadians, randomChance, randomRange } from '@/utils';
-import { FireResult, WeaponEntityConfig } from './type';
+import { FireResult, WeaponCategory, WeaponEntityConfig, WeaponType } from './type';
 
 /**
  * Weapon class

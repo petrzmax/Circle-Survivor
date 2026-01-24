@@ -1,7 +1,8 @@
 import { SHOP_ITEMS } from '@/config/shop.config';
 import { ENEMY_TYPES } from '@/domain/enemies/config';
 import { WEAPON_TYPES } from '@/domain/weapons/config';
-import { EnemyType, WeaponType } from '@/types/enums';
+import { WeaponType } from '@/domain/weapons/type';
+import { EnemyType } from '@/types/enums';
 import { getEnemyDisplayName } from '@/utils';
 import { JSX } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
@@ -201,14 +202,22 @@ export function DevMenu(): JSX.Element | null {
             <button type="button" onClick={handleSkipToWave}>
               Go
             </button>
-            <button type="button" className="danger" onClick={() => {
-              service.killAllEnemies();
-            }}>
+            <button
+              type="button"
+              className="danger"
+              onClick={() => {
+                service.killAllEnemies();
+              }}
+            >
               Kill All
             </button>
-            <button type="button" className="success" onClick={() => {
-              service.finishWave();
-            }}>
+            <button
+              type="button"
+              className="success"
+              onClick={() => {
+                service.finishWave();
+              }}
+            >
               Finish
             </button>
           </div>
@@ -217,9 +226,12 @@ export function DevMenu(): JSX.Element | null {
         {/* Items */}
         <DevMenuSection title="Items">
           <div className="dev-menu-row">
-            <select value={selectedItem} onChange={(e) => {
-              setSelectedItem((e.target as HTMLSelectElement).value);
-            }}>
+            <select
+              value={selectedItem}
+              onChange={(e) => {
+                setSelectedItem((e.target as HTMLSelectElement).value);
+              }}
+            >
               {items.map((item) => (
                 <option key={item.value} value={item.value}>
                   {item.label}
@@ -231,9 +243,12 @@ export function DevMenu(): JSX.Element | null {
             </button>
           </div>
           <div className="dev-menu-row">
-            <select value={selectedWeapon} onChange={(e) => {
-              setSelectedWeapon((e.target as HTMLSelectElement).value);
-            }}>
+            <select
+              value={selectedWeapon}
+              onChange={(e) => {
+                setSelectedWeapon((e.target as HTMLSelectElement).value);
+              }}
+            >
               {weapons.map((weapon) => (
                 <option key={weapon.value} value={weapon.value}>
                   {weapon.label}
@@ -246,9 +261,12 @@ export function DevMenu(): JSX.Element | null {
           </div>
           <div className="dev-menu-row">
             <span className="dev-menu-label">Gold:</span>
-            <button type="button" onClick={() => {
-              service.addGold(1000);
-            }}>
+            <button
+              type="button"
+              onClick={() => {
+                service.addGold(1000);
+              }}
+            >
               +1000
             </button>
           </div>
@@ -257,9 +275,12 @@ export function DevMenu(): JSX.Element | null {
         {/* Spawning */}
         <DevMenuSection title="Spawn">
           <div className="dev-menu-row">
-            <select value={selectedBoss} onChange={(e) => {
-              setSelectedBoss((e.target as HTMLSelectElement).value);
-            }}>
+            <select
+              value={selectedBoss}
+              onChange={(e) => {
+                setSelectedBoss((e.target as HTMLSelectElement).value);
+              }}
+            >
               {bosses.map((boss) => (
                 <option key={boss.value} value={boss.value}>
                   {boss.label}
@@ -271,9 +292,12 @@ export function DevMenu(): JSX.Element | null {
             </button>
           </div>
           <div className="dev-menu-row">
-            <select value={selectedEnemy} onChange={(e) => {
-              setSelectedEnemy((e.target as HTMLSelectElement).value);
-            }}>
+            <select
+              value={selectedEnemy}
+              onChange={(e) => {
+                setSelectedEnemy((e.target as HTMLSelectElement).value);
+              }}
+            >
               {enemies.map((enemy) => (
                 <option key={enemy.value} value={enemy.value}>
                   {enemy.label}
@@ -300,12 +324,21 @@ export function DevMenu(): JSX.Element | null {
         <DevMenuSection title="Player">
           <div className="dev-menu-row">
             <div className="dev-menu-checkbox">
-              <input type="checkbox" id="dev-godmode" checked={godMode} onChange={handleGodModeChange} />
+              <input
+                type="checkbox"
+                id="dev-godmode"
+                checked={godMode}
+                onChange={handleGodModeChange}
+              />
               <label htmlFor="dev-godmode">God Mode</label>
             </div>
-            <button type="button" className="success" onClick={() => {
-              service.healPlayer(Infinity);
-            }}>
+            <button
+              type="button"
+              className="success"
+              onClick={() => {
+                service.healPlayer(Infinity);
+              }}
+            >
               Full Heal
             </button>
           </div>

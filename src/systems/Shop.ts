@@ -3,12 +3,12 @@
  * UI rendering is handled by Preact Shop component
  */
 
-import { singleton } from 'tsyringe';
-import toast from 'react-hot-toast';
-import { SHOP_ITEMS, WeaponShopItem } from '@/config/shop.config';
-import { WeaponType } from '@/types/enums';
-import { randomElementStrict } from '@/utils';
 import { GAME_BALANCE } from '@/config';
+import { SHOP_ITEMS, WeaponShopItem } from '@/config/shop.config';
+import { WeaponType } from '@/domain/weapons/type';
+import { randomElementStrict } from '@/utils';
+import toast from 'react-hot-toast';
+import { singleton } from 'tsyringe';
 
 // ============ Types ============
 
@@ -38,7 +38,6 @@ export interface ShopWeapon {
 
 @singleton()
 export class Shop {
-
   /**
    * Apply item effect to player.
    * Called externally when Preact Shop component emits purchase events.

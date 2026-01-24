@@ -3,7 +3,8 @@
  * Each character has unique starting stats and playstyle.
  */
 
-import { CharacterType, WeaponType } from '@/types/enums';
+import { WeaponType } from '@/domain/weapons/type';
+import { CharacterType } from '@/types/enums';
 
 export interface CharacterConfig {
   name: string;

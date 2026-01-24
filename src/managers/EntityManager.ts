@@ -5,7 +5,6 @@
  * Future: Object pooling can be added here to reduce GC pressure.
  */
 
-import { singleton } from 'tsyringe';
 import { Enemy } from '@/domain/enemies';
 import { Deployable } from '@/entities/Deployable';
 import { Entity } from '@/entities/Entity';
@@ -13,6 +12,7 @@ import { Pickup } from '@/entities/Pickup';
 import { Player } from '@/entities/Player';
 import { Projectile } from '@/entities/Projectile';
 import { distanceSquared, pointInRect, Vector2 } from '@/utils';
+import { singleton } from 'tsyringe';
 
 /**
  * Entity categories for typed retrieval
@@ -22,7 +22,6 @@ export type EntityCategory = 'player' | 'enemy' | 'projectile' | 'deployable' | 
 /**
  * Manages all game entities with typed collections.
  * Provides efficient add/remove/query operations.
- *
  */
 @singleton()
 export class EntityManager {

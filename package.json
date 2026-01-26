@@ -35,7 +35,7 @@
     "babel-plugin-transform-typescript-metadata": "^0.4.0",
     "eslint": "^9.39.2",
     "jsdom": "^27.4.0",
-    "prettier": "^3.8.0",
+    "prettier": "^3.8.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.53.0",
     "vite": "^7.3.1",

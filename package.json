@@ -28,7 +28,7 @@
     "@babel/plugin-proposal-decorators": "^7.28.6",
     "@preact/preset-vite": "^2.10.2",
     "@testing-library/preact": "^3.2.4",
-    "@types/node": "^25.0.9",
+    "@types/node": "^25.0.10",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
     "@typescript-eslint/parser": "^8.53.0",
     "@vitest/ui": "^4.0.17",

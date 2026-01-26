@@ -31,7 +31,7 @@
     "@types/node": "^25.0.10",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
     "@typescript-eslint/parser": "^8.53.0",
-    "@vitest/ui": "^4.0.17",
+    "@vitest/ui": "^4.0.18",
     "babel-plugin-transform-typescript-metadata": "^0.4.0",
     "eslint": "^9.39.2",
     "jsdom": "^27.4.0",

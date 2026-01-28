@@ -17,13 +17,16 @@ export class WeaponManager {
   ) {}
 
   public fireWeapons(currentTime: number, player: Player): void {
+    // TODO it shouldn't know so deep object definition. add specific method for it.
+    const upgradeConfig = this.configService.getGameBalance().weapons.upgrade;
+
     for (let i = 0; i < player.weapons.length; i++) {
       const weapon = player.weapons[i]!;
       const config = weapon.config;
 
       // Calculate fire rate with level and player multiplier
-      const levelMultiplier = 1 + (weapon.level - 1) * 0.1;
-      const fireRate = config.fireRate / levelMultiplier / player.attackSpeedMultiplier;
+      const attackSpeedMultiplier = Math.pow(upgradeConfig.attackSpeedPerLevel, weapon.level - 1);
+      const fireRate = config.fireRate / attackSpeedMultiplier / player.attackSpeedMultiplier;
 
       // Include fire offset for staggered shooting
       if (currentTime - weapon.lastFireTime < fireRate + weapon.fireOffset) continue;
@@ -62,13 +65,22 @@ export class WeaponManager {
       weapon.lastFireTime = currentTime;
 
       // Calculate damage with level
-      const baseDamage = config.damage * (1 + (weapon.level - 1) * 0.15);
+      const damageMultiplier = Math.pow(upgradeConfig.damagePerLevel, weapon.level - 1);
+      const baseDamage = config.damage * damageMultiplier;
 
       // Calculate projectile count (bulletCount is base, multishot and projectileCount are bonuses)
       const projectileCount = config.bulletCount + weapon.multishot + player.projectileCount;
 
       // Fire based on weapon type - pass target position for correct aiming
-      this.fireWeaponProjectiles(weapon, weaponPos, target, baseDamage, projectileCount, player);
+      this.fireWeaponProjectiles(
+        weapon,
+        weaponPos,
+        target,
+        baseDamage,
+        projectileCount,
+        player,
+        upgradeConfig,
+      );
     }
   }
 
@@ -79,6 +91,11 @@ export class WeaponManager {
     damage: number,
     projectileCount: number,
     player: Player,
+    upgradeConfig: {
+      damagePerLevel: number;
+      attackSpeedPerLevel: number;
+      explosionPerLevel: number;
+    },
   ): void {
     const config = weapon.config;
     // Always calculate angle to target - not using pos.angle fallback
@@ -117,7 +134,10 @@ export class WeaponManager {
           : undefined,
         explosive: config.explosive
           ? {
-              explosionRadius: config.explosionRadius ?? 50,
+              explosionRadius:
+                (config.explosionRadius ?? 50) *
+                Math.pow(upgradeConfig.explosionPerLevel, weapon.level - 1) *
+                player.explosionRadius,
               explosionDamage: finalDamage,
               visualEffect: config.explosionEffect ?? VisualEffect.STANDARD,
             }
@@ -145,9 +165,11 @@ export class WeaponManager {
    * Deploy a mine at the player's position
    */
   private deployMine(config: WeaponConfig, player: Player, level: number): void {
+    const upgradeConfig = this.configService.getGameBalance().weapons.upgrade;
+
     // Calculate damage with level
-    const levelMultiplier = 1 + (level - 1) * 0.15;
-    const damage = config.damage * levelMultiplier * player.damageMultiplier;
+    const damageMultiplier = Math.pow(upgradeConfig.damagePerLevel, level - 1);
+    const damage = config.damage * damageMultiplier * player.damageMultiplier;
 
     // Create deployable config
     const deployableConfig: DeployableConfig = {
@@ -157,7 +179,10 @@ export class WeaponManager {
       damage: damage,
       ownerId: player.id,
       color: config.color,
-      explosionRadius: (config.explosionRadius ?? 70) * player.explosionRadius,
+      explosionRadius:
+        (config.explosionRadius ?? 70) *
+        Math.pow(upgradeConfig.explosionPerLevel, level - 1) *
+        player.explosionRadius,
       explosionDamage: damage,
       visualEffect: VisualEffect.STANDARD,
       armingTime: 0.5, // 500ms arming time
@@ -179,6 +204,13 @@ export class WeaponManager {
 
     // Recalculate fire offsets for staggered shooting
     this.recalculateFireOffsets();
+  }
+
+  /**
+   * Upgrade weapon stats
+   */
+  public upgradeWeapon(weapon: WeaponInstance): void {
+    weapon.level++;
   }
 
   /**

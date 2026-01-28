@@ -6,10 +6,10 @@
  */
 
 import { Enemy } from '@/domain/enemies';
+import { Player } from '@/domain/player/Player';
 import { Deployable } from '@/entities/Deployable';
 import { Entity } from '@/entities/Entity';
 import { Pickup } from '@/entities/Pickup';
-import { Player } from '@/entities/Player';
 import { Projectile } from '@/entities/Projectile';
 import { distanceSquared, pointInRect, Vector2 } from '@/utils';
 import { singleton } from 'tsyringe';
@@ -31,6 +31,7 @@ export class EntityManager {
   private projectiles = new Map<number, Projectile>();
   private deployables = new Map<number, Deployable>();
   private pickups = new Map<number, Pickup>();
+
   /** Debug mode */
   // TODO - create better approach
   private debug: boolean = false;

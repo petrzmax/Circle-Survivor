@@ -2,8 +2,7 @@ import { GAME_BALANCE } from '@/config/balance.config';
 import { CHARACTER_TYPES } from '@/config/characters.config';
 import { AudioSystem } from '@/domain/audio/AudioSystem';
 import { Enemy } from '@/domain/enemies';
-import { WeaponInstance, WeaponType } from '@/domain/weapons/type';
-import { Player } from '@/entities/Player';
+import { Player } from '@/domain/player/Player';
 import { Projectile } from '@/entities/Projectile';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager, StateManager } from '@/managers';
@@ -12,7 +11,7 @@ import { CombatSystem } from '@/systems/CombatSystem';
 import { EffectsSystem } from '@/systems/EffectsSystem';
 import { HUD } from '@/systems/HUD';
 import { InputSystem } from '@/systems/InputSystem';
-import { Shop, ShopPlayer, ShopWeapon } from '@/systems/Shop';
+import { Shop } from '@/systems/Shop';
 import { WaveManager } from '@/systems/WaveManager';
 import { CharacterType, EnemyType, GameState, ProjectileType } from '@/types/enums';
 import { distance } from '@/utils';
@@ -586,46 +585,6 @@ export class Game {
     });
   }
 
-  // ============ Shop ============
-
-  private createShopPlayer(player: Player): ShopPlayer {
-    const weapons = player.weapons;
-    // Use a Proxy on the real player, only overriding what's needed for Shop
-    return new Proxy(player as unknown as ShopPlayer, {
-      get: (target, prop) => {
-        // Override weapons to use ShopWeapon format with upgrade()
-        if (prop === 'weapons') {
-          return weapons.map((w: WeaponInstance) => this.createShopWeapon(w));
-        }
-        // Override addWeapon to call Game.addWeapon
-        if (prop === 'addWeapon') {
-          return (type: string) => {
-            this.weaponManager.addWeapon(type as WeaponType);
-          };
-        }
-        // Everything else comes from the real player
-        return target[prop as keyof ShopPlayer];
-      },
-      set: (target, prop, value) => {
-        // Forward all property sets directly to the real player
-        (target as Record<string, unknown>)[prop as string] = value;
-        return true;
-      },
-    });
-  }
-
-  private createShopWeapon(weapon: WeaponInstance): ShopWeapon {
-    return {
-      type: weapon.type,
-      name: weapon.name,
-      level: weapon.level,
-      upgrade: () => {
-        weapon.level++;
-      },
-      multishot: weapon.multishot,
-    };
-  }
-
   /**
    * Apply shop purchase effects to player.
    * Called when Preact Shop emits itemPurchased event.
@@ -633,11 +592,10 @@ export class Game {
    */
   private applyShopPurchase(itemId: string): void {
     const player = this.entityManager.getPlayer();
-    const shopPlayer = this.createShopPlayer(player);
 
     // Use existing shop buyItem logic but skip the price check & event emission
     // since those are already handled
-    this.shop.applyItemEffect(itemId, shopPlayer);
+    this.shop.applyItemEffect(itemId, player);
   }
 
   /**

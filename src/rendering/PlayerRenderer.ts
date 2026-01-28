@@ -1,4 +1,4 @@
-import { Player } from '@/entities/Player';
+import { Player } from '@/domain/player/Player';
 import { TWO_PI } from '@/utils/math';
 
 /**

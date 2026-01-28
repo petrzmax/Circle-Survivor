@@ -1,3 +1,4 @@
+import { GAME_BALANCE, GameBalanceConfig } from '@/config';
 import { singleton } from 'tsyringe';
 import { CanvasBounds } from './../utils/random';
 
@@ -5,5 +6,9 @@ import { CanvasBounds } from './../utils/random';
 export class ConfigService {
   public getCanvasBounds(): CanvasBounds {
     return { width: 900, height: 700 };
+  }
+
+  public getGameBalance(): GameBalanceConfig {
+    return GAME_BALANCE;
   }
 }

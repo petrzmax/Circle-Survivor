@@ -5,7 +5,10 @@
 
 import { GAME_BALANCE } from '@/config';
 import { SHOP_ITEMS, WeaponShopItem } from '@/config/shop.config';
+import { Player } from '@/domain/player/Player';
+import { PlayerStats } from '@/domain/player/type';
 import { WeaponType } from '@/domain/weapons/type';
+import { WeaponManager } from '@/managers/WeaponManager';
 import { randomElementStrict } from '@/utils';
 import toast from 'react-hot-toast';
 import { singleton } from 'tsyringe';
@@ -38,12 +41,14 @@ export interface ShopWeapon {
 
 @singleton()
 export class Shop {
+  public constructor(private weaponManager: WeaponManager) {}
+
   /**
    * Apply item effect to player.
    * Called externally when Preact Shop component emits purchase events.
    * No price check or event emission - those are handled by caller.
    */
-  public applyItemEffect(itemId: string, player: ShopPlayer): void {
+  public applyItemEffect(itemId: string, player: Player): void {
     const item = SHOP_ITEMS[itemId];
     if (!item) return;
 
@@ -54,11 +59,11 @@ export class Shop {
           const sameTypeWeapons = player.weapons.filter((w) => w.type === weaponItem.weaponType);
           if (sameTypeWeapons.length > 0) {
             const randomWeapon = randomElementStrict(sameTypeWeapons);
-            randomWeapon.upgrade();
+            this.weaponManager.upgradeWeapon(randomWeapon);
             toast(`⬆️ ${item.name} +${randomWeapon.level}`);
           }
         } else {
-          player.addWeapon(weaponItem.weaponType);
+          this.weaponManager.addWeapon(weaponItem.weaponType);
         }
         break;
       }
@@ -68,7 +73,7 @@ export class Shop {
         player.addItem(itemId);
         for (const [stat, valueRaw] of Object.entries(statItem.effect)) {
           const value = valueRaw as number;
-          player.applyStat(stat, value);
+          player.applyStat(stat as keyof PlayerStats, value);
         }
         break;
       }

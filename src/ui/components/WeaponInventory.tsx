@@ -5,6 +5,8 @@
 import { SHOP_ITEMS, WeaponShopItem } from '@/config/shop.config';
 import { WeaponType } from '@/domain/weapons/type';
 import { JSX } from 'preact';
+import { useWeaponTooltip } from '../hooks/useWeaponTooltip';
+import { WeaponTooltip } from './WeaponTooltip';
 
 interface WeaponData {
   type: WeaponType;
@@ -35,6 +37,8 @@ export function WeaponInventory({
   onSell,
   getSellPrice,
 }: WeaponInventoryProps): JSX.Element {
+  const tooltip = useWeaponTooltip();
+
   if (weapons.length === 0) {
     return (
       <div class="weapon-inventory">
@@ -44,13 +48,20 @@ export function WeaponInventory({
   }
 
   return (
-    <div class="weapon-inventory">
+    <div class="weapon-inventory" onMouseMove={tooltip.handleMouseMove}>
       {weapons.map((weapon) => {
         const sellPrice = getSellPrice(weapon.type);
         const emoji = getWeaponEmoji(weapon.type);
 
         return (
-          <div class="weapon-card" key={weapon.index}>
+          <div
+            class="weapon-card"
+            key={weapon.index}
+            onMouseEnter={(): void => {
+              tooltip.showTooltip(weapon.type, weapon.level);
+            }}
+            onMouseLeave={tooltip.hideTooltip}
+          >
             <div class="weapon-emoji">{emoji}</div>
             <h4>{weapon.name}</h4>
             <div class="level">Poziom {weapon.level}</div>
@@ -65,6 +76,8 @@ export function WeaponInventory({
           </div>
         );
       })}
+
+      <WeaponTooltip weaponData={tooltip.hoveredWeapon} position={tooltip.mousePosition} />
     </div>
   );
 }

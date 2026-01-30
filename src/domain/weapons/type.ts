@@ -15,13 +15,13 @@ export interface WeaponConfig {
   weaponCategory: WeaponCategory;
 
   // Optional properties
-  pierce?: boolean;
   pierceCount?: number;
   explosive?: boolean;
   explosionRadius?: number;
   explosionEffect?: VisualEffect;
   bulletRadius?: number;
   knockbackMultiplier?: number;
+  // TODO analyse if it's still needed
   shortRange?: boolean;
   maxDistance?: number;
 

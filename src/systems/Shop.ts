@@ -8,7 +8,7 @@ import { SHOP_ITEMS, WeaponShopItem } from '@/config/shop.config';
 import { Player } from '@/domain/player/Player';
 import { PlayerStats } from '@/domain/player/type';
 import { WeaponType } from '@/domain/weapons/type';
-import { WeaponManager } from '@/managers/WeaponManager';
+import { WeaponManager } from '@/domain/weapons/WeaponManager';
 import { randomElementStrict } from '@/utils';
 import toast from 'react-hot-toast';
 import { singleton } from 'tsyringe';

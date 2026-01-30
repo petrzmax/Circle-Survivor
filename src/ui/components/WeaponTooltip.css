@@ -1,0 +1,28 @@
+.weapon-tooltip {
+  position: fixed;
+  background: rgba(26, 26, 46, 0.98);
+  border: 2px solid #0f3460;
+  border-radius: 8px;
+  padding: 12px;
+  width: 190px;
+  font-size: 12px;
+  color: white;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.weapon-tooltip-header {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: #e94560;
+  border-bottom: 1px solid #0f3460;
+  padding-bottom: 6px;
+}
+
+.weapon-tooltip-stat {
+  margin: 4px 0;
+  color: #ccc;
+  line-height: 1.4;
+}

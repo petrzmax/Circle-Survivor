@@ -1,15 +1,15 @@
 import { SHOP_ITEMS } from '@/config/shop.config';
 import { Game } from '@/core/Game';
 import { WeaponType } from '@/domain/weapons/type';
+import { WeaponManager } from '@/domain/weapons/WeaponManager';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
-import { WeaponManager } from '@/managers/WeaponManager';
 import { RenderSystem } from '@/systems/RenderSystem';
 import { WaveManager } from '@/systems/WaveManager';
 import { EnemyType } from '@/types/enums';
 import { getSpawnPoint } from '@/utils';
 import { singleton } from 'tsyringe';
-import { ConfigService } from './../core/ConfigService';
+import { ConfigService } from '../config/ConfigService';
 
 /**
  * Player state snapshot for DevMenu display

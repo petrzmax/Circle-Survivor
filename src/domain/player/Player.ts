@@ -3,7 +3,7 @@
  * The main playable character with stats, weapons, and items.
  */
 
-import { CHARACTER_TYPES, CharacterConfig, GAME_BALANCE, WEAPON_TYPES } from '@/config';
+import { CHARACTER_TYPES, CharacterConfig, GAME_BALANCE } from '@/config';
 import type { WeaponInstance } from '@/domain/weapons/type';
 import { WeaponType } from '@/domain/weapons/type';
 import { IHealth } from '@/types/components';
@@ -12,6 +12,7 @@ import { clamp, Vector2 } from '@/utils';
 import { TWO_PI } from '@/utils/math';
 import { Entity } from '../../entities/Entity';
 import { InputState, PlayerConfig, PlayerStats } from './type';
+import { WEAPON_TYPES } from '../weapons';
 
 /**
  * Player entity

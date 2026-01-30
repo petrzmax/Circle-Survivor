@@ -1,6 +1,6 @@
-import { GAME_BALANCE, GameBalanceConfig } from '@/config';
+import { GAME_BALANCE, GameBalanceConfig, WeaponUpgradeConfig } from '@/config';
 import { singleton } from 'tsyringe';
-import { CanvasBounds } from './../utils/random';
+import { CanvasBounds } from '../utils/random';
 
 @singleton()
 export class ConfigService {
@@ -10,5 +10,9 @@ export class ConfigService {
 
   public getGameBalance(): GameBalanceConfig {
     return GAME_BALANCE;
+  }
+
+  public getWeaponsUpgrade(): WeaponUpgradeConfig {
+    return GAME_BALANCE.weapons.upgrade;
   }
 }

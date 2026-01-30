@@ -161,3 +161,6 @@ export const GAME_BALANCE = {
 
 /** Type for the game balance configuration */
 export type GameBalanceConfig = typeof GAME_BALANCE;
+
+/** Type for weapon upgrade configuration */
+export type WeaponUpgradeConfig = GameBalanceConfig['weapons']['upgrade'];

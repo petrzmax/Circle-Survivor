@@ -17,11 +17,11 @@ import { CharacterType, EnemyType, GameState, ProjectileType } from '@/types/enu
 import { distance } from '@/utils';
 import toast from 'react-hot-toast';
 import { injectable } from 'tsyringe';
-import { WeaponManager } from './../managers/WeaponManager';
+import { ConfigService } from '../config/ConfigService';
+import { WeaponManager } from '../domain/weapons/WeaponManager';
 import { PickupSpawnSystem } from './../systems/PickupSpawnSystem';
 import { RenderSystem } from './../systems/RenderSystem';
 import { RewardSystem } from './../systems/RewardSystem';
-import { ConfigService } from './ConfigService';
 
 @injectable()
 export class Game {

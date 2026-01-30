@@ -189,7 +189,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     type: 'weapon',
     weaponType: WeaponType.CROSSBOW,
     name: 'Kusza Przebijająca',
-    description: 'Przebija do 5 wrogów!',
+    description: 'Przebija do 3 wrogów!',
     price: 280,
     emoji: '🏹',
   },

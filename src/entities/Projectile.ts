@@ -145,7 +145,7 @@ export class Projectile extends Entity implements IExpirable {
 
     if (config.pierce) {
       this.pierce = {
-        ...config.pierce,
+        pierceCount: config.pierce.pierceCount,
         hitEnemies: new Set(),
       };
     }

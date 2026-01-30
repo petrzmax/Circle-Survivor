@@ -6,26 +6,25 @@ import { EntityManager } from '@/managers';
 import { DeployableType, ProjectileType, VisualEffect } from '@/types';
 import { copyVector, degreesToRadians, randomChance, randomRange, vectorFromAngle } from '@/utils';
 import { singleton } from 'tsyringe';
-import { ConfigService } from './../core/ConfigService';
-import { WEAPON_TYPES } from './../domain/weapons/config';
+import { ConfigService } from '../../config/ConfigService';
+import { WeaponStatsCalculator } from './WeaponStatsCalculator';
+import { WEAPON_TYPES } from './config';
 
 @singleton()
 export class WeaponManager {
   public constructor(
     private entityManager: EntityManager,
     private configService: ConfigService,
+    private statsCalculator: WeaponStatsCalculator,
   ) {}
 
   public fireWeapons(currentTime: number, player: Player): void {
-    // TODO it shouldn't know so deep object definition. add specific method for it.
-    const upgradeConfig = this.configService.getGameBalance().weapons.upgrade;
-
     for (let i = 0; i < player.weapons.length; i++) {
       const weapon = player.weapons[i]!;
       const config = weapon.config;
 
       // Calculate fire rate with level and player multiplier
-      const attackSpeedMultiplier = Math.pow(upgradeConfig.attackSpeedPerLevel, weapon.level - 1);
+      const attackSpeedMultiplier = this.statsCalculator.getAttackSpeedMultiplier(weapon.level);
       const fireRate = config.fireRate / attackSpeedMultiplier / player.attackSpeedMultiplier;
 
       // Include fire offset for staggered shooting
@@ -65,22 +64,14 @@ export class WeaponManager {
       weapon.lastFireTime = currentTime;
 
       // Calculate damage with level
-      const damageMultiplier = Math.pow(upgradeConfig.damagePerLevel, weapon.level - 1);
+      const damageMultiplier = this.statsCalculator.getDamageMultiplier(weapon.level);
       const baseDamage = config.damage * damageMultiplier;
 
       // Calculate projectile count (bulletCount is base, multishot and projectileCount are bonuses)
       const projectileCount = config.bulletCount + weapon.multishot + player.projectileCount;
 
       // Fire based on weapon type - pass target position for correct aiming
-      this.fireWeaponProjectiles(
-        weapon,
-        weaponPos,
-        target,
-        baseDamage,
-        projectileCount,
-        player,
-        upgradeConfig,
-      );
+      this.fireWeaponProjectiles(weapon, weaponPos, target, baseDamage, projectileCount, player);
     }
   }
 
@@ -91,11 +82,6 @@ export class WeaponManager {
     damage: number,
     projectileCount: number,
     player: Player,
-    upgradeConfig: {
-      damagePerLevel: number;
-      attackSpeedPerLevel: number;
-      explosionPerLevel: number;
-    },
   ): void {
     const config = weapon.config;
     // Always calculate angle to target - not using pos.angle fallback
@@ -129,14 +115,14 @@ export class WeaponManager {
         ownerId: player.id,
         color: config.color,
         maxDistance: config.shortRange ? (config.maxDistance ?? config.range) : 0, // 0 = infinite
-        pierce: config.pierce
-          ? { pierceCount: (config.pierceCount ?? 1) + player.pierce, hitEnemies: new Set() }
+        pierce: config.pierceCount
+          ? { pierceCount: config.pierceCount + player.pierce, hitEnemies: new Set() }
           : undefined,
         explosive: config.explosive
           ? {
               explosionRadius:
                 (config.explosionRadius ?? 50) *
-                Math.pow(upgradeConfig.explosionPerLevel, weapon.level - 1) *
+                this.statsCalculator.getExplosionMultiplier(weapon.level) *
                 player.explosionRadius,
               explosionDamage: finalDamage,
               visualEffect: config.explosionEffect ?? VisualEffect.STANDARD,
@@ -165,10 +151,8 @@ export class WeaponManager {
    * Deploy a mine at the player's position
    */
   private deployMine(config: WeaponConfig, player: Player, level: number): void {
-    const upgradeConfig = this.configService.getGameBalance().weapons.upgrade;
-
     // Calculate damage with level
-    const damageMultiplier = Math.pow(upgradeConfig.damagePerLevel, level - 1);
+    const damageMultiplier = this.statsCalculator.getDamageMultiplier(level);
     const damage = config.damage * damageMultiplier * player.damageMultiplier;
 
     // Create deployable config
@@ -181,7 +165,7 @@ export class WeaponManager {
       color: config.color,
       explosionRadius:
         (config.explosionRadius ?? 70) *
-        Math.pow(upgradeConfig.explosionPerLevel, level - 1) *
+        this.statsCalculator.getExplosionMultiplier(level) *
         player.explosionRadius,
       explosionDamage: damage,
       visualEffect: VisualEffect.STANDARD,

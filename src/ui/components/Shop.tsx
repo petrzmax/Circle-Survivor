@@ -6,7 +6,9 @@ import { Shop as ShopService } from '@/systems/Shop';
 import { shuffleArray } from '@/utils';
 import { JSX } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
+import { useWeaponTooltip } from '../hooks/useWeaponTooltip';
 import { WeaponInventory } from './WeaponInventory';
+import { WeaponTooltip } from './WeaponTooltip';
 
 type ShopTab = 'buy' | 'inventory';
 
@@ -30,6 +32,7 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
   const [shopInitialized, setShopInitialized] = useState(false);
   const [pendingReroll, setPendingReroll] = useState(false);
   const [activeTab, setActiveTab] = useState<ShopTab>('buy');
+  const tooltip = useWeaponTooltip();
 
   // Generate items only when shop first opens (visible changes from false to true)
   useEffect(() => {
@@ -177,7 +180,7 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
   }));
 
   return (
-    <div id="shop">
+    <div id="shop" onMouseMove={tooltip.handleMouseMove}>
       <h2>🛒 SKLEP</h2>
 
       {/* Tab Navigation */}
@@ -186,6 +189,7 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
           class={`shop-tab ${activeTab === 'buy' ? 'active' : ''}`}
           onClick={(): void => {
             setActiveTab('buy');
+            tooltip.hideTooltip();
           }}
         >
           🛍️ Kup
@@ -194,6 +198,7 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
           class={`shop-tab ${activeTab === 'inventory' ? 'active' : ''}`}
           onClick={(): void => {
             setActiveTab('inventory');
+            tooltip.hideTooltip();
           }}
         >
           ⚔️ Ekwipunek ({playerState.weapons.length})
@@ -254,6 +259,17 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
                   onBuy={(): void => {
                     handleBuy(itemKey, currentPrice);
                   }}
+                  onMouseEnter={(): void => {
+                    if (item.type === 'weapon') {
+                      // Check if player already has this weapon to show correct level
+                      const existingWeapon = playerState.weapons.find(
+                        (w) => w.type === item.weaponType,
+                      );
+                      const level = existingWeapon ? existingWeapon.level + 1 : 1;
+                      tooltip.showTooltip(item.weaponType, level);
+                    }
+                  }}
+                  onMouseLeave={tooltip.hideTooltip}
                 />
               );
             })}
@@ -271,6 +287,8 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
       <button id="start-wave-btn" onClick={handleStartWave}>
         ▶ Rozpocznij falę
       </button>
+
+      <WeaponTooltip weaponData={tooltip.hoveredWeapon} position={tooltip.mousePosition} />
     </div>
   );
 }
@@ -282,6 +300,8 @@ interface ShopItemCardProps {
   isLocked: boolean;
   upgradeInfo: string;
   onBuy: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 function ShopItemCard({
@@ -291,9 +311,16 @@ function ShopItemCard({
   isLocked,
   upgradeInfo,
   onBuy,
+  onMouseEnter,
+  onMouseLeave,
 }: ShopItemCardProps): JSX.Element {
   return (
-    <div class={`shop-item ${canBuy ? '' : 'disabled'}`} onClick={canBuy ? onBuy : undefined}>
+    <div
+      class={`shop-item ${canBuy ? '' : 'disabled'}`}
+      onClick={canBuy ? onBuy : undefined}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
       <div style={{ fontSize: '24px' }}>{item.emoji}</div>
       <h3>{item.name}</h3>
       <p>{item.description}</p>

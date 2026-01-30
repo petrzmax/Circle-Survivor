@@ -81,12 +81,13 @@ export class Shop {
   }
 
   /**
-   * Calculate sell price for a weapon based on its type and current wave
+   * Calculate sell price for a weapon based on its type, level, and current wave
    * @param weaponType The type of weapon to sell
    * @param waveNumber Current wave number (affects price scaling)
-   * @returns Sell price in gold (30% of buy price, scaled by wave)
+   * @param level Weapon level (higher level = higher sell price)
+   * @returns Sell price in gold (30% of buy price, scaled by wave and level)
    */
-  public static calculateSellPrice(weaponType: WeaponType, waveNumber: number): number {
+  public calculateSellPrice(weaponType: WeaponType, waveNumber: number, level: number = 1): number {
     const shopItem = Object.values(SHOP_ITEMS).find(
       (item) => item.type === 'weapon' && item.weaponType === weaponType,
     ) as WeaponShopItem | undefined;
@@ -95,7 +96,8 @@ export class Shop {
 
     const basePrice = shopItem.price;
     const waveMultiplier = 1 + (waveNumber - 2) * GAME_BALANCE.economy.priceScale.perWave;
-    const scaledPrice = basePrice * waveMultiplier;
+    const levelMultiplier = 1 + (level - 1) * GAME_BALANCE.economy.sell.levelMultiplier;
+    const scaledPrice = basePrice * waveMultiplier * levelMultiplier;
 
     return Math.round(scaledPrice * GAME_BALANCE.economy.sell.priceMultiplier);
   }

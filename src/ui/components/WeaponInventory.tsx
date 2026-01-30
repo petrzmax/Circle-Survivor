@@ -18,7 +18,7 @@ interface WeaponData {
 interface WeaponInventoryProps {
   weapons: WeaponData[];
   onSell: (weaponIndex: number, sellPrice: number) => void;
-  getSellPrice: (weaponType: WeaponType) => number;
+  getSellPrice: (weaponType: WeaponType, level: number) => number;
 }
 
 /**
@@ -50,7 +50,7 @@ export function WeaponInventory({
   return (
     <div class="weapon-inventory" onMouseMove={tooltip.handleMouseMove}>
       {weapons.map((weapon) => {
-        const sellPrice = getSellPrice(weapon.type);
+        const sellPrice = getSellPrice(weapon.type, weapon.level);
         const emoji = getWeaponEmoji(weapon.type);
 
         return (

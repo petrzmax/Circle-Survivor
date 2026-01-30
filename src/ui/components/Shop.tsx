@@ -6,9 +6,12 @@ import { Shop as ShopService } from '@/systems/Shop';
 import { shuffleArray } from '@/utils';
 import { JSX } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
+import { container } from 'tsyringe';
 import { useWeaponTooltip } from '../hooks/useWeaponTooltip';
 import { WeaponInventory } from './WeaponInventory';
 import { WeaponTooltip } from './WeaponTooltip';
+
+const shopService = container.resolve(ShopService);
 
 type ShopTab = 'buy' | 'inventory';
 
@@ -165,7 +168,8 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
   };
 
   const getSellPrice = useCallback(
-    (weaponType: WeaponType): number => ShopService.calculateSellPrice(weaponType, waveNumber),
+    (weaponType: WeaponType, level: number): number =>
+      shopService.calculateSellPrice(weaponType, waveNumber, level),
     [waveNumber],
   );
 
@@ -261,11 +265,14 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
                   }}
                   onMouseEnter={(): void => {
                     if (item.type === 'weapon') {
-                      // Check if player already has this weapon to show correct level
+                      // Only show upgraded level if this is actually an upgrade
+                      // (player has max weapons AND already owns this weapon type)
                       const existingWeapon = playerState.weapons.find(
                         (w) => w.type === item.weaponType,
                       );
-                      const level = existingWeapon ? existingWeapon.level + 1 : 1;
+                      const isUpgrade =
+                        playerState.weapons.length >= playerState.maxWeapons && existingWeapon;
+                      const level = isUpgrade ? existingWeapon.level + 1 : 1;
                       tooltip.showTooltip(item.weaponType, level);
                     }
                   }}

@@ -103,6 +103,8 @@ export const GAME_BALANCE = {
     sell: {
       /** Sell price multiplier (0.3 = 30% of buy price). */
       priceMultiplier: 0.3,
+      /** Extra value per weapon level (0.5 = +50% per level above 1). */
+      levelMultiplier: 0.5,
     },
   },
 

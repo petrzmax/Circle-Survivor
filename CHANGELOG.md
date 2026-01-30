@@ -1,5 +1,45 @@
 # Changelog
 
+## [1.9.0](https://github.com/petrzmax/Circle-Survivor/compare/v1.8.1...v1.9.0) (2026-01-30)
+
+
+### ✨ Features
+
+* add new boss names ([e2f17ca](https://github.com/petrzmax/Circle-Survivor/commit/e2f17caf109446799091588f9ad3cf7780258d60))
+* add weapon statistics tooltip ([6239cdf](https://github.com/petrzmax/Circle-Survivor/commit/6239cdf62da789d9dabfe765e3e5a070e87be2a9))
+* velocity inheritance for enemy and player projectiles ([c737d8c](https://github.com/petrzmax/Circle-Survivor/commit/c737d8c47b86caf42b7609f2eb2d82e61c328572))
+
+
+### ⚖️ Balance Changes
+
+* **balance:** adjust pierce for pierce weapons ([379b94a](https://github.com/petrzmax/Circle-Survivor/commit/379b94a2fe8d7ea330ccbad25472e9aec55012b2))
+
+
+### 🐛 Bug Fixes
+
+* add cooldown to crossbow sound to prevent overlapping audio ([7349280](https://github.com/petrzmax/Circle-Survivor/commit/7349280eea4c509de60d74e6d229990753e67a80))
+* add cooldown to dodge, to avoid sound glitch ([5625cab](https://github.com/petrzmax/Circle-Survivor/commit/5625cab2bea9118cf8f4a21fa0f89dbbc43856ac))
+* remove trailing zeros from cooldown ([982e6db](https://github.com/petrzmax/Circle-Survivor/commit/982e6dbcac928ae86541a113d3ef60e98dbe8a78))
+* update toast notification for weapon sale and adjust Shop import path ([69fa574](https://github.com/petrzmax/Circle-Survivor/commit/69fa5747be6ae9e1f5a2fd0ee989261dbeaf5d46))
+* weapon upgrade tooltip, and weapon sell price not affected by level ([b77f9d4](https://github.com/petrzmax/Circle-Survivor/commit/b77f9d4892afc3c61b5bc5d562c81c44cd078912))
+
+
+### ♻️ Refactoring
+
+* implement dependency injection with tsyringe ([e2aa302](https://github.com/petrzmax/Circle-Survivor/commit/e2aa3025301f624dcde16842577455cb260a411d))
+* migrate DevMenu to preact ([108ad98](https://github.com/petrzmax/Circle-Survivor/commit/108ad980ff26cba375bf95460e82c829dd9bced3))
+* migrate EventBus to new events directory and update imports ([c3cc9cd](https://github.com/petrzmax/Circle-Survivor/commit/c3cc9cd8340a0b477878969a939b7cc12717bfd6))
+* move weapon logic to weaponManager ([901a652](https://github.com/petrzmax/Circle-Survivor/commit/901a652e5dd433b338d2fcb752e671760be16b3c))
+* Player class and weapon management ([8eacf24](https://github.com/petrzmax/Circle-Survivor/commit/8eacf24fdb2250bcb9cc4a3ff07a81e500374a8c))
+
+
+### 📦 Other Changes
+
+* **deps:** bump @types/node from 25.0.9 to 25.0.10 ([#58](https://github.com/petrzmax/Circle-Survivor/issues/58)) ([3c2eae4](https://github.com/petrzmax/Circle-Survivor/commit/3c2eae4c1baf2477be1986731aed18e83fb45189))
+* **deps:** bump @vitest/ui from 4.0.17 to 4.0.18 ([#62](https://github.com/petrzmax/Circle-Survivor/issues/62)) ([5107dd2](https://github.com/petrzmax/Circle-Survivor/commit/5107dd222ce4565eeae29118375b9c443a1cbf86))
+* **deps:** bump prettier from 3.8.0 to 3.8.1 ([#61](https://github.com/petrzmax/Circle-Survivor/issues/61)) ([4a58713](https://github.com/petrzmax/Circle-Survivor/commit/4a5871331fef6f9ae87521ec81fa91ac7f393fcc))
+* **deps:** bump typescript-eslint from 8.53.0 to 8.53.1 ([#60](https://github.com/petrzmax/Circle-Survivor/issues/60)) ([85553ab](https://github.com/petrzmax/Circle-Survivor/commit/85553abbca3fc4989da71320cce2a161d9771e80))
+
 ## [1.8.1](https://github.com/petrzmax/Circle-Survivor/compare/v1.8.0...v1.8.1) (2026-01-20)
 
 

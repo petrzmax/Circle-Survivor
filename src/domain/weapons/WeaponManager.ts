@@ -107,6 +107,11 @@ export class WeaponManager {
       const speed = config.bulletSpeed;
       const velocityVector = vectorFromAngle(angle, speed);
 
+      // Add player velocity to projectile (velocity inheritance)
+      const playerVel = player.getVelocity();
+      velocityVector.x += playerVel.vx;
+      velocityVector.y += playerVel.vy;
+
       const projectile = new Projectile({
         position: { x: pos.x, y: pos.y },
         radius: config.bulletRadius ?? 4, // Default 4 like original

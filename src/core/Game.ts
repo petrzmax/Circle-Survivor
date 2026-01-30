@@ -382,6 +382,9 @@ export class Game {
         const attackResult = enemy.tryAttack(player.position, currentTime);
         if (attackResult) {
           if (attackResult.type === 'bullets') {
+            // Get enemy velocity for projectile inheritance
+            const enemyVel = enemy.getVelocity();
+
             // Create enemy projectiles
             for (const bulletData of attackResult.bullets) {
               const projectile = new Projectile({
@@ -396,7 +399,8 @@ export class Game {
                 color: bulletData.color,
                 maxDistance: 1000,
               });
-              projectile.setVelocity(bulletData.vx, bulletData.vy);
+              // Add enemy velocity to projectile (velocity inheritance)
+              projectile.setVelocity(bulletData.vx + enemyVel.vx, bulletData.vy + enemyVel.vy);
               this.entityManager.addProjectile(projectile);
             }
             // Currently only shockwave type exists, but may have more attack types in future

@@ -1,38 +1,22 @@
 import { JSX } from 'preact';
-
-interface PlayerState {
-  hp: number;
-  maxHp: number;
-  gold: number;
-  xp: number;
-  armor: number;
-  damageMultiplier: number;
-  critChance: number;
-  dodge: number;
-  regen: number;
-}
+import { usePlayer } from '../hooks/usePlayer';
+import { useWave } from '../hooks/useWave';
 
 interface HUDProps {
   visible: boolean;
-  playerState: PlayerState;
-  waveNumber: number;
-  timeRemaining: number;
-  isWaveActive: boolean;
 }
 
-export function HUD({
-  visible,
-  playerState,
-  waveNumber,
-  timeRemaining,
-  isWaveActive,
-}: HUDProps): JSX.Element | null {
-  if (!visible) return null;
+export function HUD({ visible }: HUDProps): JSX.Element | null {
+  const player = usePlayer();
+  const wave = useWave();
 
-  const { hp, maxHp, gold, xp, armor, damageMultiplier, critChance, dodge, regen } = playerState;
+  if (!visible || !player) return null;
+
+  const { hp, maxHp, gold, xp, armor, damageMultiplier, critChance, dodge, regen } = player;
+  const { waveNumber, timeRemaining, isWaveActive } = wave;
   const hpPercent = (hp / maxHp) * 100;
+  const hpText = `${Math.ceil(hp)}/${maxHp}`;
 
-  // TODO hmmm verify
   // Armor uses formula: reduction = armor / (armor + 100)
   const armorReduction = armor / (armor + 100);
   const armorPercent = Math.round(armorReduction * 100);
@@ -49,7 +33,7 @@ export function HUD({
         <div id="hp-bar">
           <div id="hp-fill" style={{ width: `${hpPercent}%` }} />
           <span id="hp-text">
-            {Math.ceil(hp)}/{maxHp}
+            {hpText}
           </span>
         </div>
         <div id="wave-info">

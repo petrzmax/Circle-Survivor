@@ -42,24 +42,10 @@ export interface GameEvents {
   bossDefeated: { enemy: Enemy; bossName: string };
 
   // Shop events
-  shopOpened: {
-    gold: number;
-    waveNumber: number;
-    playerState: {
-      gold: number;
-      weapons: Array<{ type: WeaponType; name: string; level: number }>;
-      maxWeapons: number;
-      items?: string[];
-    };
-  };
+  shopOpened: void;
   shopClosed: void;
   itemPurchased: { itemId: string; cost: number };
-  shopPlayerUpdated: {
-    gold: number;
-    weapons: Array<{ type: WeaponType; name: string; level: number }>;
-    maxWeapons: number;
-    items: string[];
-  };
+  shopPlayerUpdated: void;
   weaponPurchased: { weaponType: string; cost: number };
   weaponSold: { weaponIndex: number; sellPrice: number };
   shopError: void;
@@ -73,17 +59,8 @@ export interface GameEvents {
   countdownTick: { seconds: number };
   audioToggleRequested: void;
   audioStateChanged: { enabled: boolean };
-  // TODO use it as trigger only, data get from systems, and managers or remove part of these as it will be on different screen.
+  // TODO use it as trigger only, get data from systems, and managers or remove
   hudUpdate: {
-    hp: number;
-    maxHp: number;
-    gold: number;
-    xp: number;
-    armor: number;
-    damageMultiplier: number;
-    critChance: number;
-    dodge: number;
-    regen: number;
     waveNumber: number;
     timeRemaining: number;
     isWaveActive: boolean;

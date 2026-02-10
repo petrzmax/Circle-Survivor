@@ -10,11 +10,13 @@ import { SOUND_DEFINITIONS } from '@/domain/audio/config';
 import { VisualEffect } from '@/types';
 import { randomRange } from '@/utils';
 import { SoundStep, WindowWithWebkit } from './type';
+import { singleton } from 'tsyringe';
 
 /**
  * Handles all game audio using Web Audio API.
  * Generates sounds procedurally (no external files needed).
  */
+@singleton()
 export class AudioSystem {
   private ctx: AudioContext | null = null;
   private enabled: boolean = true;

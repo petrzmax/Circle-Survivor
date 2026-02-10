@@ -47,6 +47,7 @@ export class Game {
 
   public constructor(
     pickupSpawnSystem: PickupSpawnSystem,
+    audioSystem: AudioSystem,
     private collisionSystem: CollisionSystem,
     private combatSystem: CombatSystem,
     private configService: ConfigService,
@@ -62,6 +63,7 @@ export class Game {
     // These systems auto-connect to EventBus - instantiation is enough
     void pickupSpawnSystem;
     void rewardSystem;
+    void audioSystem;
     // Get canvas
     this.canvas = document.getElementById('game') as HTMLCanvasElement;
     this.ctx = this.canvas.getContext('2d')!;
@@ -71,9 +73,6 @@ export class Game {
 
     // Initialize systems without DI (no deps or special cases)
     this.effectsSystem = new EffectsSystem();
-
-    // AudioSystem initializes itself via EventBus - no reference needed
-    new AudioSystem();
 
     // Setup state change listeners
     this.setupStateListeners();
@@ -180,16 +179,7 @@ export class Game {
     this.entityManager.clearExceptPlayer();
 
     // Preact Shop component handles rendering via shopOpened event
-    EventBus.emit('shopOpened', {
-      gold: player.gold,
-      waveNumber: this.waveManager.waveNumber,
-      playerState: {
-        gold: player.gold,
-        weapons: player.weapons.map((w) => ({ type: w.type, name: w.name, level: w.level })),
-        maxWeapons: player.maxWeapons,
-        items: [...player.items],
-      },
-    });
+    EventBus.emit('shopOpened', undefined);
   }
 
   private onEnterPaused(): void {
@@ -570,19 +560,8 @@ export class Game {
   // ============ HUD ============
 
   private updateHUD(): void {
-    const player = this.entityManager.getPlayer();
-
-    // Emit HUD update for Preact UI
+    // Emit HUD update as trigger — player data read directly from EntityManager by hooks
     EventBus.emit('hudUpdate', {
-      hp: player.hp,
-      maxHp: player.maxHp,
-      gold: player.gold,
-      xp: player.xp,
-      armor: player.armor,
-      damageMultiplier: player.damageMultiplier,
-      critChance: player.critChance,
-      dodge: player.dodge,
-      regen: player.regen,
       waveNumber: this.waveManager.waveNumber,
       timeRemaining: this.waveManager.timeRemaining,
       isWaveActive: this.waveManager.isWaveActive,
@@ -603,15 +582,9 @@ export class Game {
   }
 
   /**
-   * Emit updated player state to Shop component after purchases
+   * Notify UI that player state changed after shop purchase
    */
   private emitShopPlayerUpdate(): void {
-    const player = this.entityManager.getPlayer();
-    EventBus.emit('shopPlayerUpdated', {
-      gold: player.gold,
-      weapons: player.weapons.map((w) => ({ type: w.type, name: w.name, level: w.level })),
-      maxWeapons: player.maxWeapons,
-      items: [...player.items],
-    });
+    EventBus.emit('shopPlayerUpdated', undefined);
   }
 }

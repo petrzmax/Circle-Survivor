@@ -231,6 +231,7 @@ export class Game {
 
     // Reset game state
     this.waveManager.reset();
+    this.effectsSystem.reset();
 
     this.waveManager.startWave();
     this.updateHUD();

@@ -76,6 +76,13 @@ export class EffectsSystem {
   }
 
   /**
+   * Reset all active effects (on game restart)
+   */
+  public reset(): void {
+    this.effects = this.createEffectsState();
+  }
+
+  /**
    * Creates empty effects state
    */
   private createEffectsState(): EffectsState {

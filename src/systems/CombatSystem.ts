@@ -121,7 +121,7 @@ export class CombatSystem {
         EventBus.emit('thornsTriggered', undefined);
         const thornsKilled = enemy.takeDamage(player.thorns, enemy.position, player.knockback);
         if (thornsKilled) {
-          this.handleEnemyDeath(enemy, 'player', currentTime);
+          this.handleEnemyDeath(enemy, 'player');
         }
       }
 
@@ -155,7 +155,7 @@ export class CombatSystem {
 
     // Process projectile-enemy collisions
     for (const { projectile, enemy } of collisions.projectileEnemyCollisions) {
-      this.processProjectileHit(projectile, enemy, currentTime);
+      this.processProjectileHit(projectile, enemy);
     }
 
     // Process pickup collisions
@@ -199,7 +199,7 @@ export class CombatSystem {
    * Process a projectile hitting an enemy
    * Uses runtimeConfig for damageMultiplier, explosionRadius, and knockback
    */
-  private processProjectileHit(projectile: Projectile, enemy: Enemy, currentTime: number): void {
+  private processProjectileHit(projectile: Projectile, enemy: Enemy): void {
     // Skip if enemy already dead (prevents multiple death events from shotgun pellets in same frame)
     if (enemy.isDead()) {
       return;
@@ -229,7 +229,7 @@ export class CombatSystem {
 
     // Handle enemy death
     if (isDead) {
-      this.handleEnemyDeath(enemy, 'player', currentTime);
+      this.handleEnemyDeath(enemy, 'player');
     }
 
     // Handle explosive projectiles
@@ -274,10 +274,13 @@ export class CombatSystem {
     const player = this.entityManager.getPlayer();
     const damageMultiplier = player.damageMultiplier;
 
+    // Track enemies already killed this batch to avoid redundant damage on overlapping explosions
+    const killedThisBatch = new Set<number>();
+
     while (this.pendingExplosions.length > 0) {
       const explosion = this.pendingExplosions.shift();
       if (explosion) {
-        this.processExplosion(explosion, damageMultiplier, currentTime);
+        this.processExplosion(explosion, damageMultiplier, currentTime, killedThisBatch);
       }
     }
   }
@@ -289,6 +292,7 @@ export class CombatSystem {
     explosion: ExplosionEvent,
     damageMultiplier: number,
     currentTime: number,
+    killedThisBatch?: Set<number>,
   ): void {
     const { position, radius, damage, visualEffect, isBanana, isMini, isEnemyExplosion } =
       explosion;
@@ -317,6 +321,11 @@ export class CombatSystem {
     const enemies = this.entityManager.getEnemiesInRadius(position, radius);
 
     for (const enemy of enemies) {
+      // Skip enemies already killed in this explosion batch
+      if (killedThisBatch?.has(enemy.id) || enemy.isDead()) {
+        continue;
+      }
+
       const isDead = enemy.takeDamage(damage * damageMultiplier, position);
 
       EventBus.emit('enemyDamaged', {
@@ -326,7 +335,8 @@ export class CombatSystem {
       });
 
       if (isDead) {
-        this.handleEnemyDeath(enemy, 'explosion', currentTime);
+        killedThisBatch?.add(enemy.id);
+        this.handleEnemyDeath(enemy, 'explosion');
       }
     }
 
@@ -351,19 +361,15 @@ export class CombatSystem {
   public processEnemyDeath(
     enemy: Enemy,
     killer: 'player' | 'explosion' = 'player',
-    currentTime: number = performance.now(),
+    _currentTime: number = performance.now(),
   ): void {
-    this.handleEnemyDeath(enemy, killer, currentTime);
+    this.handleEnemyDeath(enemy, killer);
   }
 
   /**
    * Handle enemy death - spawn pickups, emit events
    */
-  private handleEnemyDeath(
-    enemy: Enemy,
-    killer: 'player' | 'explosion',
-    currentTime: number,
-  ): void {
+  private handleEnemyDeath(enemy: Enemy, killer: 'player' | 'explosion'): void {
     // TODO, reconsider, maybe some special boss effect, or data in enemy dead event
     // Boss death - special explosion sound via event
     if (enemy.isBoss) {
@@ -375,22 +381,16 @@ export class CombatSystem {
       });
     }
 
-    // Handle explodeOnDeath - process immediately, not queued
+    // Handle explodeOnDeath - queued to avoid deep recursive call stacks
     if (enemy.explodeOnDeath && enemy.explosionRadius > 0) {
-      const player = this.entityManager.getPlayer();
-      const damageMultiplier = player.damageMultiplier;
-      this.processExplosion(
-        {
-          position: enemy.position,
-          radius: enemy.explosionRadius,
-          damage: enemy.explosionDamage,
-          visualEffect: VisualEffect.FIRE,
-          sourceId: enemy.id,
-          isEnemyExplosion: true,
-        },
-        damageMultiplier,
-        currentTime,
-      );
+      this.queueExplosion({
+        position: { x: enemy.position.x, y: enemy.position.y },
+        radius: enemy.explosionRadius,
+        damage: enemy.explosionDamage,
+        visualEffect: VisualEffect.FIRE,
+        sourceId: enemy.id,
+        isEnemyExplosion: true,
+      });
     }
 
     // TODO move to SpawnSystem

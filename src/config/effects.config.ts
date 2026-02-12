@@ -93,9 +93,9 @@ export const EFFECTS_CONFIG = {
     /** Initial pre-allocated death particle objects */
     initialDeathParticles: 500,
     /** Maximum active death particles (skip spawning when exceeded) */
-    maxDeathParticles: 500,
+    maxDeathParticles: 2000,
     /** Maximum active explosions */
-    maxExplosions: 50,
+    maxExplosions: 200,
   },
 } as const;
 

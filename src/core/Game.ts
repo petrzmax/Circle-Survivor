@@ -510,10 +510,7 @@ export class Game {
   // ============ Render ============
 
   private render(): void {
-    // Render effects
     this.renderSystem.renderAll(this.ctx, this.lastTime);
-    // TODO: integrate EffectsSystem rendering into RenderSystem
-    this.effectsSystem.renderAll(this.ctx);
 
     // Render boss health bar
     this.renderBossHealthBar();

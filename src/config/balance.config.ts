@@ -42,6 +42,8 @@ export const GAME_BALANCE = {
     scalingFactor: 1.04,
     /** Knockback multiplier for normal enemies. Higher = easier to push back. */
     knockbackMultiplier: 3,
+    /** Enemy bullet radius as fraction of enemy radius. */
+    bulletRadiusRatio: 0.15,
   },
 
   /**

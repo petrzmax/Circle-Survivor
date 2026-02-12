@@ -257,5 +257,23 @@ export class AudioSystem {
           this.play('explosion');
       }
     });
+
+    // Enemy attacks
+    EventBus.on('enemyFired', ({ isBoss, pattern }) => {
+      if (!isBoss) return;
+      switch (pattern) {
+        case 'around':
+          this.play('bossFireAround');
+          break;
+        case 'spread':
+          this.play('bossFireSpread');
+          break;
+        default:
+          this.play('bossFire');
+      }
+    });
+    EventBus.on('shockwaveTriggered', () => {
+      this.play('shockwave');
+    });
   }
 }

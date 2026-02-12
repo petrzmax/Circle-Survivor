@@ -1,4 +1,5 @@
 import { Enemy } from '@/domain/enemies';
+import { AttackPattern, ShockwaveAttackResult } from '@/domain/enemies/type';
 import { WeaponType } from '@/domain/weapons';
 import { Pickup, Player, Projectile } from '@/entities';
 import { CharacterType, GameState, VisualEffect } from '@/types';
@@ -28,6 +29,8 @@ export interface GameEvents {
     damage: number;
     visualEffect: VisualEffect;
   };
+  shockwaveTriggered: ShockwaveAttackResult;
+  enemyFired: { isBoss: boolean; pattern: AttackPattern };
 
   // Pickup events
   goldCollected: { amount: number; position: Vector2 };

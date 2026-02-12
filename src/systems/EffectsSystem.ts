@@ -125,6 +125,10 @@ export class EffectsSystem {
     EventBus.on('enemyDeath', (data) => {
       this.createDeathEffect(data.enemy);
     });
+
+    EventBus.on('shockwaveTriggered', (data) => {
+      this.createShockwave(data);
+    });
   }
 
   /**
@@ -343,16 +347,13 @@ export class EffectsSystem {
   /**
    * Create shockwave effect (boss attack)
    */
-  public createShockwave(
-    shockwave: {
-      x: number;
-      y: number;
-      radius: number;
-      damage: number;
-      color?: string;
-    },
-    currentTime: number,
-  ): void {
+  private createShockwave(shockwave: {
+    x: number;
+    y: number;
+    radius: number;
+    damage: number;
+    color?: string;
+  }): void {
     this.shockwaves.push({
       x: shockwave.x,
       y: shockwave.y,
@@ -360,7 +361,7 @@ export class EffectsSystem {
       currentRadius: 0,
       damage: shockwave.damage,
       color: shockwave.color ?? '',
-      created: currentTime,
+      created: this.currentTime,
       damageDealt: false,
       alpha: 1,
     });

@@ -38,6 +38,7 @@ export type AttackPattern = 'single' | 'double' | 'spread' | 'shockwave' | 'arou
  */
 export interface BulletAttackResult {
   type: 'bullets';
+  pattern: AttackPattern;
   bullets: EnemyBulletData[];
 }
 

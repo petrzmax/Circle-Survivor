@@ -382,7 +382,7 @@ export class Game {
                   x: bulletData.x,
                   y: bulletData.y,
                 },
-                radius: Math.floor(enemy.radius * 0.15), // default 6
+                radius: Math.floor(enemy.radius * GAME_BALANCE.enemy.bulletRadiusRatio),
                 type: ProjectileType.ENEMY_BULLET,
                 damage: bulletData.damage,
                 ownerId: enemy.id,
@@ -393,10 +393,15 @@ export class Game {
               projectile.setVelocity(bulletData.vx + enemyVel.vx, bulletData.vy + enemyVel.vy);
               this.entityManager.addProjectile(projectile);
             }
+            const { pattern } = attackResult;
+            if (enemy.isBoss) {
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+              EventBus.emit('enemyFired', { isBoss: true, pattern });
+            }
             // Currently only shockwave type exists, but may have more attack types in future
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           } else if (attackResult.type === 'shockwave') {
-            this.effectsSystem.createShockwave(attackResult, currentTime);
+            EventBus.emit('shockwaveTriggered', attackResult);
           }
         }
       }

@@ -175,6 +175,7 @@ export class Game {
     player.position.y = this.canvas.height / 2;
 
     this.entityManager.clearExceptPlayer();
+    this.effectsSystem.reset();
 
     // Preact Shop component handles rendering via shopOpened event
     EventBus.emit('shopOpened', undefined);

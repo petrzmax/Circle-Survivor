@@ -728,6 +728,30 @@ button:hover {
     margin-bottom: 8px;
 }
 
+.weapon-card .merge-btn {
+    background: linear-gradient(135deg, #3baaa2, #2f9690);
+    padding: 6px 12px;
+    margin-top: 5px;
+    font-size: 11px;
+    border-radius: 5px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.weapon-card .merge-btn:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(78, 205, 196, 0.4);
+}
+
+.weapon-card .merge-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
 .weapon-card .sell-btn {
     background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
     padding: 6px 12px;
@@ -738,6 +762,8 @@ button:hover {
     color: white;
     cursor: pointer;
     transition: all 0.2s;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .weapon-card .sell-btn:hover {

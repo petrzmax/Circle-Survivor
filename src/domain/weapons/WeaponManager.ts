@@ -196,6 +196,70 @@ export class WeaponManager {
   }
 
   /**
+   * Check if a weapon at the given index can be merged with another weapon in inventory.
+   * Requires: same type, same level, level < maxLevel, and at least two matching weapons.
+   */
+  public canMergeWeapon(weaponIndex: number): boolean {
+    const player = this.entityManager.getPlayer();
+    const weapon = player.weapons[weaponIndex];
+    if (!weapon) return false;
+
+    const maxLevel = this.configService.getGameBalance().weapons.maxLevel;
+    if (weapon.level >= maxLevel) return false;
+
+    // Check if there's at least one other weapon with same type and level
+    return player.weapons.some(
+      (w, i) => i !== weaponIndex && w.type === weapon.type && w.level === weapon.level,
+    );
+  }
+
+  /**
+   * Find the index of a valid merge partner for the weapon at the given index.
+   * Returns the index of the first matching weapon, or -1 if none found.
+   */
+  public getMergePartnerIndex(weaponIndex: number): number {
+    const player = this.entityManager.getPlayer();
+    const weapon = player.weapons[weaponIndex];
+    if (!weapon) return -1;
+
+    return player.weapons.findIndex(
+      (w, i) => i !== weaponIndex && w.type === weapon.type && w.level === weapon.level,
+    );
+  }
+
+  /**
+   * Merge two weapons of the same type and level into one weapon of level+1.
+   * Removes the merge partner and upgrades the selected weapon.
+   * Returns true if merge was successful.
+   */
+  public mergeWeapon(weaponIndex: number): boolean {
+    const player = this.entityManager.getPlayer();
+    const weapon = player.weapons[weaponIndex];
+    if (!weapon) return false;
+
+    if (!this.canMergeWeapon(weaponIndex)) return false;
+
+    const partnerIndex = this.getMergePartnerIndex(weaponIndex);
+    if (partnerIndex === -1) return false;
+
+    // Remove the partner first (if partner is after weapon, index stays valid)
+    // If partner is before weapon, the weapon index shifts down by 1
+    player.removeWeaponAt(partnerIndex);
+
+    // Adjust weapon index if the partner was before it
+    const adjustedIndex = partnerIndex < weaponIndex ? weaponIndex - 1 : weaponIndex;
+    const targetWeapon = player.weapons[adjustedIndex];
+    if (!targetWeapon) return false;
+
+    targetWeapon.level++;
+
+    // Recalculate fire offsets after removing a weapon
+    this.recalculateFireOffsets();
+
+    return true;
+  }
+
+  /**
    * Upgrade weapon stats
    */
   public upgradeWeapon(weapon: WeaponInstance): void {

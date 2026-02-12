@@ -287,6 +287,21 @@ export const SOUND_DEFINITIONS: Record<string, SoundDefinition> = {
     ],
   },
 
+  weaponMerge: {
+    steps: [
+      { type: 'tone', frequency: 400, duration: 0.1, oscillator: 'sine', volume: 0.3 },
+      { type: 'tone', frequency: 600, duration: 0.1, oscillator: 'sine', volume: 0.35, delay: 80 },
+      {
+        type: 'tone',
+        frequency: 900,
+        duration: 0.15,
+        oscillator: 'triangle',
+        volume: 0.3,
+        delay: 160,
+      },
+    ],
+  },
+
   error: {
     steps: [
       { type: 'tone', frequency: 200, duration: 0.1, oscillator: 'square', volume: 0.3 },

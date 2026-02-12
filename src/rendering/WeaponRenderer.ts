@@ -112,7 +112,7 @@ function drawWeaponLevel(ctx: CanvasRenderingContext2D, level: number): void {
   ctx.fillStyle = '#ffd700';
   ctx.font = 'bold 8px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText(`+${level - 1}`, 0, 14);
+  ctx.fillText(`+${level}`, 0, 14);
 }
 
 function drawCrossbow(ctx: CanvasRenderingContext2D): void {

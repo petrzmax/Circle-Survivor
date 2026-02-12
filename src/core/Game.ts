@@ -136,6 +136,27 @@ export class Game {
         this.updateHUD();
       }
     });
+
+    // Listen for weapon merge events from shop
+    EventBus.on('weaponMerge', ({ weaponIndex }) => {
+      const player = this.entityManager.getPlayer();
+      const weapon = player.weapons[weaponIndex];
+      if (!weapon) return;
+
+      const weaponType = weapon.type;
+      const success = this.weaponManager.mergeWeapon(weaponIndex);
+
+      if (success) {
+        // Find the merged weapon (may have shifted index)
+        const merged = player.weapons.find((w) => w.type === weaponType);
+        const newLevel = merged?.level ?? 0;
+        // TODO use service
+        toast(`🔀 ${merged?.name ?? ''} → Poziom ${newLevel}`);
+        EventBus.emit('weaponMerged', { weaponType, newLevel });
+        this.emitShopPlayerUpdate();
+        this.updateHUD();
+      }
+    });
   }
 
   // ============ State Enter Handlers ============

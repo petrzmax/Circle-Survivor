@@ -51,6 +51,8 @@ export interface GameEvents {
   shopPlayerUpdated: void;
   weaponPurchased: { weaponType: string; cost: number };
   weaponSold: { weaponIndex: number; sellPrice: number };
+  weaponMerge: { weaponIndex: number };
+  weaponMerged: { weaponType: WeaponType; newLevel: number };
   shopError: void;
 
   // Game state events

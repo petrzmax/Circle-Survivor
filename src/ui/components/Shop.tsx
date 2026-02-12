@@ -1,3 +1,4 @@
+import { GAME_BALANCE } from '@/config/balance.config';
 import { SHOP_ITEMS, ShopItem } from '@/config/shop.config';
 import { WeaponType } from '@/domain/weapons/type';
 import { EventBus } from '@/events/EventBus';
@@ -94,6 +95,24 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
   const handleSellWeapon = (weaponIndex: number, sellPrice: number): void => {
     EventBus.emit('weaponSold', { weaponIndex, sellPrice });
   };
+
+  const handleMergeWeapon = (weaponIndex: number): void => {
+    EventBus.emit('weaponMerge', { weaponIndex });
+  };
+
+  const canMergeWeapon = useCallback(
+    (weaponIndex: number): boolean => {
+      const weapon = weapons[weaponIndex];
+      if (!weapon) return false;
+
+      if (weapon.level >= GAME_BALANCE.weapons.maxLevel) return false;
+
+      return weapons.some(
+        (w, i) => i !== weaponIndex && w.type === weapon.type && w.level === weapon.level,
+      );
+    },
+    [weapons],
+  );
 
   const getSellPrice = useCallback(
     (weaponType: WeaponType, level: number): number =>
@@ -211,7 +230,10 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
         <WeaponInventory
           weapons={weaponsWithIndex}
           onSell={handleSellWeapon}
+          onMerge={handleMergeWeapon}
+          canMerge={canMergeWeapon}
           getSellPrice={getSellPrice}
+          maxLevel={GAME_BALANCE.weapons.maxLevel}
         />
       )}
 

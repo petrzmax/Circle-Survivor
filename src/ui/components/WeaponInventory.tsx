@@ -18,7 +18,10 @@ interface WeaponData {
 interface WeaponInventoryProps {
   weapons: WeaponData[];
   onSell: (weaponIndex: number, sellPrice: number) => void;
+  onMerge: (weaponIndex: number) => void;
+  canMerge: (weaponIndex: number) => boolean;
   getSellPrice: (weaponType: WeaponType, level: number) => number;
+  maxLevel: number;
 }
 
 /**
@@ -35,7 +38,10 @@ function getWeaponEmoji(weaponType: WeaponType): string {
 export function WeaponInventory({
   weapons,
   onSell,
+  onMerge,
+  canMerge,
   getSellPrice,
+  maxLevel,
 }: WeaponInventoryProps): JSX.Element {
   const tooltip = useWeaponTooltip();
 
@@ -65,6 +71,21 @@ export function WeaponInventory({
             <div class="weapon-emoji">{emoji}</div>
             <h4>{weapon.name}</h4>
             <div class="level">Poziom {weapon.level}</div>
+            {weapon.level >= maxLevel ? (
+              <button class="merge-btn" disabled>
+                ✨ Max poziom
+              </button>
+            ) : (
+              <button
+                class="merge-btn"
+                disabled={!canMerge(weapon.index)}
+                onClick={(): void => {
+                  onMerge(weapon.index);
+                }}
+              >
+                ⚡ Połącz
+              </button>
+            )}
             <button
               class="sell-btn"
               onClick={(): void => {

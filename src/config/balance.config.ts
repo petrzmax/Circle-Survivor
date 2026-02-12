@@ -126,6 +126,8 @@ export const GAME_BALANCE = {
    * Applied when player upgrades existing weapons in shop.
    */
   weapons: {
+    /** Maximum weapon level. Weapons at this level cannot be merged further. */
+    maxLevel: 5,
     upgrade: {
       /** Damage multiplier per upgrade level. 1.3 = +30% damage per level. */
       damagePerLevel: 1.3,

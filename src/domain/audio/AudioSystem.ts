@@ -229,6 +229,9 @@ export class AudioSystem {
     EventBus.on('weaponSold', () => {
       this.play('sell');
     });
+    EventBus.on('weaponMerged', () => {
+      this.play('weaponMerge');
+    });
     EventBus.on('shopError', () => {
       this.play('error');
     });

@@ -152,6 +152,10 @@ export const GAME_BALANCE = {
    * Controls how pickups move toward the player.
    */
   pickup: {
+    /** Radius for collecting pickups (pixels). */
+    collectionRadius: 25,
+    /** Radius at which pickups start being attracted toward the player (pixels). */
+    attractionRadius: 100,
     /** Player speed multiplier for pickup attraction. 1.2 = pickups move 20% faster than player. */
     playerSpeedMultiplier: 1.2,
     /** Minimum distance factor multiplier. Pickups never move slower than base × this. */

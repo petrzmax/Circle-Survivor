@@ -32,9 +32,7 @@ export function HUD({ visible }: HUDProps): JSX.Element | null {
       <div id="hud">
         <div id="hp-bar">
           <div id="hp-fill" style={{ width: `${hpPercent}%` }} />
-          <span id="hp-text">
-            {hpText}
-          </span>
+          <span id="hp-text">{hpText}</span>
         </div>
         <div id="wave-info">
           Fala: <span id="wave-num">{waveNumber}</span>

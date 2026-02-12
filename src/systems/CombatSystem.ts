@@ -177,6 +177,20 @@ export class CombatSystem {
       }
     }
 
+    // Process shockwave-player collisions
+    for (const shockwave of collisions.shockwavePlayerCollisions) {
+      if (randomChance(player.dodge)) {
+        EventBus.emit('playerDodged', undefined);
+      } else {
+        const isDead = player.takeDamage(shockwave.damage, currentTime);
+
+        if (isDead) {
+          EventBus.emit('playerDeath', { player, killedBy: null });
+        }
+      }
+      shockwave.damageDealt = true;
+    }
+
     // Process any pending explosions
     this.processExplosions(currentTime);
   }

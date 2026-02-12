@@ -33,9 +33,6 @@ export class Game {
   private lastTime: number = 0;
   private selectedCharacter: CharacterType | null = null;
 
-  // Systems (not injected - no deps or special cases)
-  private effectsSystem: EffectsSystem;
-
   // Regeneration tracking
   private lastRegenTime: number = 0;
 
@@ -51,6 +48,7 @@ export class Game {
     private collisionSystem: CollisionSystem,
     private combatSystem: CombatSystem,
     private configService: ConfigService,
+    private effectsSystem: EffectsSystem,
     private entityManager: EntityManager,
     private inputSystem: InputSystem,
     private renderSystem: RenderSystem,
@@ -71,8 +69,8 @@ export class Game {
     this.canvas.width = canvasBounds.width;
     this.canvas.height = canvasBounds.height;
 
-    // Initialize systems without DI (no deps or special cases)
-    this.effectsSystem = new EffectsSystem();
+    // Wire shockwave data from EffectsSystem to CollisionSystem
+    this.collisionSystem.setShockwaveProvider(() => this.effectsSystem.getActiveShockwaves());
 
     // Setup state change listeners
     this.setupStateListeners();
@@ -397,7 +395,7 @@ export class Game {
             // Currently only shockwave type exists, but may have more attack types in future
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           } else if (attackResult.type === 'shockwave') {
-            this.effectsSystem.createShockwave(attackResult);
+            this.effectsSystem.createShockwave(attackResult, currentTime);
           }
         }
       }
@@ -481,8 +479,8 @@ export class Game {
     const collisions = this.collisionSystem.checkAll();
     this.combatSystem.processCollisions(collisions, currentTime);
 
-    // Update shockwaves
-    this.updateShockwaves(currentTime);
+    // Update visual effects (particles, explosions, shockwaves)
+    this.effectsSystem.update(currentTime);
 
     // Cleanup
     this.entityManager.removeInactive();
@@ -505,30 +503,6 @@ export class Game {
 
     if (enemy.isBoss) {
       EventBus.emit('bossSpawned', { enemy, bossName: enemy.bossName ?? 'Boss' });
-    }
-  }
-
-  // ============ Combat Effects ============
-
-  private updateShockwaves(currentTime: number): void {
-    const player = this.entityManager.getPlayer();
-
-    const playerDied = this.effectsSystem.updateShockwaves(
-      {
-        x: player.position.x,
-        y: player.position.y,
-        dodge: player.dodge,
-        takeDamage: (damage: number, time: number) => player.takeDamage(damage, time),
-      },
-      currentTime,
-      () => {
-        EventBus.emit('playerDodged', undefined);
-      },
-    );
-
-    if (playerDied) {
-      // TODO: killed by, shockwave, maybe Killed by, could be displayed
-      EventBus.emit('playerDeath', { player, killedBy: null });
     }
   }
 

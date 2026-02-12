@@ -5,4 +5,5 @@ export * from './ExplosionRenderer';
 export * from './PickupRenderer';
 export * from './PlayerRenderer';
 export * from './ProjectileRenderer';
+export * from './ShockwaveRenderer';
 export * from './WeaponRenderer';

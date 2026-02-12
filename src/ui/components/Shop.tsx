@@ -140,8 +140,7 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
       {/* Info bar - always visible */}
       <div class="shop-info">
         <small>
-          Fala {waveNumber} | Bronie: {weapons.length}/{maxWeapons} |
-          Przedmioty: {items.length} |{' '}
+          Fala {waveNumber} | Bronie: {weapons.length}/{maxWeapons} | Przedmioty: {items.length} |{' '}
           <span style={{ color: '#ffd700' }}>💰 {gold}</span>
         </small>
         <button
@@ -195,11 +194,8 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
                     if (item.type === 'weapon') {
                       // Only show upgraded level if this is actually an upgrade
                       // (player has max weapons AND already owns this weapon type)
-                      const existingWeapon = weapons.find(
-                        (w) => w.type === item.weaponType,
-                      );
-                      const isUpgrade =
-                        weapons.length >= maxWeapons && existingWeapon;
+                      const existingWeapon = weapons.find((w) => w.type === item.weaponType);
+                      const isUpgrade = weapons.length >= maxWeapons && existingWeapon;
                       const level = isUpgrade ? existingWeapon.level + 1 : 1;
                       tooltip.showTooltip(item.weaponType, level);
                     }

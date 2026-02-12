@@ -1,5 +1,45 @@
 # Changelog
 
+## [1.10.0](https://github.com/petrzmax/Circle-Survivor/compare/v1.9.0...v1.10.0) (2026-02-12)
+
+
+### ✨ Features
+
+* Add new sounds for enemy attack patterns ([43659f3](https://github.com/petrzmax/Circle-Survivor/commit/43659f303f1853281a12be14ac7454e0944c658e))
+* implement object pooling for effects system ([b586fe0](https://github.com/petrzmax/Circle-Survivor/commit/b586fe0fdf1d11f3850955a569be801805bac6c6))
+* implement weapon merging ([2f4a978](https://github.com/petrzmax/Circle-Survivor/commit/2f4a97843a1a670b761913d1cf6c1683274e9e01))
+
+
+### 🐛 Bug Fixes
+
+* clean particles after game reset ([656fb4f](https://github.com/petrzmax/Circle-Survivor/commit/656fb4fa535473d599e3cb80a0272f1c5b04a753))
+* increase maximum limits for death particles and explosions ([e707891](https://github.com/petrzmax/Circle-Survivor/commit/e707891fcf7ecd6b4ea7de6be2fbf44481601045))
+* reset effects system on game reset ([14f39d2](https://github.com/petrzmax/Circle-Survivor/commit/14f39d251b93bbc48919db910cacc26f058988f0))
+* shockwave rendering order ([bbbfc73](https://github.com/petrzmax/Circle-Survivor/commit/bbbfc73ea0dc5c6c8ef6c4133445962d348129fd))
+
+
+### ♻️ Refactoring
+
+* refactor shop logic for improved state management ([9ee6166](https://github.com/petrzmax/Circle-Survivor/commit/9ee616681b4a1d0b1c417ca5835a90d059ccaeb0))
+* reorganize imports and simplify AudioContext initialization ([16d0083](https://github.com/petrzmax/Circle-Survivor/commit/16d00838f6ddcc98fe1207153b8fdd46dcc1911a))
+* simplify enemy death handling and explosion processing ([4e991e8](https://github.com/petrzmax/Circle-Survivor/commit/4e991e88cd88f85dfd282b7ad518f521cc226f6e))
+
+
+### 📚 Documentation
+
+* add note to separate interfaces from implementations in type.ts files ([ea90f14](https://github.com/petrzmax/Circle-Survivor/commit/ea90f1471363ebae3c61ba894ecbfffda5222916))
+* update project conventions for code utility usage and config injection ([720261b](https://github.com/petrzmax/Circle-Survivor/commit/720261b6e7caba48f7ed27f69e9c9fcfe8d55b35))
+
+
+### 📦 Other Changes
+
+* **deps:** bump @babel/plugin-proposal-decorators ([#65](https://github.com/petrzmax/Circle-Survivor/issues/65)) ([367f3ec](https://github.com/petrzmax/Circle-Survivor/commit/367f3ece0b0c18c1e1ebd894d747fbafb982c0bf))
+* **deps:** bump @preact/preset-vite from 2.10.2 to 2.10.3 ([#71](https://github.com/petrzmax/Circle-Survivor/issues/71)) ([e19ec1c](https://github.com/petrzmax/Circle-Survivor/commit/e19ec1c4d747f18c33c06d7c1d686a82a884c0f0))
+* **deps:** bump @types/node from 25.0.10 to 25.2.2 ([#70](https://github.com/petrzmax/Circle-Survivor/issues/70)) ([bc373af](https://github.com/petrzmax/Circle-Survivor/commit/bc373af4cf9e7cd618bdf052010a49111def1a75))
+* **deps:** bump jsdom from 27.4.0 to 28.0.0 ([#69](https://github.com/petrzmax/Circle-Survivor/issues/69)) ([7e0c7ce](https://github.com/petrzmax/Circle-Survivor/commit/7e0c7ceb57178b41f0308f71f6139f015117a421))
+* **deps:** bump preact from 10.28.2 to 10.28.3 ([#67](https://github.com/petrzmax/Circle-Survivor/issues/67)) ([8dd8e5e](https://github.com/petrzmax/Circle-Survivor/commit/8dd8e5ea6be51f4ab5e1842112a8a9f066c4ca03))
+* **deps:** bump typescript-eslint from 8.53.1 to 8.54.0 ([#66](https://github.com/petrzmax/Circle-Survivor/issues/66)) ([b2fd338](https://github.com/petrzmax/Circle-Survivor/commit/b2fd338c687de5592683815fe3ea2657d53fb82f))
+
 ## [1.9.0](https://github.com/petrzmax/Circle-Survivor/compare/v1.8.1...v1.9.0) (2026-01-30)
 
 

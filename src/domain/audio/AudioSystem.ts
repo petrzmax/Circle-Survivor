@@ -5,12 +5,12 @@
  * Sound definitions are in sounds.config.ts - this class only plays them.
  */
 
-import { EventBus } from '@/events/EventBus';
 import { SOUND_DEFINITIONS } from '@/domain/audio/config';
+import { EventBus } from '@/events/EventBus';
 import { VisualEffect } from '@/types';
 import { randomRange } from '@/utils';
-import { SoundStep, WindowWithWebkit } from './type';
 import { singleton } from 'tsyringe';
+import { SoundStep } from './type';
 
 /**
  * Handles all game audio using Web Audio API.
@@ -33,14 +33,7 @@ export class AudioSystem {
    */
   private init(): boolean {
     try {
-      // Browser compatibility: Check for AudioContext or fallback to webkit prefix
-      // In TypeScript strict mode with modern lib.dom, window.AudioContext is always defined,
-      // but we still check for webkit fallback for older Safari browsers at runtime
-
-      const AudioContextClass =
-        window.AudioContext || (window as WindowWithWebkit).webkitAudioContext;
-
-      this.ctx = new AudioContextClass();
+      this.ctx = new AudioContext();
       return true;
     } catch (e) {
       console.warn('[AudioSystem] Failed to initialize:', e);

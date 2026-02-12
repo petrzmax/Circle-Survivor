@@ -22,10 +22,3 @@ export interface SoundDefinition {
   /** Cooldown in ms - prevents sound spam */
   cooldown?: number;
 }
-
-/**
- * Extend Window interface to include webkit prefixed AudioContext
- */
-export interface WindowWithWebkit extends Window {
-  webkitAudioContext?: typeof AudioContext;
-}

@@ -18,6 +18,11 @@ Project Structure and Organization:
 - Store game configuration (constants like gravity, speed) in a centralized config file.
 - Avoid global state; inject dependencies where possible or use a controlled Singleton for the main Game instance.
 
+Project specific conventions:
+
+- Use already existing code utils if possible. Especially files: collision.ts, math.ts, random.ts.
+- Inject game configs through ConfigService.ts
+
 Naming Conventions:
 
 - camelCase: functions, variables, methods (e.g., 'updatePlayer', 'enemyCount').

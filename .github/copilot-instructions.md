@@ -17,6 +17,12 @@ Project Structure and Organization:
 - Centralize asset loading (images, sounds) through a resource manager.
 - Store game configuration (constants like gravity, speed) in a centralized config file.
 - Avoid global state; inject dependencies where possible or use a controlled Singleton for the main Game instance.
+- Separate interfaces from implementations in corresponding type.ts files.
+
+Project specific conventions:
+
+- Use already existing code utils if possible. Especially files: collision.ts, math.ts, random.ts.
+- Inject game configs through ConfigService.ts
 
 Naming Conventions:
 

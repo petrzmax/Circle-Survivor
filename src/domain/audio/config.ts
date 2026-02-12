@@ -97,6 +97,79 @@ export const SOUND_DEFINITIONS: Record<string, SoundDefinition> = {
     cooldown: 20,
   },
 
+  // ========== Enemy Sounds ==========
+
+  bossFire: {
+    steps: [
+      { type: 'tone', frequency: 140, duration: 0.1, oscillator: 'square', volume: 0.25 },
+      {
+        type: 'tone',
+        frequency: 90,
+        duration: 0.08,
+        oscillator: 'triangle',
+        volume: 0.2,
+        delay: 25,
+      },
+    ],
+    cooldown: 50,
+  },
+
+  bossFireSpread: {
+    steps: [
+      { type: 'tone', frequency: 160, duration: 0.08, oscillator: 'square', volume: 0.25 },
+      {
+        type: 'tone',
+        frequency: 120,
+        duration: 0.06,
+        oscillator: 'square',
+        volume: 0.2,
+        delay: 30,
+      },
+      {
+        type: 'tone',
+        frequency: 80,
+        duration: 0.06,
+        oscillator: 'triangle',
+        volume: 0.15,
+        delay: 60,
+      },
+    ],
+    cooldown: 50,
+  },
+
+  bossFireAround: {
+    steps: [
+      { type: 'noise', duration: 0.1, volume: 0.25 },
+      { type: 'tone', frequency: 180, duration: 0.12, oscillator: 'square', volume: 0.3 },
+      {
+        type: 'tone',
+        frequency: 100,
+        duration: 0.1,
+        oscillator: 'triangle',
+        volume: 0.2,
+        delay: 40,
+      },
+    ],
+    cooldown: 100,
+  },
+
+  shockwave: {
+    steps: [
+      { type: 'tone', frequency: 80, duration: 0.15, oscillator: 'sine', volume: 0.4 },
+      { type: 'tone', frequency: 35, duration: 0.3, oscillator: 'sine', volume: 0.35, delay: 40 },
+      { type: 'noise', duration: 0.2, volume: 0.2 },
+      {
+        type: 'tone',
+        frequency: 20,
+        duration: 0.25,
+        oscillator: 'triangle',
+        volume: 0.25,
+        delay: 120,
+      },
+    ],
+    cooldown: 300,
+  },
+
   // ========== Explosion Sounds ==========
 
   explosion: {

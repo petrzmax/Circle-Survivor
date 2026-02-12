@@ -3,16 +3,21 @@
  * Rendering and updating of temporary visual effects.
  */
 
+import { ConfigService } from '@/config/ConfigService';
+import { EffectsConfig } from '@/config/effects.config';
 import { Enemy } from '@/domain/enemies';
 import { EventBus } from '@/events/EventBus';
 import { renderExplosion } from '@/rendering';
-import { EnemyType, VisualEffect } from '@/types';
-import { distance, randomAngle, randomChance, randomRange } from '@/utils';
+import { renderShockwave } from '@/rendering/ShockwaveRenderer';
+import { VisualEffect } from '@/types';
+import { ObjectPool, randomAngle, randomRange } from '@/utils';
 import { TWO_PI, Vector2 } from '@/utils/math';
+import { singleton } from 'tsyringe';
 
 // ============ Effect Interfaces ============
 
 export interface Explosion {
+  active: boolean;
   position: Vector2;
   radius: number;
   maxRadius: number;
@@ -22,7 +27,7 @@ export interface Explosion {
 }
 
 export interface DeathParticle {
-  // TODO add velocity component and transform component
+  active: boolean;
   x: number;
   y: number;
   vx: number;
@@ -47,21 +52,68 @@ export interface Shockwave {
   alpha: number;
 }
 
-// ============ Effects Storage ============
-
-export interface EffectsState {
-  explosions: Explosion[];
-  deathEffects: DeathParticle[];
-  shockwaves: Shockwave[];
-}
-
 // ============ Effects System ============
 
+@singleton()
 export class EffectsSystem {
-  // TODO analyse if these should be in entity manager
-  private effects: EffectsState = this.createEffectsState();
+  private readonly config: EffectsConfig;
+  private explosionPool: ObjectPool<Explosion>;
+  private deathParticlePool: ObjectPool<DeathParticle>;
+  private shockwaves: Shockwave[] = [];
+  /** Current game time, updated each frame via update() */
+  private currentTime: number = 0;
 
-  public constructor() {
+  public constructor(configService: ConfigService) {
+    this.config = configService.getEffectsConfig();
+    const poolConfig = this.config.pool;
+
+    this.explosionPool = new ObjectPool<Explosion>(
+      () => ({
+        active: false,
+        position: { x: 0, y: 0 },
+        radius: 0,
+        maxRadius: 0,
+        alpha: 0,
+        created: 0,
+        visualEffect: VisualEffect.STANDARD,
+      }),
+      (e) => {
+        e.alpha = 0;
+        e.radius = 0;
+        e.maxRadius = 0;
+        e.created = 0;
+      },
+      poolConfig.initialExplosions,
+    );
+
+    this.deathParticlePool = new ObjectPool<DeathParticle>(
+      () => ({
+        active: false,
+        x: 0,
+        y: 0,
+        vx: 0,
+        vy: 0,
+        size: 0,
+        color: '',
+        alpha: 0,
+        life: 0,
+        decay: 0,
+        isBoss: false,
+      }),
+      (p) => {
+        p.x = 0;
+        p.y = 0;
+        p.vx = 0;
+        p.vy = 0;
+        p.size = 0;
+        p.alpha = 0;
+        p.life = 0;
+        p.decay = 0;
+        p.isBoss = false;
+      },
+      poolConfig.initialDeathParticles,
+    );
+
     this.connectToEventBus();
   }
 
@@ -73,110 +125,116 @@ export class EffectsSystem {
     EventBus.on('enemyDeath', (data) => {
       this.createDeathEffect(data.enemy);
     });
+
+    EventBus.on('shockwaveTriggered', (data) => {
+      this.createShockwave(data);
+    });
   }
 
   /**
-   * Creates empty effects state
+   * Reset all active effects (on game restart)
    */
-  private createEffectsState(): EffectsState {
-    return {
-      explosions: [],
-      deathEffects: [],
-      shockwaves: [],
-    };
+  public reset(): void {
+    this.explosionPool.releaseAll();
+    this.deathParticlePool.releaseAll();
+    this.shockwaves = [];
   }
 
   /**
-   * Update shockwaves (boss attack effect)
-   * @returns True if player died from shockwave
+   * Get active shockwaves for collision detection
    */
-  public updateShockwaves(
-    player: {
-      x: number;
-      y: number;
-      dodge: number;
-      takeDamage: (damage: number, time: number) => boolean;
-    },
-    currentTime: number,
-    onDodge: () => void,
-  ): boolean {
-    for (let i = this.effects.shockwaves.length - 1; i >= 0; i--) {
-      const sw = this.effects.shockwaves[i]!;
-      const age = Date.now() - sw.created;
-      const duration = 400; // ms
+  public getActiveShockwaves(): Shockwave[] {
+    return this.shockwaves;
+  }
+
+  /**
+   * Update shockwave visuals (radius expansion, alpha fade, removal)
+   */
+  public updateShockwaves(currentTime: number): void {
+    const { duration, expansionFactor } = this.config.shockwaves;
+    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+      const sw = this.shockwaves[i]!;
+      const age = currentTime - sw.created;
 
       // Expand ring
-      sw.currentRadius = sw.maxRadius * Math.min(1, age / (duration * 0.7));
+      sw.currentRadius = sw.maxRadius * Math.min(1, age / (duration * expansionFactor));
       sw.alpha = 1 - age / duration;
-
-      // Deal damage to player when wave reaches them (only once)
-      if (!sw.damageDealt) {
-        const distToPlayer = distance({ x: sw.x, y: sw.y }, player);
-        if (distToPlayer <= sw.currentRadius && distToPlayer >= sw.currentRadius - 30) {
-          // Player in wave range
-          if (randomChance(player.dodge)) {
-            onDodge();
-          } else {
-            const isDead = player.takeDamage(sw.damage, currentTime);
-            if (isDead) return true;
-          }
-          sw.damageDealt = true;
-        }
-      }
 
       // Remove finished ones (swap-and-pop for O(1) removal)
       if (sw.alpha <= 0) {
-        this.effects.shockwaves[i] = this.effects.shockwaves[this.effects.shockwaves.length - 1]!;
-        this.effects.shockwaves.pop();
+        this.shockwaves[i] = this.shockwaves[this.shockwaves.length - 1]!;
+        this.shockwaves.pop();
       }
     }
-    return false;
   }
 
-  // TODO move to rendering
+  // ============ Update Methods ============
+
   /**
-   * Render explosions
+   * Update all effects (call in game update phase)
    */
-  private renderExplosions(ctx: CanvasRenderingContext2D): void {
-    const explosions = this.effects.explosions;
-    for (let i = explosions.length - 1; i >= 0; i--) {
-      const exp = explosions[i]!;
-      const age = Date.now() - exp.created;
-      const duration = exp.visualEffect === VisualEffect.NUKE ? 600 : 300;
+  public update(currentTime: number): void {
+    this.currentTime = currentTime;
+    this.updateExplosions(currentTime);
+    this.updateDeathEffects();
+    this.updateShockwaves(currentTime);
+  }
+
+  /**
+   * Update explosion lifetimes and remove expired
+   */
+  private updateExplosions(currentTime: number): void {
+    this.explosionPool.forEachActive((exp) => {
+      const age = currentTime - exp.created;
+      const duration =
+        exp.visualEffect === VisualEffect.NUKE
+          ? this.config.explosions.nukeDuration
+          : this.config.explosions.standardDuration;
       exp.alpha = 1 - age / duration;
 
       if (exp.alpha <= 0) {
-        explosions[i] = explosions[explosions.length - 1]!;
-        explosions.pop();
-        continue;
+        this.explosionPool.release(exp);
       }
-
-      renderExplosion(ctx, exp);
-    }
+    });
   }
 
   /**
-   * Render death particle effects
+   * Update death particle physics and remove expired
    */
-  // TODO optimize - explosins bottleneck
-  private renderDeathEffects(ctx: CanvasRenderingContext2D): void {
-    const deathEffects = this.effects.deathEffects;
-    for (let i = deathEffects.length - 1; i >= 0; i--) {
-      const p = deathEffects[i]!;
-
-      // Update position and life
+  private updateDeathEffects(): void {
+    const friction = this.config.deathParticles.physics.friction;
+    this.deathParticlePool.forEachActive((p) => {
       p.x += p.vx;
       p.y += p.vy;
-      p.vx *= 0.95; // Friction
-      p.vy *= 0.95;
+      p.vx *= friction;
+      p.vy *= friction;
       p.life -= p.decay;
       p.alpha = p.life;
 
       if (p.life <= 0) {
-        deathEffects[i] = deathEffects[deathEffects.length - 1]!;
-        deathEffects.pop();
-        continue;
+        this.deathParticlePool.release(p);
       }
+    });
+  }
+
+  // ============ Render Methods ============
+
+  /**
+   * Render explosions (pure draw, no state mutation)
+   */
+  private renderExplosions(ctx: CanvasRenderingContext2D): void {
+    this.explosionPool.forEachActiveForward((exp) => {
+      if (exp.alpha <= 0) return;
+      renderExplosion(ctx, exp);
+    });
+  }
+
+  /**
+   * Render death particle effects (pure draw, no state mutation)
+   */
+  private renderDeathEffects(ctx: CanvasRenderingContext2D): void {
+    this.deathParticlePool.forEachActiveForward((p) => {
+      if (p.life <= 0) return;
 
       ctx.save();
       ctx.globalAlpha = p.alpha;
@@ -192,36 +250,16 @@ export class EffectsSystem {
       ctx.arc(p.x, p.y, p.size * p.life, 0, TWO_PI);
       ctx.fill();
       ctx.restore();
-    }
+    });
   }
 
   /**
    * Render shockwave effects
    */
   private renderShockwaves(ctx: CanvasRenderingContext2D): void {
-    const shockwaves = this.effects.shockwaves;
-    for (const sw of shockwaves) {
+    for (const sw of this.shockwaves) {
       if (sw.alpha <= 0) continue;
-
-      ctx.save();
-      ctx.globalAlpha = sw.alpha * 0.6;
-
-      // Outer ring (expanding)
-      ctx.beginPath();
-      ctx.arc(sw.x, sw.y, sw.currentRadius, 0, TWO_PI);
-      ctx.strokeStyle = sw.color || '#ff4444';
-      ctx.lineWidth = 8;
-      ctx.shadowColor = sw.color || '#ff4444';
-      ctx.shadowBlur = 20;
-      ctx.stroke();
-
-      // Inner ring
-      ctx.beginPath();
-      ctx.arc(sw.x, sw.y, sw.currentRadius * 0.7, 0, TWO_PI);
-      ctx.lineWidth = 4;
-      ctx.stroke();
-
-      ctx.restore();
+      renderShockwave(ctx, sw);
     }
   }
 
@@ -229,59 +267,63 @@ export class EffectsSystem {
    * Create death particle effect for enemy
    */
   public createDeathEffect(enemy: Enemy): void {
-    // Particle count depends on enemy type
-    let particleCount = 8;
-    let particleSize = 4;
+    const { presets, boss, bossGolden, physics } = this.config.deathParticles;
+    const defaultPreset = this.config.deathParticles.default;
+    const maxParticles = this.config.pool.maxDeathParticles;
+
+    // Resolve particle preset by enemy type
+    let particleCount: number;
+    let particleSize: number;
     const particleColor = enemy.color;
 
     if (enemy.isBoss) {
-      particleCount = 30;
-      particleSize = 8;
-    } else if (enemy.type === EnemyType.TANK || enemy.type === EnemyType.BRUTE) {
-      particleCount = 15;
-      particleSize = 6;
-    } else if (enemy.type === EnemyType.SWARM) {
-      particleCount = 5;
-      particleSize = 3;
+      particleCount = boss.particleCount;
+      particleSize = boss.particleSize;
+    } else {
+      const preset = presets[enemy.type] ?? defaultPreset;
+      particleCount = preset.particleCount;
+      particleSize = preset.particleSize;
     }
 
-    // Creating particles
+    // Creating particles (skip if pool cap reached)
     for (let i = 0; i < particleCount; i++) {
-      const angle = (TWO_PI / particleCount) * i + randomRange(0, 0.5);
-      const speed = randomRange(2, 6);
+      if (this.deathParticlePool.activeCount >= maxParticles) break;
 
-      this.effects.deathEffects.push({
-        x: enemy.position.x,
-        y: enemy.position.y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        size: particleSize * randomRange(0.5, 1),
-        color: particleColor,
-        alpha: 1,
-        life: 1,
-        decay: randomRange(0.02, 0.04),
-        isBoss: enemy.isBoss,
-      });
+      const angle = (TWO_PI / particleCount) * i + randomRange(0, physics.angleJitter);
+      const speed = randomRange(physics.speedMin, physics.speedMax);
+      const p = this.deathParticlePool.acquire();
+
+      p.x = enemy.position.x;
+      p.y = enemy.position.y;
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed;
+      p.size = particleSize * randomRange(physics.sizeVarianceMin, physics.sizeVarianceMax);
+      p.color = particleColor;
+      p.alpha = 1;
+      p.life = 1;
+      p.decay = randomRange(physics.decayMin, physics.decayMax);
+      p.isBoss = enemy.isBoss;
     }
 
     // Additional effect for boss - second wave of larger particles
     if (enemy.isBoss) {
-      for (let i = 0; i < 20; i++) {
-        const angle = randomAngle();
-        const speed = randomRange(1, 3);
+      for (let i = 0; i < bossGolden.count; i++) {
+        if (this.deathParticlePool.activeCount >= maxParticles) break;
 
-        this.effects.deathEffects.push({
-          x: enemy.position.x,
-          y: enemy.position.y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          size: randomRange(10, 20),
-          color: '#FFD700', // Golden color
-          alpha: 1,
-          life: 1,
-          decay: 0.01,
-          isBoss: true,
-        });
+        const angle = randomAngle();
+        const speed = randomRange(bossGolden.speedMin, bossGolden.speedMax);
+        const p = this.deathParticlePool.acquire();
+
+        p.x = enemy.position.x;
+        p.y = enemy.position.y;
+        p.vx = Math.cos(angle) * speed;
+        p.vy = Math.sin(angle) * speed;
+        p.size = randomRange(bossGolden.sizeMin, bossGolden.sizeMax);
+        p.color = bossGolden.color;
+        p.alpha = 1;
+        p.life = 1;
+        p.decay = bossGolden.decay;
+        p.isBoss = true;
       }
     }
   }
@@ -290,34 +332,36 @@ export class EffectsSystem {
    * Create explosion visual effect
    */
   private createExplosion(position: Vector2, radius: number, visualEffect: VisualEffect): void {
-    this.effects.explosions.push({
-      position,
-      radius,
-      maxRadius: radius,
-      alpha: 1,
-      created: Date.now(),
-      visualEffect,
-    });
+    if (this.explosionPool.activeCount >= this.config.pool.maxExplosions) return;
+
+    const exp = this.explosionPool.acquire();
+    exp.position.x = position.x;
+    exp.position.y = position.y;
+    exp.radius = radius;
+    exp.maxRadius = radius;
+    exp.alpha = 1;
+    exp.created = this.currentTime;
+    exp.visualEffect = visualEffect;
   }
 
   /**
    * Create shockwave effect (boss attack)
    */
-  public createShockwave(shockwave: {
+  private createShockwave(shockwave: {
     x: number;
     y: number;
     radius: number;
     damage: number;
     color?: string;
   }): void {
-    this.effects.shockwaves.push({
+    this.shockwaves.push({
       x: shockwave.x,
       y: shockwave.y,
       maxRadius: shockwave.radius,
       currentRadius: 0,
       damage: shockwave.damage,
-      color: shockwave.color ?? '#ff4444',
-      created: Date.now(),
+      color: shockwave.color ?? '',
+      created: this.currentTime,
       damageDealt: false,
       alpha: 1,
     });

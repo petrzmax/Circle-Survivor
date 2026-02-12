@@ -270,7 +270,7 @@ export class Enemy extends Entity implements IHealth {
     switch (pattern) {
       case 'spread': {
         // 60 degree spread of 5 projectiles
-        return this.createSpreadProjectiles(baseAngle, 5, Math.PI / 3);
+        return this.createSpreadProjectiles(baseAngle, 5, Math.PI / 3, 'spread');
       }
 
       case 'shockwave':
@@ -285,22 +285,23 @@ export class Enemy extends Entity implements IHealth {
 
       case 'double': {
         // 20 degree spread of 2 projectiles
-        return this.createSpreadProjectiles(baseAngle, 2, Math.PI / 9);
+        return this.createSpreadProjectiles(baseAngle, 2, Math.PI / 9, 'double');
       }
 
       case 'around': {
         // 360 degree spread of 26 projectiles
-        return this.createSpreadProjectiles(baseAngle, 26, TWO_PI);
+        return this.createSpreadProjectiles(baseAngle, 26, TWO_PI, 'around');
       }
 
       case 'single':
-      default:
+      default: {
         return {
           type: 'bullets',
+          pattern: pattern ?? 'single',
           bullets: [
             {
-              x: this.position.x,
-              y: this.position.y,
+              x: this.position.x + (dx / dist) * this.radius,
+              y: this.position.y + (dy / dist) * this.radius,
               vx: (dx / dist) * this.bulletSpeed,
               vy: (dy / dist) * this.bulletSpeed,
               damage: this.bulletDamage,
@@ -308,6 +309,7 @@ export class Enemy extends Entity implements IHealth {
             },
           ],
         };
+      }
     }
   }
 
@@ -315,20 +317,21 @@ export class Enemy extends Entity implements IHealth {
     baseAngle: number,
     spreadCount: number,
     spreadAngle: number,
+    pattern: AttackPattern,
   ): AttackResult {
     const bullets: EnemyBulletData[] = [];
 
     for (let i = 0; i < spreadCount; i++) {
       const angle = baseAngle - spreadAngle / 2 + (spreadAngle / (spreadCount - 1)) * i;
       bullets.push({
-        x: this.position.x,
-        y: this.position.y,
+        x: this.position.x + Math.cos(angle) * this.radius,
+        y: this.position.y + Math.sin(angle) * this.radius,
         vx: Math.cos(angle) * this.bulletSpeed,
         vy: Math.sin(angle) * this.bulletSpeed,
         damage: this.bulletDamage * 0.6,
         color: this.color,
       });
     }
-    return { type: 'bullets', bullets };
+    return { type: 'bullets', pattern, bullets };
   }
 }

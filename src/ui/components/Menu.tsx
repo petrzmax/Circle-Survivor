@@ -1,8 +1,10 @@
+import { AudioSystem } from '@/domain/audio/AudioSystem';
 import { EventBus } from '@/events/EventBus';
 import { CharacterType, GameState } from '@/types/enums';
 import { GAME_VERSION } from '@/version';
 import { JSX } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
+import { container } from 'tsyringe';
 import { CharacterSelect } from './CharacterSelect';
 import { LeaderboardComponent } from './Leaderboard';
 
@@ -15,16 +17,20 @@ interface MenuProps {
 
 export function Menu({ gameState, finalWave, finalXp, character }: MenuProps): JSX.Element | null {
   const [showMenuLeaderboard, setShowMenuLeaderboard] = useState(false);
-  const [audioEnabled, setAudioEnabled] = useState(true);
+  const [, forceUpdate] = useState(0);
+
+  const audioSystem = container.resolve(AudioSystem);
 
   useEffect(() => {
-    const sub = EventBus.on('audioStateChanged', ({ enabled }) => {
-      setAudioEnabled(enabled);
+    const sub = EventBus.on('audioStateChanged', () => {
+      forceUpdate((n) => n + 1);
     });
     return (): void => {
       sub.unsubscribe();
     };
   }, []);
+
+  const audioEnabled = audioSystem.isEnabled();
 
   const handleResume = (): void => {
     EventBus.emit('resumeRequested', undefined);

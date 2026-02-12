@@ -3,13 +3,15 @@
  * Emits events when collisions are detected for other systems to handle.
  */
 
-import { singleton } from 'tsyringe';
+import { ConfigService } from '@/config/ConfigService';
 import { Enemy } from '@/domain/enemies';
 import { Deployable } from '@/entities/Deployable';
 import { Pickup } from '@/entities/Pickup';
 import { Projectile } from '@/entities/Projectile';
 import { EntityManager } from '@/managers/EntityManager';
-import { distanceSquared, Vector2 } from '@/utils';
+import { distance, distanceSquared, Vector2 } from '@/utils';
+import { singleton } from 'tsyringe';
+import { Shockwave } from './EffectsSystem';
 
 /**
  * Collision detection result
@@ -25,6 +27,8 @@ export interface CollisionResult {
   pickupCollisions: Pickup[];
   /** Enemies triggering deployables */
   deployableCollisions: Array<{ deployable: Deployable; enemies: Enemy[] }>;
+  /** Shockwaves hitting the player */
+  shockwavePlayerCollisions: Shockwave[];
 }
 
 /**
@@ -33,12 +37,24 @@ export interface CollisionResult {
  */
 @singleton()
 export class CollisionSystem {
-  // TODO these should not, be stored here, verify
-  private pickupRadius: number = 25;
-  private attractionRadius: number = 100;
+  private pickupRadius: number;
+  private attractionRadius: number;
+  private shockwaveProvider: (() => Shockwave[]) | null = null;
 
-  public constructor(private entityManager: EntityManager) {
-    // Config values use defaults - can add setters if needed
+  public constructor(
+    private entityManager: EntityManager,
+    private configService: ConfigService,
+  ) {
+    const pickupConfig = configService.getGameBalance().pickup;
+    this.pickupRadius = pickupConfig.collectionRadius;
+    this.attractionRadius = pickupConfig.attractionRadius;
+  }
+
+  /**
+   * Set the provider function for active shockwaves
+   */
+  public setShockwaveProvider(provider: () => Shockwave[]): void {
+    this.shockwaveProvider = provider;
   }
 
   /**
@@ -51,6 +67,7 @@ export class CollisionSystem {
       projectileEnemyCollisions: [],
       pickupCollisions: [],
       deployableCollisions: [],
+      shockwavePlayerCollisions: [],
     };
 
     const player = this.entityManager.getPlayer();
@@ -72,6 +89,9 @@ export class CollisionSystem {
 
     // Check deployable collisions
     result.deployableCollisions = this.checkDeployableCollisions();
+
+    // Check shockwave-player collisions
+    result.shockwavePlayerCollisions = this.checkShockwavePlayerCollisions();
 
     return result;
   }
@@ -195,6 +215,30 @@ export class CollisionSystem {
 
       if (triggeredBy.length > 0) {
         collisions.push({ deployable, enemies: triggeredBy });
+      }
+    }
+
+    return collisions;
+  }
+
+  /**
+   * Check shockwave collision with player (ring-based detection)
+   */
+  private checkShockwavePlayerCollisions(): Shockwave[] {
+    if (!this.shockwaveProvider) return [];
+
+    const player = this.entityManager.getPlayer();
+    const shockwaves = this.shockwaveProvider();
+    const collisions: Shockwave[] = [];
+    const ringWidth = this.configService.getEffectsConfig().shockwaves.ringWidth;
+
+    for (const sw of shockwaves) {
+      if (sw.damageDealt) continue;
+
+      const dist = distance({ x: sw.x, y: sw.y }, player.position);
+
+      if (dist <= sw.currentRadius && dist >= sw.currentRadius - ringWidth) {
+        collisions.push(sw);
       }
     }
 

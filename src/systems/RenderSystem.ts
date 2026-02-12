@@ -8,6 +8,7 @@ import {
 } from '@/rendering';
 import { renderBackground } from '@/rendering/BackgroundRenderer';
 import { renderEnemy } from '@/rendering/EnemyRenderer';
+import { EffectsSystem } from '@/systems/EffectsSystem';
 import { singleton } from 'tsyringe';
 import { HUD } from './HUD';
 
@@ -18,7 +19,10 @@ export class RenderSystem {
   // Debug display flags
   private showEnemyCount: boolean = false;
 
-  public constructor(entityManager: EntityManager) {
+  public constructor(
+    entityManager: EntityManager,
+    private effectsSystem: EffectsSystem,
+  ) {
     this.entityManager = entityManager;
   }
 
@@ -32,10 +36,11 @@ export class RenderSystem {
 
   public renderAll(ctx: CanvasRenderingContext2D, currentTime: number): void {
     renderBackground(ctx);
-    // TODO render effects
     this.renderPickups(ctx);
     this.renderDeployables(ctx, currentTime);
     this.renderProjectiles(ctx);
+    // TODO refactor to decouple from effects system.
+    this.effectsSystem.renderAll(ctx);
     this.renderEnemies(ctx);
     this.renderPlayer(ctx, currentTime);
 

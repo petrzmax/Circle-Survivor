@@ -1,4 +1,5 @@
 import { GAME_BALANCE, GameBalanceConfig, WeaponUpgradeConfig } from '@/config';
+import { EFFECTS_CONFIG, EffectsConfig } from '@/config/effects.config';
 import { singleton } from 'tsyringe';
 import { CanvasBounds } from '../utils/random';
 
@@ -14,5 +15,9 @@ export class ConfigService {
 
   public getWeaponsUpgrade(): WeaponUpgradeConfig {
     return GAME_BALANCE.weapons.upgrade;
+  }
+
+  public getEffectsConfig(): EffectsConfig {
+    return EFFECTS_CONFIG;
   }
 }

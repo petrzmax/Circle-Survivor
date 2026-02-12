@@ -60,3 +60,5 @@ export {
   weightedRandom,
   type CanvasBounds,
 } from './random';
+
+export { ObjectPool, type Poolable } from './object-pool';

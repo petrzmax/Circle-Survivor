@@ -1,12 +1,13 @@
-import { GAME_BALANCE } from '@/config/balance.config';
 import { SHOP_ITEMS, ShopItem } from '@/config/shop.config';
 import { WeaponType } from '@/domain/weapons/type';
 import { EventBus } from '@/events/EventBus';
 import { Shop as ShopService } from '@/systems/Shop';
-import { shuffleArray } from '@/utils';
+import { calculatePrice, generateShopItems, getRerollPrice } from '@/systems/ShopLogic';
 import { JSX } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import { container } from 'tsyringe';
+import { usePlayer } from '../hooks/usePlayer';
+import { useWave } from '../hooks/useWave';
 import { useWeaponTooltip } from '../hooks/useWeaponTooltip';
 import { WeaponInventory } from './WeaponInventory';
 import { WeaponTooltip } from './WeaponTooltip';
@@ -15,20 +16,13 @@ const shopService = container.resolve(ShopService);
 
 type ShopTab = 'buy' | 'inventory';
 
-interface PlayerState {
-  gold: number;
-  weapons: Array<{ type: WeaponType; name: string; level: number }>;
-  maxWeapons: number;
-  items?: string[];
-}
-
 interface ShopProps {
   visible: boolean;
-  playerState: PlayerState;
-  waveNumber: number;
 }
 
-export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Element | null {
+export function Shop({ visible }: ShopProps): JSX.Element | null {
+  const player = usePlayer();
+  const { waveNumber } = useWave();
   const [availableItems, setAvailableItems] = useState<string[]>([]);
   const [soldItems, setSoldItems] = useState<Set<string>>(new Set());
   const [rerollCount, setRerollCount] = useState(0);
@@ -37,13 +31,18 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
   const [activeTab, setActiveTab] = useState<ShopTab>('buy');
   const tooltip = useWeaponTooltip();
 
+  const gold = player?.gold ?? 0;
+  const weapons = player?.weapons ?? [];
+  const maxWeapons = player?.maxWeapons ?? 6;
+  const items = player?.items ?? [];
+
   // Generate items only when shop first opens (visible changes from false to true)
   useEffect(() => {
     if (visible && !shopInitialized) {
       setRerollCount(0);
       setSoldItems(new Set());
       setActiveTab('buy');
-      generateItemsWithGold(playerState.gold);
+      setAvailableItems(generateShopItems(gold, waveNumber));
       setShopInitialized(true);
     } else if (!visible && shopInitialized) {
       // Reset when shop closes
@@ -51,86 +50,15 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
     }
   }, [visible, shopInitialized]);
 
-  const calculatePrice = useCallback(
-    (basePrice: number): number => {
-      const waveMultiplier = 1 + (waveNumber - 2) * GAME_BALANCE.economy.priceScale.perWave;
-      return Math.round(basePrice * waveMultiplier);
-    },
+  const currentCalculatePrice = useCallback(
+    (basePrice: number): number => calculatePrice(basePrice, waveNumber),
     [waveNumber],
   );
 
-  const getRerollPrice = useCallback((): number => {
-    const basePrice = GAME_BALANCE.economy.reroll.baseCost;
-    const waveMultiplier = 1 + (waveNumber - 2) * GAME_BALANCE.economy.reroll.perWave;
-    const rerollMultiplier = 1 + rerollCount * GAME_BALANCE.economy.reroll.perReroll;
-    return Math.round(basePrice * waveMultiplier * rerollMultiplier);
-  }, [waveNumber, rerollCount]);
-
-  const generateItemsWithGold = useCallback(
-    (gold: number): void => {
-      const affordableWeapons: string[] = [];
-      const unaffordableWeapons: string[] = [];
-      const affordableItems: string[] = [];
-      const unaffordableItems: string[] = [];
-
-      Object.keys(SHOP_ITEMS).forEach((key) => {
-        const item = SHOP_ITEMS[key];
-        if (!item) return;
-
-        const price = calculatePrice(item.price);
-        const canAfford = gold >= price;
-
-        if (item.type === 'weapon') {
-          if (canAfford) affordableWeapons.push(key);
-          else unaffordableWeapons.push(key);
-        } else {
-          if (canAfford) affordableItems.push(key);
-          else unaffordableItems.push(key);
-        }
-      });
-
-      shuffleArray(affordableWeapons);
-      shuffleArray(unaffordableWeapons);
-      shuffleArray(affordableItems);
-      shuffleArray(unaffordableItems);
-
-      const newItems: string[] = [];
-
-      // 2 weapons - prioritize affordable
-      const allWeapons = [...affordableWeapons, ...unaffordableWeapons];
-      for (let i = 0; i < 2 && i < allWeapons.length; i++) {
-        const key = allWeapons[i];
-        if (key) newItems.push(key);
-      }
-
-      // 2 items - prioritize affordable
-      const allItems = [...affordableItems, ...unaffordableItems];
-      for (let i = 0; i < 2 && i < allItems.length; i++) {
-        const key = allItems[i];
-        if (key) newItems.push(key);
-      }
-
-      // 2 extra random - prioritize affordable
-      const usedWeapons = allWeapons.slice(0, 2);
-      const usedItems = allItems.slice(0, 2);
-      const extraWeapons = allWeapons.filter((w) => !usedWeapons.includes(w));
-      const extraItems = allItems.filter((i) => !usedItems.includes(i));
-      const extras = [...extraWeapons, ...extraItems];
-      shuffleArray(extras);
-
-      for (let i = 0; i < 2 && i < extras.length; i++) {
-        const key = extras[i];
-        if (key) newItems.push(key);
-      }
-
-      shuffleArray(newItems);
-      setAvailableItems(newItems);
-    },
-    [calculatePrice],
-  );
+  const currentRerollPrice = getRerollPrice(waveNumber, rerollCount);
 
   const handleBuy = (itemKey: string, price: number): void => {
-    if (playerState.gold < price) {
+    if (gold < price) {
       EventBus.emit('shopError', undefined);
       return;
     }
@@ -140,8 +68,8 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
   };
 
   const handleReroll = (): void => {
-    const price = getRerollPrice();
-    if (playerState.gold < price) {
+    const price = currentRerollPrice;
+    if (gold < price) {
       EventBus.emit('shopError', undefined);
       return;
     }
@@ -154,10 +82,10 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
   // Regenerate items after reroll when gold updates
   useEffect(() => {
     if (visible && shopInitialized && pendingReroll) {
-      generateItemsWithGold(playerState.gold);
+      setAvailableItems(generateShopItems(gold, waveNumber));
       setPendingReroll(false);
     }
-  }, [playerState.gold, pendingReroll]);
+  }, [gold, pendingReroll]);
 
   const handleStartWave = (): void => {
     EventBus.emit('startGameRequested', undefined);
@@ -175,10 +103,10 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
 
   if (!visible) return null;
 
-  const rerollPrice = getRerollPrice();
+  const rerollPrice = currentRerollPrice;
 
   // Prepare weapons with index for inventory
-  const weaponsWithIndex = playerState.weapons.map((w, index) => ({
+  const weaponsWithIndex = weapons.map((w, index) => ({
     ...w,
     index,
   }));
@@ -205,21 +133,20 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
             tooltip.hideTooltip();
           }}
         >
-          ⚔️ Ekwipunek ({playerState.weapons.length})
+          ⚔️ Ekwipunek ({weapons.length})
         </button>
       </div>
 
       {/* Info bar - always visible */}
       <div class="shop-info">
         <small>
-          Fala {waveNumber} | Bronie: {playerState.weapons.length}/{playerState.maxWeapons} |
-          Przedmioty: {playerState.items?.length ?? 0} |{' '}
-          <span style={{ color: '#ffd700' }}>💰 {playerState.gold}</span>
+          Fala {waveNumber} | Bronie: {weapons.length}/{maxWeapons} | Przedmioty: {items.length} |{' '}
+          <span style={{ color: '#ffd700' }}>💰 {gold}</span>
         </small>
         <button
-          class={`reroll-inline-btn ${playerState.gold < rerollPrice ? 'disabled' : ''}`}
-          onClick={playerState.gold >= rerollPrice ? handleReroll : undefined}
-          disabled={playerState.gold < rerollPrice || activeTab !== 'buy'}
+          class={`reroll-inline-btn ${gold < rerollPrice ? 'disabled' : ''}`}
+          onClick={gold >= rerollPrice ? handleReroll : undefined}
+          disabled={gold < rerollPrice || activeTab !== 'buy'}
           style={activeTab !== 'buy' ? { opacity: 0, pointerEvents: 'none' } : undefined}
         >
           🎲 Losuj (💰 {rerollPrice})
@@ -233,15 +160,15 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
             .filter((itemKey) => !soldItems.has(itemKey) && SHOP_ITEMS[itemKey])
             .map((itemKey, index) => {
               const item = SHOP_ITEMS[itemKey]!;
-              const currentPrice = calculatePrice(item.price);
-              const canAfford = playerState.gold >= currentPrice;
+              const currentPrice = currentCalculatePrice(item.price);
+              const canAfford = gold >= currentPrice;
 
               let isWeaponLocked = false;
               let upgradeInfo = '';
 
               if (item.type === 'weapon') {
-                const hasThisWeapon = playerState.weapons.some((w) => w.type === item.weaponType);
-                if (playerState.weapons.length >= playerState.maxWeapons) {
+                const hasThisWeapon = weapons.some((w) => w.type === item.weaponType);
+                if (weapons.length >= maxWeapons) {
                   if (!hasThisWeapon) {
                     isWeaponLocked = true;
                   } else {
@@ -267,11 +194,8 @@ export function Shop({ visible, playerState, waveNumber }: ShopProps): JSX.Eleme
                     if (item.type === 'weapon') {
                       // Only show upgraded level if this is actually an upgrade
                       // (player has max weapons AND already owns this weapon type)
-                      const existingWeapon = playerState.weapons.find(
-                        (w) => w.type === item.weaponType,
-                      );
-                      const isUpgrade =
-                        playerState.weapons.length >= playerState.maxWeapons && existingWeapon;
+                      const existingWeapon = weapons.find((w) => w.type === item.weaponType);
+                      const isUpgrade = weapons.length >= maxWeapons && existingWeapon;
                       const level = isUpgrade ? existingWeapon.level + 1 : 1;
                       tooltip.showTooltip(item.weaponType, level);
                     }

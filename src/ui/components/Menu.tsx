@@ -3,7 +3,7 @@ import { EventBus } from '@/events/EventBus';
 import { CharacterType, GameState } from '@/types/enums';
 import { GAME_VERSION } from '@/version';
 import { JSX } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import { container } from 'tsyringe';
 import { CharacterSelect } from './CharacterSelect';
 import { LeaderboardComponent } from './Leaderboard';
@@ -21,15 +21,6 @@ export function Menu({ gameState, finalWave, finalXp, character }: MenuProps): J
 
   const audioSystem = container.resolve(AudioSystem);
 
-  useEffect(() => {
-    const sub = EventBus.on('audioStateChanged', () => {
-      forceUpdate((n) => n + 1);
-    });
-    return (): void => {
-      sub.unsubscribe();
-    };
-  }, []);
-
   const audioEnabled = audioSystem.isEnabled();
 
   const handleResume = (): void => {
@@ -42,7 +33,8 @@ export function Menu({ gameState, finalWave, finalXp, character }: MenuProps): J
     EventBus.emit('restartRequested', undefined);
   };
   const handleToggleAudio = (): void => {
-    EventBus.emit('audioToggleRequested', undefined);
+    audioSystem.toggle();
+    forceUpdate((n) => n + 1);
   };
 
   // Start Screen

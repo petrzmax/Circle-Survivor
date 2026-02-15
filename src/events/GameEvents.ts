@@ -62,8 +62,7 @@ export interface GameEvents {
 
   // UI events
   countdownTick: { seconds: number };
-  audioToggleRequested: void;
-  audioStateChanged: { enabled: boolean };
+
   // TODO use it as trigger only, get data from systems, and managers or remove
   hudUpdate: {
     waveNumber: number;

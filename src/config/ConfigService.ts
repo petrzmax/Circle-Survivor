@@ -1,4 +1,4 @@
-import { GAME_BALANCE, GameBalanceConfig, WeaponUpgradeConfig } from '@/config';
+import { GAME_BALANCE, GameBalanceConfig, WeaponUpgradeConfig } from '@/config/balance.config';
 import { EFFECTS_CONFIG, EffectsConfig } from '@/config/effects.config';
 import { singleton } from 'tsyringe';
 import { CanvasBounds } from '../utils/random';
@@ -11,6 +11,14 @@ export class ConfigService {
 
   public getGameBalance(): GameBalanceConfig {
     return GAME_BALANCE;
+  }
+
+  public getBossBalance(): GameBalanceConfig['boss'] {
+    return GAME_BALANCE.boss;
+  }
+
+  public getEnemyBalance(): GameBalanceConfig['enemy'] {
+    return GAME_BALANCE.enemy;
   }
 
   public getWeaponsUpgrade(): WeaponUpgradeConfig {

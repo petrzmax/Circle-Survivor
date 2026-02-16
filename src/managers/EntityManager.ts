@@ -79,6 +79,15 @@ export class EntityManager {
     return removed;
   }
 
+  /**
+   * Destroy all active enemies
+   */
+  public killAllEnemies(): void {
+    for (const enemy of this.getActiveEnemies()) {
+      enemy.destroy();
+    }
+  }
+
   public getEnemyCount(): number {
     return this.enemies.size;
   }

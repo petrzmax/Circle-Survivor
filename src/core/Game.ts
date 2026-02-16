@@ -1,7 +1,7 @@
 import { GAME_BALANCE } from '@/config/balance.config';
 import { CHARACTER_TYPES } from '@/config/characters.config';
 import { AudioSystem } from '@/domain/audio/AudioSystem';
-import { Enemy } from '@/domain/enemies';
+import { EnemySpawnSystem } from '@/domain/enemies/EnemySpawnSystem';
 import { Player } from '@/domain/player/Player';
 import { Projectile } from '@/entities/Projectile';
 import { EventBus } from '@/events/EventBus';
@@ -13,7 +13,7 @@ import { HUD } from '@/systems/HUD';
 import { InputSystem } from '@/systems/InputSystem';
 import { Shop } from '@/systems/Shop';
 import { WaveManager } from '@/systems/WaveManager';
-import { CharacterType, EnemyType, GameState, ProjectileType } from '@/types/enums';
+import { CharacterType, GameState, ProjectileType } from '@/types/enums';
 import { distance } from '@/utils';
 import toast from 'react-hot-toast';
 import { injectable } from 'tsyringe';
@@ -45,6 +45,7 @@ export class Game {
   public constructor(
     pickupSpawnSystem: PickupSpawnSystem,
     audioSystem: AudioSystem,
+    enemySpawnSystem: EnemySpawnSystem,
     private collisionSystem: CollisionSystem,
     private combatSystem: CombatSystem,
     private configService: ConfigService,
@@ -62,6 +63,7 @@ export class Game {
     void pickupSpawnSystem;
     void rewardSystem;
     void audioSystem;
+    void enemySpawnSystem;
     // Get canvas
     this.canvas = document.getElementById('game') as HTMLCanvasElement;
     this.ctx = this.canvas.getContext('2d')!;
@@ -74,9 +76,6 @@ export class Game {
 
     // Setup state change listeners
     this.setupStateListeners();
-
-    // Bind to window for global access
-    (window as unknown as { game: Game }).game = this;
   }
 
   /**
@@ -265,16 +264,6 @@ export class Game {
     return { width: this.canvas.width, height: this.canvas.height };
   }
 
-  /**
-   * Kill all active enemies (dev tool)
-   */
-  public killAllEnemies(): void {
-    const enemies = this.entityManager.getActiveEnemies();
-    for (const enemy of enemies) {
-      enemy.destroy();
-    }
-  }
-
   // ============ Wave Management ============
 
   private startNextWave(): void {
@@ -346,12 +335,7 @@ export class Game {
     const bossAlive = this.entityManager.getActiveEnemies().some((e) => e.isBoss);
 
     // Update wave manager
-    const waveResult = this.waveManager.update(deltaTime, this.canvas, bossAlive);
-
-    // Add spawned enemies
-    for (const enemy of waveResult.enemies) {
-      this.entityManager.addEnemy(enemy);
-    }
+    const waveResult = this.waveManager.update(deltaTime, bossAlive);
 
     // Countdown sound
     if (waveResult.countdown !== false) {
@@ -517,19 +501,6 @@ export class Game {
     if (currentTime - this.lastHUDUpdate >= 100) {
       this.updateHUD();
       this.lastHUDUpdate = currentTime;
-    }
-  }
-
-  /**
-   * Spawn enemy at position (used by DevMenu)
-   * TODO: When SpawnSystem is fully integrated, delegate to SpawnSystem.spawnEnemyAt()
-   */
-  public spawnEnemy(type: EnemyType, x: number, y: number): void {
-    const enemy = new Enemy({ position: { x, y }, type });
-    this.entityManager.addEnemy(enemy);
-
-    if (enemy.isBoss) {
-      EventBus.emit('bossSpawned', { enemy, bossName: enemy.bossName ?? 'Boss' });
     }
   }
 

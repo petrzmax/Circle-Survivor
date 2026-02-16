@@ -10,7 +10,7 @@ import { WEAPON_TYPES } from '@/domain/weapons/config';
 import { Pickup } from '@/entities/Pickup';
 import { Projectile } from '@/entities/Projectile';
 import { EntityManager } from '@/managers/EntityManager';
-import { EnemyType, PickupType, ProjectileType, VisualEffect } from '@/types/enums';
+import { PickupType, ProjectileType, VisualEffect } from '@/types/enums';
 import { distance, TWO_PI, Vector2 } from '@/utils/math';
 import { randomChance, randomInt, randomRange } from '@/utils/random';
 import { CollisionResult } from './CollisionSystem';
@@ -393,42 +393,12 @@ export class CombatSystem {
       });
     }
 
-    // TODO move to SpawnSystem
-    // Handle splitOnDeath
-    if (enemy.splitOnDeath) {
-      this.spawnSplitEnemies(enemy);
-    }
-
     EventBus.emit('enemyDeath', {
       enemy,
       killer,
     });
 
     enemy.destroy();
-  }
-
-  /**
-   * Spawn split enemies when enemy with splitOnDeath dies
-   */
-  private spawnSplitEnemies(enemy: Enemy): void {
-    const splitType = enemy.type === EnemyType.SPLITTER ? EnemyType.SWARM : EnemyType.BASIC;
-
-    for (let i = 0; i < enemy.splitCount; i++) {
-      const angle = (TWO_PI * i) / enemy.splitCount;
-      const offsetX = Math.cos(angle) * 30;
-      const offsetY = Math.sin(angle) * 30;
-
-      const splitEnemy = new Enemy({
-        position: {
-          x: enemy.position.x + offsetX,
-          y: enemy.position.y + offsetY,
-        },
-        type: splitType,
-        scale: 0.6,
-      });
-
-      this.entityManager.addEnemy(splitEnemy);
-    }
   }
 
   private processPickupCollection(pickup: Pickup): void {

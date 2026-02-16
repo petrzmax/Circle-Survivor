@@ -1,19 +1,17 @@
 /**
  * Wave Management
- * Controls wave progression, enemy spawning, boss spawning
+ * Controls wave progression, enemy spawning timing, boss spawning decisions.
  */
 
 import { GAME_BALANCE } from '@/config/balance.config';
-import { Enemy } from '@/domain/enemies';
+import { EnemySpawnSystem } from '@/domain/enemies/EnemySpawnSystem';
 import { EventBus } from '@/events/EventBus';
 import { EnemyType } from '@/types/enums';
-import { CanvasBounds, getSpawnPoint } from '@/utils/random';
 import { singleton } from 'tsyringe';
 
 // ============ Types ============
 
 export interface WaveUpdateResult {
-  enemies: Enemy[];
   waveEnded: boolean;
   countdown: number | false;
 }
@@ -32,7 +30,7 @@ export class WaveManager {
   private bossSpawned: boolean = false;
   private lastCountdownSecond: number = -1;
 
-  public constructor() {
+  public constructor(private enemySpawnSystem: EnemySpawnSystem) {
     this.timeRemaining = this.waveTime;
   }
 
@@ -119,18 +117,12 @@ export class WaveManager {
   /**
    * Update wave state
    */
-  public update(
-    deltaTime: number,
-    canvas: CanvasBounds,
-    bossAlive: boolean = false,
-  ): WaveUpdateResult {
-    if (!this.isWaveActive) return { enemies: [], waveEnded: false, countdown: false };
-
-    const enemies: Enemy[] = [];
+  public update(deltaTime: number, bossAlive: boolean = false): WaveUpdateResult {
+    if (!this.isWaveActive) return { waveEnded: false, countdown: false };
 
     // When boss is alive - stop timer and don't spawn new enemies
     if (bossAlive) {
-      return { enemies: [], waveEnded: false, countdown: false };
+      return { waveEnded: false, countdown: false };
     }
 
     // Update timer (only when boss is dead)
@@ -147,37 +139,14 @@ export class WaveManager {
     }
 
     if (this.timeRemaining <= 0) {
-      return { enemies: [], waveEnded: true, countdown: 0 }; // 0 = final sound
+      return { waveEnded: true, countdown: 0 }; // 0 = final sound
     }
 
     // Spawn boss every 3 waves
     if (this.shouldSpawnBoss()) {
-      const spawn = getSpawnPoint(canvas);
       const bossType = this.getBossType();
-      const boss = new Enemy({ position: spawn, type: bossType });
-
-      // Scaling 1: With boss wave number (+50% HP, +25% DMG per boss wave)
-      const bossWave = Math.floor(this.waveNumber / 3);
-      const bossMultiplierHp = 1 + (bossWave - 1) * GAME_BALANCE.boss.hpScalePerWave;
-      const bossMultiplierDmg = 1 + (bossWave - 1) * GAME_BALANCE.boss.dmgScalePerWave;
-
-      // Scaling 2: Exponential like regular enemies (1.04^n from wave 3)
-      let expMultiplier = 1;
-      if (this.waveNumber >= 3) {
-        const scalingWave = this.waveNumber - 3;
-        expMultiplier = Math.pow(GAME_BALANCE.boss.exponentialBase, scalingWave);
-      }
-
-      // Combined scaling
-      boss.maxHp = Math.round(boss.maxHp * bossMultiplierHp * expMultiplier);
-      boss.hp = boss.maxHp;
-      boss.damage = Math.round(boss.damage * bossMultiplierDmg * expMultiplier);
-
-      enemies.push(boss);
+      this.enemySpawnSystem.spawn(bossType, { waveNumber: this.waveNumber });
       this.bossSpawned = true;
-
-      // Emit boss spawned event for sound
-      EventBus.emit('bossSpawned', { enemy: boss, bossName: boss.bossName ?? 'Boss' });
     }
 
     // Spawn enemies (only when boss is dead)
@@ -185,25 +154,14 @@ export class WaveManager {
     if (this.spawnTimer >= this.spawnInterval) {
       this.spawnTimer = 0;
 
+      const types: EnemyType[] = [];
       for (let i = 0; i < this.enemiesPerSpawn; i++) {
-        const spawn = getSpawnPoint(canvas);
-        const type = this.getRandomEnemyType();
-        const enemy = new Enemy({ position: spawn, type: type });
-
-        // Enemy scaling from wave 5 (exponential: scalingFactor^n)
-        if (this.waveNumber >= GAME_BALANCE.enemy.scalingStartWave) {
-          const scalingWave = this.waveNumber - GAME_BALANCE.enemy.scalingStartWave;
-          const multiplier = Math.pow(GAME_BALANCE.enemy.scalingFactor, scalingWave);
-          enemy.hp = Math.round(enemy.hp * multiplier);
-          enemy.maxHp = enemy.hp;
-          enemy.damage = Math.round(enemy.damage * multiplier);
-        }
-
-        enemies.push(enemy);
+        types.push(this.getRandomEnemyType());
       }
+      this.enemySpawnSystem.spawnBatch(types, this.waveNumber);
     }
 
-    return { enemies, waveEnded: false, countdown };
+    return { waveEnded: false, countdown };
   }
 
   /**

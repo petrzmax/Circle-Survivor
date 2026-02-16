@@ -1,5 +1,5 @@
 import { SHOP_ITEMS } from '@/config/shop.config';
-import { Game } from '@/core/Game';
+import { EnemySpawnSystem } from '@/domain/enemies/EnemySpawnSystem';
 import { WeaponType } from '@/domain/weapons/type';
 import { WeaponManager } from '@/domain/weapons/WeaponManager';
 import { EventBus } from '@/events/EventBus';
@@ -7,9 +7,7 @@ import { EntityManager } from '@/managers/EntityManager';
 import { RenderSystem } from '@/systems/RenderSystem';
 import { WaveManager } from '@/systems/WaveManager';
 import { EnemyType } from '@/types/enums';
-import { getSpawnPoint } from '@/utils';
 import { singleton } from 'tsyringe';
-import { ConfigService } from '../config/ConfigService';
 
 /**
  * Player state snapshot for DevMenu display
@@ -21,14 +19,6 @@ export interface PlayerState {
   godMode: boolean;
 }
 
-/**
- * Get Game instance from window (set by Game constructor)
- */
-// TODO weird asf, remove
-function getGame(): Game {
-  return (window as unknown as { game: Game }).game;
-}
-
 @singleton()
 export class DevMenuService {
   public constructor(
@@ -36,7 +26,7 @@ export class DevMenuService {
     private waveManager: WaveManager,
     private renderSystem: RenderSystem,
     private weaponManager: WeaponManager,
-    private configService: ConfigService,
+    private enemySpawnSystem: EnemySpawnSystem,
   ) {}
 
   // ============ Wave Control ============
@@ -57,7 +47,7 @@ export class DevMenuService {
   }
 
   public killAllEnemies(): void {
-    getGame().killAllEnemies();
+    this.entityManager.killAllEnemies();
     console.log(`[DevMenu] Killed all enemies`);
   }
 
@@ -113,13 +103,10 @@ export class DevMenuService {
     console.log(`[DevMenu] Added weapon: ${type}`);
   }
 
-  // TODO should be delegated to spawn system when ready
   public spawnEnemy(type: EnemyType, count: number = 1): void {
-    const canvas = this.configService.getCanvasBounds();
-    const game = getGame();
     for (let i = 0; i < count; i++) {
-      const point = getSpawnPoint(canvas, 30);
-      game.spawnEnemy(type, point.x, point.y);
+      // TODO why not use spawn batch? so batch would get type and amount
+      this.enemySpawnSystem.spawn(type);
     }
     console.log(`[DevMenu] Spawned ${count}x ${type}`);
   }

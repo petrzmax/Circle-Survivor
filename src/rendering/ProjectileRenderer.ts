@@ -6,7 +6,7 @@
 import { Projectile } from '@/entities/Projectile';
 import { ProjectileType } from '@/types/enums';
 import { randomRange } from '@/utils';
-import { TWO_PI } from '@/utils/math';
+import { normalize, TWO_PI } from '@/utils/math';
 
 /**
  * Renders a projectile to the canvas based on its type.
@@ -212,13 +212,16 @@ function renderRocket(ctx: CanvasRenderingContext2D, p: Projectile): void {
   ctx.fillStyle = gradient;
   ctx.fill();
 
-  // Flame trail
-  ctx.beginPath();
-  ctx.moveTo(0 - vel.vx * 2, 0 - vel.vy * 2);
-  ctx.lineTo(0 - vel.vx * 4, 0 - vel.vy * 4);
-  ctx.strokeStyle = '#ff8800';
-  ctx.lineWidth = 4;
-  ctx.stroke();
+  // Flame trail (use normalized direction with fixed length)
+  const dir = normalize({ x: vel.vx, y: vel.vy });
+  if (dir.x !== 0 || dir.y !== 0) {
+    ctx.beginPath();
+    ctx.moveTo(-dir.x * 8, -dir.y * 8);
+    ctx.lineTo(-dir.x * 16, -dir.y * 16);
+    ctx.strokeStyle = '#ff8800';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+  }
 }
 
 /**

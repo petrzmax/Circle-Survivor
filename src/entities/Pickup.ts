@@ -39,8 +39,8 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
   /** Whether pickup is being attracted to player */
   public isAttracted: boolean = false;
 
-  /** Attraction speed multiplier */
-  private attractionSpeed: number = 5; // magnetSpeed in original
+  /** Attraction speed (px/s) */
+  private attractionSpeed: number = 300;
 
   /** Spawn time for animation */
   private spawnTime: number = Date.now();
@@ -127,7 +127,7 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
    * @param pickupRange Player's pickup range
    * @param deltaTime Delta time in seconds
    */
-  public updateAttraction(player: Vector2, pickupRange: number, _deltaTime: number): void {
+  public updateAttraction(player: Vector2, pickupRange: number, deltaTime: number): void {
     const dist = distance(player, this.position);
 
     if (dist <= pickupRange || this.isAttracted) {
@@ -138,8 +138,8 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
       const dy = player.y - this.position.y;
       const norm = normalize({ x: dx, y: dy });
 
-      this.position.x += norm.x * this.attractionSpeed;
-      this.position.y += norm.y * this.attractionSpeed;
+      this.position.x += norm.x * this.attractionSpeed * deltaTime;
+      this.position.y += norm.y * this.attractionSpeed * deltaTime;
       this.baseY = this.position.y; // Update base position
     }
   }

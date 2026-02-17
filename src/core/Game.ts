@@ -310,17 +310,17 @@ export class Game {
 
   // ============ Update ============
 
-  private update(deltaTime: number, currentTime: number): void {
+  private update(deltaTimeMs: number, currentTime: number): void {
     const player = this.entityManager.getPlayer();
 
-    const deltaSeconds = deltaTime / 1000;
+    const deltaTime = deltaTimeMs / 1000;
 
     // Poll gamepad state and get unified input
     this.inputSystem.poll();
     const input = this.inputSystem.getInputState();
 
     // Update player movement
-    player.updateMovement(input, this.canvas.width, this.canvas.height, deltaSeconds);
+    player.updateMovement(input, this.canvas.width, this.canvas.height, deltaTime);
 
     // TODO handle in passivesSystem?
     if (player.regen > 0) {
@@ -334,8 +334,8 @@ export class Game {
     // Check if boss is alive
     const bossAlive = this.entityManager.getActiveEnemies().some((e) => e.isBoss);
 
-    // Update wave manager
-    const waveResult = this.waveManager.update(deltaTime, bossAlive);
+    // Update wave manager (expects milliseconds)
+    const waveResult = this.waveManager.update(deltaTimeMs, bossAlive);
 
     // Countdown sound
     if (waveResult.countdown !== false) {
@@ -369,8 +369,8 @@ export class Game {
     // Update enemies (movement, boss shooting)
     const enemies = this.entityManager.getActiveEnemies();
     for (const enemy of enemies) {
-      enemy.update(deltaSeconds);
-      enemy.moveTowardsTarget(player.position, deltaSeconds, this.canvas.width, this.canvas.height);
+      enemy.update(deltaTime);
+      enemy.moveTowardsTarget(player.position, deltaTime, this.canvas.width, this.canvas.height);
 
       // Boss shooting (creates projectiles/shockwaves)
       if (enemy.canShoot) {
@@ -415,7 +415,7 @@ export class Game {
     // Update projectiles (movement, expire, off-screen removal)
     const projectiles = this.entityManager.getActiveProjectiles();
     for (const projectile of projectiles) {
-      projectile.update(deltaSeconds);
+      projectile.update(deltaTime);
 
       // Remove expired - but check if grenade should explode first
       if (!projectile.isActive) {
@@ -449,13 +449,13 @@ export class Game {
     // Update deployables (mines) - just movement/animation
     const deployables = this.entityManager.getActiveDeployables();
     for (const deployable of deployables) {
-      deployable.update(deltaSeconds);
+      deployable.update(deltaTime);
     }
 
     // Update pickups (movement, magnet attraction)
     const pickups = this.entityManager.getActivePickups();
     for (const pickup of pickups) {
-      pickup.update(deltaSeconds);
+      pickup.update(deltaTime);
 
       if (!pickup.isActive) continue;
 
@@ -479,8 +479,8 @@ export class Game {
           const distanceFactor = maxFactor - (maxFactor - minFactor) * normalizedDistance;
           const magnetSpeed = player.speed * speedMultiplier * distanceFactor;
 
-          pickup.position.x += (dx / distToPlayer) * magnetSpeed;
-          pickup.position.y += (dy / distToPlayer) * magnetSpeed;
+          pickup.position.x += (dx / distToPlayer) * magnetSpeed * deltaTime;
+          pickup.position.y += (dy / distToPlayer) * magnetSpeed * deltaTime;
         }
       }
     }
@@ -491,7 +491,7 @@ export class Game {
     this.combatSystem.processCollisions(collisions, currentTime);
 
     // Update visual effects (particles, explosions, shockwaves)
-    this.effectsSystem.update(currentTime);
+    this.effectsSystem.update(currentTime, deltaTime);
 
     // Cleanup
     this.entityManager.removeInactive();

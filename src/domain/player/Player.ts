@@ -228,15 +228,15 @@ export class Player extends Entity implements IHealth {
       }
     }
 
-    // Apply movement
-    this.position.x += vx * this.speed;
-    this.position.y += vy * this.speed;
+    // Apply movement (speed is in px/s, deltaTime in seconds)
+    this.position.x += vx * this.speed * deltaTime;
+    this.position.y += vy * this.speed * deltaTime;
 
     // Keep in bounds
     this.position.x = clamp(this.position.x, this.width / 2, canvasWidth - this.width / 2);
     this.position.y = clamp(this.position.y, this.height / 2, canvasHeight - this.height / 2);
 
-    // Store velocity for external use
+    // Store velocity for external use (px/s)
     this.setVelocity(vx * this.speed, vy * this.speed);
   }
 

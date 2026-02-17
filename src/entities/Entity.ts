@@ -115,9 +115,8 @@ export abstract class Entity implements ITransform, ICircleCollider {
    */
   public applyVelocity(deltaTime: number): void {
     if (this.velocity) {
-      // TODO IS * 60 needed - analyze
-      this.position.x += this.velocity.vx * deltaTime * 60; // Normalize to 60fps
-      this.position.y += this.velocity.vy * deltaTime * 60;
+      this.position.x += this.velocity.vx * deltaTime;
+      this.position.y += this.velocity.vy * deltaTime;
     }
   }
 

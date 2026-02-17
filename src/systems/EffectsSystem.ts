@@ -173,10 +173,10 @@ export class EffectsSystem {
   /**
    * Update all effects (call in game update phase)
    */
-  public update(currentTime: number): void {
+  public update(currentTime: number, deltaTime: number): void {
     this.currentTime = currentTime;
     this.updateExplosions(currentTime);
-    this.updateDeathEffects();
+    this.updateDeathEffects(deltaTime);
     this.updateShockwaves(currentTime);
   }
 
@@ -201,14 +201,15 @@ export class EffectsSystem {
   /**
    * Update death particle physics and remove expired
    */
-  private updateDeathEffects(): void {
+  private updateDeathEffects(deltaTime: number): void {
     const friction = this.config.deathParticles.physics.friction;
+    const frictionDecay = Math.pow(friction, deltaTime);
     this.deathParticlePool.forEachActive((p) => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vx *= friction;
-      p.vy *= friction;
-      p.life -= p.decay;
+      p.x += p.vx * deltaTime;
+      p.y += p.vy * deltaTime;
+      p.vx *= frictionDecay;
+      p.vy *= frictionDecay;
+      p.life -= p.decay * deltaTime;
       p.alpha = p.life;
 
       if (p.life <= 0) {

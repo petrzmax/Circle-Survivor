@@ -24,8 +24,8 @@ export const GAME_BALANCE = {
     exponentialBase: 1.04,
     /** Contact damage multiplier. Boss melee hits deal base damage × this value. */
     contactDamageMultiplier: 1.25,
-    /** Knockback resistance. Lower = harder to push. Normal enemies use 3. */
-    knockbackResistance: 1,
+    /** Knockback weight (px/s). Lower = harder to push. Normal enemies use 180. */
+    knockbackWeight: 60,
   },
 
   /**
@@ -40,8 +40,8 @@ export const GAME_BALANCE = {
     scalingStartWave: 5,
     /** Per-wave multiplier. Applied as Math.pow(factor, wave - startWave). */
     scalingFactor: 1.04,
-    /** Knockback multiplier for normal enemies. Higher = easier to push back. */
-    knockbackMultiplier: 3,
+    /** Knockback weight for normal enemies (px/s). Higher = easier to push back. */
+    knockbackWeight: 180,
     /** Enemy bullet radius as fraction of enemy radius. */
     bulletRadiusRatio: 0.15,
   },
@@ -117,8 +117,8 @@ export const GAME_BALANCE = {
   combat: {
     /** Explosion damage falloff at edge. 0.5 = 50% damage at max radius, 100% at center. */
     explosionFalloff: 0.5,
-    /** Explosion knockback force multiplier. */
-    explosionKnockback: 5,
+    /** Explosion knockback force multiplier (px/s). */
+    explosionKnockback: 300,
   },
 
   /**

@@ -53,21 +53,21 @@ export const EFFECTS_CONFIG = {
       sizeMin: 10,
       sizeMax: 20,
       color: '#FFD700',
-      decay: 0.01,
-      speedMin: 1,
-      speedMax: 3,
+      decay: 0.6, // per second
+      speedMin: 60, // px/s
+      speedMax: 180, // px/s
     } satisfies BossGoldenParticleConfig,
 
-    /** Particle physics */
+    /** Particle physics (all values in per-second units) */
     physics: {
-      speedMin: 2,
-      speedMax: 6,
+      speedMin: 120, // px/s
+      speedMax: 360, // px/s
       sizeVarianceMin: 0.5,
       sizeVarianceMax: 1,
-      decayMin: 0.02,
-      decayMax: 0.04,
+      decayMin: 1.2, // life drain per second
+      decayMax: 2.4, // life drain per second
       angleJitter: 0.5,
-      friction: 0.95,
+      friction: 0.0461, // retention per second (0.95^60)
     },
   },
 

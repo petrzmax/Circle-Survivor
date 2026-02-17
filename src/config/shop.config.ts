@@ -313,7 +313,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     description: '+8% szybkości ruchu',
     price: 55,
     emoji: '👢',
-    effect: { speed: 0.3 },
+    effect: { speed: 18 },
   },
   magnet: {
     type: 'item',
@@ -384,7 +384,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     effect: {
       damageMultiplier: 0.1,
       attackSpeedMultiplier: 0.1,
-      speed: 0.2,
+      speed: 12,
       armor: 5,
       maxHp: 10,
     },
@@ -398,7 +398,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     price: 300,
     emoji: '🏎️',
     effect: {
-      speed: 1, // TODO what, adjust / fix
+      speed: 60, // TODO what, adjust / fix
       dodge: 0.1,
     },
   },
@@ -474,7 +474,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     price: 260,
     emoji: '🐗',
     effect: {
-      speed: 0.6,
+      speed: 36,
       damageMultiplier: 0.15,
       thorns: 10,
     },

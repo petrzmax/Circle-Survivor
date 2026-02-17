@@ -125,7 +125,7 @@ export class Enemy extends Entity implements IHealth {
     // Shooting properties
     this.canShoot = config.canShoot ?? false;
     this.fireRate = config.fireRate ?? 2000;
-    this.bulletSpeed = config.bulletSpeed ?? 4;
+    this.bulletSpeed = config.bulletSpeed ?? 240;
     this.bulletDamage = Math.floor((config.bulletDamage ?? 15) * scale);
     this.attackPatterns = config.attackPatterns ?? ['single'];
 
@@ -147,9 +147,8 @@ export class Enemy extends Entity implements IHealth {
 
     // Apply knockback
     const knockbackStrength = this.isBoss
-      ? // TODO hmm knockback is once resistance, once multiplier...
-        GAME_BALANCE.boss.knockbackResistance
-      : GAME_BALANCE.enemy.knockbackMultiplier;
+      ? GAME_BALANCE.boss.knockbackWeight
+      : GAME_BALANCE.enemy.knockbackWeight;
 
     const dist = distance(this.position, source);
     const force = knockbackStrength * knockbackMultiplier;
@@ -186,9 +185,10 @@ export class Enemy extends Entity implements IHealth {
    * @param deltaTime Time since last frame in seconds
    */
   public update(deltaTime: number): void {
-    // Reduce knockback
-    this.knockbackX *= 0.8;
-    this.knockbackY *= 0.8;
+    // Reduce knockback (time-based exponential decay, equivalent to 0.8 per frame at 60fps)
+    const knockbackDecay = Math.pow(0.8, deltaTime * 60);
+    this.knockbackX *= knockbackDecay;
+    this.knockbackY *= knockbackDecay;
 
     // Zigzag timer update
     if (this.zigzag) {
@@ -206,7 +206,7 @@ export class Enemy extends Entity implements IHealth {
    */
   public moveTowardsTarget(
     target: Vector2,
-    _deltaTime: number,
+    deltaTime: number,
     canvasWidth: number,
     canvasHeight: number,
   ): void {
@@ -215,17 +215,17 @@ export class Enemy extends Entity implements IHealth {
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     if (dist > 0) {
-      let moveX = (dx / dist) * this.speed;
-      let moveY = (dy / dist) * this.speed;
+      let moveX = (dx / dist) * this.speed * deltaTime;
+      let moveY = (dy / dist) * this.speed * deltaTime;
 
       // Zigzag movement
       if (this.zigzag) {
-        moveX += (-dy / dist) * this.speed * 0.8 * this.zigzagDir;
-        moveY += (dx / dist) * this.speed * 0.8 * this.zigzagDir;
+        moveX += (-dy / dist) * this.speed * 0.8 * this.zigzagDir * deltaTime;
+        moveY += (dx / dist) * this.speed * 0.8 * this.zigzagDir * deltaTime;
       }
 
-      this.position.x += moveX + this.knockbackX;
-      this.position.y += moveY + this.knockbackY;
+      this.position.x += moveX + this.knockbackX * deltaTime;
+      this.position.y += moveY + this.knockbackY * deltaTime;
     }
 
     // Check if enemy entered arena

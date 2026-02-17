@@ -25,7 +25,7 @@ export const CHARACTER_TYPES: Record<CharacterType, CharacterConfig> = {
     emoji: '🔥',
     color: '#ff6600',
     maxHp: 80,
-    speed: 3.2, // -20%
+    speed: 192, // -20% (px/s)
     damageMultiplier: 1.2, // +20%
     goldMultiplier: 1,
     startingWeapon: WeaponType.SHOTGUN,
@@ -36,7 +36,7 @@ export const CHARACTER_TYPES: Record<CharacterType, CharacterConfig> = {
     emoji: '😎',
     color: '#00ff88',
     maxHp: 70,
-    speed: 4.8, // +20%
+    speed: 288, // +20% (px/s)
     damageMultiplier: 1,
     goldMultiplier: 1.15, // +15%
     startingWeapon: WeaponType.SMG,
@@ -47,7 +47,7 @@ export const CHARACTER_TYPES: Record<CharacterType, CharacterConfig> = {
     emoji: '🙂',
     color: '#4a9eff',
     maxHp: 100,
-    speed: 4,
+    speed: 240, // (px/s)
     damageMultiplier: 1,
     goldMultiplier: 1,
     startingWeapon: WeaponType.PISTOL,

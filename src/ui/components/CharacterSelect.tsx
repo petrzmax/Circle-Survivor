@@ -5,7 +5,7 @@ import { CHARACTER_TYPES, CharacterConfig } from '@/config/characters.config';
 import { WEAPON_TYPES } from '@/domain/weapons/config';
 
 function getSpecialStat(charType: CharacterType, config: CharacterConfig): JSX.Element {
-  const baseSpeed = 4;
+  const baseSpeed = 240;
   const speedDiff = Math.round((config.speed / baseSpeed - 1) * 100);
 
   // Each character shows their unique bonus

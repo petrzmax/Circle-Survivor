@@ -14,8 +14,8 @@ import { InputSystem } from '@/systems/InputSystem';
 import { Shop } from '@/systems/Shop';
 import { WaveManager } from '@/systems/WaveManager';
 import { CharacterType, GameState, ProjectileType } from '@/types/enums';
-import { distance } from '@/utils';
 import toast from 'react-hot-toast';
+import { PickupAttractionSystem } from '@/systems/PickupAttractionSystem';
 import { injectable } from 'tsyringe';
 import { ConfigService } from '../config/ConfigService';
 import { WeaponManager } from '../domain/weapons/WeaponManager';
@@ -46,6 +46,7 @@ export class Game {
     pickupSpawnSystem: PickupSpawnSystem,
     audioSystem: AudioSystem,
     enemySpawnSystem: EnemySpawnSystem,
+    private pickupAttractionSystem: PickupAttractionSystem,
     private collisionSystem: CollisionSystem,
     private combatSystem: CombatSystem,
     private configService: ConfigService,
@@ -452,38 +453,14 @@ export class Game {
       deployable.update(deltaTime);
     }
 
-    // Update pickups (movement, magnet attraction)
+    // Update pickups (lifetime, animation)
     const pickups = this.entityManager.getActivePickups();
     for (const pickup of pickups) {
       pickup.update(deltaTime);
-
-      if (!pickup.isActive) continue;
-
-      // Magnet attraction - only works if player has magnet item
-      const hasMagnet = player.items.includes('magnet');
-      const distToPlayer = distance(pickup.position, player.position);
-      if (hasMagnet && (distToPlayer < player.pickupRange || pickup.isAttracted)) {
-        pickup.isAttracted = true;
-        const dx = player.position.x - pickup.position.x;
-        const dy = player.position.y - pickup.position.y;
-        if (distToPlayer > 0) {
-          // Scale attraction speed:
-          // 1. Base speed = player speed * multiplier (always faster than player)
-          // 2. Distance factor modulates speed based on proximity
-          const speedMultiplier = GAME_BALANCE.pickup.playerSpeedMultiplier;
-          const minFactor = GAME_BALANCE.pickup.minDistanceFactor;
-          const maxFactor = GAME_BALANCE.pickup.maxDistanceFactor;
-          // Clamp normalized distance to [0, 1] to prevent weird behavior when outside range
-          const normalizedDistance = Math.min(1, distToPlayer / player.pickupRange);
-          // Interpolate from maxFactor (close) to minFactor (far)
-          const distanceFactor = maxFactor - (maxFactor - minFactor) * normalizedDistance;
-          const magnetSpeed = player.speed * speedMultiplier * distanceFactor;
-
-          pickup.position.x += (dx / distToPlayer) * magnetSpeed * deltaTime;
-          pickup.position.y += (dy / distToPlayer) * magnetSpeed * deltaTime;
-        }
-      }
     }
+
+    // Magnet attraction
+    this.pickupAttractionSystem.update(deltaTime);
 
     // === Collision Detection & Combat Processing ===
     // All collision handling is delegated to CollisionSystem + CombatSystem

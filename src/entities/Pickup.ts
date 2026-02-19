@@ -5,7 +5,7 @@
 
 import { ICollectible, IExpirable } from '@/types/components';
 import { PickupType } from '@/types/enums';
-import { Vector2, distance, normalize, randomAngle } from '@/utils';
+import { Vector2, randomAngle } from '@/utils';
 import { Entity } from './Entity';
 
 /**
@@ -38,9 +38,6 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
 
   /** Whether pickup is being attracted to player */
   public isAttracted: boolean = false;
-
-  /** Attraction speed (px/s) */
-  private attractionSpeed: number = 300;
 
   /** Spawn time for animation */
   private spawnTime: number = Date.now();
@@ -118,29 +115,6 @@ export class Pickup extends Entity implements IExpirable, ICollectible {
 
     if (this.isExpired()) {
       this.destroy();
-    }
-  }
-
-  /**
-   * Moves pickup towards player if in range
-   * @param player Player position
-   * @param pickupRange Player's pickup range
-   * @param deltaTime Delta time in seconds
-   */
-  public updateAttraction(player: Vector2, pickupRange: number, deltaTime: number): void {
-    const dist = distance(player, this.position);
-
-    if (dist <= pickupRange || this.isAttracted) {
-      this.isAttracted = true;
-
-      // Move towards player
-      const dx = player.x - this.position.x;
-      const dy = player.y - this.position.y;
-      const norm = normalize({ x: dx, y: dy });
-
-      this.position.x += norm.x * this.attractionSpeed * deltaTime;
-      this.position.y += norm.y * this.attractionSpeed * deltaTime;
-      this.baseY = this.position.y; // Update base position
     }
   }
 }

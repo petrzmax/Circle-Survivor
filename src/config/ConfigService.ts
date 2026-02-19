@@ -28,4 +28,8 @@ export class ConfigService {
   public getEffectsConfig(): EffectsConfig {
     return EFFECTS_CONFIG;
   }
+
+  public getPickupConfig(): GameBalanceConfig['pickup'] {
+    return GAME_BALANCE.pickup;
+  }
 }

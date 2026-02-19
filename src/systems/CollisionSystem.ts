@@ -37,18 +37,12 @@ export interface CollisionResult {
  */
 @singleton()
 export class CollisionSystem {
-  private pickupRadius: number;
-  private attractionRadius: number;
   private shockwaveProvider: (() => Shockwave[]) | null = null;
 
   public constructor(
     private entityManager: EntityManager,
     private configService: ConfigService,
-  ) {
-    const pickupConfig = configService.getGameBalance().pickup;
-    this.pickupRadius = pickupConfig.collectionRadius;
-    this.attractionRadius = pickupConfig.attractionRadius;
-  }
+  ) {}
 
   /**
    * Set the provider function for active shockwaves
@@ -182,7 +176,7 @@ export class CollisionSystem {
     const pickups = this.entityManager.getActivePickups();
 
     for (const pickup of pickups) {
-      const combinedRadius = this.pickupRadius + pickup.radius;
+      const combinedRadius = player.radius + pickup.radius;
       if (distanceSquared(player.position, pickup.position) < combinedRadius * combinedRadius) {
         collisions.push(pickup);
       }
@@ -246,19 +240,6 @@ export class CollisionSystem {
   }
 
   /**
-   * Update pickup attraction (moves pickups toward player)
-   */
-  public updatePickupAttraction(deltaTime: number): void {
-    const player = this.entityManager.getPlayer();
-    const pickups = this.entityManager.getActivePickups();
-    const playerPos = player.getPosition();
-
-    for (const pickup of pickups) {
-      pickup.updateAttraction(playerPos, this.attractionRadius, deltaTime);
-    }
-  }
-
-  /**
    * Find enemies in explosion radius
    */
   public getEnemiesInExplosion(position: Vector2, radius: number): Enemy[] {
@@ -280,19 +261,5 @@ export class CollisionSystem {
     }
 
     return null;
-  }
-
-  /**
-   * Set pickup collection radius
-   */
-  public setPickupRadius(radius: number): void {
-    this.pickupRadius = radius;
-  }
-
-  /**
-   * Set pickup attraction radius
-   */
-  public setAttractionRadius(radius: number): void {
-    this.attractionRadius = radius;
   }
 }

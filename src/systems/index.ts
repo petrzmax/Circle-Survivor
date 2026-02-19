@@ -6,6 +6,7 @@ export * from './GamepadHandler';
 export * from './HUD';
 export * from './InputHandler';
 export * from './InputSystem';
+export * from './PickupAttractionSystem';
 export * from './PickupSpawnSystem';
 export * from './RenderSystem';
 export * from './RewardSystem';

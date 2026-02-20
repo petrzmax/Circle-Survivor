@@ -10,12 +10,13 @@ import { container } from 'tsyringe';
 import { usePlayer } from '../hooks/usePlayer';
 import { useWave } from '../hooks/useWave';
 import { useWeaponTooltip } from '../hooks/useWeaponTooltip';
+import { ItemsInventory } from './ItemsInventory';
 import { WeaponInventory } from './WeaponInventory';
 import { WeaponTooltip } from './WeaponTooltip';
 
 const shopService = container.resolve(ShopService);
 
-type ShopTab = 'buy' | 'inventory';
+type ShopTab = 'buy' | 'inventory' | 'items';
 
 interface ShopProps {
   visible: boolean;
@@ -154,6 +155,15 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
         >
           ⚔️ Ekwipunek ({weapons.length})
         </button>
+        <button
+          class={`shop-tab ${activeTab === 'items' ? 'active' : ''}`}
+          onClick={(): void => {
+            setActiveTab('items');
+            tooltip.hideTooltip();
+          }}
+        >
+          📦 Przedmioty ({items.length})
+        </button>
       </div>
 
       {/* Info bar - always visible */}
@@ -236,6 +246,8 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
           maxLevel={GAME_BALANCE.weapons.maxLevel}
         />
       )}
+
+      {activeTab === 'items' && player && <ItemsInventory player={player} />}
 
       <button id="start-wave-btn" onClick={handleStartWave}>
         ▶ Rozpocznij falę

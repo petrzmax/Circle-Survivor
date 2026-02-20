@@ -117,7 +117,7 @@ export const GAME_BALANCE = {
   combat: {
     /** Explosion damage falloff at edge. 0.5 = 50% damage at max radius, 100% at center. */
     explosionFalloff: 0.5,
-    /** Explosion knockback force multiplier (px/s). */
+    /** Explosion knockback force multiplier (px/s). */ // NOT USED YET
     explosionKnockback: 300,
   },
 

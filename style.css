@@ -114,23 +114,81 @@ body {
     50% { transform: scale(1.1); }
 }
 
-/* Stats panel */
-#stats-panel {
-    position: absolute;
-    top: 50px;
-    left: 10px;
+/* Items Inventory (Przedmioty tab) */
+.items-inventory {
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    font-size: 11px;
-    color: #aaa;
-    pointer-events: none;
+    gap: 12px;
+    max-width: 600px;
+    height: 340px;
+    overflow-y: auto;
+    width: 100%;
 }
 
-#stats-panel .stat {
+.items-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.items-stat {
     background: rgba(0, 0, 0, 0.4);
-    padding: 2px 6px;
-    border-radius: 3px;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 13px;
+    color: #aaa;
+}
+
+.items-stat-value {
+    color: #4ecdc4;
+    font-weight: bold;
+}
+
+.items-section-label {
+    font-size: 14px;
+    color: #888;
+    border-bottom: 1px solid #0f3460;
+    padding-bottom: 4px;
+}
+
+.items-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.item-entry {
+    background: #1a1a2e;
+    border: 2px solid #0f3460;
+    border-radius: 8px;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.item-emoji {
+    font-size: 18px;
+}
+
+.item-name {
+    color: #ccc;
+}
+
+.item-count {
+    color: #4ecdc4;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.items-empty {
+    color: #666;
+    font-style: italic;
+    padding: 40px 20px;
+    text-align: center;
 }
 
 /* Game version info */

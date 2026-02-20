@@ -1,21 +1,20 @@
-import { GAME_BALANCE } from '@/config/balance.config';
 import { CHARACTER_TYPES } from '@/config/characters.config';
 import { AudioSystem } from '@/domain/audio/AudioSystem';
 import { EnemySpawnSystem } from '@/domain/enemies/EnemySpawnSystem';
 import { Player } from '@/domain/player/Player';
-import { Projectile } from '@/entities/Projectile';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager, StateManager } from '@/managers';
 import { CollisionSystem } from '@/systems/CollisionSystem';
 import { CombatSystem } from '@/systems/CombatSystem';
 import { EffectsSystem } from '@/systems/EffectsSystem';
-import { HUD } from '@/systems/HUD';
-import { InputSystem } from '@/systems/InputSystem';
+import { EnemySystem } from '@/systems/EnemySystem';
+import { PickupAttractionSystem } from '@/systems/PickupAttractionSystem';
+import { PickupSystem } from '@/systems/PickupSystem';
+import { PlayerSystem } from '@/systems/PlayerSystem';
+import { ProjectileSystem } from '@/systems/ProjectileSystem';
 import { Shop } from '@/systems/Shop';
 import { WaveManager } from '@/systems/WaveManager';
-import { CharacterType, GameState, ProjectileType } from '@/types/enums';
-import toast from 'react-hot-toast';
-import { PickupAttractionSystem } from '@/systems/PickupAttractionSystem';
+import { CharacterType, GameState } from '@/types/enums';
 import { injectable } from 'tsyringe';
 import { ConfigService } from '../config/ConfigService';
 import { WeaponManager } from '../domain/weapons/WeaponManager';
@@ -33,9 +32,6 @@ export class Game {
   private lastTime: number = 0;
   private selectedCharacter: CharacterType | null = null;
 
-  // Regeneration tracking
-  private lastRegenTime: number = 0;
-
   // HUD update throttling
   private lastHUDUpdate: number = 0;
 
@@ -51,8 +47,11 @@ export class Game {
     private combatSystem: CombatSystem,
     private configService: ConfigService,
     private effectsSystem: EffectsSystem,
+    private enemySystem: EnemySystem,
     private entityManager: EntityManager,
-    private inputSystem: InputSystem,
+    private pickupSystem: PickupSystem,
+    private playerSystem: PlayerSystem,
+    private projectileSystem: ProjectileSystem,
     private renderSystem: RenderSystem,
     private shop: Shop,
     private stateManager: StateManager,
@@ -123,39 +122,6 @@ export class Game {
       this.applyShopPurchase(itemId);
       this.emitShopPlayerUpdate();
       this.updateHUD();
-    });
-
-    // Listen for weapon sell events from shop
-    EventBus.on('weaponSold', ({ weaponIndex }) => {
-      const player = this.entityManager.getPlayer();
-      const removed = player.removeWeaponAt(weaponIndex);
-
-      if (removed) {
-        toast(`💰 Sprzedano ${removed.name}`);
-        this.emitShopPlayerUpdate();
-        this.updateHUD();
-      }
-    });
-
-    // Listen for weapon merge events from shop
-    EventBus.on('weaponMerge', ({ weaponIndex }) => {
-      const player = this.entityManager.getPlayer();
-      const weapon = player.weapons[weaponIndex];
-      if (!weapon) return;
-
-      const weaponType = weapon.type;
-      const success = this.weaponManager.mergeWeapon(weaponIndex);
-
-      if (success) {
-        // Find the merged weapon (may have shifted index)
-        const merged = player.weapons.find((w) => w.type === weaponType);
-        const newLevel = merged?.level ?? 0;
-        // TODO use service
-        toast(`🔀 ${merged?.name ?? ''} → Poziom ${newLevel}`);
-        EventBus.emit('weaponMerged', { weaponType, newLevel });
-        this.emitShopPlayerUpdate();
-        this.updateHUD();
-      }
     });
   }
 
@@ -313,24 +279,10 @@ export class Game {
 
   private update(deltaTimeMs: number, currentTime: number): void {
     const player = this.entityManager.getPlayer();
-
     const deltaTime = deltaTimeMs / 1000;
 
-    // Poll gamepad state and get unified input
-    this.inputSystem.poll();
-    const input = this.inputSystem.getInputState();
-
-    // Update player movement
-    player.updateMovement(input, this.canvas.width, this.canvas.height, deltaTime);
-
-    // TODO handle in passivesSystem?
-    if (player.regen > 0) {
-      if (!this.lastRegenTime) this.lastRegenTime = currentTime;
-      if (currentTime - this.lastRegenTime >= 1000) {
-        player.heal(player.regen);
-        this.lastRegenTime = currentTime;
-      }
-    }
+    // Update player (input, movement, regen, auto-aim)
+    this.playerSystem.update(deltaTime, currentTime);
 
     // Check if boss is alive
     const bossAlive = this.entityManager.getActiveEnemies().some((e) => e.isBoss);
@@ -355,115 +307,18 @@ export class Game {
       knockback: player.knockback,
     });
 
-    // Find nearest enemy for auto-aim (only within map bounds)
-    const canvasBounds = { width: this.canvas.width, height: this.canvas.height };
-    const nearestEnemy = this.entityManager.getNearestEnemy(
-      player.position,
-      undefined,
-      canvasBounds,
-    );
-    player.setTarget(nearestEnemy ? nearestEnemy.position : null);
-
     // Fire weapons
     this.weaponManager.fireWeapons(currentTime, player);
 
-    // Update enemies (movement, boss shooting)
-    const enemies = this.entityManager.getActiveEnemies();
-    for (const enemy of enemies) {
-      enemy.update(deltaTime);
-      enemy.moveTowardsTarget(player.position, deltaTime, this.canvas.width, this.canvas.height);
-
-      // Boss shooting (creates projectiles/shockwaves)
-      if (enemy.canShoot) {
-        const attackResult = enemy.tryAttack(player.position, currentTime);
-        if (attackResult) {
-          if (attackResult.type === 'bullets') {
-            // Get enemy velocity for projectile inheritance
-            const enemyVel = enemy.getVelocity();
-
-            // Create enemy projectiles
-            for (const bulletData of attackResult.bullets) {
-              const projectile = new Projectile({
-                position: {
-                  x: bulletData.x,
-                  y: bulletData.y,
-                },
-                radius: Math.floor(enemy.radius * GAME_BALANCE.enemy.bulletRadiusRatio),
-                type: ProjectileType.ENEMY_BULLET,
-                damage: bulletData.damage,
-                ownerId: enemy.id,
-                color: bulletData.color,
-                maxDistance: 1000,
-              });
-              // Add enemy velocity to projectile (velocity inheritance)
-              projectile.setVelocity(bulletData.vx + enemyVel.vx, bulletData.vy + enemyVel.vy);
-              this.entityManager.addProjectile(projectile);
-            }
-            const { pattern } = attackResult;
-            if (enemy.isBoss) {
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-              EventBus.emit('enemyFired', { isBoss: true, pattern });
-            }
-            // Currently only shockwave type exists, but may have more attack types in future
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-          } else if (attackResult.type === 'shockwave') {
-            EventBus.emit('shockwaveTriggered', attackResult);
-          }
-        }
-      }
-    }
-
-    // Update projectiles (movement, expire, off-screen removal)
-    const projectiles = this.entityManager.getActiveProjectiles();
-    for (const projectile of projectiles) {
-      projectile.update(deltaTime);
-
-      // Remove expired - but check if grenade should explode first
-      if (!projectile.isActive) {
-        // Grenades explode when they reach their target distance
-        if (projectile.shouldExplodeOnExpire && projectile.isExplosive() && projectile.explosive) {
-          const expRadius = projectile.explosive.explosionRadius * player.explosionRadius;
-          const isMini = projectile.type === ProjectileType.MINI_BANANA;
-          this.combatSystem.triggerExplosion(
-            projectile.position,
-            expRadius,
-            projectile.damage * player.damageMultiplier,
-            projectile.explosive.visualEffect,
-            isMini,
-          );
-        }
-        this.entityManager.removeProjectile(projectile.id);
-        continue;
-      }
-
-      // Off screen check - destroy projectiles that left the screen
-      if (
-        projectile.position.x < -50 ||
-        projectile.position.x > this.canvas.width + 50 ||
-        projectile.position.y < -50 ||
-        projectile.position.y > this.canvas.height + 50
-      ) {
-        projectile.destroy();
-      }
-    }
-
-    // Update deployables (mines) - just movement/animation
-    const deployables = this.entityManager.getActiveDeployables();
-    for (const deployable of deployables) {
-      deployable.update(deltaTime);
-    }
-
-    // Update pickups (lifetime, animation)
-    const pickups = this.entityManager.getActivePickups();
-    for (const pickup of pickups) {
-      pickup.update(deltaTime);
-    }
+    // Update entity systems
+    this.enemySystem.update(deltaTime, currentTime);
+    this.projectileSystem.update(deltaTime);
+    this.pickupSystem.update(deltaTime);
 
     // Magnet attraction
     this.pickupAttractionSystem.update(deltaTime);
 
     // === Collision Detection & Combat Processing ===
-    // All collision handling is delegated to CollisionSystem + CombatSystem
     const collisions = this.collisionSystem.checkAll();
     this.combatSystem.processCollisions(collisions, currentTime);
 
@@ -485,23 +340,6 @@ export class Game {
 
   private render(): void {
     this.renderSystem.renderAll(this.ctx, this.lastTime);
-
-    // Render boss health bar
-    this.renderBossHealthBar();
-  }
-
-  private renderBossHealthBar(): void {
-    const enemies = this.entityManager.getActiveEnemies();
-    // Map enemies to HUDBoss format
-    const hudbosses = enemies.map((e) => ({
-      type: e.type,
-      hp: e.hp,
-      maxHp: e.maxHp,
-      isBoss: e.isBoss,
-      bossName: e.bossName ?? undefined,
-      hasTopHealthBar: false,
-    }));
-    HUD.renderBossHealthBar(this.ctx, this.canvas.width, hudbosses);
   }
 
   // ============ HUD ============

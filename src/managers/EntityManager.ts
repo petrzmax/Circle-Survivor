@@ -69,6 +69,10 @@ export class EntityManager {
     return this.getEnemies().filter((e) => e.isActive && !e.isDead());
   }
 
+  public getActiveBosses(): Enemy[] {
+    return this.getActiveEnemies().filter((e) => e.isBoss);
+  }
+
   public getEnemy(id: number): Enemy | undefined {
     return this.enemies.get(id);
   }

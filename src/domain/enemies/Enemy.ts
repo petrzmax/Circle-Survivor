@@ -2,7 +2,7 @@ import { GAME_BALANCE } from '@/config';
 import { Entity } from '@/entities';
 import { IHealth } from '@/types/components';
 import { EnemyType } from '@/types/enums';
-import { clamp, randomElement, Vector2 } from '@/utils';
+import { clamp, type CanvasBounds, randomElement, Vector2 } from '@/utils';
 import { distance, TWO_PI } from '@/utils/math';
 import { ENEMY_TYPES } from './config';
 import { generateBossName } from './name';
@@ -207,8 +207,7 @@ export class Enemy extends Entity implements IHealth {
   public moveTowardsTarget(
     target: Vector2,
     deltaTime: number,
-    canvasWidth: number,
-    canvasHeight: number,
+    bounds: CanvasBounds,
   ): void {
     const dx = target.x - this.position.x;
     const dy = target.y - this.position.y;
@@ -231,9 +230,9 @@ export class Enemy extends Entity implements IHealth {
     // Check if enemy entered arena
     const isFullyInside =
       this.position.x > this.radius &&
-      this.position.x < canvasWidth - this.radius &&
+      this.position.x < bounds.width - this.radius &&
       this.position.y > this.radius &&
-      this.position.y < canvasHeight - this.radius;
+      this.position.y < bounds.height - this.radius;
 
     if (isFullyInside) {
       this.hasEnteredArena = true;
@@ -241,8 +240,8 @@ export class Enemy extends Entity implements IHealth {
 
     // Limit position only if already inside
     if (this.hasEnteredArena) {
-      this.position.x = clamp(this.position.x, this.radius, canvasWidth - this.radius);
-      this.position.y = clamp(this.position.y, this.radius, canvasHeight - this.radius);
+      this.position.x = clamp(this.position.x, this.radius, bounds.width - this.radius);
+      this.position.y = clamp(this.position.y, this.radius, bounds.height - this.radius);
     }
   }
 

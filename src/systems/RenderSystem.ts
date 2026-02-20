@@ -10,7 +10,7 @@ import { renderBackground } from '@/rendering/BackgroundRenderer';
 import { renderEnemy } from '@/rendering/EnemyRenderer';
 import { EffectsSystem } from '@/systems/EffectsSystem';
 import { singleton } from 'tsyringe';
-import { HUD } from './HUD';
+import { HUD, HUDBoss } from './HUD';
 
 @singleton()
 export class RenderSystem {
@@ -29,7 +29,6 @@ export class RenderSystem {
   /**
    * Set whether to show enemy count on canvas (dev tool)
    */
-  // TODO consider event instead, to decouple
   public setShowEnemyCount(show: boolean): void {
     this.showEnemyCount = show;
   }
@@ -43,6 +42,7 @@ export class RenderSystem {
     this.effectsSystem.renderAll(ctx);
     this.renderEnemies(ctx);
     this.renderPlayer(ctx, currentTime);
+    this.renderBossHealthBar(ctx);
 
     // Debug overlays
     if (this.showEnemyCount) {
@@ -78,5 +78,21 @@ export class RenderSystem {
     for (const pickup of this.entityManager.getActivePickups()) {
       renderPickup(ctx, pickup);
     }
+  }
+
+  /**
+   * Render boss health bar at top of screen.
+   */
+  private renderBossHealthBar(ctx: CanvasRenderingContext2D): void {
+    const bosses = this.entityManager.getActiveBosses();
+    const hudbosses: HUDBoss[] = bosses.map((e) => ({
+      type: e.type,
+      hp: e.hp,
+      maxHp: e.maxHp,
+      isBoss: e.isBoss,
+      bossName: e.bossName ?? undefined,
+      hasTopHealthBar: false,
+    }));
+    HUD.renderBossHealthBar(ctx, ctx.canvas.width, hudbosses);
   }
 }

@@ -8,7 +8,7 @@ import type { WeaponInstance } from '@/domain/weapons/type';
 import { WeaponType } from '@/domain/weapons/type';
 import { IHealth } from '@/types/components';
 import { CharacterType } from '@/types/enums';
-import { clamp, Vector2 } from '@/utils';
+import { clamp, type CanvasBounds, Vector2 } from '@/utils';
 import { TWO_PI } from '@/utils/math';
 import { Entity } from '../../entities/Entity';
 import { InputState, PlayerConfig, PlayerStats } from './type';
@@ -186,14 +186,12 @@ export class Player extends Entity implements IHealth {
   /**
    * Updates player state based on input
    * @param input Current input state
-   * @param canvasWidth Canvas width for bounds
-   * @param canvasHeight Canvas height for bounds
+   * @param bounds Canvas bounds for clamping
    * @param deltaTime Delta time in seconds
    */
   public updateMovement(
     input: InputState,
-    canvasWidth: number,
-    canvasHeight: number,
+    bounds: CanvasBounds,
     deltaTime: number,
   ): void {
     // HP regeneration
@@ -233,8 +231,8 @@ export class Player extends Entity implements IHealth {
     this.position.y += vy * this.speed * deltaTime;
 
     // Keep in bounds
-    this.position.x = clamp(this.position.x, this.width / 2, canvasWidth - this.width / 2);
-    this.position.y = clamp(this.position.y, this.height / 2, canvasHeight - this.height / 2);
+    this.position.x = clamp(this.position.x, this.width / 2, bounds.width - this.width / 2);
+    this.position.y = clamp(this.position.y, this.height / 2, bounds.height - this.height / 2);
 
     // Store velocity for external use (px/s)
     this.setVelocity(vx * this.speed, vy * this.speed);

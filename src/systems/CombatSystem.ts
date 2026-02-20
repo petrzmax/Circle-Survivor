@@ -242,7 +242,7 @@ export class CombatSystem {
       this.queueExplosion({
         position: projectile.position,
         radius: expRadius,
-        damage: projectile.explosive.explosionDamage * damageMultiplier,
+        damage: projectile.explosive.explosionDamage,
         visualEffect: projectile.explosive.visualEffect,
         sourceId: projectile.id,
         isBanana,
@@ -370,17 +370,6 @@ export class CombatSystem {
    * Handle enemy death - spawn pickups, emit events
    */
   private handleEnemyDeath(enemy: Enemy, killer: 'player' | 'explosion'): void {
-    // TODO, reconsider, maybe some special boss effect, or data in enemy dead event
-    // Boss death - special explosion sound via event
-    if (enemy.isBoss) {
-      EventBus.emit('explosionTriggered', {
-        position: enemy.position,
-        radius: 0,
-        damage: 0,
-        visualEffect: VisualEffect.NUKE,
-      });
-    }
-
     // Handle explodeOnDeath - queued to avoid deep recursive call stacks
     if (enemy.explodeOnDeath && enemy.explosionRadius > 0) {
       this.queueExplosion({
@@ -423,49 +412,6 @@ export class CombatSystem {
   }
 
   /**
-   * Apply damage to all enemies in area
-   */
-  public applyAreaDamage(
-    position: Vector2,
-    radius: number,
-    damage: number,
-    visualEffect: VisualEffect = VisualEffect.STANDARD,
-  ): void {
-    this.queueExplosion({
-      position,
-      radius,
-      damage,
-      visualEffect,
-      sourceId: -1,
-    });
-    this.processExplosions(performance.now());
-  }
-
-  /**
-   * Trigger an explosion at position (used for grenades, mines, etc.)
-   * Handles visual effects, damage, and banana splitting
-   */
-  public triggerExplosion(
-    position: Vector2,
-    radius: number,
-    damage: number,
-    visualEffect: VisualEffect = VisualEffect.STANDARD,
-    isMini: boolean = false,
-  ): void {
-    const isBanana = visualEffect === VisualEffect.BANANA;
-    this.queueExplosion({
-      position,
-      radius,
-      damage,
-      visualEffect,
-      sourceId: -1,
-      isBanana,
-      isMini,
-    });
-    this.processExplosions(performance.now());
-  }
-
-  /**
    * Spawn mini bananas after main banana explosion
    */
   private spawnMiniBananas(x: number, y: number, count: number, damageMultiplier: number): void {
@@ -474,18 +420,18 @@ export class CombatSystem {
     const explosionRadiusMultiplier = player.explosionRadius;
     const playerId = player.id;
 
+    // Speed in px/s from config with ±25% jitter for variety
+    const baseSpeed = config.bulletSpeed;
+    const baseRange = config.explosiveRange ?? 80;
+
     for (let i = 0; i < count; i++) {
       const angle = (TWO_PI / count) * i + randomRange(-0.25, 0.25);
 
-      // Random speed (6-10) and distance (60-100px) for each mini banana
-      const speed = randomInt(6, 10);
-      const range = randomInt(60, 100);
+      const speed = randomInt(baseSpeed * 0.75, baseSpeed * 1.25);
+      const range = randomInt(baseRange * 0.75, baseRange * 1.25);
 
       const projectile = new Projectile({
-        position: {
-          x,
-          y,
-        },
+        position: { x, y },
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         damage: config.damage * damageMultiplier,
@@ -493,10 +439,9 @@ export class CombatSystem {
         color: config.color,
         type: ProjectileType.MINI_BANANA,
         ownerId: playerId,
-        // Use explosiveRange for grenade-like behavior (explodes at distance)
         explosiveRange: range,
         bulletSpeed: speed,
-        weaponCategory: 'grenade',
+        weaponCategory: config.weaponCategory,
         explosive: {
           explosionRadius: (config.explosionRadius ?? 45) * explosionRadiusMultiplier,
           explosionDamage: config.damage * damageMultiplier,

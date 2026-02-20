@@ -189,8 +189,11 @@ export class AudioSystem {
     EventBus.on('enemyDamaged', () => {
       this.play('enemyHit');
     });
-    EventBus.on('enemyDeath', () => {
+    EventBus.on('enemyDeath', ({ enemy }) => {
       this.play('enemyDeath');
+      if (enemy.isBoss) {
+        this.play('nukeExplosion');
+      }
     });
     EventBus.on('playerDodged', () => {
       this.play('dodge');

@@ -6,6 +6,7 @@ import { EntityManager } from '@/managers';
 import { DeployableType, ProjectileType, VisualEffect } from '@/types';
 import { copyVector, degreesToRadians, randomChance, randomRange, vectorFromAngle } from '@/utils';
 import { singleton } from 'tsyringe';
+import toast from 'react-hot-toast';
 import { ConfigService } from '../../config/ConfigService';
 import { WeaponStatsCalculator } from './WeaponStatsCalculator';
 import { WEAPON_TYPES } from './config';
@@ -16,7 +17,38 @@ export class WeaponManager {
     private entityManager: EntityManager,
     private configService: ConfigService,
     private statsCalculator: WeaponStatsCalculator,
-  ) {}
+  ) {
+    this.setupEventListeners();
+  }
+
+  private setupEventListeners(): void {
+    EventBus.on('weaponSold', ({ weaponIndex }) => {
+      const player = this.entityManager.getPlayer();
+      const removed = player.removeWeaponAt(weaponIndex);
+
+      if (removed) {
+        toast(`💰 Sprzedano ${removed.name}`);
+        EventBus.emit('shopPlayerUpdated', undefined);
+      }
+    });
+
+    EventBus.on('weaponMerge', ({ weaponIndex }) => {
+      const player = this.entityManager.getPlayer();
+      const weapon = player.weapons[weaponIndex];
+      if (!weapon) return;
+
+      const weaponType = weapon.type;
+      const success = this.mergeWeapon(weaponIndex);
+
+      if (success) {
+        const merged = player.weapons.find((w) => w.type === weaponType);
+        const newLevel = merged?.level ?? 0;
+        toast(`🔀 ${merged?.name ?? ''} → Poziom ${newLevel}`);
+        EventBus.emit('weaponMerged', { weaponType, newLevel });
+        EventBus.emit('shopPlayerUpdated', undefined);
+      }
+    });
+  }
 
   public fireWeapons(currentTime: number, player: Player): void {
     for (let i = 0; i < player.weapons.length; i++) {

@@ -22,21 +22,30 @@ export function HUD({ visible }: HUDProps): JSX.Element | null {
 
   return (
     <div id="hud">
-      <div id="hp-bar">
-        <div id="hp-fill" style={{ width: `${hpPercent}%` }} />
-        <span id="hp-text">{hpText}</span>
+      <div class="hud-group hud-group--transparent">
+        <span id="hp-heart">❤️</span>
+        <div id="hp-bar">
+          <div id="hp-fill" style={{ width: `${hpPercent}%` }} />
+          <span id="hp-text">{hpText}</span>
+        </div>
       </div>
-      <div id="wave-info">
-        Fala: <span id="wave-num">{waveNumber}</span>
+      <div class="hud-group">
+        <span id="wave-info">
+          ⚔️ Fala <span id="wave-num">{waveNumber}</span>
+        </span>
+        <span class="hud-separator">|</span>
+        <span id="timer" class={isCountdownWarning ? 'countdown-warning' : ''}>
+          🕐 <span id="wave-timer">{timeDisplay}</span>s
+        </span>
       </div>
-      <div id="timer" class={isCountdownWarning ? 'countdown-warning' : ''}>
-        Czas: <span id="wave-timer">{timeDisplay}</span>s
-      </div>
-      <div id="gold">
-        💰 <span id="gold-amount">{gold}</span>
-      </div>
-      <div id="xp">
-        ⭐ <span id="xp-amount">{xp}</span>
+      <div class="hud-group">
+        <span id="gold">
+          💰 <span id="gold-amount">{gold}</span>
+        </span>
+        <span class="hud-separator">|</span>
+        <span id="xp">
+          ⭐ <span id="xp-amount">{xp}</span>
+        </span>
       </div>
     </div>
   );

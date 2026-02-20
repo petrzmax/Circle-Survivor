@@ -198,7 +198,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   ironArmor: {
     type: 'item',
     name: 'Żelazna Zbroja',
-    description: '+5 Pancerza',
+    description: 'Rdzewieje, ale się trzyma',
     price: 60,
     emoji: '🛡️',
     effect: { armor: 5 },
@@ -206,7 +206,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   titaniumPlate: {
     type: 'item',
     name: 'Płyta Tytanowa',
-    description: '+10 Pancerza',
+    description: 'Lżejsza niż wygląda',
     price: 120,
     emoji: '🔰',
     effect: { armor: 10 },
@@ -214,7 +214,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   dodgeCloak: {
     type: 'item',
     name: 'Peleryna Uniku',
-    description: '+3% szansy na unik',
+    description: 'Pojawiam się i znikam',
     price: 80,
     emoji: '🧥',
     effect: { dodge: 0.03 },
@@ -222,7 +222,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   thornMail: {
     type: 'item',
     name: 'Kolczuga Cierni',
-    description: 'Odbija 5% otrzymanych obrażeń',
+    description: 'Zostań pancernikiem!',
     price: 90,
     emoji: '🌵',
     effect: { thorns: 0.05 },
@@ -230,7 +230,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   heartContainer: {
     type: 'item',
     name: 'Pojemnik na Serce',
-    description: '+30 Max HP',
+    description: 'Zelda by się ucieszyła',
     price: 100,
     emoji: '💖',
     effect: { maxHp: 30 },
@@ -238,7 +238,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   regenRing: {
     type: 'item',
     name: 'Pierścień Regeneracji',
-    description: '+0.5 HP/s',
+    description: 'Jeden pierścień, by się leczyć',
     price: 85,
     emoji: '💍',
     effect: { regen: 0.5 },
@@ -248,7 +248,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   damageGem: {
     type: 'item',
     name: 'Klejnot Mocy',
-    description: '+10% obrażeń',
+    description: 'Błyszczy i boli kieszeń',
     price: 70,
     emoji: '💎',
     effect: { damageMultiplier: 0.1 },
@@ -256,7 +256,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   critGloves: {
     type: 'item',
     name: 'Rękawice Krytyka',
-    description: '+5% szansy na krytyka',
+    description: 'Niezakryte, a marudzą',
     price: 75,
     emoji: '🧤',
     effect: { critChance: 0.05 },
@@ -264,7 +264,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   critDagger: {
     type: 'item',
     name: 'Sztylet Zabójcy',
-    description: '+25% obrażeń krytycznych',
+    description: 'Kosa pod żebro',
     price: 90,
     emoji: '🗡️',
     effect: { critDamage: 0.25 },
@@ -272,7 +272,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   vampireFang: {
     type: 'item',
     name: 'Kieł Wampira',
-    description: '5% szansy na kradzież 1 HP',
+    description: 'Blade Cię znajdzie',
     price: 110,
     emoji: '🦷',
     effect: { lifesteal: 0.05 },
@@ -280,7 +280,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   coldWar: {
     type: 'item',
     name: 'Zimna Wojna',
-    description: '+15% zasięgu eksplozji',
+    description: 'Zrób sobie Fallout!',
     price: 95,
     emoji: '💥',
     effect: { explosionRadius: 0.15 },
@@ -310,15 +310,15 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   speedBoots: {
     type: 'item',
     name: 'Buty Szybkości',
-    description: '+8% szybkości ruchu',
+    description: 'Nyyyuuum!',
     price: 55,
     emoji: '👢',
-    effect: { speed: 18 },
+    effect: { speed: 0.08 },
   },
   magnet: {
     type: 'item',
     name: 'Magnes',
-    description: '+25 zasięgu zbierania',
+    description: 'Przyciąga wszystko oprócz szczęścia',
     price: 40,
     emoji: '🧲',
     effect: { pickupRange: 25 },
@@ -326,7 +326,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   luckyClover: {
     type: 'item',
     name: 'Czterolistna Koniczyna',
-    description: '+15% do dropów',
+    description: 'Schowaj, nie roluj!',
     price: 65,
     emoji: '🍀',
     effect: { luck: 0.15 },
@@ -334,7 +334,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   xpBoost: {
     type: 'item',
     name: 'Księga Mądrości',
-    description: '+25% zdobywanego XP',
+    description: 'Musisz umieć czytać',
     price: 80,
     emoji: '📚',
     effect: { xpMultiplier: 0.25 },
@@ -342,7 +342,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   goldBoost: {
     type: 'item',
     name: 'Sakwa Skąpca',
-    description: '+15% zdobywanego złota',
+    description: 'Grosz do grosza i coś kupisz',
     price: 60,
     emoji: '💰',
     effect: { goldMultiplier: 0.15 },
@@ -350,7 +350,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   attackSpeedGem: {
     type: 'item',
     name: 'Kryształ Furii',
-    description: '+8% szybkości ataku',
+    description: 'Szybciej! SZYBCIEJ!',
     price: 85,
     emoji: '⚡',
     effect: { attackSpeedMultiplier: 0.08 },
@@ -360,7 +360,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   scope: {
     type: 'item',
     name: 'Luneta',
-    description: '+20% zasięgu broni',
+    description: 'Widzę cię!',
     price: 80,
     emoji: '🔭',
     effect: { attackRange: 0.2 },
@@ -368,7 +368,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   laserSight: {
     type: 'item',
     name: 'Celownik Laserowy',
-    description: '+15% zasięgu, +5% crit',
+    description: 'Czerwona kropka śmierci',
     price: 120,
     emoji: '🎯',
     effect: { attackRange: 0.15, critChance: 0.05 },
@@ -378,13 +378,13 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   allStats: {
     type: 'item',
     name: 'Korona Króla',
-    description: '+10% do wszystkiego!',
+    description: 'Władca wszystkiego!',
     price: 200,
     emoji: '👑',
     effect: {
       damageMultiplier: 0.1,
       attackSpeedMultiplier: 0.1,
-      speed: 12,
+      speed: 0.05,
       armor: 5,
       maxHp: 10,
     },
@@ -394,18 +394,18 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   bolidKubicy: {
     type: 'item',
     name: 'Bolid Kubicy',
-    description: '+25% szybkości ruchu, +10% dodge!',
+    description: 'BRRRRR! Nie dogonisz!',
     price: 300,
     emoji: '🏎️',
     effect: {
-      speed: 60, // TODO what, adjust / fix
+      speed: 0.25,
       dodge: 0.1,
     },
   },
   kielichAlicji: {
     type: 'item',
     name: 'Kielich Alicji',
-    description: '10% szansy na kradzież 1 HP, +30 max HP, regen +0.5/s',
+    description: 'Wypij mnie!',
     price: 280,
     emoji: '🏆',
     effect: {
@@ -417,7 +417,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   koronaPodroznika: {
     type: 'item',
     name: 'Korona Podróżnika',
-    description: '+25% XP, +15% złota, +15% luck',
+    description: 'Kto dużo podróżuje, ten dużo wie',
     price: 250,
     emoji: '🗺️',
     effect: {
@@ -429,7 +429,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   kierbceWierzbickiego: {
     type: 'item',
     name: 'Kierbce Wierzbickiego',
-    description: '+20% DMG, +10% crit!',
+    description: 'Nokaut w pierwszej rundzie!',
     price: 350,
     emoji: '🥊',
     effect: {
@@ -441,7 +441,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   kijBejsbolowyByczka: {
     type: 'item',
     name: 'Kij Bejsbolowy Byczka',
-    description: 'WUUUUUU! +50% odrzut wrogów!',
+    description: 'WUUUUUU! Leć stąd!',
     price: 120,
     emoji: '🏏',
     effect: {
@@ -453,7 +453,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   midasHand: {
     type: 'item',
     name: 'Ręka Midasa',
-    description: '+30% zdobywanego złota!',
+    description: 'Midas, Midas!',
     price: 180,
     emoji: '✋💰',
     effect: { goldMultiplier: 0.3 },
@@ -461,7 +461,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   thirdHand: {
     type: 'item',
     name: 'Trzecia Ręka',
-    description: '+1 slot na broń',
+    description: 'Za długo w reaktorze, huh?',
     price: 350,
     emoji: '✋',
     effect: { maxWeapons: 1 },
@@ -469,12 +469,12 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   },
   boarHoof: {
     type: 'item',
-    name: 'Kopyto Prawdziwego Dzika',
-    description: 'DZIK MODE! +15% speed, +15% DMG, +10% odbicia obrażeń!',
+    name: 'Kopyto Dzika',
+    description: 'Nie afiszuj się nim',
     price: 260,
     emoji: '🐗',
     effect: {
-      speed: 36,
+      speed: 0.15,
       damageMultiplier: 0.15,
       thorns: 0.10,
     },

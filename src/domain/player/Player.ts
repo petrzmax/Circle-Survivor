@@ -43,8 +43,13 @@ export class Player extends Entity implements IHealth {
 
   // ============ Stats ============
 
-  public speed: number;
+  public speedMultiplier: number = 1;
   public pickupRange: number;
+
+  /** Computed final speed in px/s */
+  public get speed(): number {
+    return this.characterConfig.speed * this.speedMultiplier;
+  }
 
   // Combat
   public armor: number = 0;
@@ -113,7 +118,6 @@ export class Player extends Entity implements IHealth {
     this.color = this.characterConfig.color;
     this.maxHp = this.characterConfig.maxHp;
     this.hp = this.maxHp;
-    this.speed = this.characterConfig.speed;
     this.damageMultiplier = this.characterConfig.damageMultiplier;
     this.goldMultiplier = this.characterConfig.goldMultiplier;
 
@@ -343,7 +347,7 @@ export class Player extends Entity implements IHealth {
         this.hp += value; // Also increase current HP
         break;
       case 'speed':
-        this.speed += value;
+        this.speedMultiplier += value;
         break;
       case 'pickupRange':
         this.pickupRange += value;

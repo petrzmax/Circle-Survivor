@@ -203,7 +203,7 @@ export class Game {
     // Apply character-specific stats
     player.maxHp = charConfig.maxHp;
     player.hp = charConfig.maxHp;
-    player.speed = charConfig.speed;
+    player.speedMultiplier = 1;
     player.damageMultiplier = charConfig.damageMultiplier;
     player.goldMultiplier = charConfig.goldMultiplier;
     player.color = charConfig.color;

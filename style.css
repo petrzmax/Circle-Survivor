@@ -158,32 +158,66 @@ body {
 /* Items Inventory (Przedmioty tab) */
 .items-inventory {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    max-width: 600px;
+    gap: 16px;
+    max-width: 700px;
     height: 340px;
-    overflow-y: auto;
     width: 100%;
+}
+
+.items-column-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    min-width: 0;
+}
+
+.items-column-right {
+    width: 220px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
 }
 
 .items-stats {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
 }
 
 .items-stat {
-    background: rgba(0, 0, 0, 0.4);
-    padding: 4px 10px;
-    border-radius: 5px;
-    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
     color: #aaa;
 }
 
+.items-stat:nth-child(odd) {
+    background: rgba(0, 0, 0, 0.2);
+}
+
 .items-stat-value {
-    color: #4ecdc4;
     font-weight: bold;
+}
+
+.items-stat-value.stat-positive {
+    color: #4ecdc4;
+}
+
+.items-stat-value.stat-negative {
+    color: #e94560;
+}
+
+.items-stat-value.stat-neutral {
+    color: #888;
 }
 
 .items-section-label {

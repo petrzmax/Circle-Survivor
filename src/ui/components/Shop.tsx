@@ -164,7 +164,7 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
             itemTooltip.hideTooltip();
           }}
         >
-          ⚔️ Ekwipunek ({weapons.length})
+          ⚔️ Ekwipunek
         </button>
         <button
           class={`shop-tab ${activeTab === 'items' ? 'active' : ''}`}
@@ -174,7 +174,7 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
             itemTooltip.hideTooltip();
           }}
         >
-          📦 Przedmioty ({items.length})
+          📦 Przedmioty
         </button>
       </div>
 

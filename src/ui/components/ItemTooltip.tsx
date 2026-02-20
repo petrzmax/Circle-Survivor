@@ -24,7 +24,7 @@ const EFFECT_FORMATS: Record<keyof ItemEffect, (v: number) => string> = {
   critChance: (v) => `+${Math.round(v * 100)}%`,
   critDamage: (v) => `+${Math.round(v * 100)}%`,
   attackSpeedMultiplier: (v) => `+${Math.round(v * 100)}%`,
-  speed: (v) => `+${v}`,
+  speed: (v) => `+${Math.round(v * 100)}%`,
   lifesteal: (v) => `+${Math.round(v * 100)}%`,
   thorns: (v) => `+${Math.round(v * 100)}%`,
   luck: (v) => `+${Math.round(v * 100)}%`,

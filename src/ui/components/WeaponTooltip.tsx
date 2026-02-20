@@ -45,18 +45,27 @@ export function WeaponTooltip({ weaponData, position }: WeaponTooltipProps): JSX
       </div>
 
       {/* Always show: Damage, Cooldown, Range */}
-      <div class="weapon-tooltip-stat">{STAT_LABELS.damageMultiplier.emoji} {STAT_LABELS.damageMultiplier.label}: {damageDisplay}</div>
+      <div class="weapon-tooltip-stat">
+        {STAT_LABELS.damageMultiplier.emoji} {STAT_LABELS.damageMultiplier.label}: {damageDisplay}
+      </div>
       <div class="weapon-tooltip-stat">🔄 Przeładowanie: {cooldownSeconds} s</div>
-      <div class="weapon-tooltip-stat">{STAT_LABELS.attackRange.emoji} Zasięg: {config.range >= 9999 ? '∞' : config.range}</div>
+      <div class="weapon-tooltip-stat">
+        {STAT_LABELS.attackRange.emoji} Zasięg: {config.range >= 9999 ? '∞' : config.range}
+      </div>
 
       {/* Conditional: Pierce */}
       {config.pierceCount && (
-        <div class="weapon-tooltip-stat">{STAT_LABELS.pierce.emoji} {STAT_LABELS.pierce.label}: x{config.pierceCount}</div>
+        <div class="weapon-tooltip-stat">
+          {STAT_LABELS.pierce.emoji} {STAT_LABELS.pierce.label}: x{config.pierceCount}
+        </div>
       )}
 
       {/* Conditional: Explosive - show upgraded radius */}
       {config.explosive && stats.explosionRadius && (
-        <div class="weapon-tooltip-stat">{STAT_LABELS.explosionRadius.emoji} {STAT_LABELS.explosionRadius.label}: {stats.explosionRadius}</div>
+        <div class="weapon-tooltip-stat">
+          {STAT_LABELS.explosionRadius.emoji} {STAT_LABELS.explosionRadius.label}:{' '}
+          {stats.explosionRadius}
+        </div>
       )}
 
       {/* Special traits */}

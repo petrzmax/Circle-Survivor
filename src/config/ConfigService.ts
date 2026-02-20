@@ -32,4 +32,8 @@ export class ConfigService {
   public getPickupConfig(): GameBalanceConfig['pickup'] {
     return GAME_BALANCE.pickup;
   }
+
+  public getCombatConfig(): GameBalanceConfig['combat'] {
+    return GAME_BALANCE.combat;
+  }
 }

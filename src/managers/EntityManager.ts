@@ -365,13 +365,24 @@ export class EntityManager {
   // ========== Query Helpers ==========
 
   /**
-   * Find enemies within radius of a point
+   * Find enemies within radius of a point.
+   * Returns enemy + distance pairs for falloff calculations.
    */
-  public getEnemiesInRadius(position: Vector2, radius: number): Enemy[] {
+  public getEnemiesInRadius(
+    position: Vector2,
+    radius: number,
+  ): Array<{ enemy: Enemy; dist: number }> {
     const radiusSq = radius * radius;
-    return this.getActiveEnemies().filter((enemy) => {
-      return distanceSquared(enemy.position, position) <= radiusSq;
-    });
+    const results: Array<{ enemy: Enemy; dist: number }> = [];
+
+    for (const enemy of this.getActiveEnemies()) {
+      const dSq = distanceSquared(enemy.position, position);
+      if (dSq <= radiusSq) {
+        results.push({ enemy, dist: Math.sqrt(dSq) });
+      }
+    }
+
+    return results;
   }
 
   /**

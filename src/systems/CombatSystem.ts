@@ -3,7 +3,7 @@
  * Processes collision results and applies damage, knockback, etc.
  */
 import { singleton } from 'tsyringe';
-import { GAME_BALANCE } from '@/config/balance.config';
+import { ConfigService } from '@/config/ConfigService';
 import { EventBus } from '@/events/EventBus';
 import { Enemy } from '@/domain/enemies';
 import { WEAPON_TYPES } from '@/domain/weapons/config';
@@ -61,6 +61,7 @@ export interface CombatRuntimeConfig {
 @singleton()
 export class CombatSystem {
   private entityManager: EntityManager;
+  private configService: ConfigService;
 
   /** Pending explosions to process */
   private pendingExplosions: ExplosionEvent[] = [];
@@ -72,8 +73,9 @@ export class CombatSystem {
     knockback: 0,
   };
 
-  public constructor(entityManager: EntityManager) {
+  public constructor(entityManager: EntityManager, configService: ConfigService) {
     this.entityManager = entityManager;
+    this.configService = configService;
   }
 
   /**
@@ -105,7 +107,7 @@ export class CombatSystem {
       // Boss damage multiplier
       let damage = enemy.damage;
       if (enemy.isBoss) {
-        damage *= GAME_BALANCE.boss.contactDamageMultiplier;
+        damage *= this.configService.getBossBalance().contactDamageMultiplier;
       }
 
       const actualDamage = player.takeDamage(damage, currentTime);
@@ -298,6 +300,8 @@ export class CombatSystem {
     const { position, radius, damage, visualEffect, isBanana, isMini, isEnemyExplosion } =
       explosion;
 
+    const falloff = this.configService.getCombatConfig().explosionFalloff;
+
     // Damage player if this is an enemy explosion
     if (isEnemyExplosion) {
       const player = this.entityManager.getPlayer();
@@ -305,12 +309,14 @@ export class CombatSystem {
         const distToPlayer = distance(player.position, position);
 
         if (distToPlayer <= radius) {
-          // Player in explosion radius - deal damage
-          player.takeDamage(damage, currentTime);
+          const falloffMultiplier = 1 - (1 - falloff) * (distToPlayer / radius);
+          const finalDamage = Math.max(1, Math.round(damage * falloffMultiplier));
+
+          player.takeDamage(finalDamage, currentTime);
 
           EventBus.emit('playerHit', {
             player,
-            damage,
+            damage: finalDamage,
             // TODO add explosion source type handling
             source: 'explosion',
           });
@@ -318,20 +324,23 @@ export class CombatSystem {
       }
     }
 
-    // Find enemies in explosion radius
-    const enemies = this.entityManager.getEnemiesInRadius(position, radius);
+    // Find enemies in explosion radius (with distance for falloff)
+    const hits = this.entityManager.getEnemiesInRadius(position, radius);
 
-    for (const enemy of enemies) {
+    for (const { enemy, dist } of hits) {
       // Skip enemies already killed in this explosion batch
       if (killedThisBatch?.has(enemy.id) || enemy.isDead()) {
         continue;
       }
 
-      const isDead = enemy.takeDamage(damage * damageMultiplier, position);
+      const falloffMultiplier = 1 - (1 - falloff) * (dist / radius);
+      const finalDamage = Math.max(1, Math.round(damage * damageMultiplier * falloffMultiplier));
+
+      const isDead = enemy.takeDamage(finalDamage, position);
 
       EventBus.emit('enemyDamaged', {
         enemy,
-        damage: damage * damageMultiplier,
+        damage: finalDamage,
         source: position,
       });
 

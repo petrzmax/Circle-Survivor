@@ -109,7 +109,7 @@ const DISPLAYED_STATS: ReadonlyArray<{
     key: 'goldMultiplier',
     ...STAT_LABELS.goldMultiplier,
     format: (p) => `+${Math.round((p.goldMultiplier - 1) * 100)}%`,
-  }
+  },
 ];
 
 interface ItemsInventoryProps {
@@ -165,10 +165,13 @@ export function ItemsInventory({ player }: ItemsInventoryProps): JSX.Element {
           {DISPLAYED_STATS.map((stat) => {
             const formatted = stat.format(player);
             const numVal = parseFloat(formatted);
-            const colorClass = numVal > 0 ? 'stat-positive' : numVal < 0 ? 'stat-negative' : 'stat-neutral';
+            const colorClass =
+              numVal > 0 ? 'stat-positive' : numVal < 0 ? 'stat-negative' : 'stat-neutral';
             return (
               <div class="items-stat" key={stat.key}>
-                <span>{stat.emoji} {stat.label}</span>
+                <span>
+                  {stat.emoji} {stat.label}
+                </span>
                 <span class={`items-stat-value ${colorClass}`}>{formatted}</span>
               </div>
             );

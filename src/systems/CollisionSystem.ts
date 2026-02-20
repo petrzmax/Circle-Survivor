@@ -239,12 +239,6 @@ export class CollisionSystem {
     return collisions;
   }
 
-  /**
-   * Find enemies in explosion radius
-   */
-  public getEnemiesInExplosion(position: Vector2, radius: number): Enemy[] {
-    return this.entityManager.getEnemiesInRadius(position, radius);
-  }
 
   /**
    * Check if point is inside any enemy

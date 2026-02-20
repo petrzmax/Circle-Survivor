@@ -409,7 +409,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     price: 280,
     emoji: '🏆',
     effect: {
-      lifesteal: 0.10,
+      lifesteal: 0.1,
       maxHp: 30,
       regen: 0.5,
     },
@@ -476,7 +476,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     effect: {
       speed: 0.15,
       damageMultiplier: 0.15,
-      thorns: 0.10,
+      thorns: 0.1,
     },
   },
 } as const;

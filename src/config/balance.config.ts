@@ -134,7 +134,7 @@ export const GAME_BALANCE = {
       /** Attack speed multiplier per level. 1.1 = +10% faster firing per level. */
       attackSpeedPerLevel: 1.1,
       /** Explosion radius multiplier per level. 1.15 = +15% larger explosions per level. */
-      explosionPerLevel: 1.10,
+      explosionPerLevel: 1.1,
     },
   },
 

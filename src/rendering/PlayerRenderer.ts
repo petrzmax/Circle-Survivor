@@ -27,12 +27,8 @@ export function renderPlayer(
   if (player.armor > 0) {
     ctx.strokeStyle = `rgba(100, 150, 255, ${Math.min(player.armor / 50, 1)})`;
     ctx.lineWidth = 3;
-  } else {
-    // TODO when no armor, looks too similar to armored state
-    ctx.strokeStyle = '#2a7fff';
-    ctx.lineWidth = 2;
+    ctx.strokeRect(-player.width / 2, -player.height / 2, player.width, player.height);
   }
-  ctx.strokeRect(-player.width / 2, -player.height / 2, player.width, player.height);
 
   // TODO experiment - look on  nearest enemy
   // Eyes

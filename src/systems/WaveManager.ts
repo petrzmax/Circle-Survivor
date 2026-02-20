@@ -7,6 +7,7 @@ import { GAME_BALANCE } from '@/config/balance.config';
 import { EnemySpawnSystem } from '@/domain/enemies/EnemySpawnSystem';
 import { EventBus } from '@/events/EventBus';
 import { EnemyType } from '@/types/enums';
+import { randomElementStrict } from '@/utils/random';
 import { singleton } from 'tsyringe';
 
 // ============ Types ============
@@ -28,6 +29,7 @@ export class WaveManager {
   private spawnInterval: number = 800; // ms between spawns
   private enemiesPerSpawn: number = 2;
   private bossSpawned: boolean = false;
+  private lastBossType: EnemyType | null = null;
   private lastCountdownSecond: number = -1;
 
   public constructor(private enemySpawnSystem: EnemySpawnSystem) {
@@ -273,23 +275,21 @@ export class WaveManager {
   }
 
   /**
-   * Get boss type based on wave number
+   * Get random boss type, never repeating the previous one
    */
   private getBossType(): EnemyType {
-    const bossWave = Math.floor(this.waveNumber / 3); // 1, 2, 3, 4...
-
-    // TODO remove, after splicing enemies from bosses
     const bossTypes: EnemyType[] = [
-      EnemyType.BOSS, // Wave 3 - basic
-      EnemyType.BOSS_SWARM, // Wave 6 - splits into swarms
-      EnemyType.BOSS_TANK, // Wave 9 - huge tank
-      EnemyType.BOSS_SPEED, // Wave 12 - fast zigzag
-      EnemyType.BOSS_EXPLODER, // Wave 15 - explodes on death
-      EnemyType.BOSS_GHOST, // Wave 18 - semi-transparent
+      EnemyType.BOSS,
+      EnemyType.BOSS_SWARM,
+      EnemyType.BOSS_TANK,
+      EnemyType.BOSS_SPEED,
+      EnemyType.BOSS_EXPLODER,
+      EnemyType.BOSS_GHOST,
     ];
 
-    // Cyclically select boss, but each next one has +50% HP
-    const bossIndex = (bossWave - 1) % bossTypes.length;
-    return bossTypes[bossIndex]!; // Safe: modulo guarantees valid index
+    const candidates = bossTypes.filter((t) => t !== this.lastBossType);
+    const boss = randomElementStrict(candidates);
+    this.lastBossType = boss;
+    return boss;
   }
 }

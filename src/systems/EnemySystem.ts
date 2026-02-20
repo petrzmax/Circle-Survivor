@@ -34,8 +34,6 @@ export class EnemySystem {
         const attackResult = enemy.tryAttack(player.position, currentTime);
         if (attackResult) {
           if (attackResult.type === 'bullets') {
-            const enemyVel = enemy.getVelocity();
-
             for (const bulletData of attackResult.bullets) {
               const projectile = new Projectile({
                 position: {
@@ -49,8 +47,8 @@ export class EnemySystem {
                 color: bulletData.color,
                 maxDistance: 1000,
               });
-              // Add enemy velocity to projectile (velocity inheritance)
-              projectile.setVelocity(bulletData.vx + enemyVel.vx, bulletData.vy + enemyVel.vy);
+              // Set projectile velocity from attack pattern
+              projectile.setVelocity(bulletData.vx, bulletData.vy);
               this.entityManager.addProjectile(projectile);
             }
 

@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.11.0](https://github.com/petrzmax/Circle-Survivor/compare/v1.10.1...v1.11.0) (2026-02-20)
+
+
+### ✨ Features
+
+* add explosion damage falloff ([41afbdb](https://github.com/petrzmax/Circle-Survivor/commit/41afbdbc9df0d1a7d389ede2772adc19e456e049))
+* add items page in shop ([09cab35](https://github.com/petrzmax/Circle-Survivor/commit/09cab357fc8d288e0f43c9fa036a5577c193ea99))
+* items panel and tooltip, player stats ([b8aa105](https://github.com/petrzmax/Circle-Survivor/commit/b8aa105079dce9561af23120757226604396b5c1))
+* random boss type on boss waves ([9943240](https://github.com/petrzmax/Circle-Survivor/commit/994324064fe87c1e4e7e04e81369f722a6acf854))
+* rework in game hud ([6b86fcd](https://github.com/petrzmax/Circle-Survivor/commit/6b86fcd26bdd895efef817b8e05715b2c2baac6c))
+* update item descriptions and enhance inventory UI ([7c7bd39](https://github.com/petrzmax/Circle-Survivor/commit/7c7bd39119e27738841c20219d4c72e6b34e1c86))
+
+
+### ⚖️ Balance Changes
+
+* **balance:** adjust explosion falloff and explosion radius multiplier ([735df1d](https://github.com/petrzmax/Circle-Survivor/commit/735df1da092135cfea5107fb202a1829e21f593f))
+
+
+### 🐛 Bug Fixes
+
+* remove velocity inheritance from projectiles ([eb7d218](https://github.com/petrzmax/Circle-Survivor/commit/eb7d2187d5686822310c8a6a42a155fbc90d7d14))
+* render armor only when &gt; 0 ([9418c99](https://github.com/petrzmax/Circle-Survivor/commit/9418c99c01cd410eca9de0df6fa0fcd3d6eb022b))
+
+
+### ♻️ Refactoring
+
+* format code ([2d1a6eb](https://github.com/petrzmax/Circle-Survivor/commit/2d1a6ebbe3e59ad8617945035c2b8735d2ac2317))
+* remove dead code ([b6be5fc](https://github.com/petrzmax/Circle-Survivor/commit/b6be5fc2d315eb31c10ba0e63849d47069c81160))
+
+
+### 📦 Other Changes
+
+* **balance:** rework thorns to reflect % of damage taken, lifesteal to chance-based 1HP heal ([c812e58](https://github.com/petrzmax/Circle-Survivor/commit/c812e5808fae231aca6104cd50037fd319c703c7))
+
 ## [1.10.1](https://github.com/petrzmax/Circle-Survivor/compare/v1.10.0...v1.10.1) (2026-02-20)
 
 

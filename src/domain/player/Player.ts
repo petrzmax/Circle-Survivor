@@ -189,11 +189,7 @@ export class Player extends Entity implements IHealth {
    * @param bounds Canvas bounds for clamping
    * @param deltaTime Delta time in seconds
    */
-  public updateMovement(
-    input: InputState,
-    bounds: CanvasBounds,
-    deltaTime: number,
-  ): void {
+  public updateMovement(input: InputState, bounds: CanvasBounds, deltaTime: number): void {
     // HP regeneration
     if (this.regen > 0) {
       this.regenTimer += deltaTime * 1000;

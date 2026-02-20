@@ -204,11 +204,7 @@ export class Enemy extends Entity implements IHealth {
    * Moves enemy towards target (usually player)
    * Call this separately from update for more control
    */
-  public moveTowardsTarget(
-    target: Vector2,
-    deltaTime: number,
-    bounds: CanvasBounds,
-  ): void {
+  public moveTowardsTarget(target: Vector2, deltaTime: number, bounds: CanvasBounds): void {
     const dx = target.x - this.position.x;
     const dy = target.y - this.position.y;
     const dist = Math.sqrt(dx * dx + dy * dy);

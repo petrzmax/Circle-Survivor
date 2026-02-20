@@ -9,8 +9,10 @@ import { useCallback, useEffect, useState } from 'preact/hooks';
 import { container } from 'tsyringe';
 import { usePlayer } from '../hooks/usePlayer';
 import { useWave } from '../hooks/useWave';
+import { useItemTooltip } from '../hooks/useItemTooltip';
 import { useWeaponTooltip } from '../hooks/useWeaponTooltip';
 import { ItemsInventory } from './ItemsInventory';
+import { ItemTooltip } from './ItemTooltip';
 import { WeaponInventory } from './WeaponInventory';
 import { WeaponTooltip } from './WeaponTooltip';
 
@@ -32,6 +34,7 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
   const [pendingReroll, setPendingReroll] = useState(false);
   const [activeTab, setActiveTab] = useState<ShopTab>('buy');
   const tooltip = useWeaponTooltip();
+  const itemTooltip = useItemTooltip();
 
   const gold = player?.gold ?? 0;
   const weapons = player?.weapons ?? [];
@@ -132,7 +135,13 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
   }));
 
   return (
-    <div id="shop" onMouseMove={tooltip.handleMouseMove}>
+    <div
+      id="shop"
+      onMouseMove={(e: MouseEvent): void => {
+        tooltip.handleMouseMove(e);
+        itemTooltip.handleMouseMove(e);
+      }}
+    >
       <h2>🛒 SKLEP</h2>
 
       {/* Tab Navigation */}
@@ -142,6 +151,7 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
           onClick={(): void => {
             setActiveTab('buy');
             tooltip.hideTooltip();
+            itemTooltip.hideTooltip();
           }}
         >
           🛍️ Kup
@@ -151,6 +161,7 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
           onClick={(): void => {
             setActiveTab('inventory');
             tooltip.hideTooltip();
+            itemTooltip.hideTooltip();
           }}
         >
           ⚔️ Ekwipunek ({weapons.length})
@@ -160,6 +171,7 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
           onClick={(): void => {
             setActiveTab('items');
             tooltip.hideTooltip();
+            itemTooltip.hideTooltip();
           }}
         >
           📦 Przedmioty ({items.length})
@@ -227,9 +239,14 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
                       const isUpgrade = weapons.length >= maxWeapons && existingWeapon;
                       const level = isUpgrade ? existingWeapon.level + 1 : 1;
                       tooltip.showTooltip(item.weaponType, level);
+                    } else {
+                      itemTooltip.showTooltip(itemKey);
                     }
                   }}
-                  onMouseLeave={tooltip.hideTooltip}
+                  onMouseLeave={(): void => {
+                    tooltip.hideTooltip();
+                    itemTooltip.hideTooltip();
+                  }}
                 />
               );
             })}
@@ -254,6 +271,7 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
       </button>
 
       <WeaponTooltip weaponData={tooltip.hoveredWeapon} position={tooltip.mousePosition} />
+      <ItemTooltip itemData={itemTooltip.hoveredItem} position={itemTooltip.mousePosition} />
     </div>
   );
 }

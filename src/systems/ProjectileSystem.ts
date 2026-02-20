@@ -64,7 +64,6 @@ export class ProjectileSystem {
     }
   }
 
-
   private isOffScreen({ x, y }: Vector2): boolean {
     const margin = ProjectileSystem.OFF_SCREEN_MARGIN;
     return (

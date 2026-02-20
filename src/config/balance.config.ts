@@ -116,7 +116,7 @@ export const GAME_BALANCE = {
    */
   combat: {
     /** Explosion damage falloff at edge. 0.5 = 50% damage at max radius, 100% at center. */
-    explosionFalloff: 0.5,
+    explosionFalloff: 0.2,
     /** Explosion knockback force multiplier (px/s). */ // NOT USED YET
     explosionKnockback: 300,
   },
@@ -134,7 +134,7 @@ export const GAME_BALANCE = {
       /** Attack speed multiplier per level. 1.1 = +10% faster firing per level. */
       attackSpeedPerLevel: 1.1,
       /** Explosion radius multiplier per level. 1.15 = +15% larger explosions per level. */
-      explosionPerLevel: 1.15,
+      explosionPerLevel: 1.10,
     },
   },
 

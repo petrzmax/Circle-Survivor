@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.10.1](https://github.com/petrzmax/Circle-Survivor/compare/v1.10.0...v1.10.1) (2026-02-20)
+
+
+### 🐛 Bug Fixes
+
+* make movement and effects independent from fps ([58906a6](https://github.com/petrzmax/Circle-Survivor/commit/58906a68afdf4697172c4dff7c6ca4dfea3cdd70))
+* speed display in ui ([e6f8a0c](https://github.com/petrzmax/Circle-Survivor/commit/e6f8a0cec7dc750aae7f7f726a52b25ba3127f76))
+
+
+### ♻️ Refactoring
+
+* enemy spawning system and scaling mechanics ([3895805](https://github.com/petrzmax/Circle-Survivor/commit/3895805d8bbd5f522c4c992ad7b7893b87bc8a21))
+* extract core systems from game ([574f414](https://github.com/petrzmax/Circle-Survivor/commit/574f414a733c53007ada4002f9599858ac0fa477))
+* pickup attraction system ([2b49182](https://github.com/petrzmax/Circle-Survivor/commit/2b491826cb57a9dc7aae2fa287804b8d9c72c8f8))
+* streamline audio event handling in Menu component ([c537250](https://github.com/petrzmax/Circle-Survivor/commit/c537250355b0f65a1d7a4b6f38f5e6d497160989))
+
+
+### 📦 Other Changes
+
+* **deps:** bump @types/node from 25.2.2 to 25.2.3 ([#73](https://github.com/petrzmax/Circle-Survivor/issues/73)) ([c02c87f](https://github.com/petrzmax/Circle-Survivor/commit/c02c87f22ef6c19cb84f9e11a8436a8a22e9417f))
+* **deps:** bump @typescript-eslint/parser from 8.54.0 to 8.55.0 ([#74](https://github.com/petrzmax/Circle-Survivor/issues/74)) ([38e6f69](https://github.com/petrzmax/Circle-Survivor/commit/38e6f69adf7c57c28968ad3411d3aa7352b9deff))
+* **deps:** bump jsdom from 28.0.0 to 28.1.0 ([#75](https://github.com/petrzmax/Circle-Survivor/issues/75)) ([e2ea022](https://github.com/petrzmax/Circle-Survivor/commit/e2ea02208c62abe3b073625616706cc0f302bf12))
+* **deps:** bump typescript-eslint from 8.54.0 to 8.55.0 ([#77](https://github.com/petrzmax/Circle-Survivor/issues/77)) ([8786b5e](https://github.com/petrzmax/Circle-Survivor/commit/8786b5e06c1a3a99ca0d89d5e4b2790274f3a678))
+
 ## [1.10.0](https://github.com/petrzmax/Circle-Survivor/compare/v1.9.0...v1.10.0) (2026-02-12)
 
 

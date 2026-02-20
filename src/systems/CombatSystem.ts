@@ -108,7 +108,7 @@ export class CombatSystem {
         damage *= GAME_BALANCE.boss.contactDamageMultiplier;
       }
 
-      const isDead = player.takeDamage(damage, currentTime);
+      const actualDamage = player.takeDamage(damage, currentTime);
 
       EventBus.emit('playerHit', {
         player,
@@ -116,16 +116,17 @@ export class CombatSystem {
         source: enemy,
       });
 
-      // Thorns damage - applied after player takes damage
-      if (player.thorns > 0) {
+      // Thorns damage - reflect percentage of actual damage taken
+      if (player.thorns > 0 && actualDamage > 0) {
         EventBus.emit('thornsTriggered', undefined);
-        const thornsKilled = enemy.takeDamage(player.thorns, enemy.position, player.knockback);
+        const thornsDamage = actualDamage * player.thorns;
+        const thornsKilled = enemy.takeDamage(thornsDamage, enemy.position, player.knockback);
         if (thornsKilled) {
           this.handleEnemyDeath(enemy, 'player');
         }
       }
 
-      if (isDead) {
+      if (player.isDead()) {
         EventBus.emit('playerDeath', { player, killedBy: enemy });
       }
     }
@@ -139,7 +140,7 @@ export class CombatSystem {
         continue;
       }
 
-      const isDead = player.takeDamage(projectile.damage, currentTime);
+      player.takeDamage(projectile.damage, currentTime);
       projectile.destroy();
 
       EventBus.emit('playerHit', {
@@ -148,7 +149,7 @@ export class CombatSystem {
         source: projectile,
       });
 
-      if (isDead) {
+      if (player.isDead()) {
         EventBus.emit('playerDeath', { player, killedBy: null });
       }
     }
@@ -182,9 +183,9 @@ export class CombatSystem {
       if (randomChance(player.dodge)) {
         EventBus.emit('playerDodged', undefined);
       } else {
-        const isDead = player.takeDamage(shockwave.damage, currentTime);
+        player.takeDamage(shockwave.damage, currentTime);
 
-        if (isDead) {
+        if (player.isDead()) {
           EventBus.emit('playerDeath', { player, killedBy: null });
         }
       }
@@ -219,12 +220,12 @@ export class CombatSystem {
       source: projectile.position,
     });
 
-    // Lifesteal - explicitly check > 0 for clarity
+    // Lifesteal - chance to heal 1 HP on hit
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (player && player.lifesteal > 0) {
-      // TODO nerf it, make it a chance instead of flat %
-      const healAmount = finalDamage * player.lifesteal;
-      player.heal(healAmount);
+      if (randomChance(player.lifesteal)) {
+        player.heal(1);
+      }
     }
 
     // Handle enemy death

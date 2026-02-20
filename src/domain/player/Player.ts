@@ -132,14 +132,14 @@ export class Player extends Entity implements IHealth {
 
   /**
    * Takes damage with armor reduction and dodge chance
-   * @returns true if player died
+   * @returns actual damage dealt (0 if blocked by godMode or invincibility)
    */
-  public takeDamage(amount: number, currentTime: number): boolean {
+  public takeDamage(amount: number, currentTime: number): number {
     // God mode - no damage
-    if (this.godMode) return false;
+    if (this.godMode) return 0;
 
     // Check invincibility
-    if (currentTime < this.invincibleUntil) return false;
+    if (currentTime < this.invincibleUntil) return 0;
 
     // Note: Dodge is checked in Game.ts before calling this method
 
@@ -150,7 +150,7 @@ export class Player extends Entity implements IHealth {
     this.hp = Math.max(0, this.hp - finalDamage);
     this.invincibleUntil = currentTime + this.invincibilityDuration;
 
-    return this.hp <= 0;
+    return finalDamage;
   }
 
   /**

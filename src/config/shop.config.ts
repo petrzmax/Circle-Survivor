@@ -222,10 +222,10 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   thornMail: {
     type: 'item',
     name: 'Kolczuga Cierni',
-    description: 'Odbija 5 obrażeń',
+    description: 'Odbija 5% otrzymanych obrażeń',
     price: 90,
     emoji: '🌵',
-    effect: { thorns: 5 },
+    effect: { thorns: 0.05 },
   },
   heartContainer: {
     type: 'item',
@@ -272,10 +272,10 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   vampireFang: {
     type: 'item',
     name: 'Kieł Wampira',
-    description: '+3% kradzieży życia',
+    description: '5% szansy na kradzież 1 HP',
     price: 110,
     emoji: '🦷',
-    effect: { lifesteal: 0.03 },
+    effect: { lifesteal: 0.05 },
   },
   coldWar: {
     type: 'item',
@@ -405,11 +405,11 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   kielichAlicji: {
     type: 'item',
     name: 'Kielich Alicji',
-    description: '+5% lifesteal, +30 max HP, regen +0.5/s',
+    description: '10% szansy na kradzież 1 HP, +30 max HP, regen +0.5/s',
     price: 280,
     emoji: '🏆',
     effect: {
-      lifesteal: 0.05,
+      lifesteal: 0.10,
       maxHp: 30,
       regen: 0.5,
     },
@@ -470,13 +470,13 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
   boarHoof: {
     type: 'item',
     name: 'Kopyto Prawdziwego Dzika',
-    description: 'DZIK MODE! +15% speed, +15% DMG, +10 thorns!',
+    description: 'DZIK MODE! +15% speed, +15% DMG, +10% odbicia obrażeń!',
     price: 260,
     emoji: '🐗',
     effect: {
       speed: 36,
       damageMultiplier: 0.15,
-      thorns: 10,
+      thorns: 0.10,
     },
   },
 } as const;

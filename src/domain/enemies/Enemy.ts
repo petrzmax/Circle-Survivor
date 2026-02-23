@@ -2,7 +2,7 @@ import { GAME_BALANCE } from '@/config';
 import { Entity } from '@/entities';
 import { IHealth } from '@/types/components';
 import { EnemyType } from '@/types/enums';
-import { clamp, type CanvasBounds, randomElement, Vector2 } from '@/utils';
+import { clamp, randomElement, randomInt, randomRange, Vector2, type CanvasBounds } from '@/utils';
 import { distance, TWO_PI } from '@/utils/math';
 import { ENEMY_TYPES } from './config';
 import { generateBossName } from './name';
@@ -70,7 +70,7 @@ export class Enemy extends Entity implements IHealth {
   public bulletSpeed: number;
   public bulletDamage: number;
   public attackPatterns: AttackPattern[];
-  public lastFireTime: number = 0;
+  private nextFireTime: number = 0;
 
   // ============ Movement State ============
 
@@ -249,9 +249,10 @@ export class Enemy extends Entity implements IHealth {
    */
   public tryAttack(target: Vector2, currentTime: number): AttackResult {
     if (!this.canShoot) return null;
-    if (currentTime - this.lastFireTime < this.fireRate) return null;
+    // TODO rewrite to timers, which stop when game stops
+    if (currentTime < this.nextFireTime) return null;
 
-    this.lastFireTime = currentTime;
+    this.nextFireTime = currentTime + this.getRandomizedFireDelay();
     const pattern = randomElement(this.attackPatterns);
 
     const dx = target.x - this.position.x;
@@ -264,8 +265,8 @@ export class Enemy extends Entity implements IHealth {
 
     switch (pattern) {
       case 'spread': {
-        // 60 degree spread of 5 projectiles
-        return this.createSpreadProjectiles(baseAngle, 5, Math.PI / 3, 'spread');
+        // 60 degree spread of 4 - 6 projectiles
+        return this.createSpreadProjectiles(baseAngle, randomInt(4, 6), Math.PI / 3, 'spread');
       }
 
       case 'shockwave':
@@ -284,28 +285,21 @@ export class Enemy extends Entity implements IHealth {
       }
 
       case 'around': {
-        // 360 degree spread of 26 projectiles
-        return this.createSpreadProjectiles(baseAngle, 26, TWO_PI, 'around');
+        // 360 degree spread of 23 - 26 projectiles
+        return this.createSpreadProjectiles(baseAngle, randomInt(23, 26), TWO_PI, 'around');
       }
 
       case 'single':
-      default: {
-        return {
-          type: 'bullets',
-          pattern: pattern ?? 'single',
-          bullets: [
-            {
-              x: this.position.x + (dx / dist) * this.radius,
-              y: this.position.y + (dy / dist) * this.radius,
-              vx: (dx / dist) * this.bulletSpeed,
-              vy: (dy / dist) * this.bulletSpeed,
-              damage: this.bulletDamage,
-              color: this.color,
-            },
-          ],
-        };
-      }
+      default:
+        return this.createSpreadProjectiles(baseAngle, 1, 0, pattern ?? 'single');
     }
+  }
+
+  /** Returns fire rate with ±30% random deviation */
+  private getRandomizedFireDelay(): number {
+    const deviation = this.fireRate * 0.3;
+    // TODO maybe another method for handling random deviation?
+    return randomRange(this.fireRate - deviation, this.fireRate + deviation);
   }
 
   private createSpreadProjectiles(
@@ -316,14 +310,19 @@ export class Enemy extends Entity implements IHealth {
   ): AttackResult {
     const bullets: EnemyBulletData[] = [];
 
+    const damagePerBullet = Math.max(this.bulletDamage / spreadCount, this.bulletDamage * 0.6);
+
     for (let i = 0; i < spreadCount; i++) {
-      const angle = baseAngle - spreadAngle / 2 + (spreadAngle / (spreadCount - 1)) * i;
+      const angle =
+        spreadCount === 1
+          ? baseAngle
+          : baseAngle - spreadAngle / 2 + (spreadAngle / (spreadCount - 1)) * i;
       bullets.push({
         x: this.position.x + Math.cos(angle) * this.radius,
         y: this.position.y + Math.sin(angle) * this.radius,
         vx: Math.cos(angle) * this.bulletSpeed,
         vy: Math.sin(angle) * this.bulletSpeed,
-        damage: this.bulletDamage * 0.6,
+        damage: damagePerBullet,
         color: this.color,
       });
     }

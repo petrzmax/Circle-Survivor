@@ -15,4 +15,7 @@ window.addEventListener('load', () => {
 
   // Initialize game via DI container
   container.resolve(Game);
+
+  // Remove loading screen once game is ready
+  document.getElementById('loading-screen')?.remove();
 });

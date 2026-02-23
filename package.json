@@ -42,7 +42,7 @@
     "vitest": "^4.0.15"
   },
   "dependencies": {
-    "preact": "^10.28.3",
+    "preact": "^10.28.4",
     "react-hot-toast": "^2.6.0",
     "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.10.0"

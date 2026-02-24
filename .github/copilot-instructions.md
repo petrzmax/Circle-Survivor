@@ -9,7 +9,7 @@ Key Principles:
 - Use descriptive variable names with auxiliary verbs (e.g., isMoving, hasFired).
 - Structure files logically: game loop, renderer, entities, input handling, utils, and types.
 - Write all comments in the code in English. Comment only the non-obvious, non-self-explanatory parts of the code.
-- Prefere small methods with self-descriptive names instead of huge methods with comments.
+- Prefer small methods with self-descriptive names instead of huge methods with comments.
 
 Project Structure and Organization:
 

@@ -239,7 +239,6 @@ export class CollisionSystem {
     return collisions;
   }
 
-
   /**
    * Check if point is inside any enemy
    */

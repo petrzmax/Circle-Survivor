@@ -118,7 +118,7 @@ export class EffectsSystem {
   }
 
   private connectToEventBus(): void {
-    EventBus.on('explosionTriggered', (data) => {
+    EventBus.on('explosionProcessed', (data) => {
       this.createExplosion(data.position, data.radius, data.visualEffect);
     });
 

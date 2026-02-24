@@ -7,7 +7,7 @@
 
 import { SOUND_DEFINITIONS } from '@/domain/audio/config';
 import { EventBus } from '@/events/EventBus';
-import { VisualEffect } from '@/types';
+import { VisualEffect, PickupType } from '@/types';
 import { randomRange } from '@/utils';
 import { singleton } from 'tsyringe';
 import { SoundStep } from './type';
@@ -175,19 +175,13 @@ export class AudioSystem {
    */
   private connectToEventBus(): void {
     // Pickups
-    EventBus.on('goldCollected', () => {
-      this.play('collectGold');
-    });
-    EventBus.on('healthCollected', () => {
-      this.play('collectHealth');
+    EventBus.on('pickupCollected', ({ type }) => {
+      this.play(type === PickupType.GOLD ? 'collectGold' : 'collectHealth');
     });
 
-    // Combat
-    EventBus.on('playerHit', () => {
-      this.play('playerHit');
-    });
-    EventBus.on('enemyDamaged', () => {
-      this.play('enemyHit');
+    // Combat — unified damage event
+    EventBus.on('entityDamaged', ({ isPlayer }) => {
+      this.play(isPlayer ? 'playerHit' : 'enemyHit');
     });
     EventBus.on('enemyDeath', ({ enemy }) => {
       this.play('enemyDeath');
@@ -243,8 +237,7 @@ export class AudioSystem {
     });
 
     // Explosions
-    EventBus.on('explosionTriggered', (data) => {
-      // TODO change enum string values to match sound names
+    EventBus.on('explosionProcessed', (data) => {
       switch (data.visualEffect) {
         case VisualEffect.NUKE:
           this.play('nukeExplosion');

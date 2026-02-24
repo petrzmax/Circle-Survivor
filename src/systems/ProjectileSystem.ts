@@ -4,11 +4,12 @@
  */
 
 import { ConfigService } from '@/config/ConfigService';
+import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
 import { ProjectileType } from '@/types/enums';
 import { type CanvasBounds, type Vector2 } from '@/utils';
+import { ExplosionOrigin } from './damage.types';
 import { singleton } from 'tsyringe';
-import { CombatSystem } from './CombatSystem';
 
 @singleton()
 export class ProjectileSystem {
@@ -19,7 +20,6 @@ export class ProjectileSystem {
 
   public constructor(
     private entityManager: EntityManager,
-    private combatSystem: CombatSystem,
     configService: ConfigService,
   ) {
     this.canvasBounds = configService.getCanvasBounds();
@@ -39,18 +39,21 @@ export class ProjectileSystem {
       if (!projectile.isActive) {
         if (projectile.shouldExplodeOnExpire && projectile.isExplosive() && projectile.explosive) {
           const expRadius = projectile.explosive.explosionRadius * player.explosionRadius;
-          const isBanana =
-            projectile.type === ProjectileType.BANANA ||
-            projectile.type === ProjectileType.MINI_BANANA;
-          const isMini = projectile.type === ProjectileType.MINI_BANANA;
-          this.combatSystem.queueExplosion({
+          // TODO - WHAT A MONSTER!! Refactor this!
+          const origin =
+            projectile.type === ProjectileType.MINI_BANANA
+              ? ExplosionOrigin.MINI_BANANA
+              : projectile.type === ProjectileType.BANANA
+                ? ExplosionOrigin.BANANA
+                : ExplosionOrigin.STANDARD;
+          // Pre-bake damage with player multiplier at queue time
+          EventBus.emit('queueExplosion', {
             position: projectile.position,
             radius: expRadius,
-            damage: projectile.explosive.explosionDamage,
+            damage: projectile.explosive.explosionDamage * player.damageMultiplier,
             visualEffect: projectile.explosive.visualEffect,
             sourceId: projectile.id,
-            isBanana,
-            isMini,
+            origin,
           });
         }
         this.entityManager.removeProjectile(projectile.id);

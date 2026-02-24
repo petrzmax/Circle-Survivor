@@ -2,7 +2,8 @@ import { Enemy } from '@/domain/enemies';
 import { AttackPattern, ShockwaveAttackResult } from '@/domain/enemies/type';
 import { WeaponType } from '@/domain/weapons';
 import { Pickup, Player, Projectile } from '@/entities';
-import { CharacterType, GameState, VisualEffect } from '@/types';
+import { DamageSource, ExplosionEvent, KillSource } from '@/systems/damage.types';
+import { CharacterType, GameState, PickupType } from '@/types';
 import { Vector2 } from '@/utils';
 
 /**
@@ -10,12 +11,21 @@ import { Vector2 } from '@/utils';
  */
 export interface GameEvents {
   // Combat events
-  enemyDeath: { enemy: Enemy; killer: 'player' | 'explosion' };
-  enemyDamaged: { enemy: Enemy; damage: number; source: Vector2 };
-  playerHit: { player: Player; damage: number; source: Enemy | Projectile | 'explosion' };
+  enemyDeath: { enemy: Enemy; killer: KillSource };
+  /** Unified damage event emitted by DamageSystem for any entity */
+  entityDamaged: {
+    entityId: number;
+    damage: number;
+    source: Vector2;
+    damageSource: DamageSource;
+    isPlayer: boolean;
+  };
   playerDeath: { player: Player; killedBy: Enemy | null };
   playerDodged: void;
   thornsTriggered: void;
+
+  // Explosion queue event — any system can emit to queue an explosion
+  queueExplosion: ExplosionEvent;
 
   // Weapon events
   weaponFired: { weaponType: WeaponType };
@@ -23,18 +33,13 @@ export interface GameEvents {
   // Projectile events
   projectileHit: { projectile: Projectile; target: Enemy };
   projectileExpired: { projectile: Projectile };
-  explosionTriggered: {
-    position: Vector2;
-    radius: number;
-    damage: number;
-    visualEffect: VisualEffect;
-  };
+  /** Emitted after an explosion is fully processed */
+  explosionProcessed: ExplosionEvent;
   shockwaveTriggered: ShockwaveAttackResult;
   enemyFired: { isBoss: boolean; pattern: AttackPattern };
 
   // Pickup events
-  goldCollected: { amount: number; position: Vector2 };
-  healthCollected: { amount: number; position: Vector2 };
+  pickupCollected: { type: PickupType; amount: number; position: Vector2 };
   pickupSpawned: { pickup: Pickup };
   pickupExpired: { pickup: Pickup };
 
@@ -63,12 +68,8 @@ export interface GameEvents {
   // UI events
   countdownTick: { seconds: number };
 
-  // TODO use it as trigger only, get data from systems, and managers or remove
-  hudUpdate: {
-    waveNumber: number;
-    timeRemaining: number;
-    isWaveActive: boolean;
-  };
+  // HUD re-render trigger
+  hudUpdate: void;
 
   // State transition requests (triggers for StateManager)
   characterSelected: { characterType: CharacterType };

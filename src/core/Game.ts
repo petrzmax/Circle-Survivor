@@ -5,8 +5,11 @@ import { Player } from '@/domain/player/Player';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager, StateManager } from '@/managers';
 import { CollisionSystem } from '@/systems/CollisionSystem';
-import { CombatSystem } from '@/systems/CombatSystem';
+import { CollisionResponseSystem } from '@/systems/CollisionResponseSystem';
+import { DeathSystem } from '@/systems/DeathSystem';
 import { EffectsSystem } from '@/systems/EffectsSystem';
+import { ExplosionSystem } from '@/systems/ExplosionSystem';
+import { PickupCollisionSystem } from '@/systems/PickupCollisionSystem';
 import { EnemySystem } from '@/systems/EnemySystem';
 import { PickupAttractionSystem } from '@/systems/PickupAttractionSystem';
 import { PickupSystem } from '@/systems/PickupSystem';
@@ -44,11 +47,14 @@ export class Game {
     enemySpawnSystem: EnemySpawnSystem,
     private pickupAttractionSystem: PickupAttractionSystem,
     private collisionSystem: CollisionSystem,
-    private combatSystem: CombatSystem,
+    private collisionResponseSystem: CollisionResponseSystem,
     private configService: ConfigService,
+    _deathSystem: DeathSystem,
     private effectsSystem: EffectsSystem,
     private enemySystem: EnemySystem,
     private entityManager: EntityManager,
+    private explosionSystem: ExplosionSystem,
+    private pickupCollisionSystem: PickupCollisionSystem,
     private pickupSystem: PickupSystem,
     private playerSystem: PlayerSystem,
     private projectileSystem: ProjectileSystem,
@@ -300,13 +306,6 @@ export class Game {
       return;
     }
 
-    // Update CombatSystem runtime config with current player stats
-    this.combatSystem.updateRuntimeConfig({
-      damageMultiplier: player.damageMultiplier,
-      explosionRadius: player.explosionRadius,
-      knockback: player.knockback,
-    });
-
     // Fire weapons
     this.weaponManager.fireWeapons(currentTime, player);
 
@@ -318,9 +317,17 @@ export class Game {
     // Magnet attraction
     this.pickupAttractionSystem.update(deltaTime);
 
-    // === Collision Detection & Combat Processing ===
+    // === Collision Detection & Response ===
     const collisions = this.collisionSystem.checkAll();
-    this.combatSystem.processCollisions(collisions, currentTime);
+
+    // 1. Route collisions → DamageSystem (registers deaths but does NOT process them yet)
+    this.collisionResponseSystem.processCollisions(collisions, currentTime);
+
+    // 2. Pickups BEFORE death check — health pickups can save the player
+    this.pickupCollisionSystem.processPickups(collisions.pickupCollisions);
+
+    // 3. Death ↔ Explosion chain resolution loop
+    this.explosionSystem.resolveChain(currentTime);
 
     // Update visual effects (particles, explosions, shockwaves)
     this.effectsSystem.update(currentTime, deltaTime);
@@ -345,12 +352,7 @@ export class Game {
   // ============ HUD ============
 
   private updateHUD(): void {
-    // Emit HUD update as trigger — player data read directly from EntityManager by hooks
-    EventBus.emit('hudUpdate', {
-      waveNumber: this.waveManager.waveNumber,
-      timeRemaining: this.waveManager.timeRemaining,
-      isWaveActive: this.waveManager.isWaveActive,
-    });
+    EventBus.emit('hudUpdate', undefined);
   }
 
   /**

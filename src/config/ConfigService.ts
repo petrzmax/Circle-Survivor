@@ -21,6 +21,14 @@ export class ConfigService {
     return GAME_BALANCE.enemy;
   }
 
+  public getPlayerBalance(): GameBalanceConfig['player'] {
+    return GAME_BALANCE.player;
+  }
+
+  public getWeaponsConfig(): GameBalanceConfig['weapons'] {
+    return GAME_BALANCE.weapons;
+  }
+
   public getWeaponsUpgrade(): WeaponUpgradeConfig {
     return GAME_BALANCE.weapons.upgrade;
   }

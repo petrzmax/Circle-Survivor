@@ -1,6 +1,7 @@
 import { singleton } from 'tsyringe';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers';
+import { PickupType } from '@/types/enums';
 
 @singleton()
 export class RewardSystem {
@@ -43,16 +44,19 @@ export class RewardSystem {
       player.gold += sellPrice;
     });
 
-    EventBus.on('goldCollected', ({ amount }) => {
-      this.addGold(amount);
+    EventBus.on('pickupCollected', ({ type, amount }) => {
+      switch (type) {
+        case PickupType.GOLD:
+          this.addGold(amount);
+          break;
+        case PickupType.HEALTH:
+          this.addHealth(amount);
+          break;
+      }
     });
 
     EventBus.on('enemyDeath', ({ enemy }) => {
       this.addXp(enemy.xpValue);
-    });
-
-    EventBus.on('healthCollected', ({ amount }) => {
-      this.addHealth(amount);
     });
   }
 }

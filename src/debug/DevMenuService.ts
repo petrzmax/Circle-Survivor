@@ -6,13 +6,12 @@ import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
 import { RenderSystem } from '@/systems/RenderSystem';
 import { WaveManager } from '@/systems/WaveManager';
-import { EnemyType } from '@/types/enums';
+import { EnemyType, PickupType } from '@/types/enums';
 import { singleton } from 'tsyringe';
 
 /**
  * Player state snapshot for DevMenu display
  */
-// TODO needed here?
 export interface PlayerState {
   hp: number;
   maxHp: number;
@@ -104,15 +103,12 @@ export class DevMenuService {
   }
 
   public spawnEnemy(type: EnemyType, count: number = 1): void {
-    for (let i = 0; i < count; i++) {
-      // TODO why not use spawn batch? so batch would get type and amount
-      this.enemySpawnSystem.spawn(type);
-    }
+    this.enemySpawnSystem.spawnBatch(Array.from({ length: count }, () => type));
     console.log(`[DevMenu] Spawned ${count}x ${type}`);
   }
 
   public addGold(amount: number): void {
-    EventBus.emit('goldCollected', { amount, position: { x: 0, y: 0 } });
+    EventBus.emit('pickupCollected', { type: PickupType.GOLD, amount, position: { x: 0, y: 0 } });
     console.log(`[DevMenu] Added ${amount} gold`);
   }
 

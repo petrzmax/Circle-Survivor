@@ -3,6 +3,9 @@
  * Updates and renders UI elements
  */
 
+import { container } from 'tsyringe';
+import { CombatMath } from '@/utils/combat-math';
+
 // ============ Types ============
 
 export interface HUDPlayer {
@@ -93,8 +96,8 @@ export const HUD = {
    * Update stats panel display
    */
   updateStatsPanel(player: HUDPlayer): void {
-    // Armor uses formula: reduction = armor / (armor + 100)
-    const armorReduction = player.armor / (player.armor + 100);
+    const combatMath = container.resolve(CombatMath);
+    const armorReduction = combatMath.armorReduction(player.armor);
 
     const statArmor = document.getElementById('stat-armor');
     const statDamage = document.getElementById('stat-damage');

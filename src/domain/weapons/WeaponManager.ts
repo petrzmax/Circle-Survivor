@@ -231,7 +231,7 @@ export class WeaponManager {
     const weapon = player.weapons[weaponIndex];
     if (!weapon) return false;
 
-    const maxLevel = this.configService.getGameBalance().weapons.maxLevel;
+    const maxLevel = this.configService.getWeaponsConfig().maxLevel;
     if (weapon.level >= maxLevel) return false;
 
     // Check if there's at least one other weapon with same type and level

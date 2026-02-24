@@ -33,7 +33,6 @@ export enum VisualEffect {
   STANDARD = 'standard',
   NUKE = 'nuke',
   HOLY = 'holy',
-  FIRE = 'fire',
   BANANA = 'banana',
 }
 

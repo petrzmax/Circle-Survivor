@@ -1,9 +1,8 @@
-import { GAME_BALANCE } from '@/config';
 import { Entity } from '@/entities';
 import { IHealth } from '@/types/components';
 import { EnemyType } from '@/types/enums';
 import { clamp, randomElement, randomInt, randomRange, Vector2, type CanvasBounds } from '@/utils';
-import { distance, TWO_PI } from '@/utils/math';
+import { TWO_PI } from '@/utils/math';
 import { ENEMY_TYPES } from './config';
 import { generateBossName } from './name';
 import {
@@ -137,32 +136,6 @@ export class Enemy extends Entity implements IHealth {
   }
 
   // ============ Health Interface ============
-
-  /**
-   * Takes damage and applies knockback
-   * @returns true if enemy died
-   */
-  public takeDamage(amount: number, source: Vector2, knockbackMultiplier: number = 1): boolean {
-    this.hp -= amount;
-
-    // Apply knockback
-    const knockbackStrength = this.isBoss
-      ? GAME_BALANCE.boss.knockbackWeight
-      : GAME_BALANCE.enemy.knockbackWeight;
-
-    const dist = distance(this.position, source);
-    const force = knockbackStrength * knockbackMultiplier;
-
-    const dx = this.position.x - source.x;
-    const dy = this.position.y - source.y;
-
-    if (dist > 0) {
-      this.knockbackX = (dx / dist) * force;
-      this.knockbackY = (dy / dist) * force;
-    }
-
-    return this.hp <= 0;
-  }
 
   /**
    * Heals the enemy

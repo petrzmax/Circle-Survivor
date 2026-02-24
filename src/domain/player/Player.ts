@@ -6,6 +6,7 @@
 import { CHARACTER_TYPES, CharacterConfig, GAME_BALANCE } from '@/config';
 import type { WeaponInstance } from '@/domain/weapons/type';
 import { WeaponType } from '@/domain/weapons/type';
+import { IDamageable } from '@/systems/damage.types';
 import { IHealth } from '@/types/components';
 import { CharacterType } from '@/types/enums';
 import { clamp, type CanvasBounds, Vector2 } from '@/utils';
@@ -18,7 +19,7 @@ import { WEAPON_TYPES } from '../weapons';
  * Player entity
  * Uses composition for weapons and items.
  */
-export class Player extends Entity implements IHealth {
+export class Player extends Entity implements IHealth, IDamageable {
   /** Player size (square) */
   public width: number = 30;
   public height: number = 30;
@@ -63,6 +64,10 @@ export class Player extends Entity implements IHealth {
   public projectileCount: number = 0;
   public pierce: number = 0;
   public attackRange: number = 1;
+
+  // Knockback velocity
+  public knockbackX: number = 0;
+  public knockbackY: number = 0;
 
   // Utility
   public luck: number = 0;
@@ -133,29 +138,6 @@ export class Player extends Entity implements IHealth {
   }
 
   // ============ Health Interface ============
-
-  /**
-   * Takes damage with armor reduction and dodge chance
-   * @returns actual damage dealt (0 if blocked by godMode or invincibility)
-   */
-  public takeDamage(amount: number, currentTime: number): number {
-    // God mode - no damage
-    if (this.godMode) return 0;
-
-    // Check invincibility
-    if (currentTime < this.invincibleUntil) return 0;
-
-    // Note: Dodge is checked in Game.ts before calling this method
-
-    // Armor reduction (diminishing returns)
-    const reduction = this.armor / (this.armor + GAME_BALANCE.player.armorDiminishingFactor);
-    const finalDamage = amount * (1 - reduction);
-
-    this.hp = Math.max(0, this.hp - finalDamage);
-    this.invincibleUntil = currentTime + this.invincibilityDuration;
-
-    return finalDamage;
-  }
 
   /**
    * Heals the player

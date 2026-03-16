@@ -1,5 +1,45 @@
 # Changelog
 
+## [2.0.0](https://github.com/petrzmax/Circle-Survivor/compare/v1.11.0...v2.0.0) (2026-03-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* migrate to Koota ECS
+
+### ✨ Features
+
+* add enemy-enemy collision detection and separation force handling ([93dad5e](https://github.com/petrzmax/Circle-Survivor/commit/93dad5e6b6e861973595bf3ecedd4a1a970e7da1))
+* add simple loading screen ([cf99d64](https://github.com/petrzmax/Circle-Survivor/commit/cf99d64b14e754576efaa27e60a8ba8dcb2ba87a))
+* add touch support with virtual joystick and fullscreen toggle for mobile devices ([d023ba9](https://github.com/petrzmax/Circle-Survivor/commit/d023ba94cfcfdab895f0f051f2cd2004322a9ac2))
+* implement physics system for force-based movement and friction decay ([0e35477](https://github.com/petrzmax/Circle-Survivor/commit/0e35477db8d12e6a51b71858d95595cc6823ed29))
+* make boss attacks less predictable ([9f083fa](https://github.com/petrzmax/Circle-Survivor/commit/9f083fac2ce3ac09134337450862b13725aba00e))
+* migrate to Koota ECS ([04510e9](https://github.com/petrzmax/Circle-Survivor/commit/04510e9908b4cf2997bd156e130df66b7adb4cee))
+
+
+### ♻️ Refactoring
+
+* split combat system into smaller systems ([91010a8](https://github.com/petrzmax/Circle-Survivor/commit/91010a884f4aed35b13f57381f9eb65fc54bd5c6))
+
+
+### 📦 Other Changes
+
+* add guideline to avoid using abbreviations for field names ([3a2469f](https://github.com/petrzmax/Circle-Survivor/commit/3a2469fc5644c3b9450bfbb8198811cc1c3d992d))
+* **deps:** bump @preact/preset-vite from 2.10.3 to 2.10.4 ([#96](https://github.com/petrzmax/Circle-Survivor/issues/96)) ([e4f83b3](https://github.com/petrzmax/Circle-Survivor/commit/e4f83b35a44d55f3249449853f4a54144d721610))
+* **deps:** bump @types/node from 25.2.3 to 25.3.3 ([#87](https://github.com/petrzmax/Circle-Survivor/issues/87)) ([828f0db](https://github.com/petrzmax/Circle-Survivor/commit/828f0db93c8d777e794be4af7f41683f8b0b3250))
+* **deps:** bump @types/node from 25.3.3 to 25.3.5 ([#93](https://github.com/petrzmax/Circle-Survivor/issues/93)) ([0dcae33](https://github.com/petrzmax/Circle-Survivor/commit/0dcae3392065f616f64abeb852e5a64a204ad6af))
+* **deps:** bump @typescript-eslint/eslint-plugin from 8.56.0 to 8.56.1 ([#90](https://github.com/petrzmax/Circle-Survivor/issues/90)) ([c6f89de](https://github.com/petrzmax/Circle-Survivor/commit/c6f89dee03e18848b4d7acd5632bd4884db705ed))
+* **deps:** bump @typescript-eslint/parser from 8.56.0 to 8.56.1 ([#88](https://github.com/petrzmax/Circle-Survivor/issues/88)) ([c29fc36](https://github.com/petrzmax/Circle-Survivor/commit/c29fc3651cc0e54300d0d91017e39dd15daf068f))
+* **deps:** bump eslint from 9.39.2 to 10.0.3 ([#92](https://github.com/petrzmax/Circle-Survivor/issues/92)) ([9d2df0f](https://github.com/petrzmax/Circle-Survivor/commit/9d2df0f2266e09ad83b6f2865cb3f041b4896b0b))
+* **deps:** bump jsdom from 28.1.0 to 29.0.0 ([#95](https://github.com/petrzmax/Circle-Survivor/issues/95)) ([b497821](https://github.com/petrzmax/Circle-Survivor/commit/b497821450877ae3909d64c5c591bfd41584d6ea))
+* **deps:** bump preact from 10.28.3 to 10.28.4 ([#82](https://github.com/petrzmax/Circle-Survivor/issues/82)) ([f3e05a4](https://github.com/petrzmax/Circle-Survivor/commit/f3e05a4638975f86af6a0fdccd827bb829cc58b0))
+* **deps:** bump typescript-eslint from 8.55.0 to 8.56.0 ([#81](https://github.com/petrzmax/Circle-Survivor/issues/81)) ([674a959](https://github.com/petrzmax/Circle-Survivor/commit/674a9599cbc1549bb41bde2ed66e747049314dd5))
+* **deps:** bump typescript-eslint from 8.56.0 to 8.56.1 ([#91](https://github.com/petrzmax/Circle-Survivor/issues/91)) ([45110ce](https://github.com/petrzmax/Circle-Survivor/commit/45110ce6399dac29294b981d990356ff82e78649))
+* **deps:** bump vite from 7.3.1 to 8.0.0 ([#97](https://github.com/petrzmax/Circle-Survivor/issues/97)) ([a5cded2](https://github.com/petrzmax/Circle-Survivor/commit/a5cded2af09b7e3e22af338703fce584ae91436a))
+* **deps:** bump vitest from 4.0.18 to 4.1.0 ([#94](https://github.com/petrzmax/Circle-Survivor/issues/94)) ([f60a9d4](https://github.com/petrzmax/Circle-Survivor/commit/f60a9d41329857078a02d5ecb0696139dea19a39))
+* fix typo ([a5fbaaf](https://github.com/petrzmax/Circle-Survivor/commit/a5fbaafebf9ef56ba90c77e46fe284959049043f))
+* update copilot instructions ([39871f1](https://github.com/petrzmax/Circle-Survivor/commit/39871f116d297faa91a36f09391bc4fb70089b3f))
+
 ## [1.11.0](https://github.com/petrzmax/Circle-Survivor/compare/v1.10.1...v1.11.0) (2026-02-20)
 
 

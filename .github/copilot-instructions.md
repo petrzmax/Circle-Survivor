@@ -10,6 +10,7 @@ Key Principles:
 - Structure files logically: game loop, renderer, entities, input handling, utils, and types.
 - Write all comments in the code in English. Comment only the non-obvious, non-self-explanatory parts of the code.
 - Prefer small methods with self-descriptive names instead of huge methods with comments.
+- Avoid using abbreviations for field names etc.
 
 Project Structure and Organization:
 

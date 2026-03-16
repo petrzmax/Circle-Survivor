@@ -34,6 +34,8 @@ export interface CollisionResult {
   deployableCollisions: Array<{ deployable: Entity; enemies: Entity[] }>;
   /** Shockwaves hitting the player */
   shockwavePlayerCollisions: Shockwave[];
+  /** Enemies overlapping with other enemies */
+  enemyEnemyCollisions: Array<{ enemyA: Entity; enemyB: Entity }>;
 }
 
 @singleton()
@@ -57,6 +59,7 @@ export class CollisionSystem {
       pickupCollisions: [],
       deployableCollisions: [],
       shockwavePlayerCollisions: [],
+      enemyEnemyCollisions: [],
     };
 
     const playerEntity = this.entityManager.getPlayerEntity();
@@ -74,6 +77,7 @@ export class CollisionSystem {
     result.pickupCollisions = this.checkPickupCollisions(playerPos, playerRadius);
     result.deployableCollisions = this.checkDeployableCollisions();
     result.shockwavePlayerCollisions = this.checkShockwavePlayerCollisions(playerPos);
+    result.enemyEnemyCollisions = this.checkEnemyEnemyCollisions();
 
     return result;
   }
@@ -197,6 +201,36 @@ export class CollisionSystem {
 
       if (triggeredBy.length > 0) {
         collisions.push({ deployable, enemies: triggeredBy });
+      }
+    }
+
+    return collisions;
+  }
+
+  private checkEnemyEnemyCollisions(): Array<{ enemyA: Entity; enemyB: Entity }> {
+    const collisions: Array<{ enemyA: Entity; enemyB: Entity }> = [];
+    const enemies = this.entityManager.getActiveEnemies();
+
+    for (let i = 0; i < enemies.length; i++) {
+      const enemyA = enemies[i]!;
+      const dA = enemyA.get(EnemyData)!;
+      if (dA.phasing) continue;
+
+      const posA = enemyA.get(Position)!;
+      const radiusA = enemyA.get(Collider)!.radius;
+
+      for (let j = i + 1; j < enemies.length; j++) {
+        const enemyB = enemies[j]!;
+        const dB = enemyB.get(EnemyData)!;
+        if (dB.phasing) continue;
+
+        const posB = enemyB.get(Position)!;
+        const radiusB = enemyB.get(Collider)!.radius;
+        const combinedRadius = radiusA + radiusB;
+
+        if (distanceSquared(posA, posB) < combinedRadius * combinedRadius) {
+          collisions.push({ enemyA, enemyB });
+        }
       }
     }
 

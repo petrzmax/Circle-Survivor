@@ -46,6 +46,8 @@ export const GAME_BALANCE = {
     knockbackForce: 180,
     /** Enemy bullet radius as fraction of enemy radius. */
     bulletRadiusRatio: 0.15,
+    /** Repulsion force multiplier per pixel of overlap between enemies. */
+    separationForce: 2,
   },
 
   /**

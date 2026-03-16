@@ -7,6 +7,7 @@ import type { Entity } from 'koota';
 import { singleton } from 'tsyringe';
 import { ConfigService } from '@/config/ConfigService';
 import {
+  Collider,
   Damage,
   DeployableData,
   Explosive,
@@ -17,6 +18,9 @@ import {
   Position,
   ProjectileData,
 } from '@/ecs/traits';
+import { applyForce } from '@/ecs/utils/entity-utils';
+import { circleOverlapDepth } from '@/utils/collision';
+import { distance } from '@/utils/math';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
 import { DamageSource, getExplosionOrigin } from './damage.types';
@@ -27,6 +31,7 @@ import { DeathSystem } from './DeathSystem';
 @singleton()
 export class CollisionResponseSystem {
   private readonly bossContactDamageMultiplier: number;
+  private readonly enemySeparationForce: number;
 
   public constructor(
     private entityManager: EntityManager,
@@ -35,6 +40,7 @@ export class CollisionResponseSystem {
     configService: ConfigService,
   ) {
     this.bossContactDamageMultiplier = configService.getBossBalance().contactDamageMultiplier;
+    this.enemySeparationForce = configService.getEnemyBalance().separationForce;
   }
 
   public processCollisions(collisions: CollisionResult, currentTime: number): void {
@@ -45,6 +51,7 @@ export class CollisionResponseSystem {
     this.handleProjectileEnemyHits(playerEntity, collisions.projectileEnemyCollisions, currentTime);
     this.handleShockwaves(playerEntity, collisions.shockwavePlayerCollisions, currentTime);
     this.handleDeployables(playerEntity, collisions.deployableCollisions);
+    this.handleEnemyEnemyCollisions(collisions.enemyEnemyCollisions);
   }
 
   /** 1. Player-Enemy contact damage + thorns */
@@ -270,6 +277,39 @@ export class CollisionResponseSystem {
       targetId: enemy.id(),
       position: pPos,
     });
+  }
+
+  /** 6. Enemy-enemy overlap repulsion */
+  private handleEnemyEnemyCollisions(
+    pairs: Array<{ enemyA: Entity; enemyB: Entity }>,
+  ): void {
+    for (const { enemyA, enemyB } of pairs) {
+      const posA = enemyA.get(Position)!;
+      const posB = enemyB.get(Position)!;
+      const radiusA = enemyA.get(Collider)!.radius;
+      const radiusB = enemyB.get(Collider)!.radius;
+
+      const overlap = circleOverlapDepth({ ...posA, radius: radiusA }, { ...posB, radius: radiusB });
+      if (overlap <= 0) continue;
+
+      const dist = distance(posA, posB);
+      let dx: number;
+      let dy: number;
+
+      if (dist > 0) {
+        dx = (posB.x - posA.x) / dist;
+        dy = (posB.y - posA.y) / dist;
+      } else {
+        // Exactly overlapping — use random direction to break symmetry
+        const angle = Math.random() * Math.PI * 2;
+        dx = Math.cos(angle);
+        dy = Math.sin(angle);
+      }
+
+      const force = overlap * this.enemySeparationForce;
+      applyForce(enemyA, -dx * force, -dy * force);
+      applyForce(enemyB, dx * force, dy * force);
+    }
   }
 
   /** Find an enemy entity by its Koota entity ID */

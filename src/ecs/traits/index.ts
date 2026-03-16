@@ -8,11 +8,11 @@ export {
   Velocity,
   Collider,
   Health,
-  Knockback,
   Damage,
   Lifetime,
   Explosive,
   DropsPickup,
+  PhysicsBody,
 } from './shared';
 
 // Tag traits

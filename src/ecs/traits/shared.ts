@@ -18,9 +18,6 @@ export const Collider = trait({ radius: 0 });
 /** Health pool */
 export const Health = trait({ hp: 0, maxHp: 0 });
 
-/** Knockback force — structurally compatible with Vector2 */
-export const Knockback = trait({ x: 0, y: 0 });
-
 /** Contact/hit damage amount */
 export const Damage = trait({ amount: 0 });
 
@@ -38,3 +35,6 @@ export const Explosive = trait(() => ({
 export const DropsPickup = trait(() => ({
   goldValue: 0,
 }));
+
+/** Physics body — enables force-based movement with friction decay */
+export const PhysicsBody = trait({ mass: 1, friction: 0, forceX: 0, forceY: 0 });

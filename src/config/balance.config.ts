@@ -24,8 +24,8 @@ export const GAME_BALANCE = {
     exponentialBase: 1.04,
     /** Contact damage multiplier. Boss melee hits deal base damage × this value. */
     contactDamageMultiplier: 1.25,
-    /** Knockback weight (px/s). Lower = harder to push. Normal enemies use 180. */
-    knockbackWeight: 60,
+    /** Physics mass for bosses. Higher = harder to knock back. Normal enemies use mass 1. */
+    mass: 5,
   },
 
   /**
@@ -40,8 +40,10 @@ export const GAME_BALANCE = {
     scalingStartWave: 5,
     /** Per-wave multiplier. Applied as Math.pow(factor, wave - startWave). */
     scalingFactor: 1.04,
-    /** Knockback weight for normal enemies (px/s). Higher = easier to push back. */
-    knockbackWeight: 180,
+    /** Physics mass for normal enemies. Lower = easier to knock back. */
+    mass: 1,
+    /** Knockback force applied to enemies (px/s). */
+    knockbackForce: 180,
     /** Enemy bullet radius as fraction of enemy radius. */
     bulletRadiusRatio: 0.15,
   },
@@ -119,6 +121,8 @@ export const GAME_BALANCE = {
     explosionFalloff: 0.2,
     /** Explosion knockback force multiplier (px/s). */ // NOT USED YET
     explosionKnockback: 300,
+    /** Speed (px/s) below which a grenade is considered "landed" and should explode. */
+    grenadeStopSpeed: 35,
   },
 
   /**

@@ -16,6 +16,7 @@ import { EnemySystem } from '@/systems/EnemySystem';
 import { PickupAttractionSystem } from '@/systems/PickupAttractionSystem';
 import { PickupSystem } from '@/systems/PickupSystem';
 import { PlayerSystem } from '@/systems/PlayerSystem';
+import { PhysicsSystem } from '@/systems/PhysicsSystem';
 import { ProjectileSystem } from '@/systems/ProjectileSystem';
 import { Shop } from '@/systems/Shop';
 import { WaveManager } from '@/systems/WaveManager';
@@ -58,6 +59,7 @@ export class Game {
     private entityManager: EntityManager,
     private explosionSystem: ExplosionSystem,
     private pickupCollisionSystem: PickupCollisionSystem,
+    private physicsSystem: PhysicsSystem,
     private pickupSystem: PickupSystem,
     private playerSystem: PlayerSystem,
     private projectileSystem: ProjectileSystem,
@@ -314,6 +316,9 @@ export class Game {
 
     // Magnet attraction
     this.pickupAttractionSystem.update(deltaTime);
+
+    // Physics: force→velocity→position (knockback, grenade friction)
+    this.physicsSystem.update(deltaTime);
 
     // === Collision Detection & Response ===
     const collisions = this.collisionSystem.checkAll();

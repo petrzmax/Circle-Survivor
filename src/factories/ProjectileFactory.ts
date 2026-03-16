@@ -25,13 +25,14 @@ export function createMiniBananaConfigs(params: MiniBananaSpawnParams): Projecti
 
   const count = randomInt(4, 6);
   const baseSpeed = config.bulletSpeed;
-  const baseRange = config.explosiveRange ?? 80;
+  const baseFriction = config.friction ?? 0.09;
   const configs: ProjectileConfig[] = [];
 
   for (let i = 0; i < count; i++) {
     const angle = (TWO_PI / count) * i + randomRange(-0.25, 0.25);
     const speed = randomInt(baseSpeed * 0.75, baseSpeed * 1.25);
-    const range = randomInt(baseRange * 0.75, baseRange * 1.25);
+    // Randomize friction to vary travel distance (higher friction = shorter range)
+    const friction = baseFriction * randomRange(0.75, 1.25);
 
     configs.push({
       position: { x: position.x, y: position.y },
@@ -42,9 +43,10 @@ export function createMiniBananaConfigs(params: MiniBananaSpawnParams): Projecti
       type: ProjectileType.MINI_BANANA,
       ownerId,
       color: config.color,
-      explosiveRange: range,
+      explosiveRange: config.explosiveRange ?? 80,
       bulletSpeed: speed,
       weaponCategory: config.weaponCategory,
+      friction,
       explosive: {
         explosionRadius: (config.explosionRadius ?? 45) * explosionRadiusMultiplier,
         explosionDamage: config.damage * damageMultiplier,

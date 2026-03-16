@@ -16,6 +16,7 @@ import { singleton } from 'tsyringe';
 @singleton()
 export class ProjectileSystem {
   private readonly canvasBounds: CanvasBounds;
+  private readonly grenadeStopSpeed: number;
 
   /** Off-screen margin before destroying projectiles */
   private static readonly OFF_SCREEN_MARGIN = 50;
@@ -25,6 +26,7 @@ export class ProjectileSystem {
     configService: ConfigService,
   ) {
     this.canvasBounds = configService.getCanvasBounds();
+    this.grenadeStopSpeed = configService.getCombatConfig().grenadeStopSpeed;
   }
 
   /**
@@ -76,7 +78,8 @@ export class ProjectileSystem {
   // ============ Behavior ============
 
   /**
-   * Per-frame projectile update: lifetime, rotation, velocity, distance, grenade slowdown.
+   * Per-frame projectile update: lifetime, rotation, distance tracking.
+   * Position is handled by PhysicsSystem for all projectiles.
    */
   private updateProjectile(entity: Entity, deltaTime: number): void {
     const pd = entity.get(ProjectileData)!;
@@ -90,37 +93,17 @@ export class ProjectileSystem {
       pd.rotation += pd.rotationSpeed * deltaTime;
     }
 
-    // Apply velocity
-    const vel = entity.get(Velocity)!;
+    // Track distance traveled
     const pos = entity.get(Position)!;
-    const newX = pos.x + vel.vx * deltaTime;
-    const newY = pos.y + vel.vy * deltaTime;
-    entity.set(Position, { x: newX, y: newY });
+    pd.distanceTraveled = distance(pd.spawnPosition, { x: pos.x, y: pos.y });
 
-    // Calculate distance traveled (with grenade slowdown)
-    if (pd.weaponCategory === 'grenade' && pd.explosiveRange > 0) {
-      pd.distanceTraveled = distance(pd.spawnPosition, { x: newX, y: newY });
-
-      const progress = pd.distanceTraveled / pd.explosiveRange;
-
-      // Slowdown near target
-      if (progress > 0.7 && progress < 1) {
-        const slowdownProgress = (progress - 0.7) / 0.3;
-        const speedMultiplier = Math.max(0.1, 1 - slowdownProgress * 0.9);
-
-        const currentSpeed = Math.sqrt(vel.vx * vel.vx + vel.vy * vel.vy);
-        if (currentSpeed > 0.1) {
-          const targetSpeed = pd.baseSpeed * speedMultiplier;
-          const scale = targetSpeed / currentSpeed;
-          entity.set(Velocity, { vx: vel.vx * scale, vy: vel.vy * scale });
-        }
-      }
-
-      if (progress >= 1) {
+    // Grenade explosion: speed below threshold means grenade has "landed"
+    if (pd.weaponCategory === 'grenade') {
+      const vel = entity.get(Velocity)!;
+      const speed = Math.sqrt(vel.vx * vel.vx + vel.vy * vel.vy);
+      if (speed < this.grenadeStopSpeed) {
         pd.shouldExplodeOnExpire = true;
       }
-    } else {
-      pd.distanceTraveled = distance(pd.spawnPosition, { x: newX, y: newY });
     }
   }
 

@@ -1,7 +1,7 @@
 import { GAME_BALANCE } from '@/config/balance.config';
 import { ConfigService } from '@/config/ConfigService';
 import type { AttackPattern, AttackResult, EnemyBulletData } from '@/domain/enemies/type';
-import { Collider, EnemyData, IsBoss, Knockback, Position } from '@/ecs/traits';
+import { Collider, EnemyData, IsBoss, Position } from '@/ecs/traits';
 import { spawnProjectile } from '@/ecs/factories/entity-factories';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
@@ -30,7 +30,7 @@ export class EnemySystem {
   }
 
   /**
-   * Update all enemies: knockback decay, zigzag, movement, boss shooting.
+   * Update all enemies: zigzag, movement, boss shooting.
    */
   public update(deltaTime: number, currentTime: number): void {
     const playerEntity = this.entityManager.getPlayerEntity();
@@ -82,19 +82,9 @@ export class EnemySystem {
   // ============ Behaviors ============
 
   /**
-   * Per-frame enemy update: knockback decay & zigzag timer.
+   * Per-frame enemy update: zigzag timer.
    */
   private updateEnemy(entity: Entity, deltaTime: number): void {
-    // Knockback decay (time-based exponential)
-    const knockbackDecay = Math.pow(0.8, deltaTime * 60);
-    const kb = entity.get(Knockback);
-    if (kb) {
-      entity.set(Knockback, {
-        x: kb.x * knockbackDecay,
-        y: kb.y * knockbackDecay,
-      });
-    }
-
     // Zigzag timer update
     const d = entity.get(EnemyData)!;
     if (d.zigzag) {
@@ -107,7 +97,8 @@ export class EnemySystem {
   }
 
   /**
-   * Move enemy towards target with zigzag & knockback, clamped to arena bounds.
+   * Move enemy towards target with zigzag, clamped to arena bounds.
+   * Knockback displacement is handled by PhysicsSystem via Velocity.
    */
   private moveEnemyTowardsTarget(
     entity: Entity,
@@ -133,9 +124,8 @@ export class EnemySystem {
         moveY += (dx / dist) * d.speed * 0.8 * d.zigzagDir * deltaTime;
       }
 
-      const kb = entity.get(Knockback);
-      newX += moveX + (kb?.x ?? 0) * deltaTime;
-      newY += moveY + (kb?.y ?? 0) * deltaTime;
+      newX += moveX;
+      newY += moveY;
     }
 
     const r = entity.get(Collider)!.radius;

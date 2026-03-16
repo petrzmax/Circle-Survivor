@@ -191,6 +191,7 @@ export class WeaponManager {
         explosiveRange: config.explosiveRange,
         bulletSpeed: speed,
         rotationSpeed: config.rotationSpeed,
+        friction: config.friction,
         vx: velocityVector.x,
         vy: velocityVector.y,
       };

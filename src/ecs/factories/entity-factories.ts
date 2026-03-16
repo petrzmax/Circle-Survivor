@@ -31,8 +31,8 @@ import {
   IsPlayer,
   IsPlayerOwned,
   IsProjectile,
-  Knockback,
   Lifetime,
+  PhysicsBody,
   PickupData,
   PlayerCharacter,
   PlayerStats,
@@ -51,6 +51,7 @@ export function spawnProjectile(config: ProjectileConfig): Entity {
   return world.spawn(
     IsProjectile,
     ...(isPlayerProjectile ? [IsPlayerOwned] : []),
+    PhysicsBody({ mass: 1, friction: config.friction ?? 0, forceX: 0, forceY: 0 }),
     Position({ x: config.position.x, y: config.position.y }),
     Velocity({ vx: config.vx ?? 0, vy: config.vy ?? 0 }),
     Collider({ radius: config.radius }),
@@ -157,7 +158,7 @@ export function spawnEnemy(entityConfig: EnemyEntityConfig): Entity {
     Velocity({ vx: 0, vy: 0 }),
     Collider({ radius }),
     Health({ hp, maxHp: hp }),
-    Knockback({ x: 0, y: 0 }),
+    PhysicsBody({ mass: config.mass ?? (isBoss ? GAME_BALANCE.boss.mass : GAME_BALANCE.enemy.mass), friction: 0.2, forceX: 0, forceY: 0 }),
     Damage({ amount: damage }),
     DropsPickup({
       goldValue: Math.floor(config.goldValue * scale),
@@ -211,7 +212,6 @@ export function spawnPlayer(config: PlayerConfig): Entity {
     Velocity({ vx: 0, vy: 0 }),
     Collider({ radius: 15 }),
     Health({ hp: maxHp, maxHp }),
-    Knockback({ x: 0, y: 0 }),
     PlayerCharacter({
       characterType,
       color: characterConfig.color,

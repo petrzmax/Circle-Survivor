@@ -1,17 +1,17 @@
 /**
  * DamageSystem — Single authority for all HP modifications.
  *
- * Defense-side only: armor, dodge, knockback, invincibility.
+ * Defense-side only: armor, dodge, knockback (via PhysicsBody force), invincibility.
  * Callers pre-compute final offense damage before calling damageEntity().
  *
- * Operates on raw Koota Entity — reads Health, Position, Knockback (SoA),
+ * Operates on raw Koota Entity — reads Health, Position (SoA),
  * and PlayerStats (AoS, for defense stats like armor/dodge/invincibility).
  */
 import type { Entity } from 'koota';
 import { singleton } from 'tsyringe';
 import { ConfigService } from '@/config/ConfigService';
-import { Health, IsBoss, Knockback, PlayerStats, Position } from '@/ecs/traits';
-import { healEntity } from '@/ecs/utils/entity-utils';
+import { Health, IsBoss, PlayerStats, Position } from '@/ecs/traits';
+import { applyForce, healEntity } from '@/ecs/utils/entity-utils';
 import { EventBus } from '@/events/EventBus';
 import { distance, Vector2 } from '@/utils/math';
 import { randomChance } from '@/utils/random';
@@ -20,19 +20,17 @@ import { DamageResult, DamageSource } from './damage.types';
 
 @singleton()
 export class DamageSystem {
-  private readonly enemyKnockbackWeight: number;
-  private readonly bossKnockbackWeight: number;
+  private readonly knockbackForce: number;
 
   public constructor(
     private combatMath: CombatMath,
     configService: ConfigService,
   ) {
-    this.enemyKnockbackWeight = configService.getEnemyBalance().knockbackWeight;
-    this.bossKnockbackWeight = configService.getBossBalance().knockbackWeight;
+    this.knockbackForce = configService.getEnemyBalance().knockbackForce;
   }
 
   /**
-   * Apply damage to any entity with Health, Position, Knockback traits.
+   * Apply damage to any entity with Health and Position traits.
    *
    * Flow: godMode → invincibility → dodge → armor → subtract HP → knockback → event.
    * Defense stats (armor, dodge, godMode, invincibility) are read from PlayerStats
@@ -159,26 +157,22 @@ export class DamageSystem {
   }
 
   /**
-   * Apply directional knockback away from the damage source.
+   * Apply directional knockback as a force on PhysicsBody.
    */
   private applyKnockback(
     target: Entity,
     source: Vector2,
     knockbackMultiplier: number,
-    isBoss: boolean,
+    _isBoss: boolean,
   ): void {
-    const knockbackWeight = isBoss ? this.bossKnockbackWeight : this.enemyKnockbackWeight;
     const pos = target.get(Position)!;
     const dist = distance(pos, source);
-    const force = knockbackWeight * knockbackMultiplier;
+    const force = this.knockbackForce * knockbackMultiplier;
 
     if (dist > 0) {
       const dx = pos.x - source.x;
       const dy = pos.y - source.y;
-      target.set(Knockback, {
-        x: (dx / dist) * force,
-        y: (dy / dist) * force,
-      });
+      applyForce(target, (dx / dist) * force, (dy / dist) * force);
     }
   }
 }

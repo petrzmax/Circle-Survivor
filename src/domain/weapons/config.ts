@@ -204,7 +204,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     emoji: '✝️',
     fireRate: 3000,
     damage: 150,
-    bulletSpeed: 240,
+    bulletSpeed: 360,
     bulletCount: 1,
     spread: 0,
     explosive: true,
@@ -217,13 +217,14 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     weaponCategory: WeaponCategory.GRENADE,
     explosiveRange: 275,
     projectileType: ProjectileType.HOLY_GRENADE,
+    friction: 0.02,
   },
   [WeaponType.BANANA]: {
     name: 'Banan z Worms',
     emoji: '🍌',
     fireRate: 2500,
     damage: 40,
-    bulletSpeed: 300,
+    bulletSpeed: 420,
     bulletCount: 1,
     spread: 0,
     explosive: true,
@@ -237,6 +238,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     explosiveRange: 235,
     projectileType: ProjectileType.BANANA,
     rotationSpeed: 4, // ~0.6 rotations per second
+    friction: 0.028,
   },
   [WeaponType.CROSSBOW]: {
     name: 'Kusza Przebijająca',
@@ -261,7 +263,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     emoji: '🍌',
     fireRate: 0,
     damage: 16,
-    bulletSpeed: 480,
+    bulletSpeed: 600,
     bulletCount: 1,
     spread: 0,
     explosive: true,
@@ -275,5 +277,6 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     explosiveRange: 80,
     projectileType: ProjectileType.MINI_BANANA,
     rotationSpeed: 6, // ~0.8 rotations per second
+    friction: 0.09,
   },
 } as const;

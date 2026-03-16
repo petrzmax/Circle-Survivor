@@ -31,6 +31,7 @@ export interface WeaponConfig {
 
   // Projectile behavior
   rotationSpeed?: number; // radians per second
+  friction?: number; // velocity decay for grenade-type projectiles
 }
 
 export interface WeaponInstance {

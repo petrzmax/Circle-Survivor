@@ -3,13 +3,13 @@
  * Operate on any Koota Entity with the required traits.
  * Only shared here when ≥2 systems need the same trait operation.
  *
- * IMPORTANT: SoA traits (Position, Velocity, Health, Knockback, Damage, Lifetime, Collider)
+ * IMPORTANT: SoA traits (Position, Velocity, Health, PhysicsBody, Damage, Lifetime, Collider)
  * return COPIES from entity.get(). Always use entity.set() to persist changes.
  * AoS traits (PlayerStats, EnemyData, etc.) return live references — direct mutation works.
  */
 
 import type { Entity } from 'koota';
-import { Health, IsDead, Knockback, Position } from '@/ecs/traits';
+import { Health, IsDead, PhysicsBody } from '@/ecs/traits';
 
 /**
  * Apply damage to any entity with a Health trait.
@@ -39,22 +39,19 @@ export function fullHealEntity(entity: Entity): void {
 }
 
 /**
- * Apply knockback force to any entity with Knockback and Position traits.
- * Direction is away from source point.
+ * Accumulate force on an entity's PhysicsBody trait.
+ * Forces are additive — multiple calls per frame stack correctly.
+ * PhysicsSystem clears forces after each tick.
  */
-export function applyKnockback(entity: Entity, srcX: number, srcY: number, force: number): void {
-  const pos = entity.get(Position);
-  if (!pos) return;
-  if (!entity.has(Knockback)) return;
+export function applyForce(entity: Entity, forceX: number, forceY: number): void {
+  const body = entity.get(PhysicsBody);
+  if (!body) return;
 
-  const dx = pos.x - srcX;
-  const dy = pos.y - srcY;
-  const dist = Math.sqrt(dx * dx + dy * dy);
-  if (dist === 0) return;
-
-  entity.set(Knockback, {
-    x: (dx / dist) * force,
-    y: (dy / dist) * force,
+  entity.set(PhysicsBody, {
+    mass: body.mass,
+    friction: body.friction,
+    forceX: body.forceX + forceX,
+    forceY: body.forceY + forceY,
   });
 }
 

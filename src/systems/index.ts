@@ -14,6 +14,7 @@ export * from './InputSystem';
 export * from './PickupAttractionSystem';
 export * from './PickupCollisionSystem';
 export * from './PickupSpawnSystem';
+export * from './PhysicsSystem';
 export * from './PickupSystem';
 export * from './PlayerSystem';
 export * from './ProjectileSystem';

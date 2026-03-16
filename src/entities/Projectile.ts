@@ -48,4 +48,5 @@ export interface ProjectileConfig extends EntityConfig {
   weaponCategory?: string;
   explosiveRange?: number;
   bulletSpeed?: number;
+  friction?: number;
 }

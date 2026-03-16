@@ -3,14 +3,20 @@
  *
  * Defense-side only: armor, dodge, knockback, invincibility.
  * Callers pre-compute final offense damage before calling damageEntity().
+ *
+ * Operates on raw Koota Entity — reads Health, Position, Knockback (SoA),
+ * and PlayerStats (AoS, for defense stats like armor/dodge/invincibility).
  */
+import type { Entity } from 'koota';
 import { singleton } from 'tsyringe';
 import { ConfigService } from '@/config/ConfigService';
+import { Health, IsBoss, Knockback, PlayerStats, Position } from '@/ecs/traits';
+import { healEntity } from '@/ecs/utils/entity-utils';
 import { EventBus } from '@/events/EventBus';
 import { distance, Vector2 } from '@/utils/math';
 import { randomChance } from '@/utils/random';
-import { CombatMath, healEntity } from '@/utils/combat-math';
-import { DamageResult, DamageSource, IDamageable } from './damage.types';
+import { CombatMath } from '@/utils/combat-math';
+import { DamageResult, DamageSource } from './damage.types';
 
 @singleton()
 export class DamageSystem {
@@ -26,11 +32,13 @@ export class DamageSystem {
   }
 
   /**
-   * Apply damage to any IDamageable target.
+   * Apply damage to any entity with Health, Position, Knockback traits.
    *
    * Flow: godMode → invincibility → dodge → armor → subtract HP → knockback → event.
+   * Defense stats (armor, dodge, godMode, invincibility) are read from PlayerStats
+   * if present — enemies without PlayerStats are treated as unarmored.
    *
-   * @param target       The entity receiving damage (Player or Enemy via IDamageable)
+   * @param target       The Koota entity receiving damage
    * @param incomingDamage  Final offense-side damage (caller already applied multipliers)
    * @param currentTime  Current game time in ms (for invincibility checks)
    * @param source       Position the damage came from (for knockback direction)
@@ -39,48 +47,51 @@ export class DamageSystem {
    * @param isBoss       Whether the target is a boss (affects knockback weight)
    */
   public damageEntity(
-    target: IDamageable,
+    target: Entity,
     incomingDamage: number,
     currentTime: number,
     source: Vector2,
     damageSource: DamageSource,
     knockbackMultiplier: number = 1,
     isBoss: boolean = false,
-    isPlayer: boolean = false,
   ): DamageResult {
+    // Read defense stats from PlayerStats (only player has them)
+    const stats = target.get(PlayerStats);
+    const isPlayer = !!stats;
+
     // God mode — immune
-    if (target.godMode) {
+    if (stats?.godMode) {
       return { actualDamage: 0, isDead: false };
     }
 
     // Invincibility frames
-    if (currentTime < (target.invincibleUntil ?? 0)) {
+    if (stats && currentTime < stats.invincibleUntil) {
       return { actualDamage: 0, isDead: false };
     }
 
     // Dodge check (per-attack — each hit rolls independently)
-    if (randomChance(target.dodge ?? 0)) {
-      if (isPlayer) {
-        EventBus.emit('playerDodged', undefined);
-      }
+    if (stats && randomChance(stats.dodge)) {
+      EventBus.emit('playerDodged', undefined);
       return { actualDamage: 0, isDead: false };
     }
 
     // Armor diminishing returns
     let finalDamage = incomingDamage;
-    const armor = target.armor ?? 0;
+    const armor = stats?.armor ?? 0;
     if (armor > 0) {
       const reduction = this.combatMath.armorReduction(armor);
       finalDamage = incomingDamage * (1 - reduction);
     }
 
-    // Subtract HP
-    target.hp = Math.max(0, target.hp - finalDamage);
+    // Subtract HP (SoA — must use entity.set())
+    // Inline: needs newHp for isDead check and clamps to 0 (generic util doesn't).
+    const h = target.get(Health)!;
+    const newHp = Math.max(0, h.hp - finalDamage);
+    target.set(Health, { hp: newHp, maxHp: h.maxHp });
 
-    // Set invincibility
-    const invincibilityDuration = target.invincibilityDuration ?? 0;
-    if (invincibilityDuration > 0) {
-      target.invincibleUntil = currentTime + invincibilityDuration;
+    // Set invincibility (AoS — direct mutation OK)
+    if (stats && stats.invincibilityDuration > 0) {
+      stats.invincibleUntil = currentTime + stats.invincibilityDuration;
     }
 
     // Apply directional knockback
@@ -88,7 +99,7 @@ export class DamageSystem {
 
     // Emit typed damage event
     EventBus.emit('entityDamaged', {
-      entityId: target.id,
+      entityId: target.id(),
       damage: finalDamage,
       source,
       damageSource,
@@ -97,52 +108,52 @@ export class DamageSystem {
 
     return {
       actualDamage: finalDamage,
-      isDead: target.hp <= 0,
+      isDead: newHp <= 0,
     };
   }
 
   /**
-   * Attempt lifesteal heal on the player.
-   * Called after a successful hit on an enemy.
+   * Attempt lifesteal heal on the player entity.
    */
-  public applyLifesteal(player: IDamageable & { lifesteal: number }): void {
-    if (randomChance(player.lifesteal)) {
-      healEntity(player, 1);
+  public applyLifesteal(playerEntity: Entity): void {
+    const stats = playerEntity.get(PlayerStats);
+    if (!stats) return;
+    if (randomChance(stats.lifesteal)) {
+      healEntity(playerEntity, 1);
     }
   }
 
   /**
    * Reflect thorns damage back to the attacker.
-   * Works for all incoming damage sources that have a traceable attacker entity.
    *
-   * @param player       The player who took damage (source of thorns)
-   * @param attacker     The entity that dealt damage (receives thorns damage)
-   * @param actualDamage The actual damage the player received (after armor)
-   * @param currentTime  Current game time
-   * @param isBoss       Whether the attacker is a boss
+   * @param playerEntity  The player who took damage (source of thorns)
+   * @param attacker      The enemy entity that dealt damage (receives thorns damage)
+   * @param actualDamage  The actual damage the player received (after armor)
+   * @param currentTime   Current game time
    */
   public applyThorns(
-    player: IDamageable & { thorns: number; knockback: number },
-    attacker: IDamageable,
+    playerEntity: Entity,
+    attacker: Entity,
     actualDamage: number,
     currentTime: number,
-    isBoss: boolean = false,
   ): DamageResult {
-    if (player.thorns <= 0 || actualDamage <= 0) {
+    const stats = playerEntity.get(PlayerStats);
+    if (!stats || stats.thorns <= 0 || actualDamage <= 0) {
       return { actualDamage: 0, isDead: false };
     }
 
     EventBus.emit('thornsTriggered', undefined);
-    const thornsDamage = actualDamage * player.thorns;
+    const thornsDamage = actualDamage * stats.thorns;
+    const isBoss = attacker.has(IsBoss);
 
     // Thorns damage bypasses attacker's armor/dodge — raw damage to HP + knockback
     return this.damageEntity(
       attacker,
       thornsDamage,
       currentTime,
-      attacker.position,
+      attacker.get(Position)!,
       DamageSource.THORNS,
-      player.knockback,
+      stats.knockback,
       isBoss,
     );
   }
@@ -151,20 +162,23 @@ export class DamageSystem {
    * Apply directional knockback away from the damage source.
    */
   private applyKnockback(
-    target: IDamageable,
+    target: Entity,
     source: Vector2,
     knockbackMultiplier: number,
     isBoss: boolean,
   ): void {
     const knockbackWeight = isBoss ? this.bossKnockbackWeight : this.enemyKnockbackWeight;
-    const dist = distance(target.position, source);
+    const pos = target.get(Position)!;
+    const dist = distance(pos, source);
     const force = knockbackWeight * knockbackMultiplier;
 
     if (dist > 0) {
-      const dx = target.position.x - source.x;
-      const dy = target.position.y - source.y;
-      target.knockbackX = (dx / dist) * force;
-      target.knockbackY = (dy / dist) * force;
+      const dx = pos.x - source.x;
+      const dy = pos.y - source.y;
+      target.set(Knockback, {
+        x: (dx / dist) * force,
+        y: (dy / dist) * force,
+      });
     }
   }
 }

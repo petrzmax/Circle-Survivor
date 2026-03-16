@@ -1,10 +1,21 @@
-import { Enemy } from '@/domain/enemies';
 import { WeaponConfig, WeaponInstance, WeaponType } from '@/domain/weapons';
-import { Deployable, DeployableConfig, Player, Projectile } from '@/entities';
+import { Position, PlayerStats, WeaponInventory, ProjectileData } from '@/ecs/traits';
+import { spawnProjectile, spawnDeployable } from '@/ecs/factories/entity-factories';
+import { addWeapon, removeWeaponAt, getWeaponPosition } from '@/ecs/utils/player-utils';
+import type { ProjectileConfig } from '@/entities/Projectile';
+import type { DeployableConfig } from '@/types/common';
 import { EventBus } from '@/events';
 import { EntityManager } from '@/managers';
 import { DeployableType, ProjectileType, VisualEffect } from '@/types';
-import { copyVector, degreesToRadians, randomChance, randomRange, vectorFromAngle } from '@/utils';
+import {
+  copyVector,
+  degreesToRadians,
+  randomChance,
+  randomRange,
+  vectorFromAngle,
+  type Vector2,
+} from '@/utils';
+import type { Entity } from 'koota';
 import { singleton } from 'tsyringe';
 import toast from 'react-hot-toast';
 import { ConfigService } from '../../config/ConfigService';
@@ -23,8 +34,8 @@ export class WeaponManager {
 
   private setupEventListeners(): void {
     EventBus.on('weaponSold', ({ weaponIndex }) => {
-      const player = this.entityManager.getPlayer();
-      const removed = player.removeWeaponAt(weaponIndex);
+      const player = this.entityManager.getPlayerEntity();
+      const removed = removeWeaponAt(player, weaponIndex);
 
       if (removed) {
         toast(`💰 Sprzedano ${removed.name}`);
@@ -33,15 +44,16 @@ export class WeaponManager {
     });
 
     EventBus.on('weaponMerge', ({ weaponIndex }) => {
-      const player = this.entityManager.getPlayer();
-      const weapon = player.weapons[weaponIndex];
+      const player = this.entityManager.getPlayerEntity();
+      const inv = player.get(WeaponInventory)!;
+      const weapon = inv.weapons[weaponIndex];
       if (!weapon) return;
 
       const weaponType = weapon.type;
       const success = this.mergeWeapon(weaponIndex);
 
       if (success) {
-        const merged = player.weapons.find((w) => w.type === weaponType);
+        const merged = inv.weapons.find((w) => w.type === weaponType);
         const newLevel = merged?.level ?? 0;
         toast(`🔀 ${merged?.name ?? ''} → Poziom ${newLevel}`);
         EventBus.emit('weaponMerged', { weaponType, newLevel });
@@ -50,14 +62,17 @@ export class WeaponManager {
     });
   }
 
-  public fireWeapons(currentTime: number, player: Player): void {
-    for (let i = 0; i < player.weapons.length; i++) {
-      const weapon = player.weapons[i]!;
+  public fireWeapons(currentTime: number, playerEntity: Entity): void {
+    const inv = playerEntity.get(WeaponInventory)!;
+    const stats = playerEntity.get(PlayerStats)!;
+
+    for (let i = 0; i < inv.weapons.length; i++) {
+      const weapon = inv.weapons[i]!;
       const config = weapon.config;
 
       // Calculate fire rate with level and player multiplier
       const attackSpeedMultiplier = this.statsCalculator.getAttackSpeedMultiplier(weapon.level);
-      const fireRate = config.fireRate / attackSpeedMultiplier / player.attackSpeedMultiplier;
+      const fireRate = config.fireRate / attackSpeedMultiplier / stats.attackSpeedMultiplier;
 
       // Include fire offset for staggered shooting
       if (currentTime - weapon.lastFireTime < fireRate + weapon.fireOffset) continue;
@@ -68,30 +83,34 @@ export class WeaponManager {
       // Handle deployable weapons (mines) - they don't need a target
       if (config.deployableType === DeployableType.MINE) {
         weapon.lastFireTime = currentTime;
-        this.deployMine(config, player, weapon.level);
+        this.deployMine(config, playerEntity, weapon.level);
         continue;
       }
 
       // Get weapon position (use currentTarget for positioning only)
-      const weaponPos = player.getWeaponPosition(i, player.currentTarget);
-      const maxRange = config.range * player.attackRange;
+      const weaponPos = getWeaponPosition(playerEntity, i, stats.currentTarget);
+      const maxRange = config.range * stats.attackRange;
 
       // Find nearest enemy from weapon position within map bounds
       const canvasBounds = this.configService.getCanvasBounds();
-      let target = this.entityManager.getNearestEnemy(weaponPos, maxRange, canvasBounds);
+      let targetPos = this.entityManager.getNearestEnemyPosition(weaponPos, maxRange, canvasBounds);
 
       // Fallback to main target if within range
-      if (!target && player.currentTarget) {
-        const dx = player.currentTarget.x - weaponPos.x;
-        const dy = player.currentTarget.y - weaponPos.y;
+      if (!targetPos && stats.currentTarget) {
+        const dx = stats.currentTarget.x - weaponPos.x;
+        const dy = stats.currentTarget.y - weaponPos.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist <= maxRange) {
-          // Find the actual enemy at currentTarget position within map bounds
-          target = this.entityManager.getNearestEnemy(player.currentTarget, 50, canvasBounds);
+          // TODO move canvas bounds to entity manager (do not pass it as parameter, get from config service)
+          targetPos = this.entityManager.getNearestEnemyPosition(
+            stats.currentTarget,
+            50,
+            canvasBounds,
+          );
         }
       }
 
-      if (!target) continue;
+      if (!targetPos) continue;
 
       weapon.lastFireTime = currentTime;
 
@@ -100,38 +119,46 @@ export class WeaponManager {
       const baseDamage = config.damage * damageMultiplier;
 
       // Calculate projectile count (bulletCount is base, multishot and projectileCount are bonuses)
-      const projectileCount = config.bulletCount + weapon.multishot + player.projectileCount;
+      const projectileCount = config.bulletCount + weapon.multishot + stats.projectileCount;
 
       // Fire based on weapon type - pass target position for correct aiming
-      this.fireWeaponProjectiles(weapon, weaponPos, target, baseDamage, projectileCount, player);
+      this.fireWeaponProjectiles(
+        weapon,
+        weaponPos,
+        targetPos,
+        baseDamage,
+        projectileCount,
+        playerEntity,
+      );
     }
   }
 
   private fireWeaponProjectiles(
     weapon: WeaponInstance,
     pos: { x: number; y: number; angle: number },
-    target: Enemy,
+    targetPos: Vector2,
     damage: number,
     projectileCount: number,
-    player: Player,
+    playerEntity: Entity,
   ): void {
     const config = weapon.config;
-    // Always calculate angle to target - not using pos.angle fallback
-    const targetAngle = Math.atan2(target.position.y - pos.y, target.position.x - pos.x);
+    const stats = playerEntity.get(PlayerStats)!;
+    const playerId = playerEntity.id();
+
+    // Always calculate angle to target
+    const targetAngle = Math.atan2(targetPos.y - pos.y, targetPos.x - pos.x);
 
     // Critical hit check
-    const isCrit = randomChance(player.critChance);
-    const finalDamage = isCrit ? damage * player.critDamage : damage;
+    const isCrit = randomChance(stats.critChance);
+    const finalDamage = isCrit ? damage * stats.critDamage : damage;
 
     for (let i = 0; i < projectileCount; i++) {
       // Spread angle for multiple projectiles (spread is in degrees)
       let angle = targetAngle;
       if (projectileCount > 1) {
         const spreadRad = degreesToRadians(config.spread);
-        // Distribute bullets evenly across spread
         angle = targetAngle - spreadRad / 2 + (spreadRad / (projectileCount - 1)) * i;
       } else if (config.spread > 0) {
-        // Random spread for single bullet
         const spreadRad = randomRange(-0.5, 0.5) * degreesToRadians(config.spread);
         angle += spreadRad;
       }
@@ -139,129 +166,123 @@ export class WeaponManager {
       const speed = config.bulletSpeed;
       const velocityVector = vectorFromAngle(angle, speed);
 
-      const projectile = new Projectile({
+      const projConfig: ProjectileConfig = {
         position: { x: pos.x, y: pos.y },
-        radius: config.bulletRadius ?? 4, // Default 4 like original
+        radius: config.bulletRadius ?? 4,
         type: WEAPON_TYPES[weapon.type].projectileType ?? ProjectileType.STANDARD,
         damage: finalDamage,
-        ownerId: player.id,
+        ownerId: playerId,
         color: config.color,
-        maxDistance: config.shortRange ? (config.maxDistance ?? config.range) : 0, // 0 = infinite
+        maxDistance: config.shortRange ? (config.maxDistance ?? config.range) : 0,
         pierce: config.pierceCount
-          ? { pierceCount: config.pierceCount + player.pierce, hitEnemies: new Set() }
+          ? { pierceCount: config.pierceCount + stats.pierce, hitEnemies: new Set() }
           : undefined,
         explosive: config.explosive
           ? {
               explosionRadius:
                 (config.explosionRadius ?? 50) *
                 this.statsCalculator.getExplosionMultiplier(weapon.level) *
-                player.explosionRadius,
+                stats.explosionRadius,
               explosionDamage: finalDamage,
               visualEffect: config.explosionEffect ?? VisualEffect.STANDARD,
             }
           : undefined,
-        // Grenade properties for slowdown/explosion behavior
         weaponCategory: config.weaponCategory,
         explosiveRange: config.explosiveRange,
         bulletSpeed: speed,
-        // Projectile rotation (e.g., scythe)
         rotationSpeed: config.rotationSpeed,
-      });
+        vx: velocityVector.x,
+        vy: velocityVector.y,
+      };
 
-      projectile.setVelocityVector(velocityVector);
-      projectile.isCrit = isCrit;
-      projectile.knockbackMultiplier = config.knockbackMultiplier ?? 1;
+      const entity = spawnProjectile(projConfig);
 
-      this.entityManager.addProjectile(projectile);
+      // Set per-projectile state on ProjectileData (AoS — direct mutation)
+      const projectileData = entity.get(ProjectileData)!;
+      projectileData.isCrit = isCrit;
+      projectileData.knockbackMultiplier = config.knockbackMultiplier ?? 1;
     }
 
-    // Play weapon sound
     EventBus.emit('weaponFired', { weaponType: weapon.type });
   }
 
   /**
    * Deploy a mine at the player's position
    */
-  private deployMine(config: WeaponConfig, player: Player, level: number): void {
-    // Calculate damage with level
-    const damageMultiplier = this.statsCalculator.getDamageMultiplier(level);
-    const damage = config.damage * damageMultiplier * player.damageMultiplier;
+  private deployMine(config: WeaponConfig, playerEntity: Entity, level: number): void {
+    const stats = playerEntity.get(PlayerStats)!;
+    const pos = playerEntity.get(Position)!;
+    const playerId = playerEntity.id();
 
-    // Create deployable config
+    const damageMultiplier = this.statsCalculator.getDamageMultiplier(level);
+    const damage = config.damage * damageMultiplier * stats.damageMultiplier;
+
     const deployableConfig: DeployableConfig = {
-      position: copyVector(player.position), // Copy position so mine doesn't follow player
+      position: copyVector(pos),
       radius: config.bulletRadius ?? 12,
       type: DeployableType.MINE,
       damage: damage,
-      ownerId: player.id,
+      ownerId: playerId,
       color: config.color,
       explosionRadius:
         (config.explosionRadius ?? 70) *
         this.statsCalculator.getExplosionMultiplier(level) *
-        player.explosionRadius,
+        stats.explosionRadius,
       explosionDamage: damage,
       visualEffect: VisualEffect.STANDARD,
-      armingTime: 0.5, // 500ms arming time
+      armingTime: 0.5,
     };
 
-    const mine = new Deployable(deployableConfig);
-    this.entityManager.addDeployable(mine);
+    spawnDeployable(deployableConfig);
 
-    // Play mine deploy sound
     EventBus.emit('weaponFired', { weaponType: WeaponType.MINES });
   }
 
   public addWeapon(type: WeaponType): void {
-    const player = this.entityManager.getPlayer();
+    const player = this.entityManager.getPlayerEntity();
 
-    // Let player handle weapon creation and management
-    const added = player.addWeapon(type);
+    const added = addWeapon(player, type);
     if (!added) return;
 
-    // Recalculate fire offsets for staggered shooting
     this.recalculateFireOffsets();
   }
 
   /**
    * Check if a weapon at the given index can be merged with another weapon in inventory.
-   * Requires: same type, same level, level < maxLevel, and at least two matching weapons.
    */
   public canMergeWeapon(weaponIndex: number): boolean {
-    const player = this.entityManager.getPlayer();
-    const weapon = player.weapons[weaponIndex];
+    const inv = this.entityManager.getPlayerEntity().get(WeaponInventory)!;
+    const weapon = inv.weapons[weaponIndex];
     if (!weapon) return false;
 
     const maxLevel = this.configService.getWeaponsConfig().maxLevel;
     if (weapon.level >= maxLevel) return false;
 
-    // Check if there's at least one other weapon with same type and level
-    return player.weapons.some(
+    return inv.weapons.some(
       (w, i) => i !== weaponIndex && w.type === weapon.type && w.level === weapon.level,
     );
   }
 
   /**
    * Find the index of a valid merge partner for the weapon at the given index.
-   * Returns the index of the first matching weapon, or -1 if none found.
    */
   public getMergePartnerIndex(weaponIndex: number): number {
-    const player = this.entityManager.getPlayer();
-    const weapon = player.weapons[weaponIndex];
+    const inv = this.entityManager.getPlayerEntity().get(WeaponInventory)!;
+    const weapon = inv.weapons[weaponIndex];
     if (!weapon) return -1;
 
-    return player.weapons.findIndex(
+    return inv.weapons.findIndex(
       (w, i) => i !== weaponIndex && w.type === weapon.type && w.level === weapon.level,
     );
   }
 
   /**
    * Merge two weapons of the same type and level into one weapon of level+1.
-   * Removes the merge partner and upgrades the selected weapon.
-   * Returns true if merge was successful.
    */
   public mergeWeapon(weaponIndex: number): boolean {
-    const player = this.entityManager.getPlayer();
-    const weapon = player.weapons[weaponIndex];
+    const player = this.entityManager.getPlayerEntity();
+    const inv = player.get(WeaponInventory)!;
+    const weapon = inv.weapons[weaponIndex];
     if (!weapon) return false;
 
     if (!this.canMergeWeapon(weaponIndex)) return false;
@@ -269,50 +290,38 @@ export class WeaponManager {
     const partnerIndex = this.getMergePartnerIndex(weaponIndex);
     if (partnerIndex === -1) return false;
 
-    // Remove the partner first (if partner is after weapon, index stays valid)
-    // If partner is before weapon, the weapon index shifts down by 1
-    player.removeWeaponAt(partnerIndex);
+    removeWeaponAt(player, partnerIndex);
 
-    // Adjust weapon index if the partner was before it
     const adjustedIndex = partnerIndex < weaponIndex ? weaponIndex - 1 : weaponIndex;
-    const targetWeapon = player.weapons[adjustedIndex];
+    const targetWeapon = inv.weapons[adjustedIndex];
     if (!targetWeapon) return false;
 
     targetWeapon.level++;
 
-    // Recalculate fire offsets after removing a weapon
     this.recalculateFireOffsets();
-
     return true;
   }
 
-  /**
-   * Upgrade weapon stats
-   */
   public upgradeWeapon(weapon: WeaponInstance): void {
     weapon.level++;
   }
 
   /**
    * Spread shots evenly for weapons of the same type.
-   * Assigns staggered offsets so weapons don't all fire at once.
    */
   private recalculateFireOffsets(): void {
-    const player = this.entityManager.getPlayer();
+    const inv = this.entityManager.getPlayerEntity().get(WeaponInventory)!;
 
-    // Group weapons by type
     const weaponsByType: Record<string, WeaponInstance[]> = {};
-    for (const weapon of player.weapons) {
+    for (const weapon of inv.weapons) {
       weaponsByType[weapon.type] ??= [];
       weaponsByType[weapon.type]?.push(weapon);
     }
 
-    // Assign staggered offsets within each type group
     for (const type in weaponsByType) {
       const weapons = weaponsByType[type]!;
       const count = weapons.length;
       for (let i = 0; i < count; i++) {
-        // Offset each weapon by fraction of fire rate
         weapons[i]!.fireOffset = (i / count) * weapons[i]!.config.fireRate;
       }
     }

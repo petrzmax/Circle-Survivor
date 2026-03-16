@@ -1,292 +1,126 @@
 /**
  * EntityManager - Centralized entity lifecycle management.
- * Handles adding, removing, and querying game entities.
- *
- * Future: Object pooling can be added here to reduce GC pressure.
+ * Pure Koota ECS — no adapters, all methods return Entity or Entity[].
  */
 
-import { Enemy } from '@/domain/enemies';
-import { Player } from '@/domain/player/Player';
-import { Deployable } from '@/entities/Deployable';
-import { Entity } from '@/entities/Entity';
-import { Pickup } from '@/entities/Pickup';
-import { Projectile } from '@/entities/Projectile';
+import {
+  IsArmed,
+  IsBoss,
+  IsDead,
+  IsDeployable,
+  IsEnemy,
+  IsPickup,
+  IsPlayer,
+  IsPlayerOwned,
+  IsProjectile,
+  PlayerStats,
+  Position,
+} from '@/ecs/traits';
+import { world } from '@/ecs/world';
 import { distanceSquared, pointInRect, Vector2 } from '@/utils';
+import { createQuery, Not, type Entity, type ExtractSchema, type TraitRecord } from 'koota';
 import { singleton } from 'tsyringe';
 
-/**
- * Entity categories for typed retrieval
- */
-export type EntityCategory = 'player' | 'enemy' | 'projectile' | 'deployable' | 'pickup';
+// ============ Cached Queries ============
+const activeEnemiesQuery = createQuery(IsEnemy, Not(IsDead));
+const activeBossesQuery = createQuery(IsEnemy, IsBoss, Not(IsDead));
+const activeProjectilesQuery = createQuery(IsProjectile, Not(IsDead));
+const activePlayerProjectilesQuery = createQuery(IsProjectile, IsPlayerOwned, Not(IsDead));
+const activeEnemyProjectilesQuery = createQuery(IsProjectile, Not(IsPlayerOwned), Not(IsDead));
+const activeDeployablesQuery = createQuery(IsDeployable, Not(IsDead));
+const armedDeployablesQuery = createQuery(IsDeployable, IsArmed, Not(IsDead));
+const activePickupsQuery = createQuery(IsPickup, Not(IsDead));
+const deadEntitiesQuery = createQuery(IsDead);
+const playerQuery = createQuery(IsPlayer);
 
 /**
- * Manages all game entities with typed collections.
- * Provides efficient add/remove/query operations.
+ * Manages all game entities via Koota ECS world queries.
+ * Returns raw Koota Entity — type discriminated by tags (IsEnemy, IsPlayer, etc.).
  */
 @singleton()
 export class EntityManager {
-  /** Current player (single instance) */
-  private player: Player | null = null;
-  private enemies = new Map<number, Enemy>();
-  private projectiles = new Map<number, Projectile>();
-  private deployables = new Map<number, Deployable>();
-  private pickups = new Map<number, Pickup>();
-
-  /** Debug mode */
-  // TODO - create better approach
-  private debug: boolean = false;
-
   // ========== Player ==========
 
-  /**
-   * Set the player entity
-   */
-  public setPlayer(player: Player): void {
-    this.player = player;
-    this.log('Player set');
+  /** Returns the player entity. Throws if no player exists. */
+  public getPlayerEntity(): Entity {
+    const [entity] = world.query(playerQuery);
+    if (!entity) throw new Error('No player entity found!');
+    return entity;
   }
 
-  /**
-   * Get the current player
-   */
-  public getPlayer(): Player {
-    if (!this.player) throw new Error('No player entity found!');
-    return this.player;
+  /** Returns the player's stats (live AoS reference). Throws if no player exists. */
+  public getPlayerStats(): TraitRecord<ExtractSchema<typeof PlayerStats>> {
+    return this.getPlayerEntity().get(PlayerStats)!;
+  }
+
+  /** Check if a player entity exists. */
+  public hasPlayer(): boolean {
+    return world.query(playerQuery).length > 0;
   }
 
   // ========== Enemies ==========
 
-  public addEnemy(enemy: Enemy): void {
-    this.enemies.set(enemy.id, enemy);
-    this.log(`Enemy added: ${enemy.id} (type: ${enemy.type})`);
+  public getActiveEnemies(): readonly Entity[] {
+    return world.query(activeEnemiesQuery);
   }
 
-  public getEnemies(): Enemy[] {
-    return Array.from(this.enemies.values());
+  public getActiveBosses(): readonly Entity[] {
+    return world.query(activeBossesQuery);
   }
 
-  public getActiveEnemies(): Enemy[] {
-    return this.getEnemies().filter((e) => e.isActive && !e.isDead());
-  }
-
-  public getActiveBosses(): Enemy[] {
-    return this.getActiveEnemies().filter((e) => e.isBoss);
-  }
-
-  public getEnemy(id: number): Enemy | undefined {
-    return this.enemies.get(id);
-  }
-
-  public removeEnemy(id: number): boolean {
-    const removed = this.enemies.delete(id);
-    if (removed) this.log(`Enemy removed: ${id}`);
-    return removed;
-  }
-
-  /**
-   * Destroy all active enemies
-   */
   public killAllEnemies(): void {
-    for (const enemy of this.getActiveEnemies()) {
-      enemy.destroy();
+    for (const entity of world.query(activeEnemiesQuery)) {
+      if (!entity.has(IsDead)) entity.add(IsDead);
     }
   }
 
-  public getEnemyCount(): number {
-    return this.enemies.size;
-  }
-
   public getActiveEnemyCount(): number {
-    return this.getActiveEnemies().length;
+    return world.query(activeEnemiesQuery).length;
   }
 
   // ========== Projectiles ==========
 
-  public addProjectile(projectile: Projectile): void {
-    this.projectiles.set(projectile.id, projectile);
-    this.log(`Projectile added: ${projectile.id} (type: ${projectile.type})`);
+  public getActiveProjectiles(): readonly Entity[] {
+    return world.query(activeProjectilesQuery);
   }
 
-  public addProjectiles(projectiles: Projectile[]): void {
-    projectiles.forEach((p) => {
-      this.addProjectile(p);
-    });
+  public getActivePlayerProjectiles(): readonly Entity[] {
+    return world.query(activePlayerProjectilesQuery);
   }
 
-  public getProjectiles(): Projectile[] {
-    return Array.from(this.projectiles.values());
-  }
-
-  public getActiveProjectiles(): Projectile[] {
-    return this.getProjectiles().filter((p) => p.isActive);
-  }
-
-  public getPlayerProjectiles(): Projectile[] {
-    const playerId = this.player?.id;
-    if (playerId === undefined) return [];
-    return this.getActiveProjectiles().filter((p) => p.ownerId === playerId);
-  }
-
-  public getEnemyProjectiles(): Projectile[] {
-    const playerId = this.player?.id;
-    return this.getActiveProjectiles().filter((p) => p.ownerId !== playerId);
-  }
-
-  public removeProjectile(id: number): boolean {
-    const removed = this.projectiles.delete(id);
-    if (removed) this.log(`Projectile removed: ${id}`);
-    return removed;
+  public getActiveEnemyProjectiles(): readonly Entity[] {
+    return world.query(activeEnemyProjectilesQuery);
   }
 
   // ========== Deployables ==========
 
-  /**
-   * Add a deployable
-   */
-  public addDeployable(deployable: Deployable): void {
-    this.deployables.set(deployable.id, deployable);
-    this.log(`Deployable added: ${deployable.id} (type: ${deployable.type})`);
+  public getActiveDeployables(): readonly Entity[] {
+    return world.query(activeDeployablesQuery);
   }
 
-  /**
-   * Get all deployables
-   */
-  public getDeployables(): Deployable[] {
-    return Array.from(this.deployables.values());
-  }
-
-  /**
-   * Get active deployables only
-   */
-  public getActiveDeployables(): Deployable[] {
-    return this.getDeployables().filter((d) => d.isActive);
-  }
-
-  /**
-   * Get armed deployables (ready to trigger)
-   */
-  public getArmedDeployables(): Deployable[] {
-    return this.getActiveDeployables().filter((d) => d.isArmed);
-  }
-
-  /**
-   * Remove a deployable
-   */
-  public removeDeployable(id: number): boolean {
-    const removed = this.deployables.delete(id);
-    if (removed) this.log(`Deployable removed: ${id}`);
-    return removed;
+  public getArmedDeployables(): readonly Entity[] {
+    return world.query(armedDeployablesQuery);
   }
 
   // ========== Pickups ==========
 
-  /**
-   * Add a pickup
-   */
-  public addPickup(pickup: Pickup): void {
-    this.pickups.set(pickup.id, pickup);
-    this.log(`Pickup added: ${pickup.id} (type: ${pickup.type})`);
-  }
-
-  /**
-   * Get all pickups
-   */
-  public getPickups(): Pickup[] {
-    return Array.from(this.pickups.values());
-  }
-
-  /**
-   * Get active pickups only
-   */
-  public getActivePickups(): Pickup[] {
-    return this.getPickups().filter((p) => p.isActive);
-  }
-
-  /**
-   * Remove a pickup
-   */
-  public removePickup(id: number): boolean {
-    const removed = this.pickups.delete(id);
-    if (removed) this.log(`Pickup removed: ${id}`);
-    return removed;
+  public getActivePickups(): readonly Entity[] {
+    return world.query(activePickupsQuery);
   }
 
   // ========== Bulk Operations ==========
 
   /**
-   * Update all entities
-   */
-  public updateAll(deltaTime: number): void {
-    // Update player
-    // Note: Player movement is handled separately with input
-
-    // Update enemies
-    this.enemies.forEach((enemy) => {
-      if (enemy.isActive) {
-        enemy.update(deltaTime);
-      }
-    });
-
-    // Update projectiles
-    this.projectiles.forEach((projectile) => {
-      if (projectile.isActive) {
-        projectile.update(deltaTime);
-      }
-    });
-
-    // Update deployables
-    this.deployables.forEach((deployable) => {
-      if (deployable.isActive) {
-        deployable.update(deltaTime);
-      }
-    });
-
-    // Update pickups
-    this.pickups.forEach((pickup) => {
-      if (pickup.isActive) {
-        pickup.update(deltaTime);
-      }
-    });
-  }
-
-  /**
-   * Remove all inactive entities (cleanup)
-   * @returns Number of entities removed
+   * Remove all dead entities from the world.
    */
   public removeInactive(): number {
+    const deadEntities = world.query(deadEntitiesQuery);
     let removed = 0;
 
-    // Cleanup enemies
-    this.enemies.forEach((enemy, id) => {
-      if (!enemy.isActive) {
-        this.enemies.delete(id);
-        removed++;
-      }
-    });
-
-    // Cleanup projectiles
-    this.projectiles.forEach((projectile, id) => {
-      if (!projectile.isActive) {
-        this.projectiles.delete(id);
-        removed++;
-      }
-    });
-
-    // Cleanup deployables
-    this.deployables.forEach((deployable, id) => {
-      if (!deployable.isActive) {
-        this.deployables.delete(id);
-        removed++;
-      }
-    });
-
-    // Cleanup pickups
-    this.pickups.forEach((pickup, id) => {
-      if (!pickup.isActive) {
-        this.pickups.delete(id);
-        removed++;
-      }
-    });
+    for (const entity of deadEntities) {
+      entity.destroy();
+      removed++;
+    }
 
     if (removed > 0) {
       this.log(`Removed ${removed} inactive entities`);
@@ -296,58 +130,12 @@ export class EntityManager {
   }
 
   /**
-   * Get total entity count
-   */
-  public getTotalCount(): number {
-    return (
-      (this.player ? 1 : 0) +
-      this.enemies.size +
-      this.projectiles.size +
-      this.deployables.size +
-      this.pickups.size
-    );
-  }
-
-  /**
-   * Get entity counts by category
-   */
-  public getCounts(): Record<EntityCategory, number> {
-    return {
-      player: this.player ? 1 : 0,
-      enemy: this.enemies.size,
-      projectile: this.projectiles.size,
-      deployable: this.deployables.size,
-      pickup: this.pickups.size,
-    };
-  }
-
-  /**
-   * Get all entities as flat array
-   */
-  public getAllEntities(): Entity[] {
-    const entities: Entity[] = [];
-
-    if (this.player) {
-      entities.push(this.player);
-    }
-
-    this.enemies.forEach((e) => entities.push(e));
-    this.projectiles.forEach((p) => entities.push(p));
-    this.deployables.forEach((d) => entities.push(d));
-    this.pickups.forEach((p) => entities.push(p));
-
-    return entities;
-  }
-
-  /**
    * Clear all entities (reset game)
    */
   public clear(): void {
-    this.player = null;
-    this.enemies.clear();
-    this.projectiles.clear();
-    this.deployables.clear();
-    this.pickups.clear();
+    for (const entity of [...world.entities]) {
+      entity.destroy();
+    }
     this.log('All entities cleared');
   }
 
@@ -355,10 +143,11 @@ export class EntityManager {
    * Clear all except player
    */
   public clearExceptPlayer(): void {
-    this.enemies.clear();
-    this.projectiles.clear();
-    this.deployables.clear();
-    this.pickups.clear();
+    for (const entity of [...world.entities]) {
+      if (!entity.has(IsPlayer)) {
+        entity.destroy();
+      }
+    }
     this.log('All entities except player cleared');
   }
 
@@ -366,19 +155,20 @@ export class EntityManager {
 
   /**
    * Find enemies within radius of a point.
-   * Returns enemy + distance pairs for falloff calculations.
+   * Returns entity + distance pairs for falloff calculations.
    */
   public getEnemiesInRadius(
     position: Vector2,
     radius: number,
-  ): Array<{ enemy: Enemy; dist: number }> {
+  ): Array<{ entity: Entity; dist: number }> {
     const radiusSq = radius * radius;
-    const results: Array<{ enemy: Enemy; dist: number }> = [];
+    const results: Array<{ entity: Entity; dist: number }> = [];
 
-    for (const enemy of this.getActiveEnemies()) {
-      const dSq = distanceSquared(enemy.position, position);
+    for (const entity of world.query(activeEnemiesQuery)) {
+      const pos = entity.get(Position)!;
+      const dSq = distanceSquared(pos, position);
       if (dSq <= radiusSq) {
-        results.push({ enemy, dist: Math.sqrt(dSq) });
+        results.push({ entity, dist: Math.sqrt(dSq) });
       }
     }
 
@@ -386,52 +176,58 @@ export class EntityManager {
   }
 
   /**
-   * Find nearest enemy to a point
-   * @param position Position to search from
-   * @param maxDistance Maximum distance to search (optional)
-   * @param canvasBounds Canvas boundaries to filter enemies (optional)
+   * Find nearest enemy to a point. Returns Entity or null.
    */
   public getNearestEnemy(
     position: Vector2,
     maxDistance?: number,
     canvasBounds?: { width: number; height: number },
-  ): Enemy | null {
-    let nearest: Enemy | null = null;
+  ): Entity | null {
+    let nearest: Entity | null = null;
     let nearestDistSq = maxDistance ? maxDistance * maxDistance : Infinity;
 
-    this.getActiveEnemies().forEach((enemy) => {
-      // Filter out enemies outside the map bounds
+    for (const entity of world.query(activeEnemiesQuery)) {
+      const pos = entity.get(Position)!;
+
       if (canvasBounds) {
         const mapRect = {
           position: { x: 0, y: 0 },
           width: canvasBounds.width,
           height: canvasBounds.height,
         };
-        if (!pointInRect(enemy.position, mapRect)) return; // Skip enemies outside
+        if (!pointInRect(pos, mapRect)) continue;
       }
 
-      const distSq = distanceSquared(enemy.position, position);
-
+      const distSq = distanceSquared(pos, position);
       if (distSq < nearestDistSq) {
         nearestDistSq = distSq;
-        nearest = enemy;
+        nearest = entity;
       }
-    });
+    }
 
     return nearest;
   }
 
   /**
-   * Find pickups within radius of a point
+   * Find nearest enemy position to a point (convenience for targeting).
    */
-  public getPickupsInRadius(position: Vector2, radius: number): Pickup[] {
-    const radiusSq = radius * radius;
-    return this.getActivePickups().filter((pickup) => {
-      return distanceSquared(pickup.position, position) <= radiusSq;
-    });
+  public getNearestEnemyPosition(
+    position: Vector2,
+    maxDistance?: number,
+    canvasBounds?: { width: number; height: number },
+  ): Vector2 | null {
+    const entity = this.getNearestEnemy(position, maxDistance, canvasBounds);
+    if (!entity) return null;
+    const pos = entity.get(Position)!;
+    return { x: pos.x, y: pos.y };
   }
 
   // ========== Debug ==========
+
+  // eslint-disable-next-line @typescript-eslint/class-literal-property-style
+  private get debug(): boolean {
+    return false;
+  }
 
   private log(message: string): void {
     if (this.debug) {

@@ -1,5 +1,23 @@
 import { EntityManager } from '@/managers';
 import {
+  Collider,
+  DeployableData,
+  EnemyData,
+  Health,
+  IsArmed,
+  IsAttracted,
+  IsBoss,
+  Lifetime,
+  PickupData,
+  PlayerCharacter,
+  PlayerStats,
+  Position,
+  ProjectileData,
+  Velocity,
+  WeaponInventory,
+} from '@/ecs/traits';
+import { getWeaponPosition } from '@/ecs/utils/player-utils';
+import {
   renderDeployable,
   renderPickup,
   renderPlayer,
@@ -8,9 +26,10 @@ import {
 } from '@/rendering';
 import { renderBackground } from '@/rendering/BackgroundRenderer';
 import { renderEnemy } from '@/rendering/EnemyRenderer';
+import type { BossRenderData, WeaponRenderData } from '@/rendering/render-types';
 import { EffectsSystem } from '@/systems/EffectsSystem';
 import { singleton } from 'tsyringe';
-import { HUD, HUDBoss } from './HUD';
+import { HUD } from './HUD';
 
 @singleton()
 export class RenderSystem {
@@ -51,32 +70,126 @@ export class RenderSystem {
   }
 
   private renderPlayer(ctx: CanvasRenderingContext2D, currentTime: number): void {
-    const player = this.entityManager.getPlayer();
-    renderPlayer(ctx, player, currentTime);
-    renderWeapons(ctx, player);
+    const playerEntity = this.entityManager.getPlayerEntity();
+    const pos = playerEntity.get(Position)!;
+    const char = playerEntity.get(PlayerCharacter)!;
+    const stats = playerEntity.get(PlayerStats)!;
+    const inv = playerEntity.get(WeaponInventory)!;
+
+    renderPlayer(
+      ctx,
+      {
+        x: pos.x,
+        y: pos.y,
+        width: char.width,
+        height: char.height,
+        color: char.color,
+        armor: stats.armor,
+        invincibleUntil: stats.invincibleUntil,
+      },
+      currentTime,
+    );
+
+    // Pre-compute weapon positions and build render data
+    const weaponData: WeaponRenderData[] = inv.weapons.map((weapon, index) => {
+      const wPos = getWeaponPosition(playerEntity, index, stats.currentTarget);
+      return { x: wPos.x, y: wPos.y, angle: wPos.angle, type: weapon.type, level: weapon.level };
+    });
+    renderWeapons(ctx, weaponData);
   }
 
   private renderEnemies(ctx: CanvasRenderingContext2D): void {
-    for (const enemy of this.entityManager.getActiveEnemies()) {
-      renderEnemy(ctx, enemy);
+    for (const entity of this.entityManager.getActiveEnemies()) {
+      const pos = entity.get(Position)!;
+      const col = entity.get(Collider)!;
+      const h = entity.get(Health)!;
+      const enemyData = entity.get(EnemyData)!;
+      const isBoss = entity.has(IsBoss);
+
+      renderEnemy(ctx, {
+        x: pos.x,
+        y: pos.y,
+        radius: col.radius,
+        color: enemyData.color,
+        hp: h.hp,
+        maxHp: h.maxHp,
+        isBoss,
+        phasing: enemyData.phasing,
+        explodeOnDeath: enemyData.explodeOnDeath,
+        hasTopHealthBar: enemyData.hasTopHealthBar,
+        bossName: enemyData.bossName,
+      });
     }
   }
 
   private renderProjectiles(ctx: CanvasRenderingContext2D): void {
-    for (const projectile of this.entityManager.getActiveProjectiles()) {
-      renderProjectile(ctx, projectile);
+    for (const entity of this.entityManager.getActiveProjectiles()) {
+      const pos = entity.get(Position)!;
+      const col = entity.get(Collider)!;
+      const vel = entity.get(Velocity)!;
+      const projectileData = entity.get(ProjectileData)!;
+
+      renderProjectile(ctx, {
+        x: pos.x,
+        y: pos.y,
+        radius: col.radius,
+        type: projectileData.type,
+        color: projectileData.color,
+        isCrit: projectileData.isCrit,
+        rotation: projectileData.rotation,
+        vx: vel.vx,
+        vy: vel.vy,
+        distanceTraveled: projectileData.distanceTraveled,
+        maxDistance: projectileData.maxDistance,
+      });
     }
   }
 
   private renderDeployables(ctx: CanvasRenderingContext2D, currentTime: number): void {
-    for (const deployable of this.entityManager.getActiveDeployables()) {
-      renderDeployable(ctx, deployable, currentTime);
+    for (const entity of this.entityManager.getActiveDeployables()) {
+      const pos = entity.get(Position)!;
+      const col = entity.get(Collider)!;
+      const deployableData = entity.get(DeployableData)!;
+
+      renderDeployable(
+        ctx,
+        {
+          x: pos.x,
+          y: pos.y,
+          radius: col.radius,
+          type: deployableData.type,
+          isArmed: entity.has(IsArmed),
+          blinkOffset: deployableData.blinkOffset,
+        },
+        currentTime,
+      );
     }
   }
 
   private renderPickups(ctx: CanvasRenderingContext2D): void {
-    for (const pickup of this.entityManager.getActivePickups()) {
-      renderPickup(ctx, pickup);
+    // Sort by ID for stable render order (Koota uses swap-remove, which shuffles query results)
+    const pickups = [...this.entityManager.getActivePickups()].sort((a, b) => a.id() - b.id());
+    for (const entity of pickups) {
+      const pos = entity.get(Position)!;
+      const col = entity.get(Collider)!;
+      const pickupData = entity.get(PickupData)!;
+      const lt = entity.get(Lifetime)!;
+      const isAttracted = entity.has(IsAttracted);
+
+      // Replicate getScale() logic from adapter
+      let scale = 1;
+      if (!isAttracted && lt.remaining <= pickupData.shrinkDuration) {
+        const shrinkProgress = 1 - lt.remaining / pickupData.shrinkDuration;
+        scale = Math.max(0, 1 - shrinkProgress);
+      }
+
+      renderPickup(ctx, {
+        x: pos.x,
+        y: pos.y,
+        radius: col.radius,
+        type: pickupData.type,
+        scale,
+      });
     }
   }
 
@@ -85,14 +198,16 @@ export class RenderSystem {
    */
   private renderBossHealthBar(ctx: CanvasRenderingContext2D): void {
     const bosses = this.entityManager.getActiveBosses();
-    const hudbosses: HUDBoss[] = bosses.map((e) => ({
-      type: e.type,
-      hp: e.hp,
-      maxHp: e.maxHp,
-      isBoss: e.isBoss,
-      bossName: e.bossName ?? undefined,
-      hasTopHealthBar: false,
-    }));
-    HUD.renderBossHealthBar(ctx, ctx.canvas.width, hudbosses);
+    const bossData: BossRenderData[] = bosses.map((entity) => {
+      const enemyData = entity.get(EnemyData)!;
+      const h = entity.get(Health)!;
+      return {
+        type: enemyData.type,
+        name: enemyData.bossName ?? enemyData.type,
+        hp: h.hp,
+        maxHp: h.maxHp,
+      };
+    });
+    HUD.renderBossHealthBar(ctx, ctx.canvas.width, bossData);
   }
 }

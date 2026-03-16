@@ -1,4 +1,4 @@
-import { Deployable } from '@/entities/Deployable';
+import type { DeployableRenderData } from './render-types';
 import { DeployableType } from '@/types/enums';
 import { TWO_PI } from '@/utils/math';
 
@@ -7,24 +7,24 @@ import { TWO_PI } from '@/utils/math';
  */
 export function renderDeployable(
   ctx: CanvasRenderingContext2D,
-  deployable: Deployable,
+  d: DeployableRenderData,
   currentTime: number,
 ): void {
   ctx.save();
-  ctx.translate(deployable.position.x, deployable.position.y);
+  ctx.translate(d.x, d.y);
 
-  switch (deployable.type) {
+  switch (d.type) {
     case DeployableType.MINE:
-      drawMine(ctx, deployable, currentTime);
+      drawMine(ctx, d, currentTime);
       break;
     case DeployableType.TURRET:
-      drawTurret(ctx, deployable);
+      drawTurret(ctx, d);
       break;
     case DeployableType.TRAP:
-      drawTrap(ctx, deployable);
+      drawTrap(ctx, d);
       break;
     default:
-      throw new Error(`Unknown deployable type: ${deployable.type as string}`);
+      throw new Error(`Unknown deployable type: ${d.type as string}`);
   }
 
   ctx.restore();
@@ -33,7 +33,11 @@ export function renderDeployable(
 /**
  * Mine - dark circle with blinking red light when armed
  */
-function drawMine(ctx: CanvasRenderingContext2D, d: Deployable, currentTime: number): void {
+function drawMine(
+  ctx: CanvasRenderingContext2D,
+  d: DeployableRenderData,
+  currentTime: number,
+): void {
   // Body
   ctx.beginPath();
   ctx.arc(0, 0, d.radius, 0, TWO_PI);
@@ -58,7 +62,7 @@ function drawMine(ctx: CanvasRenderingContext2D, d: Deployable, currentTime: num
 /**
  * Turret - placeholder for future implementation
  */
-function drawTurret(ctx: CanvasRenderingContext2D, d: Deployable): void {
+function drawTurret(ctx: CanvasRenderingContext2D, d: DeployableRenderData): void {
   // Base
   ctx.beginPath();
   ctx.arc(0, 0, d.radius, 0, TWO_PI);
@@ -80,7 +84,7 @@ function drawTurret(ctx: CanvasRenderingContext2D, d: Deployable): void {
 /**
  * Trap - placeholder for future implementation
  */
-function drawTrap(ctx: CanvasRenderingContext2D, d: Deployable): void {
+function drawTrap(ctx: CanvasRenderingContext2D, d: DeployableRenderData): void {
   // Spiky circle
   ctx.beginPath();
   const spikes = 8;

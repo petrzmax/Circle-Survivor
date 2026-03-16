@@ -5,11 +5,13 @@
 
 import { GAME_BALANCE } from '@/config';
 import { SHOP_ITEMS, WeaponShopItem } from '@/config/shop.config';
-import { Player } from '@/domain/player/Player';
-import { PlayerStats } from '@/domain/player/type';
+import { PlayerStats as PlayerStatsType } from '@/domain/player/type';
 import { WeaponType } from '@/domain/weapons/type';
+import { PlayerStats, WeaponInventory } from '@/ecs/traits';
+import { addItem, applyStat } from '@/ecs/utils/player-utils';
 import { WeaponManager } from '@/domain/weapons/WeaponManager';
 import { randomElementStrict } from '@/utils';
+import type { Entity } from 'koota';
 import toast from 'react-hot-toast';
 import { singleton } from 'tsyringe';
 
@@ -22,11 +24,6 @@ export interface ShopPlayer {
   items?: string[];
   maxHp: number;
   hp: number;
-  addWeapon(type: string): void;
-  addItem(itemKey: string): void;
-  applyStat(stat: string, value: number): void;
-  heal(amount: number): void;
-  [stat: string]: unknown;
 }
 
 export interface ShopWeapon {
@@ -44,19 +41,21 @@ export class Shop {
   public constructor(private weaponManager: WeaponManager) {}
 
   /**
-   * Apply item effect to player.
+   * Apply item effect to player entity.
    * Called externally when Preact Shop component emits purchase events.
-   * No price check or event emission - those are handled by caller.
    */
-  public applyItemEffect(itemId: string, player: Player): void {
+  public applyItemEffect(itemId: string, playerEntity: Entity): void {
     const item = SHOP_ITEMS[itemId];
     if (!item) return;
 
     switch (item.type) {
       case 'weapon': {
         const weaponItem = item;
-        if (player.weapons.length >= player.maxWeapons) {
-          const sameTypeWeapons = player.weapons.filter((w) => w.type === weaponItem.weaponType);
+        const inv = playerEntity.get(WeaponInventory)!;
+        const stats = playerEntity.get(PlayerStats)!;
+
+        if (inv.weapons.length >= stats.maxWeapons) {
+          const sameTypeWeapons = inv.weapons.filter((w) => w.type === weaponItem.weaponType);
           if (sameTypeWeapons.length > 0) {
             const randomWeapon = randomElementStrict(sameTypeWeapons);
             this.weaponManager.upgradeWeapon(randomWeapon);
@@ -70,10 +69,10 @@ export class Shop {
 
       case 'item': {
         const statItem = item;
-        player.addItem(itemId);
+        addItem(playerEntity, itemId);
         for (const [stat, valueRaw] of Object.entries(statItem.effect)) {
           const value = valueRaw as number;
-          player.applyStat(stat as keyof PlayerStats, value);
+          applyStat(playerEntity, stat as keyof PlayerStatsType, value);
         }
         break;
       }

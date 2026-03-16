@@ -1,6 +1,8 @@
+import type { Entity } from 'koota';
 import { singleton } from 'tsyringe';
-import { Enemy } from '@/domain/enemies';
+import { EnemyData, Health, IsBoss, IsDead, Position } from '@/ecs/traits';
 import { EventBus } from '@/events/EventBus';
+import type { EnemyDeathData } from '@/events/GameEvents';
 import { EntityManager } from '@/managers/EntityManager';
 import { VisualEffect } from '@/types/enums';
 import { KillSource } from './damage.types';
@@ -8,17 +10,16 @@ import { KillSource } from './damage.types';
 @singleton()
 export class DeathSystem {
   /** Dead enemies pending processing */
-  private pendingDeaths: Enemy[] = [];
+  private pendingDeaths: Entity[] = [];
   private isPlayerDeathPending: boolean = false;
 
   public constructor(private entityManager: EntityManager) {}
 
   /**
-   * Mark an enemy as pending death processing.
-   * Called by CollisionResponseSystem / ExplosionSystem after DamageSystem confirms kill.
+   * Mark an enemy entity as pending death processing.
    */
-  public registerEnemyDeath(enemy: Enemy): void {
-    this.pendingDeaths.push(enemy);
+  public registerEnemyDeath(entity: Entity): void {
+    this.pendingDeaths.push(entity);
   }
 
   /**
@@ -37,43 +38,62 @@ export class DeathSystem {
 
   /**
    * Process all pending deaths.
-   * - Enemy: emit enemyDeath, queue explode-on-death, destroy
+   * - Enemy: emit enemyDeath, queue explode-on-death, add IsDead
    * - Player: emit playerDeath
    */
   public processDeaths(): void {
     // Process enemy deaths
     while (this.pendingDeaths.length > 0) {
-      const enemy = this.pendingDeaths.shift()!;
+      const entity = this.pendingDeaths.shift()!;
 
       // Skip already-destroyed enemies (deduplication from multiple damage sources)
-      if (!enemy.isActive) continue;
+      if (entity.has(IsDead)) continue;
+
+      const enemy = entity.get(EnemyData)!;
+      const pos = entity.get(Position)!;
 
       // Explode-on-death: queue via EventBus — ExplosionSystem listens
       if (enemy.explodeOnDeath && enemy.explosionRadius > 0) {
         EventBus.emit('queueExplosion', {
-          position: { x: enemy.position.x, y: enemy.position.y },
+          position: pos,
           radius: enemy.explosionRadius,
           damage: enemy.explosionDamage,
           visualEffect: VisualEffect.STANDARD,
-          sourceId: enemy.id,
+          sourceId: entity.id(),
           isEnemyExplosion: true,
         });
       }
 
+      // Snapshot enemy data into a POJO before destroying
+      const deathData: EnemyDeathData = {
+        position: pos,
+        type: enemy.type,
+        color: enemy.color,
+        isBoss: entity.has(IsBoss),
+        xpValue: enemy.xpValue,
+        goldValue: enemy.goldValue,
+        splitOnDeath: enemy.splitOnDeath,
+        splitCount: enemy.splitCount,
+      };
+
       EventBus.emit('enemyDeath', {
-        enemy,
+        enemy: deathData,
         killer: KillSource.PLAYER,
       });
 
-      enemy.destroy();
+      // Mark dead
+      if (!entity.has(IsDead)) {
+        entity.add(IsDead);
+      }
     }
 
     // Process player death
     if (this.isPlayerDeathPending) {
-      const player = this.entityManager.getPlayer();
+      const playerEntity = this.entityManager.getPlayerEntity();
+      const h = playerEntity.get(Health)!;
       // Check if player is still dead (health pickup might have saved them)
-      if (player.isDead()) {
-        EventBus.emit('playerDeath', { player, killedBy: null });
+      if (h.hp <= 0) {
+        EventBus.emit('playerDeath', undefined);
       }
       this.isPlayerDeathPending = false;
     }

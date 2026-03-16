@@ -1,7 +1,9 @@
 import { CHARACTER_TYPES } from '@/config/characters.config';
 import { AudioSystem } from '@/domain/audio/AudioSystem';
 import { EnemySpawnSystem } from '@/domain/enemies/EnemySpawnSystem';
-import { Player } from '@/domain/player/Player';
+import { spawnPlayer } from '@/ecs/factories/entity-factories';
+import { Position } from '@/ecs/traits';
+import { fullHealEntity } from '@/ecs/utils/entity-utils';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager, StateManager } from '@/managers';
 import { CollisionSystem } from '@/systems/CollisionSystem';
@@ -21,6 +23,7 @@ import { CharacterType, GameState } from '@/types/enums';
 import { injectable } from 'tsyringe';
 import { ConfigService } from '../config/ConfigService';
 import { WeaponManager } from '../domain/weapons/WeaponManager';
+import { Time, world } from '../ecs/world';
 import { PickupSpawnSystem } from './../systems/PickupSpawnSystem';
 import { RenderSystem } from './../systems/RenderSystem';
 import { RewardSystem } from './../systems/RewardSystem';
@@ -162,15 +165,13 @@ export class Game {
   private onEnterShop(): void {
     this.waveManager.endWave();
 
-    const player = this.entityManager.getPlayer();
-    player.hp = player.maxHp; // Full heal
-    player.position.x = this.canvas.width / 2; // Center player
-    player.position.y = this.canvas.height / 2;
+    const player = this.entityManager.getPlayerEntity();
+    fullHealEntity(player);
+    player.set(Position, { x: this.canvas.width / 2, y: this.canvas.height / 2 }); // Center
 
     this.entityManager.clearExceptPlayer();
     this.effectsSystem.reset();
 
-    // Preact Shop component handles rendering via shopOpened event
     EventBus.emit('shopOpened', undefined);
   }
 
@@ -180,11 +181,10 @@ export class Game {
   }
 
   private onEnterGameOver(): void {
-    const player = this.entityManager.getPlayer();
+    const stats = this.entityManager.getPlayerStats();
 
-    // Preact App handles game over UI based on gameOver event
     EventBus.emit('gameOver', {
-      score: player.xp,
+      score: stats.xp,
       wave: this.waveManager.waveNumber,
       time: 0,
     });
@@ -196,27 +196,17 @@ export class Game {
   private initializeNewGame(): void {
     this.selectedCharacter ??= CharacterType.NORMIK;
 
-    // Get character config
     const charConfig = CHARACTER_TYPES[this.selectedCharacter];
 
-    // Create player
-    const player = new Player({
+    // Reset entity manager (destroys all entities including old player)
+    this.entityManager.clear();
+
+    // Spawn player entity via factory (all stats come from character config)
+    spawnPlayer({
       x: this.canvas.width / 2,
       y: this.canvas.height / 2,
       characterType: this.selectedCharacter,
     });
-
-    // Apply character-specific stats
-    player.maxHp = charConfig.maxHp;
-    player.hp = charConfig.maxHp;
-    player.speedMultiplier = 1;
-    player.damageMultiplier = charConfig.damageMultiplier;
-    player.goldMultiplier = charConfig.goldMultiplier;
-    player.color = charConfig.color;
-
-    // Reset entity manager and set player
-    this.entityManager.clear();
-    this.entityManager.setPlayer(player);
 
     // Initialize weapons
     this.weaponManager.addWeapon(charConfig.startingWeapon);
@@ -284,14 +274,22 @@ export class Game {
   // ============ Update ============
 
   private update(deltaTimeMs: number, currentTime: number): void {
-    const player = this.entityManager.getPlayer();
+    const playerEntity = this.entityManager.getPlayerEntity();
     const deltaTime = deltaTimeMs / 1000;
+
+    // Update ECS world time resource
+    const prevTime = world.get(Time);
+    world.set(Time, {
+      delta: deltaTime,
+      elapsed: (prevTime?.elapsed ?? 0) + deltaTime,
+      current: currentTime,
+    });
 
     // Update player (input, movement, regen, auto-aim)
     this.playerSystem.update(deltaTime, currentTime);
 
     // Check if boss is alive
-    const bossAlive = this.entityManager.getActiveEnemies().some((e) => e.isBoss);
+    const bossAlive = this.entityManager.getActiveBosses().length > 0;
 
     // Update wave manager (expects milliseconds)
     const waveResult = this.waveManager.update(deltaTimeMs, bossAlive);
@@ -307,7 +305,7 @@ export class Game {
     }
 
     // Fire weapons
-    this.weaponManager.fireWeapons(currentTime, player);
+    this.weaponManager.fireWeapons(currentTime, playerEntity);
 
     // Update entity systems
     this.enemySystem.update(deltaTime, currentTime);
@@ -361,11 +359,8 @@ export class Game {
    * Gold deduction is handled by RewardSystem.
    */
   private applyShopPurchase(itemId: string): void {
-    const player = this.entityManager.getPlayer();
-
-    // Use existing shop buyItem logic but skip the price check & event emission
-    // since those are already handled
-    this.shop.applyItemEffect(itemId, player);
+    const playerEntity = this.entityManager.getPlayerEntity();
+    this.shop.applyItemEffect(itemId, playerEntity);
   }
 
   /**

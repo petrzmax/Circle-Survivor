@@ -1,17 +1,27 @@
-import { Enemy } from '@/domain/enemies';
 import { AttackPattern, ShockwaveAttackResult } from '@/domain/enemies/type';
 import { WeaponType } from '@/domain/weapons';
-import { Pickup, Player, Projectile } from '@/entities';
 import { DamageSource, ExplosionEvent, KillSource } from '@/systems/damage.types';
-import { CharacterType, GameState, PickupType } from '@/types';
+import { CharacterType, EnemyType, GameState, PickupType } from '@/types';
 import { Vector2 } from '@/utils';
+
+/** Snapshot of enemy data at time of death — no adapter reference */
+export interface EnemyDeathData {
+  position: Vector2;
+  type: EnemyType;
+  color: string;
+  isBoss: boolean;
+  xpValue: number;
+  goldValue: number;
+  splitOnDeath: boolean;
+  splitCount: number;
+}
 
 /**
  * Event payload types for type-safe event handling
  */
 export interface GameEvents {
   // Combat events
-  enemyDeath: { enemy: Enemy; killer: KillSource };
+  enemyDeath: { enemy: EnemyDeathData; killer: KillSource };
   /** Unified damage event emitted by DamageSystem for any entity */
   entityDamaged: {
     entityId: number;
@@ -20,7 +30,8 @@ export interface GameEvents {
     damageSource: DamageSource;
     isPlayer: boolean;
   };
-  playerDeath: { player: Player; killedBy: Enemy | null };
+  // TODO(feature): Emit killer info (EnemyDeathData | DamageSource) for death screen / stats.
+  playerDeath: void;
   playerDodged: void;
   thornsTriggered: void;
 
@@ -31,8 +42,7 @@ export interface GameEvents {
   weaponFired: { weaponType: WeaponType };
 
   // Projectile events
-  projectileHit: { projectile: Projectile; target: Enemy };
-  projectileExpired: { projectile: Projectile };
+  projectileHit: { projectileId: number; targetId: number; position: Vector2 };
   /** Emitted after an explosion is fully processed */
   explosionProcessed: ExplosionEvent;
   shockwaveTriggered: ShockwaveAttackResult;
@@ -40,14 +50,12 @@ export interface GameEvents {
 
   // Pickup events
   pickupCollected: { type: PickupType; amount: number; position: Vector2 };
-  pickupSpawned: { pickup: Pickup };
-  pickupExpired: { pickup: Pickup };
 
   // Wave events
   waveStart: { waveNumber: number; enemyCount: number };
   waveEnd: { waveNumber: number; enemiesKilled: number };
-  bossSpawned: { enemy: Enemy; bossName: string };
-  bossDefeated: { enemy: Enemy; bossName: string };
+  bossSpawned: { bossName: string };
+  bossDefeated: { bossName: string };
 
   // Shop events
   shopOpened: void;

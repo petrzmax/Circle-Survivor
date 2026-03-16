@@ -2,24 +2,19 @@
  * Weapon Renderer - draws weapons around the player
  */
 
-import { Player } from '@/domain/player/Player';
+import type { WeaponRenderData } from './render-types';
 import { WeaponType } from '@/domain/weapons';
 import { TWO_PI } from '@/utils/math';
 
 /**
  * Draw all weapons around the player
  */
-export function renderWeapons(ctx: CanvasRenderingContext2D, player: Player): void {
-  const weaponCount = player.weapons.length;
-  if (weaponCount === 0) return;
+export function renderWeapons(ctx: CanvasRenderingContext2D, weapons: WeaponRenderData[]): void {
+  if (weapons.length === 0) return;
 
-  player.weapons.forEach((weapon, index) => {
-    // Get weapon position with target aiming
-    const pos = player.getWeaponPosition(index, player.currentTarget);
-
-    // Draw weapon icon
-    drawWeapon(ctx, weapon.type, weapon.level, pos.x, pos.y, pos.angle);
-  });
+  for (const weapon of weapons) {
+    drawWeapon(ctx, weapon.type, weapon.level, weapon.x, weapon.y, weapon.angle);
+  }
 }
 
 function drawWeapon(

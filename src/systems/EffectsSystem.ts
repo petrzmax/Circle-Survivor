@@ -5,7 +5,7 @@
 
 import { ConfigService } from '@/config/ConfigService';
 import { EffectsConfig } from '@/config/effects.config';
-import { Enemy } from '@/domain/enemies';
+import type { EnemyDeathData } from '@/events/GameEvents';
 import { EventBus } from '@/events/EventBus';
 import { renderExplosion } from '@/rendering';
 import { renderShockwave } from '@/rendering/ShockwaveRenderer';
@@ -267,7 +267,7 @@ export class EffectsSystem {
   /**
    * Create death particle effect for enemy
    */
-  public createDeathEffect(enemy: Enemy): void {
+  public createDeathEffect(enemy: EnemyDeathData): void {
     const { presets, boss, bossGolden, physics } = this.config.deathParticles;
     const defaultPreset = this.config.deathParticles.default;
     const maxParticles = this.config.pool.maxDeathParticles;

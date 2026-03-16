@@ -1,4 +1,35 @@
 import { CharacterType } from '@/types';
+import type { WeaponInstance } from '@/domain/weapons/type';
+
+/**
+ * Plain data snapshot for UI components — UI must not hold mutable Entity refs.
+ */
+export interface PlayerData {
+  hp: number;
+  maxHp: number;
+  gold: number;
+  xp: number;
+  weapons: WeaponInstance[];
+  maxWeapons: number;
+  items: string[];
+  armor: number;
+  dodge: number;
+  regen: number;
+  thorns: number;
+  lifesteal: number;
+  damageMultiplier: number;
+  critChance: number;
+  critDamage: number;
+  attackSpeedMultiplier: number;
+  attackRange: number;
+  explosionRadius: number;
+  knockback: number;
+  speedMultiplier: number;
+  pickupRange: number;
+  luck: number;
+  xpMultiplier: number;
+  goldMultiplier: number;
+}
 
 /**
  * Player stats interface - all modifiable stats

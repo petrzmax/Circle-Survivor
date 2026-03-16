@@ -1,21 +1,21 @@
 import { singleton } from 'tsyringe';
+import { Collider, Health, IsBoss, IsDead, PlayerStats, Position } from '@/ecs/traits';
+import { spawnProjectile } from '@/ecs/factories/entity-factories';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
-import { createMiniBananas } from '@/factories/ProjectileFactory';
-import { distance, Vector2 } from '@/utils/math';
+import { createMiniBananaConfigs } from '@/factories/ProjectileFactory';
+import { distance, distanceSquared, Vector2 } from '@/utils/math';
 import { CombatMath } from '@/utils/combat-math';
 import { DamageSource, ExplosionOrigin } from './damage.types';
 import { DamageSystem } from './DamageSystem';
 import { DeathSystem } from './DeathSystem';
 import type { ExplosionEvent } from './damage.types';
 
-/** Maximum iterations for the death→explosion chain resolution loop */
 const MAX_CHAIN_ITERATIONS = 10;
 
 @singleton()
 export class ExplosionSystem {
   private pendingExplosions: ExplosionEvent[] = [];
-  /** Banana explosion origins queued for mini-banana spawning after chain completes */
   private pendingMiniBananaSpawns: ExplosionEvent[] = [];
 
   public constructor(
@@ -52,9 +52,6 @@ export class ExplosionSystem {
     this.spawnPendingMiniBananas();
   }
 
-  /**
-   * Process all pending explosions.
-   */
   private processExplosions(currentTime: number): void {
     const killedThisBatch = new Set<number>();
 
@@ -64,9 +61,6 @@ export class ExplosionSystem {
     }
   }
 
-  /**
-   * Process a single explosion — AOE damage with distance falloff.
-   */
   private processExplosion(
     explosion: ExplosionEvent,
     currentTime: number,
@@ -88,51 +82,49 @@ export class ExplosionSystem {
     EventBus.emit('explosionProcessed', explosion);
   }
 
-  /** Spawn mini-banana projectiles for all banana explosions collected during the chain. */
   private spawnPendingMiniBananas(): void {
     while (this.pendingMiniBananaSpawns.length > 0) {
       const explosion = this.pendingMiniBananaSpawns.shift()!;
-      const player = this.entityManager.getPlayer();
+      const playerEntity = this.entityManager.getPlayerEntity();
+      const playerStats = playerEntity.get(PlayerStats)!;
 
-      const projectiles = createMiniBananas({
+      const configs = createMiniBananaConfigs({
         position: explosion.position,
-        damageMultiplier: player.damageMultiplier,
-        explosionRadiusMultiplier: player.explosionRadius,
-        ownerId: player.id,
+        damageMultiplier: playerStats.damageMultiplier,
+        explosionRadiusMultiplier: playerStats.explosionRadius,
+        ownerId: playerEntity.id(),
       });
 
-      for (const projectile of projectiles) {
-        this.entityManager.addProjectile(projectile);
+      for (const config of configs) {
+        spawnProjectile(config);
       }
     }
   }
 
-  /** Apply explosion damage to the player (enemy explosions only). */
   private damagePlayerFromExplosion(
     position: Vector2,
     radius: number,
     damage: number,
     currentTime: number,
   ): void {
-    const player = this.entityManager.getPlayer();
-    if (!player.isActive) return;
+    const playerEntity = this.entityManager.getPlayerEntity();
+    if (playerEntity.has(IsDead)) return;
 
-    const distToPlayer = distance(player.position, position);
+    const pPos = playerEntity.get(Position)!;
+    const pRadius = playerEntity.get(Collider)!.radius;
+    const distToPlayer = distance(pPos, position);
     if (distToPlayer > radius) return;
 
-    const effectiveDist = Math.max(0, distToPlayer - player.radius);
+    const effectiveDist = Math.max(0, distToPlayer - pRadius);
     const falloffMultiplier = this.combatMath.explosionFalloff(effectiveDist, radius);
     const finalDamage = Math.max(1, Math.round(damage * falloffMultiplier));
 
     const result = this.damageSystem.damageEntity(
-      player,
+      playerEntity,
       finalDamage,
       currentTime,
       position,
       DamageSource.EXPLOSION,
-      1,
-      false,
-      true,
     );
 
     if (result.isDead) {
@@ -140,7 +132,6 @@ export class ExplosionSystem {
     }
   }
 
-  /** Apply explosion damage to all enemies in radius with distance falloff. */
   private damageEnemiesFromExplosion(
     position: Vector2,
     radius: number,
@@ -148,14 +139,26 @@ export class ExplosionSystem {
     currentTime: number,
     killedThisBatch: Set<number>,
   ): void {
-    const hits = this.entityManager.getEnemiesInRadius(position, radius);
+    const radiusSq = radius * radius;
+    const enemies = this.entityManager.getActiveEnemies();
 
-    for (const { enemy, dist } of hits) {
-      if (killedThisBatch.has(enemy.id) || enemy.isDead()) continue;
+    for (const enemy of enemies) {
+      const ePos = enemy.get(Position)!;
+      const dSq = distanceSquared(ePos, position);
+      if (dSq > radiusSq) continue;
 
-      const effectiveDist = Math.max(0, dist - enemy.radius);
+      const id = enemy.id();
+      if (killedThisBatch.has(id)) continue;
+
+      const eHealth = enemy.get(Health);
+      if (!eHealth || eHealth.hp <= 0) continue;
+
+      const dist = Math.sqrt(dSq);
+      const eRadius = enemy.get(Collider)!.radius;
+      const effectiveDist = Math.max(0, dist - eRadius);
       const falloffMultiplier = this.combatMath.explosionFalloff(effectiveDist, radius);
       const finalDamage = Math.max(1, Math.round(damage * falloffMultiplier));
+      const isBoss = enemy.has(IsBoss);
 
       const result = this.damageSystem.damageEntity(
         enemy,
@@ -163,12 +166,12 @@ export class ExplosionSystem {
         currentTime,
         position,
         DamageSource.EXPLOSION,
-        0, // No knockback from explosions (direction is ambiguous in radial AOE)
-        enemy.isBoss,
+        0,
+        isBoss,
       );
 
       if (result.isDead) {
-        killedThisBatch.add(enemy.id);
+        killedThisBatch.add(id);
         this.deathSystem.registerEnemyDeath(enemy);
       }
     }

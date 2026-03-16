@@ -3,7 +3,6 @@
  * Efficient collision checks for game entities.
  */
 
-import { ICircleCollider } from '@/types/components';
 import { Vector2, clamp, distance, distanceSquared } from './math';
 
 /**
@@ -32,24 +31,6 @@ export interface Circle extends Vector2 {
 export function circleCollision(a: Circle, b: Circle): boolean {
   const combinedRadius = a.radius + b.radius;
   return distanceSquared(a, b) < combinedRadius * combinedRadius;
-}
-
-/**
- * Checks collision between two entities with transform and collider
- * @param aPos Position of first entity
- * @param aCollider Collider of first entity
- * @param bPos Position of second entity
- * @param bCollider Collider of second entity
- * @returns True if entities collide
- */
-export function entityCollision(
-  aPos: Vector2,
-  aCollider: ICircleCollider,
-  bPos: Vector2,
-  bCollider: ICircleCollider,
-): boolean {
-  const combinedRadius = aCollider.radius + bCollider.radius;
-  return distanceSquared(aPos, bPos) < combinedRadius * combinedRadius;
 }
 
 /**

@@ -1,0 +1,38 @@
+/**
+ * Re-exports all ECS traits.
+ */
+
+// Shared SoA traits
+export {
+  Position,
+  Velocity,
+  Collider,
+  Health,
+  Knockback,
+  Damage,
+  Lifetime,
+  Explosive,
+  DropsPickup,
+} from './shared';
+
+// Tag traits
+export {
+  IsPlayer,
+  IsEnemy,
+  IsProjectile,
+  IsPickup,
+  IsDeployable,
+  IsBoss,
+  IsDead,
+  IsArmed,
+  IsAttracted,
+  IsPlayerOwned,
+  IsEnemyOwned,
+} from './tags';
+
+// Per-type AoS traits
+export { PlayerStats, PlayerCharacter, WeaponInventory } from './player';
+export { EnemyData } from './enemy';
+export { ProjectileData } from './projectile';
+export { PickupData } from './pickup';
+export { DeployableData } from './deployable';

@@ -5,6 +5,7 @@
 
 import { container } from 'tsyringe';
 import { CombatMath } from '@/utils/combat-math';
+import type { BossRenderData } from '@/rendering/render-types';
 
 // ============ Types ============
 
@@ -24,15 +25,6 @@ export interface HUDWaveManager {
   waveNumber: number;
   timeRemaining: number;
   isWaveActive: boolean;
-}
-
-export interface HUDBoss {
-  type: string;
-  hp: number;
-  maxHp: number;
-  isBoss: boolean;
-  bossName?: string;
-  hasTopHealthBar?: boolean;
 }
 
 // ============ HUD System ============
@@ -119,14 +111,11 @@ export const HUD = {
   renderBossHealthBar(
     ctx: CanvasRenderingContext2D,
     canvasWidth: number,
-    enemies: HUDBoss[],
+    bosses: BossRenderData[],
   ): void {
-    // Find active boss
-    const boss = enemies.find((e) => e.isBoss);
+    // Find first active boss
+    const boss = bosses[0];
     if (!boss) return;
-
-    // Mark boss so we don't draw small health bar above them
-    boss.hasTopHealthBar = true;
 
     const barWidth = canvasWidth * 0.5;
     const barHeight = 18;
@@ -155,9 +144,9 @@ export const HUD = {
     ctx.font = 'bold 13px Arial';
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillText(`${bossEmoji} ${boss.bossName ?? 'BOSS'}`, canvasWidth / 2 + 1, barY - 6);
+    ctx.fillText(`${bossEmoji} ${boss.name}`, canvasWidth / 2 + 1, barY - 6);
     ctx.fillStyle = '#ff6b6b';
-    ctx.fillText(`${bossEmoji} ${boss.bossName ?? 'BOSS'}`, canvasWidth / 2, barY - 7);
+    ctx.fillText(`${bossEmoji} ${boss.name}`, canvasWidth / 2, barY - 7);
 
     // Bar background - dark with rounded corners
     ctx.beginPath();

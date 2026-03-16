@@ -1,4 +1,3 @@
-import { Deployable, Projectile } from '@/entities';
 import { DeployableType, ProjectileType, VisualEffect } from '@/types';
 
 export interface WeaponConfig {
@@ -43,11 +42,6 @@ export interface WeaponInstance {
   name: string;
   fireOffset: number; // Staggered shooting offset
 }
-export interface FireResult {
-  projectiles: Projectile[];
-  deployables: Deployable[];
-}
-
 export interface WeaponEntityConfig {
   type: WeaponType;
   /** Fire offset for staggered shooting (milliseconds) */

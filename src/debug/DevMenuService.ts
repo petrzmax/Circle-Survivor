@@ -2,6 +2,9 @@ import { SHOP_ITEMS } from '@/config/shop.config';
 import { EnemySpawnSystem } from '@/domain/enemies/EnemySpawnSystem';
 import { WeaponType } from '@/domain/weapons/type';
 import { WeaponManager } from '@/domain/weapons/WeaponManager';
+import { Health, PlayerStats } from '@/ecs/traits';
+import { fullHealEntity } from '@/ecs/utils/entity-utils';
+import { addItem, applyStat } from '@/ecs/utils/player-utils';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
 import { RenderSystem } from '@/systems/RenderSystem';
@@ -53,42 +56,41 @@ export class DevMenuService {
   // ============ Player Actions ============
 
   public getPlayerState(): PlayerState | null {
-    try {
-      const player = this.entityManager.getPlayer();
-      return {
-        hp: player.hp,
-        maxHp: player.maxHp,
-        godMode: player.godMode,
-      };
-    } catch {
-      return null;
-    }
+    if (!this.entityManager.hasPlayer()) return null;
+    const entity = this.entityManager.getPlayerEntity();
+    const health = entity.get(Health)!;
+    const stats = entity.get(PlayerStats)!;
+    return {
+      hp: health.hp,
+      maxHp: health.maxHp,
+      godMode: stats.godMode,
+    };
   }
 
   public setGodMode(enabled: boolean): void {
-    const player = this.entityManager.getPlayer();
-    player.godMode = enabled;
+    const stats = this.entityManager.getPlayerStats();
+    stats.godMode = enabled;
     console.log(`[DevMenu] God mode: ${enabled ? 'ON' : 'OFF'}`);
   }
 
-  public healPlayer(amount: number): void {
-    const player = this.entityManager.getPlayer();
-    player.heal(amount);
+  public healPlayer(): void {
+    const entity = this.entityManager.getPlayerEntity();
+    fullHealEntity(entity);
     console.log(`[DevMenu] Player healed`);
   }
 
   public addItemToPlayer(itemId: string): void {
-    const player = this.entityManager.getPlayer();
+    const entity = this.entityManager.getPlayerEntity();
     const item = SHOP_ITEMS[itemId];
 
     if (item?.type === 'item') {
-      player.addItem(itemId);
+      addItem(entity, itemId);
 
       // Apply stat bonuses from effect
       const effect = item.effect;
       for (const [stat, value] of Object.entries(effect)) {
         if (value !== undefined) {
-          player.applyStat(stat as keyof typeof effect, value as number);
+          applyStat(entity, stat as keyof typeof effect, value as number);
         }
       }
       console.log(`[DevMenu] Added item: ${item.name}`);

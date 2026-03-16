@@ -1,16 +1,24 @@
 /**
  * CollisionResponseSystem — Pure routing layer.
  *
- * Reads CollisionResult, dispatches to DamageSystem / ExplosionSystem / DeathSystem.
+ * Reads CollisionResult (raw Entity references), dispatches to DamageSystem / DeathSystem.
  */
+import type { Entity } from 'koota';
 import { singleton } from 'tsyringe';
 import { ConfigService } from '@/config/ConfigService';
-import { Enemy } from '@/domain/enemies';
-import { Player } from '@/domain/player';
+import {
+  Damage,
+  DeployableData,
+  Explosive,
+  Health,
+  IsBoss,
+  IsDead,
+  PlayerStats,
+  Position,
+  ProjectileData,
+} from '@/ecs/traits';
 import { EventBus } from '@/events/EventBus';
-import { Projectile } from '@/entities/Projectile';
 import { EntityManager } from '@/managers/EntityManager';
-import { VisualEffect } from '@/types/enums';
 import { DamageSource, getExplosionOrigin } from './damage.types';
 import { CollisionResult } from './CollisionSystem';
 import { DamageSystem } from './DamageSystem';
@@ -29,51 +37,47 @@ export class CollisionResponseSystem {
     this.bossContactDamageMultiplier = configService.getBossBalance().contactDamageMultiplier;
   }
 
-  /**
-   * Process all collisions from CollisionSystem.
-   * Routes each collision type to the appropriate system.
-   */
   public processCollisions(collisions: CollisionResult, currentTime: number): void {
-    const player = this.entityManager.getPlayer();
+    const playerEntity = this.entityManager.getPlayerEntity();
 
-    this.handlePlayerEnemyContacts(player, collisions.playerEnemyCollisions, currentTime);
-    this.handlePlayerProjectiles(player, collisions.playerProjectileCollisions, currentTime);
-    this.handleProjectileEnemyHits(collisions.projectileEnemyCollisions, currentTime);
-    this.handleShockwaves(player, collisions.shockwavePlayerCollisions, currentTime);
-    this.handleDeployables(player, collisions.deployableCollisions);
+    this.handlePlayerEnemyContacts(playerEntity, collisions.playerEnemyCollisions, currentTime);
+    this.handlePlayerProjectiles(playerEntity, collisions.playerProjectileCollisions, currentTime);
+    this.handleProjectileEnemyHits(playerEntity, collisions.projectileEnemyCollisions, currentTime);
+    this.handleShockwaves(playerEntity, collisions.shockwavePlayerCollisions, currentTime);
+    this.handleDeployables(playerEntity, collisions.deployableCollisions);
   }
 
   /** 1. Player-Enemy contact damage + thorns */
   private handlePlayerEnemyContacts(
-    player: Player,
-    enemies: CollisionResult['playerEnemyCollisions'],
+    playerEntity: Entity,
+    enemies: Entity[],
     currentTime: number,
   ): void {
+    const playerStats = playerEntity.get(PlayerStats)!;
+
     for (const enemy of enemies) {
-      let damage = enemy.damage;
-      if (enemy.isBoss) {
+      const ePos = enemy.get(Position)!;
+      let damage = enemy.get(Damage)!.amount;
+      const isBoss = enemy.has(IsBoss);
+      if (isBoss) {
         damage *= this.bossContactDamageMultiplier;
       }
 
       const result = this.damageSystem.damageEntity(
-        player,
+        playerEntity,
         damage,
         currentTime,
-        enemy.position,
+        ePos,
         DamageSource.ENEMY_CONTACT,
-        1,
-        false,
-        true,
       );
 
       // Thorns on contact damage
-      if (result.actualDamage > 0 && player.thorns > 0) {
+      if (result.actualDamage > 0 && playerStats.thorns > 0) {
         const thornsResult = this.damageSystem.applyThorns(
-          player,
+          playerEntity,
           enemy,
           result.actualDamage,
           currentTime,
-          enemy.isBoss,
         );
         if (thornsResult.isDead) {
           this.deathSystem.registerEnemyDeath(enemy);
@@ -88,37 +92,44 @@ export class CollisionResponseSystem {
 
   /** 2. Player hit by enemy projectiles + thorns reflected to shooter */
   private handlePlayerProjectiles(
-    player: Player,
-    projectiles: CollisionResult['playerProjectileCollisions'],
+    playerEntity: Entity,
+    projectiles: Entity[],
     currentTime: number,
   ): void {
-    for (const projectile of projectiles) {
+    const playerStats = playerEntity.get(PlayerStats)!;
+
+    for (const proj of projectiles) {
+      const pPos = proj.get(Position)!;
+      const pDamage = proj.get(Damage)!.amount;
+      const projectileData = proj.get(ProjectileData)!;
+
       const result = this.damageSystem.damageEntity(
-        player,
-        projectile.damage,
+        playerEntity,
+        pDamage,
         currentTime,
-        projectile.position,
+        pPos,
         DamageSource.ENEMY_PROJECTILE,
-        1,
-        false,
-        true,
       );
 
-      projectile.destroy();
+      // Mark projectile dead
+      if (!proj.has(IsDead)) proj.add(IsDead);
 
       // Thorns on enemy projectile — reflect to the shooting enemy
-      if (result.actualDamage > 0 && player.thorns > 0) {
-        const attacker = this.entityManager.getEnemy(projectile.ownerId);
-        if (attacker && !attacker.isDead()) {
-          const thornsResult = this.damageSystem.applyThorns(
-            player,
-            attacker,
-            result.actualDamage,
-            currentTime,
-            attacker.isBoss,
-          );
-          if (thornsResult.isDead) {
-            this.deathSystem.registerEnemyDeath(attacker);
+      if (result.actualDamage > 0 && playerStats.thorns > 0) {
+        // Find attacker entity by ownerId
+        const attackerEntity = this.findEnemyById(projectileData.ownerId);
+        if (attackerEntity && !attackerEntity.has(IsDead)) {
+          const h = attackerEntity.get(Health);
+          if (h && h.hp > 0) {
+            const thornsResult = this.damageSystem.applyThorns(
+              playerEntity,
+              attackerEntity,
+              result.actualDamage,
+              currentTime,
+            );
+            if (thornsResult.isDead) {
+              this.deathSystem.registerEnemyDeath(attackerEntity);
+            }
           }
         }
       }
@@ -131,35 +142,31 @@ export class CollisionResponseSystem {
 
   /** 3. Player projectiles hitting enemies */
   private handleProjectileEnemyHits(
-    hits: CollisionResult['projectileEnemyCollisions'],
+    playerEntity: Entity,
+    hits: Array<{ projectile: Entity; enemy: Entity }>,
     currentTime: number,
   ): void {
     for (const { projectile, enemy } of hits) {
-      this.processProjectileHit(projectile, enemy, currentTime);
+      this.processProjectileHit(playerEntity, projectile, enemy, currentTime);
     }
   }
 
   /** 4. Shockwave damage to player */
   private handleShockwaves(
-    player: Player,
+    playerEntity: Entity,
     shockwaves: CollisionResult['shockwavePlayerCollisions'],
     currentTime: number,
   ): void {
     for (const shockwave of shockwaves) {
       const result = this.damageSystem.damageEntity(
-        player,
+        playerEntity,
         shockwave.damage,
         currentTime,
         { x: shockwave.x, y: shockwave.y },
         DamageSource.SHOCKWAVE,
-        1,
-        false,
-        true,
       );
 
       shockwave.damageDealt = true;
-
-      // Thorns on shockwave — no traceable attacker entity, skip thorns
 
       if (result.isDead) {
         this.deathSystem.registerPlayerDeath();
@@ -169,49 +176,68 @@ export class CollisionResponseSystem {
 
   /** 5. Deployable triggers (mines, traps) → queue explosions */
   private handleDeployables(
-    player: Player,
-    deployables: CollisionResult['deployableCollisions'],
+    playerEntity: Entity,
+    deployables: Array<{ deployable: Entity; enemies: Entity[] }>,
   ): void {
+    const playerStats = playerEntity.get(PlayerStats)!;
+
     for (const { deployable } of deployables) {
-      const explosionData = deployable.trigger();
-      if (explosionData) {
-        EventBus.emit('queueExplosion', {
-          position: deployable.position,
-          radius: explosionData.explosionRadius * player.explosionRadius,
-          damage: explosionData.explosionDamage * player.damageMultiplier,
-          visualEffect: explosionData.visualEffect ?? VisualEffect.STANDARD,
-          sourceId: deployable.id,
-        });
+      const deployableData = deployable.get(DeployableData)!;
+      const dPos = deployable.get(Position)!;
+      const explosive = deployable.get(Explosive);
+
+      if (!explosive || explosive.radius <= 0) continue;
+
+      // Trigger: mark dead + queue explosion
+      if (!deployable.has(IsDead)) {
+        deployable.add(IsDead);
       }
+
+      EventBus.emit('queueExplosion', {
+        position: dPos,
+        radius: explosive.radius * playerStats.explosionRadius,
+        damage: explosive.damage * playerStats.damageMultiplier,
+        visualEffect: deployableData.visualEffect,
+        sourceId: deployable.id(),
+      });
     }
   }
 
   /**
    * Process a projectile hitting an enemy.
-   * Pre-bakes offense multipliers, delegates defense to DamageSystem.
    */
-  private processProjectileHit(projectile: Projectile, enemy: Enemy, currentTime: number): void {
-    // Skip already-dead enemies (prevents double kill from shotgun pellets in same frame)
-    if (enemy.isDead()) return;
+  private processProjectileHit(
+    playerEntity: Entity,
+    projectile: Entity,
+    enemy: Entity,
+    currentTime: number,
+  ): void {
+    // Skip already-dead enemies
+    const eHealth = enemy.get(Health);
+    if (!eHealth || eHealth.hp <= 0) return;
 
-    const player = this.entityManager.getPlayer();
+    const playerStats = playerEntity.get(PlayerStats)!;
+    const pPos = projectile.get(Position)!;
+    const projectileData = projectile.get(ProjectileData)!;
+    const pDamage = projectile.get(Damage)!.amount;
+    const isBoss = enemy.has(IsBoss);
 
-    // Pre-bake offense damage: projectile.damage already includes crit (from WeaponManager)
-    const finalDamage = projectile.damage * player.damageMultiplier;
-    const totalKnockback = player.knockback * projectile.knockbackMultiplier;
+    // Pre-bake offense damage: projectile damage already includes crit (from WeaponManager)
+    const finalDamage = pDamage * playerStats.damageMultiplier;
+    const totalKnockback = playerStats.knockback * projectileData.knockbackMultiplier;
 
     const result = this.damageSystem.damageEntity(
       enemy,
       finalDamage,
       currentTime,
-      projectile.position,
-      DamageSource.ENEMY_CONTACT, // reusing — it's player-to-enemy damage
+      pPos,
+      DamageSource.ENEMY_CONTACT,
       totalKnockback,
-      enemy.isBoss,
+      isBoss,
     );
 
     // Lifesteal on hit
-    this.damageSystem.applyLifesteal(player);
+    this.damageSystem.applyLifesteal(playerEntity);
 
     // Register kill
     if (result.isDead) {
@@ -219,28 +245,39 @@ export class CollisionResponseSystem {
     }
 
     // Handle explosive projectiles
-    if (projectile.isExplosive() && projectile.explosive) {
-      const origin = getExplosionOrigin(projectile.type);
-      const expRadius = projectile.explosive.explosionRadius * player.explosionRadius;
+    if (projectileData.explosive) {
+      const origin = getExplosionOrigin(projectileData.type);
+      const expRadius = projectileData.explosive.explosionRadius * playerStats.explosionRadius;
 
-      // Pre-bake explosion damage with player multiplier
       EventBus.emit('queueExplosion', {
-        position: projectile.position,
+        position: pPos,
         radius: expRadius,
-        damage: projectile.explosive.explosionDamage * player.damageMultiplier,
-        visualEffect: projectile.explosive.visualEffect,
-        sourceId: projectile.id,
+        damage: projectileData.explosive.explosionDamage * playerStats.damageMultiplier,
+        visualEffect: projectileData.explosive.visualEffect,
+        sourceId: projectile.id(),
         origin,
       });
     }
 
     // Destroy non-piercing projectiles
-    if (!projectile.canPierce()) {
-      projectile.destroy();
-    } else if (projectile.pierce && projectile.pierce.pierceCount <= 0) {
-      projectile.destroy();
+    const canPierce = projectileData.pierce && projectileData.pierce.pierceCount > 0;
+    if (!canPierce) {
+      if (!projectile.has(IsDead)) projectile.add(IsDead);
     }
 
-    EventBus.emit('projectileHit', { projectile, target: enemy });
+    EventBus.emit('projectileHit', {
+      projectileId: projectile.id(),
+      targetId: enemy.id(),
+      position: pPos,
+    });
+  }
+
+  /** Find an enemy entity by its Koota entity ID */
+  private findEnemyById(entityId: number): Entity | null {
+    const enemies = this.entityManager.getActiveEnemies();
+    for (const e of enemies) {
+      if (e.id() === entityId) return e;
+    }
+    return null;
   }
 }

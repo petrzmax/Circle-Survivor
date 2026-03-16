@@ -3,7 +3,7 @@
  * Separates rendering logic from entity logic.
  */
 
-import { Projectile } from '@/entities/Projectile';
+import type { ProjectileRenderData } from './render-types';
 import { ProjectileType } from '@/types/enums';
 import { randomRange } from '@/utils';
 import { normalize, TWO_PI } from '@/utils/math';
@@ -11,41 +11,41 @@ import { normalize, TWO_PI } from '@/utils/math';
 /**
  * Renders a projectile to the canvas based on its type.
  */
-export function renderProjectile(ctx: CanvasRenderingContext2D, projectile: Projectile): void {
+export function renderProjectile(ctx: CanvasRenderingContext2D, p: ProjectileRenderData): void {
   ctx.save();
-  ctx.translate(projectile.position.x, projectile.position.y);
+  ctx.translate(p.x, p.y);
 
-  switch (projectile.type) {
+  switch (p.type) {
     case ProjectileType.NUKE:
-      renderNuke(ctx, projectile);
+      renderNuke(ctx, p);
       break;
     case ProjectileType.SCYTHE:
-      renderScythe(ctx, projectile);
+      renderScythe(ctx, p);
       break;
     case ProjectileType.SWORD:
-      renderSword(ctx, projectile);
+      renderSword(ctx, p);
       break;
     case ProjectileType.HOLY_GRENADE:
-      renderHolyGrenade(ctx, projectile);
+      renderHolyGrenade(ctx, p);
       break;
     case ProjectileType.BANANA:
     case ProjectileType.MINI_BANANA:
-      renderBanana(ctx, projectile);
+      renderBanana(ctx, p);
       break;
     case ProjectileType.CROSSBOW_BOLT:
-      renderCrossbowBolt(ctx, projectile);
+      renderCrossbowBolt(ctx, p);
       break;
     case ProjectileType.ROCKET:
-      renderRocket(ctx, projectile);
+      renderRocket(ctx, p);
       break;
     case ProjectileType.FLAMETHROWER:
-      renderFlame(ctx, projectile);
+      renderFlame(ctx, p);
       break;
     case ProjectileType.ENEMY_BULLET:
-      renderEnemyBullet(ctx, projectile);
+      renderEnemyBullet(ctx, p);
       break;
     default:
-      renderStandardBullet(ctx, projectile);
+      renderStandardBullet(ctx, p);
   }
 
   ctx.restore();
@@ -54,7 +54,7 @@ export function renderProjectile(ctx: CanvasRenderingContext2D, projectile: Proj
 /**
  * Standard bullet - simple colored circle with glow
  */
-function renderStandardBullet(ctx: CanvasRenderingContext2D, p: Projectile): void {
+function renderStandardBullet(ctx: CanvasRenderingContext2D, p: ProjectileRenderData): void {
   ctx.beginPath();
   ctx.arc(0, 0, p.radius, 0, TWO_PI);
   ctx.fillStyle = p.color;
@@ -77,7 +77,7 @@ function renderStandardBullet(ctx: CanvasRenderingContext2D, p: Projectile): voi
 /**
  * Nuke - large glowing green ball
  */
-function renderNuke(ctx: CanvasRenderingContext2D, p: Projectile): void {
+function renderNuke(ctx: CanvasRenderingContext2D, p: ProjectileRenderData): void {
   ctx.beginPath();
   ctx.arc(0, 0, p.radius, 0, TWO_PI);
 
@@ -96,7 +96,7 @@ function renderNuke(ctx: CanvasRenderingContext2D, p: Projectile): void {
 /**
  * Scythe - rotating crescent (uses projectile's rotation property)
  */
-function renderScythe(ctx: CanvasRenderingContext2D, p: Projectile): void {
+function renderScythe(ctx: CanvasRenderingContext2D, p: ProjectileRenderData): void {
   ctx.rotate(p.rotation);
 
   ctx.beginPath();
@@ -109,9 +109,8 @@ function renderScythe(ctx: CanvasRenderingContext2D, p: Projectile): void {
 /**
  * Sword - swift slash shape
  */
-function renderSword(ctx: CanvasRenderingContext2D, p: Projectile): void {
-  const vel = p.getVelocity();
-  ctx.rotate(Math.atan2(vel.vy, vel.vx));
+function renderSword(ctx: CanvasRenderingContext2D, p: ProjectileRenderData): void {
+  ctx.rotate(Math.atan2(p.vy, p.vx));
 
   ctx.beginPath();
   ctx.moveTo(-p.radius, 0);
@@ -130,7 +129,7 @@ function renderSword(ctx: CanvasRenderingContext2D, p: Projectile): void {
 /**
  * Holy Grenade - golden ball with cross
  */
-function renderHolyGrenade(ctx: CanvasRenderingContext2D, p: Projectile): void {
+function renderHolyGrenade(ctx: CanvasRenderingContext2D, p: ProjectileRenderData): void {
   ctx.beginPath();
   ctx.arc(0, 0, p.radius, 0, TWO_PI);
 
@@ -158,7 +157,7 @@ function renderHolyGrenade(ctx: CanvasRenderingContext2D, p: Projectile): void {
 /**
  * Banana - rotating yellow crescent
  */
-function renderBanana(ctx: CanvasRenderingContext2D, p: Projectile): void {
+function renderBanana(ctx: CanvasRenderingContext2D, p: ProjectileRenderData): void {
   ctx.rotate(p.rotation);
 
   ctx.beginPath();
@@ -174,9 +173,8 @@ function renderBanana(ctx: CanvasRenderingContext2D, p: Projectile): void {
 /**
  * Crossbow Bolt - arrow shape with glowing hook
  */
-function renderCrossbowBolt(ctx: CanvasRenderingContext2D, p: Projectile): void {
-  const vel = p.getVelocity();
-  ctx.rotate(Math.atan2(vel.vy, vel.vx));
+function renderCrossbowBolt(ctx: CanvasRenderingContext2D, p: ProjectileRenderData): void {
+  ctx.rotate(Math.atan2(p.vy, p.vx));
 
   // Arrow shaft
   ctx.beginPath();
@@ -199,9 +197,7 @@ function renderCrossbowBolt(ctx: CanvasRenderingContext2D, p: Projectile): void 
 /**
  * Rocket - bazooka rocket with flame trail
  */
-function renderRocket(ctx: CanvasRenderingContext2D, p: Projectile): void {
-  const vel = p.getVelocity();
-
+function renderRocket(ctx: CanvasRenderingContext2D, p: ProjectileRenderData): void {
   // Body with gradient
   ctx.beginPath();
   ctx.arc(0, 0, p.radius, 0, TWO_PI);
@@ -213,7 +209,7 @@ function renderRocket(ctx: CanvasRenderingContext2D, p: Projectile): void {
   ctx.fill();
 
   // Flame trail (use normalized direction with fixed length)
-  const dir = normalize({ x: vel.vx, y: vel.vy });
+  const dir = normalize({ x: p.vx, y: p.vy });
   if (dir.x !== 0 || dir.y !== 0) {
     ctx.beginPath();
     ctx.moveTo(-dir.x * 8, -dir.y * 8);
@@ -227,7 +223,7 @@ function renderRocket(ctx: CanvasRenderingContext2D, p: Projectile): void {
 /**
  * Flamethrower - fire particle
  */
-function renderFlame(ctx: CanvasRenderingContext2D, p: Projectile): void {
+function renderFlame(ctx: CanvasRenderingContext2D, p: ProjectileRenderData): void {
   const alpha = Math.max(0.3, 1 - p.distanceTraveled / (p.maxDistance || 120));
 
   ctx.beginPath();
@@ -244,7 +240,7 @@ function renderFlame(ctx: CanvasRenderingContext2D, p: Projectile): void {
 /**
  * Enemy Bullet - red hostile projectile with dark center
  */
-function renderEnemyBullet(ctx: CanvasRenderingContext2D, p: Projectile): void {
+function renderEnemyBullet(ctx: CanvasRenderingContext2D, p: ProjectileRenderData): void {
   // Glow effect
   ctx.shadowColor = p.color;
   ctx.shadowBlur = 10;

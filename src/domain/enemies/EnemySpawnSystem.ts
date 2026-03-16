@@ -1,11 +1,12 @@
+import type { Entity } from 'koota';
 import { ConfigService } from '@/config/ConfigService';
+import { EnemyData, IsBoss } from '@/ecs/traits';
 import { EventBus } from '@/events/EventBus';
-import { EntityManager } from '@/managers/EntityManager';
+import type { EnemyDeathData } from '@/events/GameEvents';
 import { EnemyType } from '@/types/enums';
 import { TWO_PI, Vector2 } from '@/utils/math';
 import { getSpawnPoint } from '@/utils/random';
 import { singleton } from 'tsyringe';
-import { Enemy } from './Enemy';
 import { EnemyCreateOptions, EnemyFactory } from './EnemyFactory';
 
 export interface EnemySpawnOptions extends EnemyCreateOptions {
@@ -22,7 +23,6 @@ const SPLIT_SCALE = 0.6;
 @singleton()
 export class EnemySpawnSystem {
   public constructor(
-    private entityManager: EntityManager,
     private enemyFactory: EnemyFactory,
     private configService: ConfigService,
   ) {
@@ -34,27 +34,26 @@ export class EnemySpawnSystem {
    * Generates a random edge position if none provided.
    * Emits `bossSpawned` event for boss enemies.
    */
-  public spawn(type: EnemyType, options?: EnemySpawnOptions): Enemy {
+  public spawn(type: EnemyType, options?: EnemySpawnOptions): Entity {
     const position = options?.position ?? this.getRandomSpawnPosition();
 
-    const enemy = this.enemyFactory.create(type, position, {
+    const entity = this.enemyFactory.create(type, position, {
       waveNumber: options?.waveNumber,
       scale: options?.scale,
     });
 
-    this.entityManager.addEnemy(enemy);
-
-    if (enemy.isBoss) {
-      EventBus.emit('bossSpawned', { enemy, bossName: enemy.bossName ?? 'Boss' });
+    if (entity.has(IsBoss)) {
+      const enemyData = entity.get(EnemyData)!;
+      EventBus.emit('bossSpawned', { bossName: enemyData.bossName ?? 'Boss' });
     }
 
-    return enemy;
+    return entity;
   }
 
   /**
    * Spawn multiple enemies of given types (all at random positions).
    */
-  public spawnBatch(types: EnemyType[], waveNumber?: number): Enemy[] {
+  public spawnBatch(types: EnemyType[], waveNumber?: number): Entity[] {
     return types.map((type) => this.spawn(type, { waveNumber }));
   }
 
@@ -80,7 +79,7 @@ export class EnemySpawnSystem {
    * Spawn split enemies around the parent's death position.
    * Distributes children evenly in a circle.
    */
-  private spawnSplitEnemies(parent: Enemy): void {
+  private spawnSplitEnemies(parent: EnemyDeathData): void {
     const splitType = parent.type === EnemyType.SPLITTER ? EnemyType.SWARM : EnemyType.BASIC;
 
     for (let i = 0; i < parent.splitCount; i++) {

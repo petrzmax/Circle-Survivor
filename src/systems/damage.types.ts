@@ -57,48 +57,6 @@ export interface DamageResult {
   isDead: boolean;
 }
 
-// ============ Damageable Interface ============
-
-export interface IDefenseStats {
-  /** Armor value (diminishing returns reduction). */
-  armor: number;
-  /** Dodge chance [0..1]. */
-  dodge: number;
-  /** God mode flag (immune to all damage). */
-  godMode: boolean;
-  /** Timestamp until which entity is invincible. */
-  invincibleUntil: number;
-  /** Duration of invincibility after being hit (ms). */
-  invincibilityDuration: number;
-}
-
-/**
- * Core damage target — the minimum data DamageSystem needs to modify HP and apply knockback.
- * Both Player and Enemy satisfy this structurally via their Entity base + health fields.
- */
-export interface IDamageTarget {
-  /** Entity ID for tracking */
-  id: number;
-  /** Current health */
-  hp: number;
-  /** Maximum health */
-  maxHp: number;
-  /** Position for knockback direction */
-  position: Vector2;
-  /** Knockback velocity X */
-  knockbackX: number;
-  /** Knockback velocity Y */
-  knockbackY: number;
-  /** Whether entity is active */
-  isActive: boolean;
-}
-
-/**
- * Combined type for DamageSystem consumers.
- * Defense stats are optional — entities without them (enemies) are treated as unarmored.
- */
-export type IDamageable = IDamageTarget & Partial<IDefenseStats>;
-
 // ============ Explosion Event ============
 
 /**

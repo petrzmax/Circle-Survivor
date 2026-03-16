@@ -30,7 +30,6 @@ export {
   circleInRect,
   circleOutsideRect,
   circleOverlapDepth,
-  entityCollision,
   pointInCircle,
   pointInRect,
   rectCircleCollision,

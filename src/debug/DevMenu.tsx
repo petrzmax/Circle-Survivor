@@ -336,7 +336,7 @@ export function DevMenu(): JSX.Element | null {
               type="button"
               className="success"
               onClick={() => {
-                service.healPlayer(Infinity);
+                service.healPlayer();
               }}
             >
               Full Heal

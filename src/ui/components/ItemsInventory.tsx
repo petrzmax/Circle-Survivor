@@ -1,6 +1,6 @@
 import { SHOP_ITEMS } from '@/config/shop.config';
 import { STAT_LABELS } from '@/config/stats-labels.config';
-import { Player } from '@/domain/player/Player';
+import type { PlayerData } from '@/domain/player/type';
 import { JSX } from 'preact';
 import { useMemo } from 'preact/hooks';
 import { useItemTooltip } from '../hooks/useItemTooltip';
@@ -15,7 +15,7 @@ const DISPLAYED_STATS: ReadonlyArray<{
   key: string;
   emoji: string;
   label: string;
-  format: (player: Player) => string;
+  format: (player: PlayerData) => string;
 }> = [
   // Defensive
   {
@@ -113,7 +113,7 @@ const DISPLAYED_STATS: ReadonlyArray<{
 ];
 
 interface ItemsInventoryProps {
-  player: Player;
+  player: PlayerData;
 }
 
 export function ItemsInventory({ player }: ItemsInventoryProps): JSX.Element {

@@ -4,6 +4,9 @@
  */
 
 import { ConfigService } from '@/config/ConfigService';
+import { PlayerStats, Position } from '@/ecs/traits';
+import { healEntity } from '@/ecs/utils/entity-utils';
+import { updatePlayerMovement } from '@/ecs/utils/player-utils';
 import { EntityManager } from '@/managers/EntityManager';
 import { type CanvasBounds } from '@/utils';
 import { singleton } from 'tsyringe';
@@ -28,31 +31,32 @@ export class PlayerSystem {
    * Update player: poll input, move, regen, set auto-aim target.
    */
   public update(deltaTime: number, currentTime: number): void {
-    const player = this.entityManager.getPlayer();
+    const player = this.entityManager.getPlayerEntity();
+    const stats = player.get(PlayerStats)!;
 
     // Poll gamepad state and get unified input
     this.inputSystem.poll();
     const input = this.inputSystem.getInputState();
 
     // Apply input to player movement
-    player.updateMovement(input, this.canvasBounds, deltaTime);
+    updatePlayerMovement(player, input, this.canvasBounds, deltaTime);
 
     // Health regeneration
-    if (player.regen > 0) {
+    if (stats.regen > 0) {
       if (!this.lastRegenTime) this.lastRegenTime = currentTime;
       if (currentTime - this.lastRegenTime >= 1000) {
-        player.heal(player.regen);
+        healEntity(player, stats.regen);
         this.lastRegenTime = currentTime;
       }
     }
 
     // Find nearest enemy for auto-aim (only within map bounds)
-    const nearestEnemy = this.entityManager.getNearestEnemy(
-      player.position,
+    const nearestEnemyPos = this.entityManager.getNearestEnemyPosition(
+      player.get(Position)!,
       undefined,
       this.canvasBounds,
     );
-    player.setTarget(nearestEnemy ? nearestEnemy.position : null);
+    stats.currentTarget = nearestEnemyPos;
   }
 
   /**

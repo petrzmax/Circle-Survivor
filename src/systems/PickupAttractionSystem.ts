@@ -4,6 +4,7 @@
  */
 
 import { ConfigService } from '@/config/ConfigService';
+import { IsAttracted, PlayerCharacter, PlayerStats, Position, WeaponInventory } from '@/ecs/traits';
 import { EntityManager } from '@/managers/EntityManager';
 import { distance } from '@/utils';
 import { singleton } from 'tsyringe';
@@ -29,34 +30,44 @@ export class PickupAttractionSystem {
    * Only applies when the player has the magnet item.
    */
   public update(deltaTime: number): void {
-    const player = this.entityManager.getPlayer();
-    const hasMagnet = player.items.includes('magnet');
-    if (!hasMagnet) return;
+    const playerEntity = this.entityManager.getPlayerEntity();
+
+    const inventory = playerEntity.get(WeaponInventory);
+    if (!inventory?.items.includes('magnet')) return;
+
+    const playerPos = playerEntity.get(Position)!;
+    const playerStats = playerEntity.get(PlayerStats)!;
+    const playerChar = playerEntity.get(PlayerCharacter)!;
+    const playerSpeed = playerChar.characterConfig!.speed * playerStats.speedMultiplier;
+    const pickupRange = playerStats.pickupRange;
 
     const pickups = this.entityManager.getActivePickups();
 
     for (const pickup of pickups) {
-      if (!pickup.isActive) continue;
+      const pickupPos = pickup.get(Position)!;
+      const distToPlayer = distance(pickupPos, playerPos);
+      const isAttracted = pickup.has(IsAttracted);
 
-      const distToPlayer = distance(pickup.position, player.position);
-
-      if (distToPlayer < player.pickupRange || pickup.isAttracted) {
-        pickup.isAttracted = true;
+      if (distToPlayer < pickupRange || isAttracted) {
+        if (!isAttracted) {
+          pickup.add(IsAttracted);
+        }
 
         if (distToPlayer > 0) {
-          const dx = player.position.x - pickup.position.x;
-          const dy = player.position.y - pickup.position.y;
+          const dx = playerPos.x - pickupPos.x;
+          const dy = playerPos.y - pickupPos.y;
 
-          // Clamp normalized distance to [0, 1] to prevent weird behavior when outside range
-          const normalizedDistance = Math.min(1, distToPlayer / player.pickupRange);
-          // Interpolate from maxFactor (close) to minFactor (far)
+          const normalizedDistance = Math.min(1, distToPlayer / pickupRange);
           const distanceFactor =
             this.maxDistanceFactor -
             (this.maxDistanceFactor - this.minDistanceFactor) * normalizedDistance;
-          const magnetSpeed = player.speed * this.speedMultiplier * distanceFactor;
+          const magnetSpeed = playerSpeed * this.speedMultiplier * distanceFactor;
 
-          pickup.position.x += (dx / distToPlayer) * magnetSpeed * deltaTime;
-          pickup.position.y += (dy / distToPlayer) * magnetSpeed * deltaTime;
+          // Position is SoA — must use set()
+          pickup.set(Position, {
+            x: pickupPos.x + (dx / distToPlayer) * magnetSpeed * deltaTime,
+            y: pickupPos.y + (dy / distToPlayer) * magnetSpeed * deltaTime,
+          });
         }
       }
     }

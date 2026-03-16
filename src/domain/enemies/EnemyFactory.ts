@@ -1,9 +1,12 @@
 /**
- * EnemyFactory - Creates Enemy instances with scaling applied.
+ * EnemyFactory - Creates enemy entities with scaling applied.
+ * Returns raw Koota Entity (no adapter).
  */
 
+import type { Entity } from 'koota';
 import { ENEMY_TYPES } from '@/domain/enemies/config';
-import { Enemy } from '@/domain/enemies/Enemy';
+import { Damage, Health } from '@/ecs/traits';
+import { spawnEnemy } from '@/ecs/factories/entity-factories';
 import { EnemyType } from '@/types/enums';
 import { Vector2 } from '@/utils';
 import { singleton } from 'tsyringe';
@@ -21,33 +24,32 @@ export class EnemyFactory {
   public constructor(private scalingService: EnemyScalingService) {}
 
   /**
-   * Create an enemy with optional wave scaling and size scale.
+   * Create an enemy entity with optional wave scaling and size scale.
    */
-  public create(type: EnemyType, position: Vector2, options?: EnemyCreateOptions): Enemy {
-    const enemy = new Enemy({
-      position,
-      type,
-      scale: options?.scale,
-    });
+  public create(type: EnemyType, position: Vector2, options?: EnemyCreateOptions): Entity {
+    const entity = spawnEnemy({ type, position, scale: options?.scale });
 
     if (options?.waveNumber !== undefined) {
-      this.applyWaveScaling(enemy, type, options.waveNumber);
+      this.applyWaveScaling(entity, type, options.waveNumber);
     }
 
-    return enemy;
+    return entity;
   }
 
   /**
-   * Apply wave-based stat scaling to an enemy.
+   * Apply wave-based stat scaling to an enemy entity.
    */
-  private applyWaveScaling(enemy: Enemy, type: EnemyType, waveNumber: number): void {
+  private applyWaveScaling(entity: Entity, type: EnemyType, waveNumber: number): void {
     const config = ENEMY_TYPES[type];
     const scaling = config.isBoss
       ? this.scalingService.getBossScaling(waveNumber)
       : this.scalingService.getEnemyScaling(waveNumber);
 
-    enemy.maxHp = Math.round(enemy.maxHp * scaling.hpMultiplier);
-    enemy.hp = enemy.maxHp;
-    enemy.damage = Math.round(enemy.damage * scaling.dmgMultiplier);
+    const health = entity.get(Health)!;
+    const scaledMaxHp = Math.round(health.maxHp * scaling.hpMultiplier);
+    entity.set(Health, { hp: scaledMaxHp, maxHp: scaledMaxHp });
+
+    const damage = entity.get(Damage)!;
+    entity.set(Damage, { amount: Math.round(damage.amount * scaling.dmgMultiplier) });
   }
 }

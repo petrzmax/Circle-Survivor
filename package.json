@@ -42,6 +42,7 @@
     "vitest": "^4.1.0"
   },
   "dependencies": {
+    "koota": "^0.6.5",
     "preact": "^10.28.4",
     "react-hot-toast": "^2.6.0",
     "reflect-metadata": "^0.2.2",

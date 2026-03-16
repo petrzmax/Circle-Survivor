@@ -1,6 +1,6 @@
 import { GAME_BALANCE } from '@/config';
-import { Enemy } from '@/domain/enemies';
 import { EventBus } from '@/events/EventBus';
+import type { EnemyDeathData } from '@/events/GameEvents';
 import { createGoldPickup, createHealthPickup } from '@/factories';
 import { EntityManager } from '@/managers';
 import { randomChance, randomInt, randomPointInCircle, vectorFromAngle } from '@/utils';
@@ -16,12 +16,11 @@ export class PickupSpawnSystem {
     this.connectToEventBus();
   }
 
-  private spawnGoldPickups(enemy: Enemy): void {
+  private spawnGoldPickups(enemy: EnemyDeathData): void {
     // Drop gold - bosses drop multiple bags for satisfying effect
     if (enemy.isBoss) {
       // One large bag (50% of value) in center
-      const bigPickup = createGoldPickup(enemy.position, Math.floor(enemy.goldValue * 0.5));
-      this.entityManager.addPickup(bigPickup);
+      createGoldPickup(enemy.position, Math.floor(enemy.goldValue * 0.5));
 
       // 6-8 small bags scattered around
       const smallBags = randomInt(6, 8);
@@ -30,38 +29,35 @@ export class PickupSpawnSystem {
         const angle = (TWO_PI / smallBags) * i;
         const dist = randomInt(20, 50);
         const offset = vectorFromAngle(angle, dist);
-        const smallPickup = createGoldPickup(addVectors(enemy.position, offset), smallValue);
-        this.entityManager.addPickup(smallPickup);
+        createGoldPickup(addVectors(enemy.position, offset), smallValue);
       }
     } else {
       // Normal enemy - one bag with random offset
       if (enemy.goldValue > 0) {
         const goldPosition = randomPointInCircle(enemy.position, 10);
-        const goldPickup = createGoldPickup(goldPosition, enemy.goldValue);
-        this.entityManager.addPickup(goldPickup);
+        createGoldPickup(goldPosition, enemy.goldValue);
       }
     }
   }
 
-  private spawnHealthPickup(enemy: Enemy): void {
-    const player = this.entityManager.getPlayer();
+  private spawnHealthPickup(enemy: EnemyDeathData): void {
+    const stats = this.entityManager.getPlayerStats();
 
     // Chance for health drop (base + luck bonus)
-    const healthDropChance =
-      player.healthDropChance + player.luck * player.healthDropLuckMultiplier;
+    const healthDropChance = stats.healthDropChance + stats.luck * stats.healthDropLuckMultiplier;
 
     if (randomChance(healthDropChance)) {
-      const healthPickup = createHealthPickup(
+      // spawnPickup adds directly to world — test via world.query(IsPickup).
+      createHealthPickup(
         // TODO random offset
         { x: enemy.position.x + 20, y: enemy.position.y },
         GAME_BALANCE.drops.healthDropValue,
       );
-      this.entityManager.addPickup(healthPickup);
     }
   }
 
   private connectToEventBus(): void {
-    EventBus.on('enemyDeath', ({ enemy, killer: _killer }) => {
+    EventBus.on('enemyDeath', ({ enemy }) => {
       this.spawnGoldPickups(enemy);
       this.spawnHealthPickup(enemy);
     });

@@ -1,40 +1,41 @@
 /**
  * CollisionSystem - Handles collision detection between entities.
- * Emits events when collisions are detected for other systems to handle.
+ * Operates directly on Koota Entity + traits (no adapters).
  */
 
+import type { Entity } from 'koota';
 import { ConfigService } from '@/config/ConfigService';
-import { Enemy } from '@/domain/enemies';
-import { Deployable } from '@/entities/Deployable';
-import { Pickup } from '@/entities/Pickup';
-import { Projectile } from '@/entities/Projectile';
+import {
+  Collider,
+  DeployableData,
+  EnemyData,
+  IsDead,
+  Position,
+  ProjectileData,
+} from '@/ecs/traits';
 import { EntityManager } from '@/managers/EntityManager';
 import { distance, distanceSquared, Vector2 } from '@/utils';
 import { singleton } from 'tsyringe';
 import { Shockwave } from './EffectsSystem';
 
 /**
- * Collision detection result
+ * Collision detection result — all arrays contain raw Koota Entity references.
  */
 export interface CollisionResult {
-  /** Player hit by enemy */
-  playerEnemyCollisions: Enemy[];
-  /** Player hit by enemy projectile */
-  playerProjectileCollisions: Projectile[];
+  /** Enemies colliding with player */
+  playerEnemyCollisions: Entity[];
+  /** Enemy projectiles hitting player */
+  playerProjectileCollisions: Entity[];
   /** Player projectiles hitting enemies */
-  projectileEnemyCollisions: Array<{ projectile: Projectile; enemy: Enemy }>;
+  projectileEnemyCollisions: Array<{ projectile: Entity; enemy: Entity }>;
   /** Pickups in player collection range */
-  pickupCollisions: Pickup[];
-  /** Enemies triggering deployables */
-  deployableCollisions: Array<{ deployable: Deployable; enemies: Enemy[] }>;
+  pickupCollisions: Entity[];
+  /** Deployables triggered by enemies */
+  deployableCollisions: Array<{ deployable: Entity; enemies: Entity[] }>;
   /** Shockwaves hitting the player */
   shockwavePlayerCollisions: Shockwave[];
 }
 
-/**
- * Handles all collision detection in the game.
- * Uses spatial queries from EntityManager for efficiency.
- */
 @singleton()
 export class CollisionSystem {
   private shockwaveProvider: (() => Shockwave[]) | null = null;
@@ -44,16 +45,10 @@ export class CollisionSystem {
     private configService: ConfigService,
   ) {}
 
-  /**
-   * Set the provider function for active shockwaves
-   */
   public setShockwaveProvider(provider: () => Shockwave[]): void {
     this.shockwaveProvider = provider;
   }
 
-  /**
-   * Check all collisions and return results
-   */
   public checkAll(): CollisionResult {
     const result: CollisionResult = {
       playerEnemyCollisions: [],
@@ -64,47 +59,40 @@ export class CollisionSystem {
       shockwavePlayerCollisions: [],
     };
 
-    const player = this.entityManager.getPlayer();
-    if (!player.isActive) {
-      return result;
-    }
+    const playerEntity = this.entityManager.getPlayerEntity();
+    if (playerEntity.has(IsDead)) return result;
 
-    // Check player-enemy collisions
-    result.playerEnemyCollisions = this.checkPlayerEnemyCollisions();
+    const playerPos = playerEntity.get(Position)!;
+    const playerRadius = playerEntity.get(Collider)!.radius;
 
-    // Check player-projectile collisions (enemy bullets)
-    result.playerProjectileCollisions = this.checkPlayerProjectileCollisions();
-
-    // Check projectile-enemy collisions (player bullets)
+    result.playerEnemyCollisions = this.checkPlayerEnemyCollisions(playerPos, playerRadius);
+    result.playerProjectileCollisions = this.checkPlayerProjectileCollisions(
+      playerPos,
+      playerRadius,
+    );
     result.projectileEnemyCollisions = this.checkProjectileEnemyCollisions();
-
-    // Check pickup collisions
-    result.pickupCollisions = this.checkPickupCollisions();
-
-    // Check deployable collisions
+    result.pickupCollisions = this.checkPickupCollisions(playerPos, playerRadius);
     result.deployableCollisions = this.checkDeployableCollisions();
-
-    // Check shockwave-player collisions
-    result.shockwavePlayerCollisions = this.checkShockwavePlayerCollisions();
+    result.shockwavePlayerCollisions = this.checkShockwavePlayerCollisions(playerPos);
 
     return result;
   }
 
-  /**
-   * Check player collision with enemies
-   */
-  private checkPlayerEnemyCollisions(): Enemy[] {
-    const player = this.entityManager.getPlayer();
-
-    const collisions: Enemy[] = [];
+  private checkPlayerEnemyCollisions(
+    playerPos: { x: number; y: number },
+    playerRadius: number,
+  ): Entity[] {
+    const collisions: Entity[] = [];
     const enemies = this.entityManager.getActiveEnemies();
 
     for (const enemy of enemies) {
-      // Skip phasing enemies
-      if (enemy.phasing) continue;
+      const d = enemy.get(EnemyData)!;
+      if (d.phasing) continue;
 
-      const combinedRadius = player.radius + enemy.radius;
-      if (distanceSquared(player.position, enemy.position) < combinedRadius * combinedRadius) {
+      const ePos = enemy.get(Position)!;
+      const eRadius = enemy.get(Collider)!.radius;
+      const combinedRadius = playerRadius + eRadius;
+      if (distanceSquared(playerPos, ePos) < combinedRadius * combinedRadius) {
         collisions.push(enemy);
       }
     }
@@ -112,51 +100,54 @@ export class CollisionSystem {
     return collisions;
   }
 
-  /**
-   * Check player collision with enemy projectiles
-   */
-  private checkPlayerProjectileCollisions(): Projectile[] {
-    const player = this.entityManager.getPlayer();
+  private checkPlayerProjectileCollisions(
+    playerPos: { x: number; y: number },
+    playerRadius: number,
+  ): Entity[] {
+    const collisions: Entity[] = [];
+    const enemyProjectiles = this.entityManager.getActiveEnemyProjectiles();
 
-    const collisions: Projectile[] = [];
-    const enemyProjectiles = this.entityManager.getEnemyProjectiles();
-
-    for (const projectile of enemyProjectiles) {
-      const combinedRadius = player.radius + projectile.radius;
-      if (distanceSquared(player.position, projectile.position) < combinedRadius * combinedRadius) {
-        collisions.push(projectile);
+    for (const proj of enemyProjectiles) {
+      const pPos = proj.get(Position)!;
+      const pRadius = proj.get(Collider)!.radius;
+      const combinedRadius = playerRadius + pRadius;
+      if (distanceSquared(playerPos, pPos) < combinedRadius * combinedRadius) {
+        collisions.push(proj);
       }
     }
 
     return collisions;
   }
 
-  /**
-   * Check player projectiles hitting enemies
-   */
-  private checkProjectileEnemyCollisions(): Array<{ projectile: Projectile; enemy: Enemy }> {
-    const collisions: Array<{ projectile: Projectile; enemy: Enemy }> = [];
-    const playerProjectiles = this.entityManager.getPlayerProjectiles();
+  private checkProjectileEnemyCollisions(): Array<{ projectile: Entity; enemy: Entity }> {
+    const collisions: Array<{ projectile: Entity; enemy: Entity }> = [];
+    const playerProjectiles = this.entityManager.getActivePlayerProjectiles();
     const enemies = this.entityManager.getActiveEnemies();
 
-    for (const projectile of playerProjectiles) {
+    for (const proj of playerProjectiles) {
+      const pPos = proj.get(Position)!;
+      const pRadius = proj.get(Collider)!.radius;
+      const pd = proj.get(ProjectileData)!;
+
       for (const enemy of enemies) {
-        const combinedRadius = projectile.radius + enemy.radius;
-        if (
-          distanceSquared(projectile.position, enemy.position) <
-          combinedRadius * combinedRadius
-        ) {
+        const ePos = enemy.get(Position)!;
+        const eRadius = enemy.get(Collider)!.radius;
+        const combinedRadius = pRadius + eRadius;
+
+        if (distanceSquared(pPos, ePos) < combinedRadius * combinedRadius) {
           // For piercing projectiles, check if already hit
-          if (projectile.canPierce()) {
-            if (!projectile.registerHit(enemy.id)) {
-              continue; // Already hit this enemy
+          if (pd.pierce && pd.pierce.pierceCount > 0) {
+            if (pd.pierce.hitEnemies.has(enemy.id())) {
+              continue;
             }
+            pd.pierce.hitEnemies.add(enemy.id());
+            pd.pierce.pierceCount--;
           }
 
-          collisions.push({ projectile, enemy });
+          collisions.push({ projectile: proj, enemy });
 
           // Non-piercing projectiles stop after first hit
-          if (!projectile.canPierce()) {
+          if (!pd.pierce || pd.pierce.pierceCount <= 0) {
             break;
           }
         }
@@ -166,18 +157,18 @@ export class CollisionSystem {
     return collisions;
   }
 
-  /**
-   * Check pickup collection (immediate pickup on contact)
-   */
-  private checkPickupCollisions(): Pickup[] {
-    const player = this.entityManager.getPlayer();
-
-    const collisions: Pickup[] = [];
+  private checkPickupCollisions(
+    playerPos: { x: number; y: number },
+    playerRadius: number,
+  ): Entity[] {
+    const collisions: Entity[] = [];
     const pickups = this.entityManager.getActivePickups();
 
     for (const pickup of pickups) {
-      const combinedRadius = player.radius + pickup.radius;
-      if (distanceSquared(player.position, pickup.position) < combinedRadius * combinedRadius) {
+      const pPos = pickup.get(Position)!;
+      const pRadius = pickup.get(Collider)!.radius;
+      const combinedRadius = playerRadius + pRadius;
+      if (distanceSquared(playerPos, pPos) < combinedRadius * combinedRadius) {
         collisions.push(pickup);
       }
     }
@@ -185,24 +176,21 @@ export class CollisionSystem {
     return collisions;
   }
 
-  /**
-   * Check deployable triggers (enemies stepping on mines)
-   */
-  private checkDeployableCollisions(): Array<{ deployable: Deployable; enemies: Enemy[] }> {
-    const collisions: Array<{ deployable: Deployable; enemies: Enemy[] }> = [];
+  private checkDeployableCollisions(): Array<{ deployable: Entity; enemies: Entity[] }> {
+    const collisions: Array<{ deployable: Entity; enemies: Entity[] }> = [];
     const deployables = this.entityManager.getArmedDeployables();
     const enemies = this.entityManager.getActiveEnemies();
 
     for (const deployable of deployables) {
-      const triggerRadius = deployable.triggerRadius;
-      const triggeredBy: Enemy[] = [];
+      const dd = deployable.get(DeployableData)!;
+      const dPos = deployable.get(Position)!;
+      const triggeredBy: Entity[] = [];
 
       for (const enemy of enemies) {
-        const combinedRadius = triggerRadius + enemy.radius;
-        if (
-          distanceSquared(deployable.position, enemy.position) <
-          combinedRadius * combinedRadius
-        ) {
+        const ePos = enemy.get(Position)!;
+        const eRadius = enemy.get(Collider)!.radius;
+        const combinedRadius = dd.triggerRadius + eRadius;
+        if (distanceSquared(dPos, ePos) < combinedRadius * combinedRadius) {
           triggeredBy.push(enemy);
         }
       }
@@ -215,13 +203,9 @@ export class CollisionSystem {
     return collisions;
   }
 
-  /**
-   * Check shockwave collision with player (ring-based detection)
-   */
-  private checkShockwavePlayerCollisions(): Shockwave[] {
+  private checkShockwavePlayerCollisions(playerPos: { x: number; y: number }): Shockwave[] {
     if (!this.shockwaveProvider) return [];
 
-    const player = this.entityManager.getPlayer();
     const shockwaves = this.shockwaveProvider();
     const collisions: Shockwave[] = [];
     const ringWidth = this.configService.getEffectsConfig().shockwaves.ringWidth;
@@ -229,8 +213,7 @@ export class CollisionSystem {
     for (const sw of shockwaves) {
       if (sw.damageDealt) continue;
 
-      const dist = distance({ x: sw.x, y: sw.y }, player.position);
-
+      const dist = distance({ x: sw.x, y: sw.y }, playerPos);
       if (dist <= sw.currentRadius && dist >= sw.currentRadius - ringWidth) {
         collisions.push(sw);
       }
@@ -240,15 +223,17 @@ export class CollisionSystem {
   }
 
   /**
-   * Check if point is inside any enemy
+   * Check if point is inside any enemy. Returns the entity or null.
    */
-  public isPointInEnemy(position: Vector2): Enemy | null {
+  public isPointInEnemy(position: Vector2): Entity | null {
     const enemies = this.entityManager.getActiveEnemies();
 
     for (const enemy of enemies) {
-      const dx = position.x - enemy.position.x;
-      const dy = position.y - enemy.position.y;
-      if (dx * dx + dy * dy <= enemy.radius * enemy.radius) {
+      const ePos = enemy.get(Position)!;
+      const eRadius = enemy.get(Collider)!.radius;
+      const dx = position.x - ePos.x;
+      const dy = position.y - ePos.y;
+      if (dx * dx + dy * dy <= eRadius * eRadius) {
         return enemy;
       }
     }

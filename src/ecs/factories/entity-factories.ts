@@ -158,7 +158,12 @@ export function spawnEnemy(entityConfig: EnemyEntityConfig): Entity {
     Velocity({ vx: 0, vy: 0 }),
     Collider({ radius }),
     Health({ hp, maxHp: hp }),
-    PhysicsBody({ mass: config.mass ?? (isBoss ? GAME_BALANCE.boss.mass : GAME_BALANCE.enemy.mass), friction: 0.2, forceX: 0, forceY: 0 }),
+    PhysicsBody({
+      mass: config.mass ?? (isBoss ? GAME_BALANCE.boss.mass : GAME_BALANCE.enemy.mass),
+      friction: 0.2,
+      forceX: 0,
+      forceY: 0,
+    }),
     Damage({ amount: damage }),
     DropsPickup({
       goldValue: Math.floor(config.goldValue * scale),

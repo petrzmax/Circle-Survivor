@@ -26,6 +26,7 @@
   "homepage": "https://github.com/petrzmax/Circle-Survivor#readme",
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.29.0",
+    "@eslint/js": "^10.0.1",
     "@preact/preset-vite": "^2.10.4",
     "@testing-library/preact": "^3.2.4",
     "@types/node": "^25.3.5",
@@ -43,6 +44,7 @@
   },
   "dependencies": {
     "koota": "^0.6.5",
+    "nipplejs": "^0.10.2",
     "preact": "^10.28.4",
     "react-hot-toast": "^2.6.0",
     "reflect-metadata": "^0.2.2",

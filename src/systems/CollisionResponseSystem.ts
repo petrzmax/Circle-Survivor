@@ -280,16 +280,17 @@ export class CollisionResponseSystem {
   }
 
   /** 6. Enemy-enemy overlap repulsion */
-  private handleEnemyEnemyCollisions(
-    pairs: Array<{ enemyA: Entity; enemyB: Entity }>,
-  ): void {
+  private handleEnemyEnemyCollisions(pairs: Array<{ enemyA: Entity; enemyB: Entity }>): void {
     for (const { enemyA, enemyB } of pairs) {
       const posA = enemyA.get(Position)!;
       const posB = enemyB.get(Position)!;
       const radiusA = enemyA.get(Collider)!.radius;
       const radiusB = enemyB.get(Collider)!.radius;
 
-      const overlap = circleOverlapDepth({ ...posA, radius: radiusA }, { ...posB, radius: radiusB });
+      const overlap = circleOverlapDepth(
+        { ...posA, radius: radiusA },
+        { ...posB, radius: radiusB },
+      );
       if (overlap <= 0) continue;
 
       const dist = distance(posA, posB);

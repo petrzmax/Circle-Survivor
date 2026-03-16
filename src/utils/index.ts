@@ -40,6 +40,8 @@ export {
 
 export { getEnemyDisplayName } from './format';
 
+export { ViewportScaler } from './viewport-scaler';
+
 export {
   ScreenSide,
   getSpawnPoint,

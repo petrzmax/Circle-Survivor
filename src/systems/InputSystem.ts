@@ -4,10 +4,11 @@
  * Provides analog input values when gamepad is used.
  */
 
-import { singleton } from 'tsyringe';
 import { StateManager } from '@/managers/StateManager';
-import { InputHandler, KeyState } from './InputHandler';
+import { singleton } from 'tsyringe';
 import { GamepadHandler } from './GamepadHandler';
+import { InputHandler, KeyState } from './InputHandler';
+import { TouchHandler } from './TouchHandler';
 
 /**
  * Extended input state with optional analog values.
@@ -33,6 +34,7 @@ export interface ExtendedInputState {
 export class InputSystem {
   private keyboardHandler: InputHandler;
   private gamepadHandler: GamepadHandler;
+  private touchHandler: TouchHandler;
 
   /** Threshold for converting analog to digital */
   private readonly analogThreshold: number = 0.3;
@@ -40,15 +42,17 @@ export class InputSystem {
   public constructor(stateManager: StateManager) {
     this.keyboardHandler = new InputHandler(stateManager);
     this.gamepadHandler = new GamepadHandler();
+    this.touchHandler = new TouchHandler();
     this.setup();
   }
 
   /**
-   * Initialize both input handlers
+   * Initialize all input handlers
    */
   public setup(): void {
     this.keyboardHandler.setup();
     this.gamepadHandler.setup();
+    this.touchHandler.setup();
   }
 
   /**
@@ -71,22 +75,37 @@ export class InputSystem {
     // Get gamepad state
     const gpState = this.getGamepadState();
 
+    // Get touch state
+    const touchAnalog = this.touchHandler.getAnalog();
+    const hasTouchInput =
+      this.touchHandler.isTouchActive() &&
+      (Math.abs(touchAnalog.x) > 0.01 || Math.abs(touchAnalog.y) > 0.01);
+
     // Check if gamepad is providing meaningful analog input
-    const hasAnalogInput =
+    const hasGamepadAnalog =
       gpState.analogX !== undefined &&
       gpState.analogY !== undefined &&
       (Math.abs(gpState.analogX) > 0.01 || Math.abs(gpState.analogY) > 0.01);
 
-    // Merge: OR logic for digital, prefer gamepad for analog
+    // Convert touch analog to digital
+    const touchUp = hasTouchInput && touchAnalog.y < -this.analogThreshold;
+    const touchDown = hasTouchInput && touchAnalog.y > this.analogThreshold;
+    const touchLeft = hasTouchInput && touchAnalog.x < -this.analogThreshold;
+    const touchRight = hasTouchInput && touchAnalog.x > this.analogThreshold;
+
+    // Merge: OR logic for digital
     const result: ExtendedInputState = {
-      up: kbState.up || gpState.up,
-      down: kbState.down || gpState.down,
-      left: kbState.left || gpState.left,
-      right: kbState.right || gpState.right,
+      up: kbState.up || gpState.up || touchUp,
+      down: kbState.down || gpState.down || touchDown,
+      left: kbState.left || gpState.left || touchLeft,
+      right: kbState.right || gpState.right || touchRight,
     };
 
-    // Include analog values if gamepad is providing input
-    if (hasAnalogInput) {
+    // Include analog values (touch takes priority over gamepad)
+    if (hasTouchInput) {
+      result.analogX = touchAnalog.x;
+      result.analogY = touchAnalog.y;
+    } else if (hasGamepadAnalog) {
       result.analogX = gpState.analogX;
       result.analogY = gpState.analogY;
     }
@@ -163,5 +182,6 @@ export class InputSystem {
   public destroy(): void {
     this.keyboardHandler.destroy();
     this.gamepadHandler.destroy();
+    this.touchHandler.destroy();
   }
 }

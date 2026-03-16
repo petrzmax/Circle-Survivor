@@ -20,4 +20,5 @@ export * from './PlayerSystem';
 export * from './ProjectileSystem';
 export * from './RenderSystem';
 export * from './RewardSystem';
+export * from './TouchHandler';
 export * from './WaveManager';

@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Circle Survivor</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -16,6 +16,12 @@
         <!-- Preact UI mount point -->
         <div id="ui-root"></div>
     </div>
+
+    <!-- Touch joystick zone (mobile only, outside game-container to avoid transform offset) -->
+    <div id="touch-zone"></div>
+
+    <!-- Fullscreen toggle (mobile only) -->
+    <button id="fullscreen-btn" aria-label="Toggle fullscreen">⛶</button>
 
     <!-- Vite entry point -->
     <script type="module" src="/src/main.ts"></script>

@@ -4,12 +4,34 @@
  */
 
 import 'reflect-metadata';
-import { container } from 'tsyringe';
 import { Game } from '@/core/Game';
 import { mountUI } from '@/ui';
+import { ViewportScaler } from '@/utils/viewport-scaler';
+import { container } from 'tsyringe';
+
+function setupFullscreenToggle(scaler: ViewportScaler): void {
+  const btn = document.getElementById('fullscreen-btn');
+  if (!btn) return;
+
+  btn.addEventListener('click', () => {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen().then(() => {
+        scaler.rescale();
+      });
+    } else {
+      void document.documentElement.requestFullscreen().then(() => {
+        scaler.rescale();
+      });
+    }
+  });
+}
 
 // Start when page loads
 window.addEventListener('load', () => {
+  // Scale game container to fit viewport
+  const scaler = new ViewportScaler();
+  setupFullscreenToggle(scaler);
+
   // Mount Preact UI layer
   mountUI();
 

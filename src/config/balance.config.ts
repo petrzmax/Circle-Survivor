@@ -121,8 +121,8 @@ export const GAME_BALANCE = {
   combat: {
     /** Explosion damage falloff at edge. 0.5 = 50% damage at max radius, 100% at center. */
     explosionFalloff: 0.2,
-    /** Explosion knockback force multiplier (px/s). */ // NOT USED YET
-    explosionKnockback: 300,
+    /** Explosion knockback impulse (px/s). Scaled by distance falloff and divided by entity mass. */
+    explosionKnockback: 600,
     /** Speed (px/s) below which a grenade is considered "landed" and should explode. */
     grenadeStopSpeed: 35,
   },

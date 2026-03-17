@@ -10,10 +10,10 @@
 import type { Entity } from 'koota';
 import { singleton } from 'tsyringe';
 import { ConfigService } from '@/config/ConfigService';
-import { Health, IsBoss, PlayerStats, Position } from '@/ecs/traits';
-import { applyForce, healEntity } from '@/ecs/utils/entity-utils';
+import { Health, PlayerStats, Position } from '@/ecs/traits';
+import { applyImpulseAwayFrom, healEntity } from '@/ecs/utils/entity-utils';
 import { EventBus } from '@/events/EventBus';
-import { distance, Vector2 } from '@/utils/math';
+import type { Vector2 } from '@/utils/math';
 import { randomChance } from '@/utils/random';
 import { CombatMath } from '@/utils/combat-math';
 import { DamageResult, DamageSource } from './damage.types';
@@ -42,7 +42,6 @@ export class DamageSystem {
    * @param source       Position the damage came from (for knockback direction)
    * @param damageSource Categorized source type for events
    * @param knockbackMultiplier  Knockback force multiplier (default 1)
-   * @param isBoss       Whether the target is a boss (affects knockback weight)
    */
   public damageEntity(
     target: Entity,
@@ -51,7 +50,6 @@ export class DamageSystem {
     source: Vector2,
     damageSource: DamageSource,
     knockbackMultiplier: number = 1,
-    isBoss: boolean = false,
   ): DamageResult {
     // Read defense stats from PlayerStats (only player has them)
     const stats = target.get(PlayerStats);
@@ -93,7 +91,7 @@ export class DamageSystem {
     }
 
     // Apply directional knockback
-    this.applyKnockback(target, source, knockbackMultiplier, isBoss);
+    applyImpulseAwayFrom(target, source, this.knockbackForce * knockbackMultiplier);
 
     // Emit typed damage event
     EventBus.emit('entityDamaged', {
@@ -142,7 +140,6 @@ export class DamageSystem {
 
     EventBus.emit('thornsTriggered', undefined);
     const thornsDamage = actualDamage * stats.thorns;
-    const isBoss = attacker.has(IsBoss);
 
     // Thorns damage bypasses attacker's armor/dodge — raw damage to HP + knockback
     return this.damageEntity(
@@ -152,27 +149,7 @@ export class DamageSystem {
       attacker.get(Position)!,
       DamageSource.THORNS,
       stats.knockback,
-      isBoss,
     );
   }
 
-  /**
-   * Apply directional knockback as a force on PhysicsBody.
-   */
-  private applyKnockback(
-    target: Entity,
-    source: Vector2,
-    knockbackMultiplier: number,
-    _isBoss: boolean,
-  ): void {
-    const pos = target.get(Position)!;
-    const dist = distance(pos, source);
-    const force = this.knockbackForce * knockbackMultiplier;
-
-    if (dist > 0) {
-      const dx = pos.x - source.x;
-      const dy = pos.y - source.y;
-      applyForce(target, (dx / dist) * force, (dy / dist) * force);
-    }
-  }
 }

@@ -9,7 +9,8 @@
  */
 
 import type { Entity } from 'koota';
-import { Health, IsDead, PhysicsBody } from '@/ecs/traits';
+import { Health, IsDead, PhysicsBody, Position } from '@/ecs/traits';
+import { normalize, scaleVector, subtractVectors, type Vector2 } from '@/utils/math';
 
 /**
  * Apply damage to any entity with a Health trait.
@@ -39,20 +40,34 @@ export function fullHealEntity(entity: Entity): void {
 }
 
 /**
- * Accumulate force on an entity's PhysicsBody trait.
- * Forces are additive — multiple calls per frame stack correctly.
- * PhysicsSystem clears forces after each tick.
+ * Accumulate impulse on an entity's PhysicsBody trait.
+ * Impulses are additive — multiple calls per frame stack correctly.
+ * PhysicsSystem clears impulses after each tick.
  */
-export function applyForce(entity: Entity, forceX: number, forceY: number): void {
+export function applyImpulse(entity: Entity, impulse: Vector2): void {
   const body = entity.get(PhysicsBody);
   if (!body) return;
 
   entity.set(PhysicsBody, {
     mass: body.mass,
     friction: body.friction,
-    forceX: body.forceX + forceX,
-    forceY: body.forceY + forceY,
+    impulseX: body.impulseX + impulse.x,
+    impulseY: body.impulseY + impulse.y,
   });
+}
+
+/**
+ * Push entity away from a source point with given magnitude.
+ * Handles direction computation and normalization internally.
+ */
+export function applyImpulseAwayFrom(entity: Entity, source: Vector2, magnitude: number): void {
+  const pos = entity.get(Position);
+  if (!pos) return;
+
+  const direction = normalize(subtractVectors(pos, source));
+  if (direction.x === 0 && direction.y === 0) return;
+
+  applyImpulse(entity, scaleVector(direction, magnitude));
 }
 
 /**

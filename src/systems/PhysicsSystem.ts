@@ -1,8 +1,8 @@
 /**
- * PhysicsSystem — Unified force→velocity→position integration with friction.
+ * PhysicsSystem — Unified impulse→velocity→position integration with friction.
  *
  * Processes all entities with PhysicsBody + Velocity + Position traits.
- * Handles: force accumulation (knockback, grenade deceleration),
+ * Handles: impulse accumulation (knockback, explosions),
  * friction-based velocity decay, and Euler position integration.
  */
 
@@ -22,9 +22,9 @@ export class PhysicsSystem {
       const body = entity.get(PhysicsBody)!;
       const vel = entity.get(Velocity)!;
 
-      // 1. Apply accumulated forces (impulse: velocity += force / mass)
-      let vx = vel.vx + body.forceX / body.mass;
-      let vy = vel.vy + body.forceY / body.mass;
+      // 1. Apply accumulated impulses (velocity += impulse / mass)
+      let vx = vel.vx + body.impulseX / body.mass;
+      let vy = vel.vy + body.impulseY / body.mass;
 
       // 2. Apply friction decay (frame-rate independent)
       if (body.friction > 0) {
@@ -43,12 +43,12 @@ export class PhysicsSystem {
         y: pos.y + vy * deltaTime,
       });
 
-      // 5. Clear accumulated forces
+      // 5. Clear accumulated impulses
       entity.set(PhysicsBody, {
         mass: body.mass,
         friction: body.friction,
-        forceX: 0,
-        forceY: 0,
+        impulseX: 0,
+        impulseY: 0,
       });
     }
   }

@@ -1,11 +1,13 @@
 import { singleton } from 'tsyringe';
-import { Collider, Health, IsBoss, IsDead, PlayerStats, Position } from '@/ecs/traits';
+import { Collider, Health, IsDead, PlayerStats, Position } from '@/ecs/traits';
 import { spawnProjectile } from '@/ecs/factories/entity-factories';
+import { applyImpulseAwayFrom } from '@/ecs/utils/entity-utils';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
 import { createMiniBananaConfigs } from '@/factories/ProjectileFactory';
 import { distance, distanceSquared, Vector2 } from '@/utils/math';
 import { CombatMath } from '@/utils/combat-math';
+import { ConfigService } from '@/config/ConfigService';
 import { DamageSource, ExplosionOrigin } from './damage.types';
 import { DamageSystem } from './DamageSystem';
 import { DeathSystem } from './DeathSystem';
@@ -17,12 +19,12 @@ const MAX_CHAIN_ITERATIONS = 10;
 export class ExplosionSystem {
   private pendingExplosions: ExplosionEvent[] = [];
   private pendingMiniBananaSpawns: ExplosionEvent[] = [];
-
   public constructor(
     private entityManager: EntityManager,
     private damageSystem: DamageSystem,
     private deathSystem: DeathSystem,
     private combatMath: CombatMath,
+    private configService: ConfigService,
   ) {
     EventBus.on('queueExplosion', (data) => {
       this.pendingExplosions.push(data);
@@ -158,7 +160,6 @@ export class ExplosionSystem {
       const effectiveDist = Math.max(0, dist - eRadius);
       const falloffMultiplier = this.combatMath.explosionFalloff(effectiveDist, radius);
       const finalDamage = Math.max(1, Math.round(damage * falloffMultiplier));
-      const isBoss = enemy.has(IsBoss);
 
       const result = this.damageSystem.damageEntity(
         enemy,
@@ -167,8 +168,11 @@ export class ExplosionSystem {
         position,
         DamageSource.EXPLOSION,
         0,
-        isBoss,
       );
+
+      // Apply explosion knockback (direction away from center, scaled by falloff)
+      const explosionKnockback = this.configService.getCombatConfig().explosionKnockback;
+      applyImpulseAwayFrom(enemy, position, explosionKnockback * falloffMultiplier);
 
       if (result.isDead) {
         killedThisBatch.add(id);

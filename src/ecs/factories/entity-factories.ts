@@ -51,7 +51,7 @@ export function spawnProjectile(config: ProjectileConfig): Entity {
   return world.spawn(
     IsProjectile,
     ...(isPlayerProjectile ? [IsPlayerOwned] : []),
-    PhysicsBody({ mass: 1, friction: config.friction ?? 0, forceX: 0, forceY: 0 }),
+    PhysicsBody({ mass: 1, friction: config.friction ?? 0, impulseX: 0, impulseY: 0 }),
     Position({ x: config.position.x, y: config.position.y }),
     Velocity({ vx: config.vx ?? 0, vy: config.vy ?? 0 }),
     Collider({ radius: config.radius }),
@@ -161,8 +161,8 @@ export function spawnEnemy(entityConfig: EnemyEntityConfig): Entity {
     PhysicsBody({
       mass: config.mass ?? (isBoss ? GAME_BALANCE.boss.mass : GAME_BALANCE.enemy.mass),
       friction: 0.2,
-      forceX: 0,
-      forceY: 0,
+      impulseX: 0,
+      impulseY: 0,
     }),
     Damage({ amount: damage }),
     DropsPickup({

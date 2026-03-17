@@ -18,7 +18,7 @@ import {
   Position,
   ProjectileData,
 } from '@/ecs/traits';
-import { applyForce } from '@/ecs/utils/entity-utils';
+import { applyImpulse } from '@/ecs/utils/entity-utils';
 import { circleOverlapDepth } from '@/utils/collision';
 import { distance } from '@/utils/math';
 import { EventBus } from '@/events/EventBus';
@@ -227,7 +227,6 @@ export class CollisionResponseSystem {
     const pPos = projectile.get(Position)!;
     const projectileData = projectile.get(ProjectileData)!;
     const pDamage = projectile.get(Damage)!.amount;
-    const isBoss = enemy.has(IsBoss);
 
     // Pre-bake offense damage: projectile damage already includes crit (from WeaponManager)
     const finalDamage = pDamage * playerStats.damageMultiplier;
@@ -240,7 +239,6 @@ export class CollisionResponseSystem {
       pPos,
       DamageSource.ENEMY_CONTACT,
       totalKnockback,
-      isBoss,
     );
 
     // Lifesteal on hit
@@ -308,8 +306,8 @@ export class CollisionResponseSystem {
       }
 
       const force = overlap * this.enemySeparationForce;
-      applyForce(enemyA, -dx * force, -dy * force);
-      applyForce(enemyB, dx * force, dy * force);
+      applyImpulse(enemyA, { x: -dx * force, y: -dy * force });
+      applyImpulse(enemyB, { x: dx * force, y: dy * force });
     }
   }
 

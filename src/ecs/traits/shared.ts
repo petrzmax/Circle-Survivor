@@ -36,5 +36,5 @@ export const DropsPickup = trait(() => ({
   goldValue: 0,
 }));
 
-/** Physics body — enables force-based movement with friction decay */
-export const PhysicsBody = trait({ mass: 1, friction: 0, forceX: 0, forceY: 0 });
+/** Physics body — enables impulse-based movement with friction decay */
+export const PhysicsBody = trait({ mass: 1, friction: 0, impulseX: 0, impulseY: 0 });

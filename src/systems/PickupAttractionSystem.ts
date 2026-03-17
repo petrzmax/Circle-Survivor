@@ -7,6 +7,7 @@ import { ConfigService } from '@/config/ConfigService';
 import { IsAttracted, PlayerCharacter, PlayerStats, Position, WeaponInventory } from '@/ecs/traits';
 import { EntityManager } from '@/managers/EntityManager';
 import { distance } from '@/utils';
+import { addVectors, normalize, scaleVector, subtractVectors } from '@/utils/math';
 import { singleton } from 'tsyringe';
 
 @singleton()
@@ -54,8 +55,7 @@ export class PickupAttractionSystem {
         }
 
         if (distToPlayer > 0) {
-          const dx = playerPos.x - pickupPos.x;
-          const dy = playerPos.y - pickupPos.y;
+          const dir = normalize(subtractVectors(playerPos, pickupPos));
 
           const normalizedDistance = Math.min(1, distToPlayer / pickupRange);
           const distanceFactor =
@@ -64,10 +64,7 @@ export class PickupAttractionSystem {
           const magnetSpeed = playerSpeed * this.speedMultiplier * distanceFactor;
 
           // Position is SoA — must use set()
-          pickup.set(Position, {
-            x: pickupPos.x + (dx / distToPlayer) * magnetSpeed * deltaTime,
-            y: pickupPos.y + (dy / distToPlayer) * magnetSpeed * deltaTime,
-          });
+          pickup.set(Position, addVectors(pickupPos, scaleVector(dir, magnetSpeed * deltaTime)));
         }
       }
     }

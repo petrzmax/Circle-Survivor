@@ -14,7 +14,7 @@ import {
   type CanvasBounds,
   type Vector2,
 } from '@/utils';
-import { TWO_PI } from '@/utils/math';
+import { addVectors, normalize, scaleVector, subtractVectors, TWO_PI } from '@/utils/math';
 import type { Entity } from 'koota';
 import { singleton } from 'tsyringe';
 
@@ -108,24 +108,22 @@ export class EnemySystem {
   ): void {
     const d = entity.get(EnemyData)!;
     const pos = entity.get(Position)!;
-    const dx = target.x - pos.x;
-    const dy = target.y - pos.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const dir = normalize(subtractVectors(target, pos));
 
     let newX = pos.x;
     let newY = pos.y;
 
-    if (dist > 0) {
-      let moveX = (dx / dist) * d.speed * deltaTime;
-      let moveY = (dy / dist) * d.speed * deltaTime;
+    if (dir.x !== 0 || dir.y !== 0) {
+      let move = scaleVector(dir, d.speed * deltaTime);
 
       if (d.zigzag) {
-        moveX += (-dy / dist) * d.speed * 0.8 * d.zigzagDir * deltaTime;
-        moveY += (dx / dist) * d.speed * 0.8 * d.zigzagDir * deltaTime;
+        const perpendicular = { x: -dir.y, y: dir.x };
+        const zigzagMove = scaleVector(perpendicular, d.speed * 0.8 * d.zigzagDir * deltaTime);
+        move = addVectors(move, zigzagMove);
       }
 
-      newX += moveX;
-      newY += moveY;
+      newX += move.x;
+      newY += move.y;
     }
 
     const r = entity.get(Collider)!.radius;

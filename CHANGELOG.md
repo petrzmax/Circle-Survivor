@@ -1,5 +1,37 @@
 # Changelog
 
+## [2.1.0](https://github.com/petrzmax/Circle-Survivor/compare/v2.0.0...v2.1.0) (2026-03-18)
+
+
+### ✨ Features
+
+* add physics impulse-based player movement ([b332ddb](https://github.com/petrzmax/Circle-Survivor/commit/b332ddbd400f62fd03e5a2cf3ed7f4adc4d24541))
+* add shockwave knockback handling ([ee17722](https://github.com/petrzmax/Circle-Survivor/commit/ee17722416928eb2bbb21f787c37c71ff4811a31))
+* enhance pickup mechanics with new attraction physics and explosion knockback ([a5e6034](https://github.com/petrzmax/Circle-Survivor/commit/a5e60345758c776f8c28da50d30d40c3372247e4))
+* explosion knockback enemies ([ccb11f7](https://github.com/petrzmax/Circle-Survivor/commit/ccb11f7387b726566f2cf17e85fe33eee25cad82))
+* force based enemy movement ([94da5d6](https://github.com/petrzmax/Circle-Survivor/commit/94da5d6de5934180857b0987e95eb615efba25b8))
+* implement steady-state force factor for player and enemy movement ([4a6da37](https://github.com/petrzmax/Circle-Survivor/commit/4a6da37cbd24f5660a23d47add5c3b27904cfac0))
+* introduce layout configuration and improve tooltip positioning ([92e2056](https://github.com/petrzmax/Circle-Survivor/commit/92e205698a5510ea4134785b2cbe6c16f703db5a))
+* refactor enemy mass handling and introduce mass calculation from radius ([0aed927](https://github.com/petrzmax/Circle-Survivor/commit/0aed927a1df36dab2fee80ab383413c643c4bc10))
+* update weapon configurations to use projectile mass for momentum-based knockback ([c7ff49c](https://github.com/petrzmax/Circle-Survivor/commit/c7ff49c7c57a8d6b04917dc21da2bebfb297f27f))
+
+
+### ⚖️ Balance Changes
+
+* **balance:** adjust projectile mass values for various weapon types ([b1210e4](https://github.com/petrzmax/Circle-Survivor/commit/b1210e491597ad446e2231406e7e2782f9d784c4))
+
+
+### 🐛 Bug Fixes
+
+* attraction not working ([a369711](https://github.com/petrzmax/Circle-Survivor/commit/a3697118f77afc2223e83a5abd2f9fb41c621b0d))
+* mini banana rotation ([5e048ba](https://github.com/petrzmax/Circle-Survivor/commit/5e048ba307aa4cc8dfc3ecb5606ca40ab4ff60c3))
+
+
+### ♻️ Refactoring
+
+* enemy and pickup attraction movement calculations ([7b7bd1f](https://github.com/petrzmax/Circle-Survivor/commit/7b7bd1fad833d1dc18c12f276668e82ee78a1544))
+* format imports for consistency across multiple files ([e8f7343](https://github.com/petrzmax/Circle-Survivor/commit/e8f73435da8b151508e32096183e2b669ce60452))
+
 ## [2.0.0](https://github.com/petrzmax/Circle-Survivor/compare/v1.11.0...v2.0.0) (2026-03-16)
 
 

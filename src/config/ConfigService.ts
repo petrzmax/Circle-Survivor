@@ -1,12 +1,13 @@
 import { GAME_BALANCE, GameBalanceConfig, WeaponUpgradeConfig } from '@/config/balance.config';
 import { EFFECTS_CONFIG, EffectsConfig } from '@/config/effects.config';
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from '@/config/layout.config';
 import { singleton } from 'tsyringe';
 import { CanvasBounds } from '@/types/common';
 
 @singleton()
 export class ConfigService {
   public getCanvasBounds(): CanvasBounds {
-    return { width: 900, height: 700 };
+    return { width: CANVAS_WIDTH, height: CANVAS_HEIGHT };
   }
 
   public getGameBalance(): GameBalanceConfig {

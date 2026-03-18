@@ -13,6 +13,13 @@ function setupFullscreenToggle(scaler: ViewportScaler): void {
   const btn = document.getElementById('fullscreen-btn');
   if (!btn) return;
 
+  // iOS Safari doesn't support Fullscreen API — hide the button entirely
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- not available on iOS Safari despite TS types
+  if (!document.documentElement.requestFullscreen) {
+    btn.style.display = 'none';
+    return;
+  }
+
   btn.addEventListener('click', () => {
     if (document.fullscreenElement) {
       void document.exitFullscreen().then(() => {

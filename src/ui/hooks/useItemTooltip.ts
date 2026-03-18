@@ -4,6 +4,7 @@
  */
 
 import { SHOP_ITEMS, StatShopItem } from '@/config/shop.config';
+import { ViewportScaler } from '@/utils/viewport-scaler';
 import { useCallback, useState } from 'preact/hooks';
 
 interface UseItemTooltipReturn {
@@ -19,7 +20,8 @@ export function useItemTooltip(): UseItemTooltipReturn {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   const handleMouseMove = useCallback((e: MouseEvent): void => {
-    setMousePosition({ x: e.clientX, y: e.clientY });
+    const local = ViewportScaler.viewportToLocal(e.clientX, e.clientY);
+    setMousePosition(local);
   }, []);
 
   const showTooltip = useCallback((itemKey: string): void => {

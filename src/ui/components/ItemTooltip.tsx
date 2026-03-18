@@ -5,11 +5,9 @@
 
 import { ItemEffect, StatShopItem } from '@/config/shop.config';
 import { STAT_LABELS } from '@/config/stats-labels.config';
+import { CONTAINER_WIDTH, TOOLTIP_OFFSET, TOOLTIP_WIDTH } from '@/utils/viewport-scaler';
 import { JSX } from 'preact';
 import './ItemTooltip.css';
-
-const TOOLTIP_WIDTH = 220;
-const TOOLTIP_OFFSET = 15;
 
 /**
  * Format functions for each ItemEffect key (how to display the delta value).
@@ -47,8 +45,8 @@ interface ItemTooltipProps {
 export function ItemTooltip({ itemData, position }: ItemTooltipProps): JSX.Element | null {
   if (!itemData) return null;
 
-  // Edge detection — flip to left if would overflow right edge
-  const shouldFlipLeft = position.x + TOOLTIP_WIDTH + TOOLTIP_OFFSET > window.innerWidth;
+  // Edge detection — flip to left if would overflow container
+  const shouldFlipLeft = position.x + TOOLTIP_WIDTH + TOOLTIP_OFFSET > CONTAINER_WIDTH;
   const left = shouldFlipLeft
     ? position.x - TOOLTIP_WIDTH - TOOLTIP_OFFSET
     : position.x + TOOLTIP_OFFSET;

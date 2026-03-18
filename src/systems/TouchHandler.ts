@@ -33,14 +33,25 @@ export class TouchHandler {
     // Show touch zone but not interactive yet (waits for PLAYING state)
     this.zone.classList.add('active');
 
+    // Prevent iOS from hijacking touches (pull-to-refresh, swipe-to-navigate)
+    this.zone.addEventListener(
+      'touchmove',
+      (e) => {
+        e.preventDefault();
+      },
+      { passive: false },
+    );
+
     // Also show fullscreen button on touch devices
     document.getElementById('fullscreen-btn')?.style.setProperty('display', 'block');
+
+    const joystickSize = Math.min(100, Math.floor(window.innerWidth * 0.22));
 
     this.manager = nipplejs.create({
       zone: this.zone,
       mode: 'dynamic',
       color: 'rgba(255, 255, 255, 0.25)',
-      size: 120,
+      size: joystickSize,
       restOpacity: 0,
       fadeTime: 100,
     });

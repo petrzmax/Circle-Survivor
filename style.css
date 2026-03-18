@@ -12,17 +12,21 @@ body {
     min-height: 100vh;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 #game-container {
     position: relative;
-    width: 906px;  /* 900 + 2*3px border */
-    height: 706px; /* 700 + 2*3px border */
+    width: var(--container-width, 906px);
+    height: var(--container-height, 706px);
 }
 
 #game {
     background: #16213e;
-    border: 3px solid #0f3460;
+    border: var(--border-width, 3px) solid #0f3460;
     border-radius: 8px;
     display: block;
 }
@@ -31,7 +35,7 @@ body {
     position: absolute;
     inset: 0;
     background: #16213e;
-    border: 3px solid #0f3460;
+    border: var(--border-width, 3px) solid #0f3460;
     border-radius: 8px;
     display: flex;
     justify-content: center;
@@ -931,7 +935,10 @@ button:hover {
 #touch-zone {
     display: none;
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     z-index: 9000;
     touch-action: none;
     pointer-events: none;

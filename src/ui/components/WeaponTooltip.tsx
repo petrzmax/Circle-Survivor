@@ -6,14 +6,12 @@
 import { STAT_LABELS } from '@/config/stats-labels.config';
 import { WeaponStatsCalculator } from '@/domain/weapons/WeaponStatsCalculator';
 import { WeaponConfig } from '@/domain/weapons/type';
+import { CONTAINER_WIDTH, TOOLTIP_OFFSET, TOOLTIP_WIDTH } from '@/utils/viewport-scaler';
 import { JSX } from 'preact';
 import { container } from 'tsyringe';
 import './WeaponTooltip.css';
 
 const statsCalculator = container.resolve(WeaponStatsCalculator);
-
-const TOOLTIP_WIDTH = 200;
-const TOOLTIP_OFFSET = 15;
 
 interface WeaponTooltipProps {
   weaponData: { config: WeaponConfig; level: number } | null;
@@ -26,8 +24,8 @@ export function WeaponTooltip({ weaponData, position }: WeaponTooltipProps): JSX
   const { config, level } = weaponData;
   const stats = statsCalculator.calculate(config, level);
 
-  // Edge detection - flip to left if would overflow right edge
-  const shouldFlipLeft = position.x + TOOLTIP_WIDTH + TOOLTIP_OFFSET > window.innerWidth;
+  // Edge detection - flip to left if would overflow container
+  const shouldFlipLeft = position.x + TOOLTIP_WIDTH + TOOLTIP_OFFSET > CONTAINER_WIDTH;
   const left = shouldFlipLeft
     ? position.x - TOOLTIP_WIDTH - TOOLTIP_OFFSET
     : position.x + TOOLTIP_OFFSET;

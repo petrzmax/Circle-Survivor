@@ -5,6 +5,7 @@
 
 import { WEAPON_TYPES } from '@/domain/weapons/config';
 import { WeaponConfig, WeaponType } from '@/domain/weapons/type';
+import { ViewportScaler } from '@/utils/viewport-scaler';
 import { useCallback, useState } from 'preact/hooks';
 
 interface WeaponTooltipData {
@@ -25,7 +26,8 @@ export function useWeaponTooltip(): UseWeaponTooltipReturn {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   const handleMouseMove = useCallback((e: MouseEvent): void => {
-    setMousePosition({ x: e.clientX, y: e.clientY });
+    const local = ViewportScaler.viewportToLocal(e.clientX, e.clientY);
+    setMousePosition(local);
   }, []);
 
   const showTooltip = useCallback((weaponType: WeaponType, level: number = 1): void => {

@@ -28,6 +28,7 @@ import {
   IsDeployable,
   IsEnemy,
   IsPickup,
+  ArenaBound,
   IsPlayer,
   IsPlayerOwned,
   IsProjectile,
@@ -215,10 +216,15 @@ export function spawnPlayer(config: PlayerConfig): Entity {
 
   return world.spawn(
     IsPlayer,
+    ArenaBound,
     Position({ x: config.x, y: config.y }),
     Velocity(),
     Collider({ radius: 15 }),
     Health({ hp: maxHp, maxHp }),
+    PhysicsBody({
+      mass: GAME_BALANCE.player.mass,
+      friction: GAME_BALANCE.player.friction,
+    }),
     PlayerCharacter({
       characterType,
       color: characterConfig.color,

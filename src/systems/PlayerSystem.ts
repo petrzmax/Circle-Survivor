@@ -30,7 +30,7 @@ export class PlayerSystem {
   /**
    * Update player: poll input, move, regen, set auto-aim target.
    */
-  public update(deltaTime: number, currentTime: number): void {
+  public update(_deltaTime: number, currentTime: number): void {
     const player = this.entityManager.getPlayerEntity();
     const stats = player.get(PlayerStats)!;
 
@@ -38,8 +38,8 @@ export class PlayerSystem {
     this.inputSystem.poll();
     const input = this.inputSystem.getInputState();
 
-    // Apply input to player movement
-    updatePlayerMovement(player, input, this.canvasBounds, deltaTime);
+    // Apply input to player movement (impulse-based — PhysicsSystem integrates)
+    updatePlayerMovement(player, input);
 
     // Health regeneration
     if (stats.regen > 0) {

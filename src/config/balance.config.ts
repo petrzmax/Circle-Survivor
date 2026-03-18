@@ -8,6 +8,15 @@
 
 export const GAME_BALANCE = {
   /**
+   * Shared physics constants.
+   * Applies to all entities processed by PhysicsSystem.
+   */
+  physics: {
+    /** Repulsion force multiplier per pixel of overlap. Used for all entity separation. */
+    separationForce: 3,
+  },
+
+  /**
    * Boss scaling parameters.
    * Bosses appear every 3rd wave (3, 6, 9, ...) and get stronger with each appearance.
    *
@@ -46,8 +55,6 @@ export const GAME_BALANCE = {
     knockbackForce: 180,
     /** Enemy bullet radius as fraction of enemy radius. */
     bulletRadiusRatio: 0.15,
-    /** Repulsion force multiplier per pixel of overlap between enemies. */
-    separationForce: 2,
   },
 
   /**
@@ -84,6 +91,12 @@ export const GAME_BALANCE = {
     armorDiminishingFactor: 100,
     /** Maximum dodge chance cap. 0.6 = 60% max dodge to prevent overpowered builds. */
     maxDodge: 0.6,
+    /** Physics mass for player. Affects knockback magnitude (impulse / mass). */
+    mass: 1,
+    /** Physics friction for player. Higher = faster deceleration. Frame-rate independent. */
+    friction: 0.3,
+    /** How aggressively steering impulse corrects toward desired velocity (0–1). Higher = snappier. */
+    moveResponse: 0.85,
   },
 
   /**

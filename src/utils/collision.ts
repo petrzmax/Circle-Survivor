@@ -141,8 +141,16 @@ export function circleOverlapDepth(a: Circle, b: Circle): number {
  */
 export function clampCircleToRect(circle: Circle, rect: Rectangle): Vector2 {
   return {
-    x: clamp(circle.x, rect.position.x + circle.radius, rect.position.x + rect.width - circle.radius),
-    y: clamp(circle.y, rect.position.y + circle.radius, rect.position.y + rect.height - circle.radius),
+    x: clamp(
+      circle.x,
+      rect.position.x + circle.radius,
+      rect.position.x + rect.width - circle.radius,
+    ),
+    y: clamp(
+      circle.y,
+      rect.position.y + circle.radius,
+      rect.position.y + rect.height - circle.radius,
+    ),
   };
 }
 
@@ -152,7 +160,10 @@ const ORIGIN: Vector2 = { x: 0, y: 0 };
  * Checks if circle is fully inside origin-based bounds (0,0 to width,height).
  */
 export function circleInBounds(pos: Vector2, radius: number, bounds: CanvasBounds): boolean {
-  return circleInRect({ ...pos, radius }, { position: ORIGIN, width: bounds.width, height: bounds.height });
+  return circleInRect(
+    { ...pos, radius },
+    { position: ORIGIN, width: bounds.width, height: bounds.height },
+  );
 }
 
 /**
@@ -160,5 +171,8 @@ export function circleInBounds(pos: Vector2, radius: number, bounds: CanvasBound
  * Returns the clamped position.
  */
 export function clampCircleToBounds(pos: Vector2, radius: number, bounds: CanvasBounds): Vector2 {
-  return clampCircleToRect({ ...pos, radius }, { position: ORIGIN, width: bounds.width, height: bounds.height });
+  return clampCircleToRect(
+    { ...pos, radius },
+    { position: ORIGIN, width: bounds.width, height: bounds.height },
+  );
 }

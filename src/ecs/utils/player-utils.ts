@@ -10,15 +10,16 @@ import type { InputState, PlayerStats as PlayerStatsType } from '@/domain/player
 import { WEAPON_TYPES } from '@/domain/weapons';
 import { GAME_BALANCE } from '@/config';
 import {
-  Collider,
   Health,
+  PhysicsBody,
   PlayerCharacter,
   PlayerStats,
   Position,
   Velocity,
   WeaponInventory,
 } from '@/ecs/traits';
-import { clamp, type CanvasBounds, type Vector2 } from '@/utils';
+import { applyImpulse } from '@/ecs/utils/entity-utils';
+import { type Vector2 } from '@/utils';
 import { TWO_PI } from '@/utils/math';
 
 /**
@@ -188,48 +189,40 @@ export function getPlayerSpeed(entity: Entity): number {
 }
 
 /**
- * Update player movement based on input state.
+ * Update player movement via impulse-based steering.
+ * Computes desired velocity from input, then applies a steering impulse.
+ * PhysicsSystem integrates impulse→velocity→position and ArenaBound handles bounds clamping.
  */
-export function updatePlayerMovement(
-  entity: Entity,
-  input: InputState,
-  bounds: CanvasBounds,
-  deltaTime: number,
-): void {
-  let vx = 0;
-  let vy = 0;
+export function updatePlayerMovement(entity: Entity, input: InputState): void {
+  let dirX = 0;
+  let dirY = 0;
 
   if (input.analogX !== undefined && input.analogY !== undefined) {
-    vx = input.analogX;
-    vy = input.analogY;
+    dirX = input.analogX;
+    dirY = input.analogY;
   } else {
-    if (input.up) vy = -1;
-    if (input.down) vy = 1;
-    if (input.left) vx = -1;
-    if (input.right) vx = 1;
+    if (input.up) dirY = -1;
+    if (input.down) dirY = 1;
+    if (input.left) dirX = -1;
+    if (input.right) dirX = 1;
 
-    if (vx !== 0 && vy !== 0) {
-      vx *= 0.707;
-      vy *= 0.707;
+    if (dirX !== 0 && dirY !== 0) {
+      dirX *= 0.707;
+      dirY *= 0.707;
     }
   }
 
   const spd = getPlayerSpeed(entity);
-  const pos = entity.get(Position)!;
-  const char = entity.get(PlayerCharacter)!;
-  const col = entity.get(Collider)!;
+  const desiredVx = dirX * spd;
+  const desiredVy = dirY * spd;
 
-  let newX = pos.x + vx * spd * deltaTime;
-  let newY = pos.y + vy * spd * deltaTime;
+  const vel = entity.get(Velocity)!;
+  const body = entity.get(PhysicsBody)!;
+  const moveResponse = GAME_BALANCE.player.moveResponse;
 
-  const w = char.width;
-  const h = char.height;
-  newX = clamp(newX, w / 2, bounds.width - w / 2);
-  newY = clamp(newY, h / 2, bounds.height - h / 2);
+  // Steering impulse: push velocity toward desired, scaled by mass so PhysicsSystem divides it back out
+  const impulseX = (desiredVx - vel.vx) * body.mass * moveResponse;
+  const impulseY = (desiredVy - vel.vy) * body.mass * moveResponse;
 
-  entity.set(Position, { x: newX, y: newY });
-  entity.set(Velocity, { vx: vx * spd, vy: vy * spd });
-
-  // Sync collider with half of character width as radius (existing behavior)
-  void col;
+  applyImpulse(entity, { x: impulseX, y: impulseY });
 }

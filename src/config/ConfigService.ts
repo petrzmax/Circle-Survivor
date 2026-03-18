@@ -44,4 +44,8 @@ export class ConfigService {
   public getCombatConfig(): GameBalanceConfig['combat'] {
     return GAME_BALANCE.combat;
   }
+
+  public getPhysicsConfig(): GameBalanceConfig['physics'] {
+    return GAME_BALANCE.physics;
+  }
 }

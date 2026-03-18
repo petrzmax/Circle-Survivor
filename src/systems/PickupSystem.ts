@@ -3,13 +3,7 @@
  * Handles lifetime countdown, arming, animation, and expiry.
  */
 
-import {
-  DeployableData,
-  IsArmed,
-  IsDead,
-  IsAttracted,
-  Lifetime,
-} from '@/ecs/traits';
+import { DeployableData, IsArmed, IsDead, IsAttracted, Lifetime } from '@/ecs/traits';
 import { EntityManager } from '@/managers/EntityManager';
 import { singleton } from 'tsyringe';
 

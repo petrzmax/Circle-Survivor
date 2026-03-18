@@ -18,7 +18,7 @@ import {
   Position,
   ProjectileData,
 } from '@/ecs/traits';
-import { applyImpulse } from '@/ecs/utils/entity-utils';
+import { applyImpulse, applyImpulseAwayFrom } from '@/ecs/utils/entity-utils';
 import { circleOverlapDepth } from '@/utils/collision';
 import { distance } from '@/utils/math';
 import { EventBus } from '@/events/EventBus';
@@ -31,7 +31,7 @@ import { DeathSystem } from './DeathSystem';
 @singleton()
 export class CollisionResponseSystem {
   private readonly bossContactDamageMultiplier: number;
-  private readonly enemySeparationForce: number;
+  private readonly separationForce: number;
 
   public constructor(
     private entityManager: EntityManager,
@@ -40,7 +40,7 @@ export class CollisionResponseSystem {
     configService: ConfigService,
   ) {
     this.bossContactDamageMultiplier = configService.getBossBalance().contactDamageMultiplier;
-    this.enemySeparationForce = configService.getEnemyBalance().separationForce;
+    this.separationForce = configService.getPhysicsConfig().separationForce;
   }
 
   public processCollisions(collisions: CollisionResult, currentTime: number): void {
@@ -62,6 +62,9 @@ export class CollisionResponseSystem {
   ): void {
     const playerStats = playerEntity.get(PlayerStats)!;
 
+    const playerPos = playerEntity.get(Position)!;
+    const playerRadius = playerEntity.get(Collider)!.radius;
+
     for (const enemy of enemies) {
       const ePos = enemy.get(Position)!;
       let damage = enemy.get(Damage)!.amount;
@@ -77,6 +80,18 @@ export class CollisionResponseSystem {
         ePos,
         DamageSource.ENEMY_CONTACT,
       );
+
+      // Physical repulsion — push player away from enemy on overlap (works during invincibility too)
+      const enemyRadius = enemy.get(Collider)!.radius;
+      const overlap = circleOverlapDepth(
+        { ...playerPos, radius: playerRadius },
+        { ...ePos, radius: enemyRadius },
+      );
+      if (overlap > 0) {
+        const force = overlap * this.separationForce;
+        applyImpulseAwayFrom(playerEntity, ePos, force);
+        applyImpulseAwayFrom(enemy, playerPos, force);
+      }
 
       // Thorns on contact damage
       if (result.actualDamage > 0 && playerStats.thorns > 0) {
@@ -305,7 +320,7 @@ export class CollisionResponseSystem {
         dy = Math.sin(angle);
       }
 
-      const force = overlap * this.enemySeparationForce;
+      const force = overlap * this.separationForce;
       applyImpulse(enemyA, { x: -dx * force, y: -dy * force });
       applyImpulse(enemyB, { x: dx * force, y: dy * force });
     }

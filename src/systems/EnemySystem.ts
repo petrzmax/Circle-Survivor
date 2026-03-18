@@ -7,13 +7,7 @@ import { spawnProjectile } from '@/ecs/factories/entity-factories';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
 import { ProjectileType } from '@/types/enums';
-import {
-  randomElement,
-  randomInt,
-  randomRange,
-  type CanvasBounds,
-  type Vector2,
-} from '@/utils';
+import { randomElement, randomInt, randomRange, type CanvasBounds, type Vector2 } from '@/utils';
 import { circleInBounds } from '@/utils/collision';
 import { addVectors, normalize, scaleVector, subtractVectors, TWO_PI } from '@/utils/math';
 import type { Entity } from 'koota';
@@ -100,11 +94,7 @@ export class EnemySystem {
   /**
    * Apply movement force towards target with zigzag.
    */
-  private moveEnemyTowardsTarget(
-    entity: Entity,
-    target: Vector2,
-    deltaTime: number,
-  ): void {
+  private moveEnemyTowardsTarget(entity: Entity, target: Vector2, deltaTime: number): void {
     const d = entity.get(EnemyData)!;
     const pos = entity.get(Position)!;
     const dir = normalize(subtractVectors(target, pos));
@@ -115,7 +105,7 @@ export class EnemySystem {
       // Steady-state: v = F * decay / (mass * (1 - decay)), so F = v * mass * (1 - decay) / decay
       // For friction=f, dt: decay = (1-f)^(dt*60)
       const decay = Math.pow(1 - body.friction, deltaTime * 60);
-      const forceFactor = body.mass * (1 - decay) / decay;
+      const forceFactor = (body.mass * (1 - decay)) / decay;
 
       let moveDir = dir;
       if (d.zigzag) {

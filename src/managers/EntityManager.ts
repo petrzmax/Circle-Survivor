@@ -22,7 +22,14 @@ import {
 } from '@/ecs/traits';
 import { world } from '@/ecs/world';
 import { distanceSquared, pointInRect, Vector2 } from '@/utils';
-import { createQuery, IsExcluded, Not, type Entity, type ExtractSchema, type TraitRecord } from 'koota';
+import {
+  createQuery,
+  IsExcluded,
+  Not,
+  type Entity,
+  type ExtractSchema,
+  type TraitRecord,
+} from 'koota';
 import { singleton } from 'tsyringe';
 
 // ============ Cached Queries ============

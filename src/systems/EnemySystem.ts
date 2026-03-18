@@ -7,7 +7,14 @@ import { spawnProjectile } from '@/ecs/factories/entity-factories';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
 import { ProjectileType } from '@/types/enums';
-import { randomElement, randomInt, randomRange, massFromRadius, type CanvasBounds, type Vector2 } from '@/utils';
+import {
+  randomElement,
+  randomInt,
+  randomRange,
+  massFromRadius,
+  type CanvasBounds,
+  type Vector2,
+} from '@/utils';
 import { circleInBounds } from '@/utils/collision';
 import { addVectors, normalize, scaleVector, subtractVectors, TWO_PI } from '@/utils/math';
 import type { Entity } from 'koota';

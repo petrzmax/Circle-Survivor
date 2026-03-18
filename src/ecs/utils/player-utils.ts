@@ -9,13 +9,7 @@ import type { WeaponType } from '@/domain/weapons/type';
 import type { InputState, PlayerStats as PlayerStatsType } from '@/domain/player/type';
 import { WEAPON_TYPES } from '@/domain/weapons';
 import { GAME_BALANCE } from '@/config';
-import {
-  Health,
-  PlayerCharacter,
-  PlayerStats,
-  Position,
-  WeaponInventory,
-} from '@/ecs/traits';
+import { Health, PlayerCharacter, PlayerStats, Position, WeaponInventory } from '@/ecs/traits';
 import { applyImpulse, steadyStateForceFactor } from '@/ecs/utils/entity-utils';
 import { type Vector2 } from '@/utils';
 import { TWO_PI } from '@/utils/math';

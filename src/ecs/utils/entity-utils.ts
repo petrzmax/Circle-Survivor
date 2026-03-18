@@ -10,7 +10,13 @@
 
 import type { Entity } from 'koota';
 import { Health, IsDead, PhysicsBody, Position } from '@/ecs/traits';
-import { normalize, scaleVector, subtractVectors, type Vector2, FRICTION_REFERENCE_FPS } from '@/utils/math';
+import {
+  normalize,
+  scaleVector,
+  subtractVectors,
+  type Vector2,
+  FRICTION_REFERENCE_FPS,
+} from '@/utils/math';
 
 /**
  * Apply damage to any entity with a Health trait.

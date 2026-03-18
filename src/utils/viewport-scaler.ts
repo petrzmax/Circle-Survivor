@@ -11,7 +11,12 @@ import {
   CONTAINER_WIDTH,
 } from '@/config/layout.config';
 
-export { CONTAINER_HEIGHT, CONTAINER_WIDTH, TOOLTIP_OFFSET, TOOLTIP_WIDTH } from '@/config/layout.config';
+export {
+  CONTAINER_HEIGHT,
+  CONTAINER_WIDTH,
+  TOOLTIP_OFFSET,
+  TOOLTIP_WIDTH,
+} from '@/config/layout.config';
 
 export interface LocalPosition {
   x: number;

@@ -16,6 +16,7 @@ export {
   lerp,
   lerpVector,
   magnitude,
+  massFromRadius,
   normalize,
   radiansToDegrees,
   rotateVector,

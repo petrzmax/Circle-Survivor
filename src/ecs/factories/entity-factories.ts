@@ -14,7 +14,7 @@ import type { PlayerConfig } from '@/domain/player/type';
 import { CHARACTER_TYPES } from '@/config/characters.config';
 import { GAME_BALANCE } from '@/config';
 import { CharacterType, PickupType, ProjectileType, VisualEffect } from '@/types/enums';
-import { randomAngle, randomInt } from '@/utils';
+import { massFromRadius, randomAngle, randomInt } from '@/utils';
 import {
   Collider,
   Damage,
@@ -165,7 +165,7 @@ export function spawnEnemy(entityConfig: EnemyEntityConfig): Entity {
     Collider({ radius }),
     Health({ hp, maxHp: hp }),
     PhysicsBody({
-      mass: config.mass ?? (isBoss ? GAME_BALANCE.boss.mass : GAME_BALANCE.enemy.mass),
+      mass: config.massOverride ?? massFromRadius(radius),
       friction: 0.2,
     }),
     Damage({ amount: damage }),

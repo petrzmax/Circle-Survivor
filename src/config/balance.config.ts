@@ -33,8 +33,6 @@ export const GAME_BALANCE = {
     exponentialBase: 1.04,
     /** Contact damage multiplier. Boss melee hits deal base damage × this value. */
     contactDamageMultiplier: 1.25,
-    /** Physics mass for bosses. Higher = harder to knock back. Normal enemies use mass 1. */
-    mass: 5,
   },
 
   /**
@@ -49,8 +47,6 @@ export const GAME_BALANCE = {
     scalingStartWave: 5,
     /** Per-wave multiplier. Applied as Math.pow(factor, wave - startWave). */
     scalingFactor: 1.04,
-    /** Physics mass for normal enemies. Lower = easier to knock back. */
-    mass: 1,
     /** Knockback force applied to enemies (px/s). */
     knockbackForce: 180,
     /** Enemy bullet radius as fraction of enemy radius. */

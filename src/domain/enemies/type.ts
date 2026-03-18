@@ -12,7 +12,7 @@ export interface EnemyConfig {
 
   // Optional behaviors
   isBoss?: boolean; // TODO
-  mass?: number;
+  massOverride?: number;
   canShoot?: boolean;
   fireRate?: number;
   bulletSpeed?: number;

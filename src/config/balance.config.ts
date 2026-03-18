@@ -13,7 +13,7 @@ export const GAME_BALANCE = {
    */
   physics: {
     /** Repulsion force multiplier per pixel of overlap. Used for all entity separation. */
-    separationForce: 3,
+    separationForce: 4,
   },
 
   /**
@@ -94,9 +94,7 @@ export const GAME_BALANCE = {
     /** Physics mass for player. Affects knockback magnitude (impulse / mass). */
     mass: 1,
     /** Physics friction for player. Higher = faster deceleration. Frame-rate independent. */
-    friction: 0.3,
-    /** How aggressively steering impulse corrects toward desired velocity (0–1). Higher = snappier. */
-    moveResponse: 0.85,
+    friction: 0.4,
   },
 
   /**

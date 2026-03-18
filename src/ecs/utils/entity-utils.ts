@@ -10,7 +10,7 @@
 
 import type { Entity } from 'koota';
 import { Health, IsDead, PhysicsBody, Position } from '@/ecs/traits';
-import { normalize, scaleVector, subtractVectors, type Vector2 } from '@/utils/math';
+import { normalize, scaleVector, subtractVectors, type Vector2, FRICTION_REFERENCE_FPS } from '@/utils/math';
 
 /**
  * Apply damage to any entity with a Health trait.
@@ -68,6 +68,19 @@ export function applyImpulseAwayFrom(entity: Entity, source: Vector2, magnitude:
   if (direction.x === 0 && direction.y === 0) return;
 
   applyImpulse(entity, scaleVector(direction, magnitude));
+}
+
+/**
+ * Compute the impulse force factor needed to maintain a desired speed at steady state.
+ * Compensates for friction decay applied by PhysicsSystem.
+ * Usage: impulse = direction * speed * forceFactor
+ */
+export function steadyStateForceFactor(entity: Entity, deltaTime: number): number {
+  const body = entity.get(PhysicsBody);
+  if (!body || body.friction <= 0) return 0;
+
+  const decay = Math.pow(1 - body.friction, deltaTime * FRICTION_REFERENCE_FPS);
+  return (body.mass * (1 - decay)) / decay;
 }
 
 /**

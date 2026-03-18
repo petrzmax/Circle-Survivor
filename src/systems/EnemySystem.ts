@@ -1,8 +1,8 @@
 import { GAME_BALANCE } from '@/config/balance.config';
 import { ConfigService } from '@/config/ConfigService';
 import type { AttackPattern, AttackResult, EnemyBulletData } from '@/domain/enemies/type';
-import { ArenaBound, Collider, EnemyData, IsBoss, PhysicsBody, Position } from '@/ecs/traits';
-import { applyImpulse } from '@/ecs/utils/entity-utils';
+import { ArenaBound, Collider, EnemyData, IsBoss, Position } from '@/ecs/traits';
+import { applyImpulse, steadyStateForceFactor } from '@/ecs/utils/entity-utils';
 import { spawnProjectile } from '@/ecs/factories/entity-factories';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
@@ -100,12 +100,7 @@ export class EnemySystem {
     const dir = normalize(subtractVectors(target, pos));
 
     if (dir.x !== 0 || dir.y !== 0) {
-      const body = entity.get(PhysicsBody)!;
-      // Convert desired speed to impulse: compensate for mass and friction
-      // Steady-state: v = F * decay / (mass * (1 - decay)), so F = v * mass * (1 - decay) / decay
-      // For friction=f, dt: decay = (1-f)^(dt*60)
-      const decay = Math.pow(1 - body.friction, deltaTime * 60);
-      const forceFactor = (body.mass * (1 - decay)) / decay;
+      const forceFactor = steadyStateForceFactor(entity, deltaTime);
 
       let moveDir = dir;
       if (d.zigzag) {

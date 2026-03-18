@@ -6,6 +6,13 @@
 export const TWO_PI = Math.PI * 2;
 
 /**
+ * Reference frame rate for friction values.
+ * Friction is authored assuming this FPS: decay = (1 - friction) ^ (deltaTime * FRICTION_REFERENCE_FPS).
+ * This makes friction frame-rate independent — the same total decay per second regardless of FPS.
+ */
+export const FRICTION_REFERENCE_FPS = 60;
+
+/**
  * 2D Vector interface
  */
 export interface Vector2 {

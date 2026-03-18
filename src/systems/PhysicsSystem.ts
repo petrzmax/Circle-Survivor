@@ -10,6 +10,7 @@ import { Collider, PhysicsBody, Position, Velocity } from '@/ecs/traits';
 import { ConfigService } from '@/config/ConfigService';
 import type { CanvasBounds } from '@/utils';
 import { clampCircleToBounds } from '@/utils/collision';
+import { FRICTION_REFERENCE_FPS } from '@/utils/math';
 import { EntityManager } from '@/managers/EntityManager';
 import { singleton } from 'tsyringe';
 
@@ -37,7 +38,7 @@ export class PhysicsSystem {
 
       // 2. Apply friction decay (frame-rate independent)
       if (body.friction > 0) {
-        const decay = Math.pow(1 - body.friction, deltaTime * 60);
+        const decay = Math.pow(1 - body.friction, deltaTime * FRICTION_REFERENCE_FPS);
         vx *= decay;
         vy *= decay;
       }

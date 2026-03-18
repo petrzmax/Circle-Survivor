@@ -11,14 +11,12 @@ import { WEAPON_TYPES } from '@/domain/weapons';
 import { GAME_BALANCE } from '@/config';
 import {
   Health,
-  PhysicsBody,
   PlayerCharacter,
   PlayerStats,
   Position,
-  Velocity,
   WeaponInventory,
 } from '@/ecs/traits';
-import { applyImpulse } from '@/ecs/utils/entity-utils';
+import { applyImpulse, steadyStateForceFactor } from '@/ecs/utils/entity-utils';
 import { type Vector2 } from '@/utils';
 import { TWO_PI } from '@/utils/math';
 
@@ -189,11 +187,13 @@ export function getPlayerSpeed(entity: Entity): number {
 }
 
 /**
- * Update player movement via impulse-based steering.
- * Computes desired velocity from input, then applies a steering impulse.
+ * Update player movement via exact-force steering.
+ * Uses the same approach as EnemySystem: computes the impulse that produces
+ * exactly the desired speed at steady state after friction decay.
+ * Knockback decays naturally through friction — no active correction fighting it.
  * PhysicsSystem integrates impulse→velocity→position and ArenaBound handles bounds clamping.
  */
-export function updatePlayerMovement(entity: Entity, input: InputState): void {
+export function updatePlayerMovement(entity: Entity, input: InputState, deltaTime: number): void {
   let dirX = 0;
   let dirY = 0;
 
@@ -212,17 +212,10 @@ export function updatePlayerMovement(entity: Entity, input: InputState): void {
     }
   }
 
+  if (dirX === 0 && dirY === 0) return;
+
   const spd = getPlayerSpeed(entity);
-  const desiredVx = dirX * spd;
-  const desiredVy = dirY * spd;
+  const forceFactor = steadyStateForceFactor(entity, deltaTime);
 
-  const vel = entity.get(Velocity)!;
-  const body = entity.get(PhysicsBody)!;
-  const moveResponse = GAME_BALANCE.player.moveResponse;
-
-  // Steering impulse: push velocity toward desired, scaled by mass so PhysicsSystem divides it back out
-  const impulseX = (desiredVx - vel.vx) * body.mass * moveResponse;
-  const impulseY = (desiredVy - vel.vy) * body.mass * moveResponse;
-
-  applyImpulse(entity, { x: impulseX, y: impulseY });
+  applyImpulse(entity, { x: dirX * spd * forceFactor, y: dirY * spd * forceFactor });
 }

@@ -84,7 +84,7 @@ export function DevMenu(): JSX.Element | null {
   const [selectedWeapon, setSelectedWeapon] = useState('');
   const [selectedBoss, setSelectedBoss] = useState('');
   const [selectedEnemy, setSelectedEnemy] = useState('');
-  const [enemyCount, setEnemyCount] = useState('1');
+  const [enemyCount, setEnemyCount] = useState('100');
   const [godMode, setGodMode] = useState(false);
   const [showEnemyCount, setShowEnemyCount] = useState(false);
 

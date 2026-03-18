@@ -34,6 +34,8 @@ export interface CollisionResult {
   deployableCollisions: Array<{ deployable: Entity; enemies: Entity[] }>;
   /** Shockwaves hitting the player */
   shockwavePlayerCollisions: Shockwave[];
+  /** Shockwave-entity knockback pairs (ring passed through entity) */
+  shockwaveEntityCollisions: Array<{ shockwave: Shockwave; entity: Entity }>;
   /** Enemies overlapping with other enemies */
   enemyEnemyCollisions: Array<{ enemyA: Entity; enemyB: Entity }>;
 }
@@ -59,6 +61,7 @@ export class CollisionSystem {
       pickupCollisions: [],
       deployableCollisions: [],
       shockwavePlayerCollisions: [],
+      shockwaveEntityCollisions: [],
       enemyEnemyCollisions: [],
     };
 
@@ -77,6 +80,7 @@ export class CollisionSystem {
     result.pickupCollisions = this.checkPickupCollisions(playerPos, playerRadius);
     result.deployableCollisions = this.checkDeployableCollisions();
     result.shockwavePlayerCollisions = this.checkShockwavePlayerCollisions(playerPos);
+    result.shockwaveEntityCollisions = this.checkShockwaveEntityCollisions();
     result.enemyEnemyCollisions = this.checkEnemyEnemyCollisions();
 
     return result;
@@ -250,6 +254,30 @@ export class CollisionSystem {
       const dist = distance({ x: sw.x, y: sw.y }, playerPos);
       if (dist <= sw.currentRadius && dist >= sw.currentRadius - ringWidth) {
         collisions.push(sw);
+      }
+    }
+
+    return collisions;
+  }
+
+  private checkShockwaveEntityCollisions(): Array<{ shockwave: Shockwave; entity: Entity }> {
+    if (!this.shockwaveProvider) return [];
+
+    const shockwaves = this.shockwaveProvider();
+    const collisions: Array<{ shockwave: Shockwave; entity: Entity }> = [];
+    const ringWidth = this.configService.getEffectsConfig().shockwaves.ringWidth;
+    const entities = this.entityManager.getKnockbackableEntities();
+
+    for (const sw of shockwaves) {
+      for (const entity of entities) {
+        const id = entity.id();
+        if (sw.knockedBackEntities.has(id)) continue;
+
+        const ePos = entity.get(Position)!;
+        const dist = distance(sw, ePos);
+        if (dist <= sw.currentRadius && dist >= sw.currentRadius - ringWidth) {
+          collisions.push({ shockwave: sw, entity });
+        }
       }
     }
 

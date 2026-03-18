@@ -132,6 +132,8 @@ export const GAME_BALANCE = {
     explosionFalloff: 0.2,
     /** Explosion knockback impulse (px/s). Scaled by distance falloff and divided by entity mass. */
     explosionKnockback: 300,
+    /** Shockwave knockback impulse (px/s). Applied once as the ring passes through an entity. */
+    shockwaveKnockback: 400,
     /** Speed (px/s) below which a grenade is considered "landed" and should explode. */
     grenadeStopSpeed: 35,
   },

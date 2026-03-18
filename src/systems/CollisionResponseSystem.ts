@@ -36,6 +36,7 @@ export class CollisionResponseSystem {
   private readonly separationForce: number;
   private readonly knockbackPerMomentum: number;
   private readonly contactKnockback: number;
+  private readonly shockwaveKnockback: number;
 
   public constructor(
     private entityManager: EntityManager,
@@ -47,6 +48,7 @@ export class CollisionResponseSystem {
     this.separationForce = configService.getPhysicsConfig().separationForce;
     this.knockbackPerMomentum = configService.getEnemyBalance().knockbackPerMomentum;
     this.contactKnockback = configService.getEnemyBalance().contactKnockback;
+    this.shockwaveKnockback = configService.getCombatConfig().shockwaveKnockback;
   }
 
   public processCollisions(collisions: CollisionResult, currentTime: number): void {
@@ -56,6 +58,7 @@ export class CollisionResponseSystem {
     this.handlePlayerProjectiles(playerEntity, collisions.playerProjectileCollisions, currentTime);
     this.handleProjectileEnemyHits(playerEntity, collisions.projectileEnemyCollisions, currentTime);
     this.handleShockwaves(playerEntity, collisions.shockwavePlayerCollisions, currentTime);
+    this.handleShockwaveEntityKnockback(collisions.shockwaveEntityCollisions);
     this.handleDeployables(playerEntity, collisions.deployableCollisions);
     this.handleEnemyEnemyCollisions(collisions.enemyEnemyCollisions);
   }
@@ -215,6 +218,16 @@ export class CollisionResponseSystem {
       if (result.isDead) {
         this.deathSystem.registerPlayerDeath();
       }
+    }
+  }
+
+  /** 4b. Shockwave ring knockback on physics entities */
+  private handleShockwaveEntityKnockback(
+    collisions: CollisionResult['shockwaveEntityCollisions'],
+  ): void {
+    for (const { shockwave, entity } of collisions) {
+      applyImpulseAwayFrom(entity, shockwave, this.shockwaveKnockback);
+      shockwave.knockedBackEntities.add(entity.id());
     }
   }
 

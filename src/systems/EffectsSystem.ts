@@ -50,6 +50,8 @@ export interface Shockwave {
   created: number;
   damageDealt: boolean;
   alpha: number;
+  /** Entities already knocked back by this shockwave (prevents repeated knockback) */
+  knockedBackEntities: Set<number>;
 }
 
 // ============ Effects System ============
@@ -365,6 +367,7 @@ export class EffectsSystem {
       created: this.currentTime,
       damageDealt: false,
       alpha: 1,
+      knockedBackEntities: new Set(),
     });
   }
 

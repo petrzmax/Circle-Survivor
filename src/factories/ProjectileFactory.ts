@@ -48,6 +48,8 @@ export function createMiniBananaConfigs(params: MiniBananaSpawnParams): Projecti
       weaponCategory: config.weaponCategory,
       friction,
       mass: config.projectileMass,
+      rotation: randomRange(0, TWO_PI),
+      rotationSpeed: config.rotationSpeed,
       explosive: {
         explosionRadius: (config.explosionRadius ?? 45) * explosionRadiusMultiplier,
         explosionDamage: config.damage * damageMultiplier,

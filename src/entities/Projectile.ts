@@ -43,6 +43,7 @@ export interface ProjectileConfig extends EntityConfig {
   pierce?: PierceComponent;
 
   // Special behaviors
+  rotation?: number;
   rotationSpeed?: number;
   returnToOwner?: boolean;
 

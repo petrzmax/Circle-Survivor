@@ -74,7 +74,7 @@ export function spawnProjectile(config: ProjectileConfig): Entity {
       pierce: config.pierce
         ? { pierceCount: config.pierce.pierceCount, hitEnemies: new Set() }
         : null,
-      rotation: 0,
+      rotation: config.rotation ?? 0,
       rotationSpeed: config.rotationSpeed ?? 0,
       returnToOwner: config.returnToOwner ?? false,
       isReturning: false,

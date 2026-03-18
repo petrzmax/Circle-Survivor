@@ -41,7 +41,7 @@ import {
   Velocity,
   WeaponInventory,
 } from '@/ecs/traits';
-import { world } from '@/ecs/world';
+import { Time, world } from '@/ecs/world';
 
 // ============ Projectile ============
 
@@ -51,7 +51,7 @@ export function spawnProjectile(config: ProjectileConfig): Entity {
   return world.spawn(
     IsProjectile,
     ...(isPlayerProjectile ? [IsPlayerOwned] : []),
-    PhysicsBody({ mass: 1, friction: config.friction ?? 0, impulseX: 0, impulseY: 0 }),
+    PhysicsBody({ friction: config.friction ?? 0 }),
     Position({ x: config.position.x, y: config.position.y }),
     Velocity({ vx: config.vx ?? 0, vy: config.vy ?? 0 }),
     Collider({ radius: config.radius }),
@@ -128,15 +128,20 @@ export function spawnPickup(config: PickupConfig): Entity {
   return world.spawn(
     IsPickup,
     Position({ x: config.position.x, y: config.position.y }),
+    Velocity(),
     Collider({ radius: 8 }),
     Lifetime({ remaining: defaultLifetime }),
+    PhysicsBody({
+      mass: GAME_BALANCE.pickup.mass,
+      friction: GAME_BALANCE.pickup.friction,
+    }),
     PickupData({
       type: config.type,
       value: config.value,
       animationOffset: randomAngle(),
-      baseY: config.position.y,
       shrinkDuration: 1,
-      spawnTime: Date.now(),
+      spawnTime: world.get(Time)?.elapsed ?? 0,
+      attractionStartTime: 0,
     }),
   );
 }
@@ -155,14 +160,12 @@ export function spawnEnemy(entityConfig: EnemyEntityConfig): Entity {
   const traits = [
     IsEnemy,
     Position({ x: entityConfig.position.x, y: entityConfig.position.y }),
-    Velocity({ vx: 0, vy: 0 }),
+    Velocity(),
     Collider({ radius }),
     Health({ hp, maxHp: hp }),
     PhysicsBody({
       mass: config.mass ?? (isBoss ? GAME_BALANCE.boss.mass : GAME_BALANCE.enemy.mass),
       friction: 0.2,
-      impulseX: 0,
-      impulseY: 0,
     }),
     Damage({ amount: damage }),
     DropsPickup({
@@ -214,7 +217,7 @@ export function spawnPlayer(config: PlayerConfig): Entity {
   return world.spawn(
     IsPlayer,
     Position({ x: config.x, y: config.y }),
-    Velocity({ vx: 0, vy: 0 }),
+    Velocity(),
     Collider({ radius: 15 }),
     Health({ hp: maxHp, maxHp }),
     PlayerCharacter({
@@ -224,7 +227,6 @@ export function spawnPlayer(config: PlayerConfig): Entity {
       height: 30,
       characterConfig,
     }),
-    // TODO Are all these stats needed to add it like this? don't these have defaults?
     PlayerStats({
       gold: 0,
       xp: 0,

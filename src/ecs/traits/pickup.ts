@@ -10,7 +10,7 @@ export const PickupData = trait(() => ({
   type: PickupType.GOLD,
   value: 0,
   animationOffset: 0,
-  baseY: 0,
   shrinkDuration: 1,
   spawnTime: 0,
+  attractionStartTime: 0,
 }));

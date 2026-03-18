@@ -27,6 +27,7 @@ import {
 import { renderBackground } from '@/rendering/BackgroundRenderer';
 import { renderEnemy } from '@/rendering/EnemyRenderer';
 import type { BossRenderData, WeaponRenderData } from '@/rendering/render-types';
+import { TimeManager } from '@/managers/TimeManager';
 import { EffectsSystem } from '@/systems/EffectsSystem';
 import { singleton } from 'tsyringe';
 import { HUD } from './HUD';
@@ -41,6 +42,7 @@ export class RenderSystem {
   public constructor(
     entityManager: EntityManager,
     private effectsSystem: EffectsSystem,
+    private timeManager: TimeManager,
   ) {
     this.entityManager = entityManager;
   }
@@ -169,12 +171,23 @@ export class RenderSystem {
   private renderPickups(ctx: CanvasRenderingContext2D): void {
     // Sort by ID for stable render order (Koota uses swap-remove, which shuffles query results)
     const pickups = [...this.entityManager.getActivePickups()].sort((a, b) => a.id() - b.id());
+    const now = this.timeManager.getElapsed();
+
     for (const entity of pickups) {
       const pos = entity.get(Position)!;
       const col = entity.get(Collider)!;
+      const vel = entity.get(Velocity)!;
       const pickupData = entity.get(PickupData)!;
       const lt = entity.get(Lifetime)!;
       const isAttracted = entity.has(IsAttracted);
+
+      // Visual-only bobbing offset (only when stationary and not attracted)
+      let yOffset = 0;
+      const speed = Math.abs(vel.vx) + Math.abs(vel.vy);
+      if (!isAttracted && speed < 5) {
+        const time = now - pickupData.spawnTime;
+        yOffset = Math.sin(time * 3 + pickupData.animationOffset) * 1.5;
+      }
 
       // Replicate getScale() logic from adapter
       let scale = 1;
@@ -185,7 +198,7 @@ export class RenderSystem {
 
       renderPickup(ctx, {
         x: pos.x,
-        y: pos.y,
+        y: pos.y + yOffset,
         radius: col.radius,
         type: pickupData.type,
         scale,

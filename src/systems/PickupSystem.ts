@@ -9,8 +9,6 @@ import {
   IsDead,
   IsAttracted,
   Lifetime,
-  PickupData,
-  Position,
 } from '@/ecs/traits';
 import { EntityManager } from '@/managers/EntityManager';
 import { singleton } from 'tsyringe';
@@ -57,7 +55,6 @@ export class PickupSystem {
 
   private updatePickups(deltaTime: number): void {
     const pickups = this.entityManager.getActivePickups();
-    const now = Date.now();
 
     for (const entity of pickups) {
       // Lifetime countdown (SoA — must use set())
@@ -66,18 +63,6 @@ export class PickupSystem {
       entity.set(Lifetime, { remaining: newRemaining });
 
       const isAttracted = entity.has(IsAttracted);
-
-      // Up-down animation (only when not being attracted)
-      if (!isAttracted) {
-        const data = entity.get(PickupData)!;
-        const pos = entity.get(Position)!;
-        const time = (now - data.spawnTime) / 1000;
-        // Position is SoA — must use set()
-        entity.set(Position, {
-          x: pos.x,
-          y: data.baseY + Math.sin(time * 3 + data.animationOffset) * 1.5,
-        });
-      }
 
       // Attracted pickups don't expire
       if (!isAttracted && newRemaining <= 0) {

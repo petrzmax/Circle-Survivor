@@ -151,5 +151,4 @@ export class DamageSystem {
       stats.knockback,
     );
   }
-
 }

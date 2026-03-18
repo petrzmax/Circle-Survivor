@@ -1,5 +1,5 @@
 import { singleton } from 'tsyringe';
-import { Collider, Health, IsDead, PlayerStats, Position } from '@/ecs/traits';
+import { Collider, Health, IsDead, IsPlayer, PlayerStats, Position } from '@/ecs/traits';
 import { spawnProjectile } from '@/ecs/factories/entity-factories';
 import { applyImpulseAwayFrom } from '@/ecs/utils/entity-utils';
 import { EventBus } from '@/events/EventBus';
@@ -75,6 +75,7 @@ export class ExplosionSystem {
     }
 
     this.damageEnemiesFromExplosion(position, radius, damage, currentTime, killedThisBatch);
+    this.applyExplosionKnockbackToAll(position, radius);
 
     // Track banana explosions for mini-banana spawning after chain resolution
     if (explosion.origin === ExplosionOrigin.BANANA) {
@@ -170,14 +171,35 @@ export class ExplosionSystem {
         0,
       );
 
-      // Apply explosion knockback (direction away from center, scaled by falloff)
-      const explosionKnockback = this.configService.getCombatConfig().explosionKnockback;
-      applyImpulseAwayFrom(enemy, position, explosionKnockback * falloffMultiplier);
-
       if (result.isDead) {
         killedThisBatch.add(id);
         this.deathSystem.registerEnemyDeath(enemy);
       }
+    }
+  }
+
+  /**
+   * Apply explosion knockback to ALL entities with PhysicsBody (enemies, pickups, etc.).
+   * Damage is handled separately — this only applies impulse forces.
+   */
+  private applyExplosionKnockbackToAll(position: Vector2, radius: number): void {
+    const radiusSq = radius * radius;
+    const explosionKnockback = this.configService.getCombatConfig().explosionKnockback;
+    const entities = this.entityManager.getKnockbackableEntities();
+
+    for (const entity of entities) {
+      if (entity.has(IsPlayer)) continue;
+
+      const ePos = entity.get(Position)!;
+      const dSq = distanceSquared(ePos, position);
+      if (dSq > radiusSq) continue;
+
+      const dist = Math.sqrt(dSq);
+      const eRadius = entity.get(Collider)!.radius;
+      const effectiveDist = Math.max(0, dist - eRadius);
+      const falloffMultiplier = this.combatMath.explosionFalloff(effectiveDist, radius);
+
+      applyImpulseAwayFrom(entity, position, explosionKnockback * falloffMultiplier);
     }
   }
 }

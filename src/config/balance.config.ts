@@ -122,7 +122,7 @@ export const GAME_BALANCE = {
     /** Explosion damage falloff at edge. 0.5 = 50% damage at max radius, 100% at center. */
     explosionFalloff: 0.2,
     /** Explosion knockback impulse (px/s). Scaled by distance falloff and divided by entity mass. */
-    explosionKnockback: 600,
+    explosionKnockback: 300,
     /** Speed (px/s) below which a grenade is considered "landed" and should explode. */
     grenadeStopSpeed: 35,
   },
@@ -162,8 +162,14 @@ export const GAME_BALANCE = {
    * Controls how pickups move toward the player.
    */
   pickup: {
-    /** Player speed multiplier for pickup attraction. 1.2 = pickups move 20% faster than player. */
-    playerSpeedMultiplier: 1.2,
+    /** Physics mass for pickups. Lower = bigger knockback from explosions. */
+    mass: 0.3,
+    /** Physics friction for pickups. Controls how fast they decelerate after being pushed. */
+    friction: 0.16,
+    /** Base attraction force magnitude. Applied as impulse each frame when magnet is active. */
+    attractionForce: 2000,
+    /** Seconds for attraction force to ramp from 0 to full strength. */
+    attractionRampUpDuration: 0.8,
     /** Minimum distance factor multiplier. Pickups never move slower than base × this. */
     minDistanceFactor: 0.5,
     /** Maximum distance factor multiplier. Pickups at player position move at base × this. */

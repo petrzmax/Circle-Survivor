@@ -22,7 +22,7 @@ import {
 } from '@/ecs/traits';
 import { world } from '@/ecs/world';
 import { distanceSquared, pointInRect, Vector2 } from '@/utils';
-import { createQuery, Not, type Entity, type ExtractSchema, type TraitRecord } from 'koota';
+import { createQuery, IsExcluded, Not, type Entity, type ExtractSchema, type TraitRecord } from 'koota';
 import { singleton } from 'tsyringe';
 
 // ============ Cached Queries ============
@@ -155,7 +155,7 @@ export class EntityManager {
    */
   public clear(): void {
     for (const entity of [...world.entities]) {
-      entity.destroy();
+      if (!entity.has(IsExcluded)) entity.destroy();
     }
     this.log('All entities cleared');
   }
@@ -165,7 +165,7 @@ export class EntityManager {
    */
   public clearExceptPlayer(): void {
     for (const entity of [...world.entities]) {
-      if (!entity.has(IsPlayer)) {
+      if (!entity.has(IsPlayer) && !entity.has(IsExcluded)) {
         entity.destroy();
       }
     }

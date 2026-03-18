@@ -4,6 +4,7 @@
  */
 
 import { TWO_PI, Vector2 } from './math';
+import type { CanvasBounds } from '@/types/common';
 
 /**
  * Generates random float in range [min, max)
@@ -129,14 +130,6 @@ export function randomDirection(): Vector2 {
     x: Math.cos(angle),
     y: Math.sin(angle),
   };
-}
-
-/**
- * Canvas bounds interface
- */
-export interface CanvasBounds {
-  width: number;
-  height: number;
 }
 
 /**

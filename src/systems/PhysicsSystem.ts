@@ -6,17 +6,26 @@
  * friction-based velocity decay, and Euler position integration.
  */
 
-import { IsDead, PhysicsBody, Position, Velocity } from '@/ecs/traits';
-import { world } from '@/ecs/world';
-import { createQuery, Not } from 'koota';
+import { Collider, PhysicsBody, Position, Velocity } from '@/ecs/traits';
+import { ConfigService } from '@/config/ConfigService';
+import type { CanvasBounds } from '@/utils';
+import { clampCircleToBounds } from '@/utils/collision';
+import { EntityManager } from '@/managers/EntityManager';
 import { singleton } from 'tsyringe';
-
-const physicsQuery = createQuery(PhysicsBody, Velocity, Position, Not(IsDead));
 
 @singleton()
 export class PhysicsSystem {
+  private readonly canvasBounds: CanvasBounds;
+
+  public constructor(
+    private entityManager: EntityManager,
+    configService: ConfigService,
+  ) {
+    this.canvasBounds = configService.getCanvasBounds();
+  }
+
   public update(deltaTime: number): void {
-    const entities = world.query(physicsQuery);
+    const entities = this.entityManager.getPhysicsEntities();
 
     for (const entity of entities) {
       const body = entity.get(PhysicsBody)!;
@@ -50,6 +59,30 @@ export class PhysicsSystem {
         impulseX: 0,
         impulseY: 0,
       });
+    }
+
+    // 6. Clamp arena-bound entities to canvas borders
+    this.clampArenaBoundEntities();
+  }
+
+  private clampArenaBoundEntities(): void {
+    const entities = this.entityManager.getArenaBoundEntities();
+
+    for (const entity of entities) {
+      const pos = entity.get(Position)!;
+      const r = entity.get(Collider)!.radius;
+      const clamped = clampCircleToBounds(pos, r, this.canvasBounds);
+
+      if (clamped.x !== pos.x || clamped.y !== pos.y) {
+        entity.set(Position, { x: clamped.x, y: clamped.y });
+
+        // Zero out velocity component on clamped axis to prevent sliding along walls
+        const vel = entity.get(Velocity)!;
+        entity.set(Velocity, {
+          vx: clamped.x !== pos.x ? 0 : vel.vx,
+          vy: clamped.y !== pos.y ? 0 : vel.vy,
+        });
+      }
     }
   }
 }

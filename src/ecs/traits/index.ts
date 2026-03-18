@@ -28,6 +28,7 @@ export {
   IsAttracted,
   IsPlayerOwned,
   IsEnemyOwned,
+  ArenaBound,
 } from './tags';
 
 // Per-type AoS traits

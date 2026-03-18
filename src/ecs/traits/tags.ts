@@ -40,3 +40,6 @@ export const IsPlayerOwned = trait();
 
 /** Marks enemy-owned projectiles */
 export const IsEnemyOwned = trait();
+
+/** Marks entities clamped to arena bounds after entering */
+export const ArenaBound = trait();

@@ -1,19 +1,20 @@
 import { GAME_BALANCE } from '@/config/balance.config';
 import { ConfigService } from '@/config/ConfigService';
 import type { AttackPattern, AttackResult, EnemyBulletData } from '@/domain/enemies/type';
-import { Collider, EnemyData, IsBoss, Position } from '@/ecs/traits';
+import { ArenaBound, Collider, EnemyData, IsBoss, PhysicsBody, Position } from '@/ecs/traits';
+import { applyImpulse } from '@/ecs/utils/entity-utils';
 import { spawnProjectile } from '@/ecs/factories/entity-factories';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
 import { ProjectileType } from '@/types/enums';
 import {
-  clamp,
   randomElement,
   randomInt,
   randomRange,
   type CanvasBounds,
   type Vector2,
 } from '@/utils';
+import { circleInBounds } from '@/utils/collision';
 import { addVectors, normalize, scaleVector, subtractVectors, TWO_PI } from '@/utils/math';
 import type { Entity } from 'koota';
 import { singleton } from 'tsyringe';
@@ -40,7 +41,7 @@ export class EnemySystem {
 
     for (const enemy of enemies) {
       this.updateEnemy(enemy, deltaTime);
-      this.moveEnemyTowardsTarget(enemy, targetPos, deltaTime, this.canvasBounds);
+      this.moveEnemyTowardsTarget(enemy, targetPos, deltaTime);
 
       const d = enemy.get(EnemyData)!;
       // Boss shooting (creates projectiles/shockwaves)
@@ -97,49 +98,43 @@ export class EnemySystem {
   }
 
   /**
-   * Move enemy towards target with zigzag, clamped to arena bounds.
-   * Knockback displacement is handled by PhysicsSystem via Velocity.
+   * Apply movement force towards target with zigzag.
    */
   private moveEnemyTowardsTarget(
     entity: Entity,
     target: Vector2,
     deltaTime: number,
-    bounds: CanvasBounds,
   ): void {
     const d = entity.get(EnemyData)!;
     const pos = entity.get(Position)!;
     const dir = normalize(subtractVectors(target, pos));
 
-    let newX = pos.x;
-    let newY = pos.y;
-
     if (dir.x !== 0 || dir.y !== 0) {
-      let move = scaleVector(dir, d.speed * deltaTime);
+      const body = entity.get(PhysicsBody)!;
+      // Convert desired speed to impulse: compensate for mass and friction
+      // Steady-state: v = F * decay / (mass * (1 - decay)), so F = v * mass * (1 - decay) / decay
+      // For friction=f, dt: decay = (1-f)^(dt*60)
+      const decay = Math.pow(1 - body.friction, deltaTime * 60);
+      const forceFactor = body.mass * (1 - decay) / decay;
 
+      let moveDir = dir;
       if (d.zigzag) {
         const perpendicular = { x: -dir.y, y: dir.x };
-        const zigzagMove = scaleVector(perpendicular, d.speed * 0.8 * d.zigzagDir * deltaTime);
-        move = addVectors(move, zigzagMove);
+        const zigzagComponent = scaleVector(perpendicular, 0.8 * d.zigzagDir);
+        moveDir = addVectors(dir, zigzagComponent);
       }
 
-      newX += move.x;
-      newY += move.y;
+      const impulse = scaleVector(moveDir, d.speed * forceFactor);
+      applyImpulse(entity, impulse);
     }
 
-    const r = entity.get(Collider)!.radius;
-    const isFullyInside =
-      newX > r && newX < bounds.width - r && newY > r && newY < bounds.height - r;
-
-    if (isFullyInside) {
-      d.hasEnteredArena = true;
+    // Track arena entry for bounds clamping
+    if (!entity.has(ArenaBound)) {
+      const r = entity.get(Collider)!.radius;
+      if (circleInBounds(pos, r, this.canvasBounds)) {
+        entity.add(ArenaBound);
+      }
     }
-
-    if (d.hasEnteredArena) {
-      newX = clamp(newX, r, bounds.width - r);
-      newY = clamp(newY, r, bounds.height - r);
-    }
-
-    entity.set(Position, { x: newX, y: newY });
   }
 
   /**

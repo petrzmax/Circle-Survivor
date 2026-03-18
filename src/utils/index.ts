@@ -27,9 +27,12 @@ export {
 
 export {
   circleCollision,
+  circleInBounds,
   circleInRect,
   circleOutsideRect,
   circleOverlapDepth,
+  clampCircleToBounds,
+  clampCircleToRect,
   pointInCircle,
   pointInRect,
   rectCircleCollision,
@@ -59,7 +62,8 @@ export {
   shuffleArray,
   shuffledCopy,
   weightedRandom,
-  type CanvasBounds,
 } from './random';
+
+export { type CanvasBounds } from '@/types/common';
 
 export { ObjectPool, type Poolable } from './object-pool';

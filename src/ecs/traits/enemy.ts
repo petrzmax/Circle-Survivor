@@ -40,5 +40,4 @@ export const EnemyData = trait(() => ({
   // Movement state
   zigzagTimer: 0,
   zigzagDir: 1,
-  hasEnteredArena: false,
 }));

@@ -1,7 +1,7 @@
 import { GAME_BALANCE, GameBalanceConfig, WeaponUpgradeConfig } from '@/config/balance.config';
 import { EFFECTS_CONFIG, EffectsConfig } from '@/config/effects.config';
 import { singleton } from 'tsyringe';
-import { CanvasBounds } from '../utils/random';
+import { CanvasBounds } from '@/types/common';
 
 @singleton()
 export class ConfigService {

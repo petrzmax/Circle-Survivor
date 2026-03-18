@@ -4,6 +4,7 @@
  */
 
 import {
+  ArenaBound,
   Collider,
   IsArmed,
   IsBoss,
@@ -17,6 +18,7 @@ import {
   PhysicsBody,
   PlayerStats,
   Position,
+  Velocity,
 } from '@/ecs/traits';
 import { world } from '@/ecs/world';
 import { distanceSquared, pointInRect, Vector2 } from '@/utils';
@@ -33,6 +35,8 @@ const activeDeployablesQuery = createQuery(IsDeployable, Not(IsDead));
 const armedDeployablesQuery = createQuery(IsDeployable, IsArmed, Not(IsDead));
 const activePickupsQuery = createQuery(IsPickup, Not(IsDead));
 const knockbackableEntitiesQuery = createQuery(PhysicsBody, Position, Collider, Not(IsDead));
+const physicsEntitiesQuery = createQuery(PhysicsBody, Velocity, Position, Not(IsDead));
+const arenaBoundEntitiesQuery = createQuery(ArenaBound, Position, Collider, Velocity, Not(IsDead));
 const deadEntitiesQuery = createQuery(IsDead);
 const playerQuery = createQuery(IsPlayer);
 
@@ -115,6 +119,14 @@ export class EntityManager {
 
   public getKnockbackableEntities(): readonly Entity[] {
     return world.query(knockbackableEntitiesQuery);
+  }
+
+  public getPhysicsEntities(): readonly Entity[] {
+    return world.query(physicsEntitiesQuery);
+  }
+
+  public getArenaBoundEntities(): readonly Entity[] {
+    return world.query(arenaBoundEntitiesQuery);
   }
 
   // ========== Bulk Operations ==========

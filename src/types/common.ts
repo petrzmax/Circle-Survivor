@@ -6,6 +6,14 @@ import type { Vector2 } from '@/utils';
 import { DeployableType, PickupType, VisualEffect } from './enums';
 
 /**
+ * Canvas / arena dimensions
+ */
+export interface CanvasBounds {
+  width: number;
+  height: number;
+}
+
+/**
  * Base entity configuration
  */
 export interface EntityConfig {

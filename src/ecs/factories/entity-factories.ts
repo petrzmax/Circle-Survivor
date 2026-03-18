@@ -196,7 +196,6 @@ export function spawnEnemy(entityConfig: EnemyEntityConfig): Entity {
       nextFireTime: 0,
       zigzagTimer: 0,
       zigzagDir: 1,
-      hasEnteredArena: false,
     }),
   ];
 

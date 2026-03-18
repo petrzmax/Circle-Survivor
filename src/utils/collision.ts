@@ -4,6 +4,7 @@
  */
 
 import { Vector2, clamp, distance, distanceSquared } from './math';
+import type { CanvasBounds } from '@/types/common';
 
 /**
  * Rectangle interface for collision detection
@@ -132,4 +133,32 @@ export function rectCollision(a: Rectangle, b: Rectangle): boolean {
 export function circleOverlapDepth(a: Circle, b: Circle): number {
   const dist = distance(a, b);
   return a.radius + b.radius - dist;
+}
+
+/**
+ * Clamps a circle position to stay fully inside a rectangle.
+ * Returns the clamped position.
+ */
+export function clampCircleToRect(circle: Circle, rect: Rectangle): Vector2 {
+  return {
+    x: clamp(circle.x, rect.position.x + circle.radius, rect.position.x + rect.width - circle.radius),
+    y: clamp(circle.y, rect.position.y + circle.radius, rect.position.y + rect.height - circle.radius),
+  };
+}
+
+const ORIGIN: Vector2 = { x: 0, y: 0 };
+
+/**
+ * Checks if circle is fully inside origin-based bounds (0,0 to width,height).
+ */
+export function circleInBounds(pos: Vector2, radius: number, bounds: CanvasBounds): boolean {
+  return circleInRect({ ...pos, radius }, { position: ORIGIN, width: bounds.width, height: bounds.height });
+}
+
+/**
+ * Clamps a circle to stay fully inside origin-based bounds (0,0 to width,height).
+ * Returns the clamped position.
+ */
+export function clampCircleToBounds(pos: Vector2, radius: number, bounds: CanvasBounds): Vector2 {
+  return clampCircleToRect({ ...pos, radius }, { position: ORIGIN, width: bounds.width, height: bounds.height });
 }

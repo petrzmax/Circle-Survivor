@@ -44,7 +44,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     color: '#ff4444',
     range: 140,
     weaponCategory: WeaponCategory.GUN,
-    projectileMass: 2.0,
+    projectileMass: 0.4,
     projectileType: ProjectileType.STANDARD,
   },
   [WeaponType.SNIPER]: {
@@ -109,7 +109,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     bulletRadius: 10,
     range: 310,
     weaponCategory: WeaponCategory.ROCKET,
-    projectileMass: 3.0,
+    projectileMass: 2.0,
     projectileType: ProjectileType.ROCKET,
   },
   [WeaponType.FLAMETHROWER]: {
@@ -165,7 +165,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     bulletRadius: 15,
     range: 9999,
     weaponCategory: WeaponCategory.ROCKET,
-    projectileMass: 5.0,
+    projectileMass: 3.0,
     projectileType: ProjectileType.NUKE,
   },
   [WeaponType.SCYTHE]: {
@@ -221,7 +221,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     bulletRadius: 12,
     range: 275,
     weaponCategory: WeaponCategory.GRENADE,
-    projectileMass: 2.5,
+    projectileMass: 1,
     explosiveRange: 275,
     projectileType: ProjectileType.HOLY_GRENADE,
     friction: 0.02,
@@ -242,7 +242,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     bulletRadius: 10,
     range: 235,
     weaponCategory: WeaponCategory.GRENADE,
-    projectileMass: 2.0,
+    projectileMass: 0.7,
     explosiveRange: 235,
     projectileType: ProjectileType.BANANA,
     rotationSpeed: 4, // ~0.6 rotations per second
@@ -283,7 +283,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     bulletRadius: 6,
     range: 80,
     weaponCategory: WeaponCategory.GRENADE,
-    projectileMass: 1.5,
+    projectileMass: 0.6,
     explosiveRange: 80,
     projectileType: ProjectileType.MINI_BANANA,
     rotationSpeed: 6, // ~0.8 rotations per second

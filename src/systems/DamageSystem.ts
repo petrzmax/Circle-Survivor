@@ -1,17 +1,17 @@
 /**
  * DamageSystem — Single authority for all HP modifications.
  *
- * Defense-side only: armor, dodge, knockback (via PhysicsBody force), invincibility.
+ * Defense-side only: armor, dodge, invincibility.
  * Callers pre-compute final offense damage before calling damageEntity().
+ * Knockback impulses are the caller's responsibility (CollisionResponseSystem, ExplosionSystem).
  *
  * Operates on raw Koota Entity — reads Health, Position (SoA),
  * and PlayerStats (AoS, for defense stats like armor/dodge/invincibility).
  */
 import type { Entity } from 'koota';
 import { singleton } from 'tsyringe';
-import { ConfigService } from '@/config/ConfigService';
 import { Health, PlayerStats, Position } from '@/ecs/traits';
-import { applyImpulseAwayFrom, healEntity } from '@/ecs/utils/entity-utils';
+import { healEntity } from '@/ecs/utils/entity-utils';
 import { EventBus } from '@/events/EventBus';
 import type { Vector2 } from '@/utils/math';
 import { randomChance } from '@/utils/random';
@@ -20,14 +20,7 @@ import { DamageResult, DamageSource } from './damage.types';
 
 @singleton()
 export class DamageSystem {
-  private readonly knockbackForce: number;
-
-  public constructor(
-    private combatMath: CombatMath,
-    configService: ConfigService,
-  ) {
-    this.knockbackForce = configService.getEnemyBalance().knockbackForce;
-  }
+  public constructor(private combatMath: CombatMath) {}
 
   /**
    * Apply damage to any entity with Health and Position traits.
@@ -39,9 +32,8 @@ export class DamageSystem {
    * @param target       The Koota entity receiving damage
    * @param incomingDamage  Final offense-side damage (caller already applied multipliers)
    * @param currentTime  Current game time in ms (for invincibility checks)
-   * @param source       Position the damage came from (for knockback direction)
+   * @param source       Position the damage came from (for event reporting)
    * @param damageSource Categorized source type for events
-   * @param knockbackMultiplier  Knockback force multiplier (default 1)
    */
   public damageEntity(
     target: Entity,
@@ -49,7 +41,6 @@ export class DamageSystem {
     currentTime: number,
     source: Vector2,
     damageSource: DamageSource,
-    knockbackMultiplier: number = 1,
   ): DamageResult {
     // Read defense stats from PlayerStats (only player has them)
     const stats = target.get(PlayerStats);
@@ -89,9 +80,6 @@ export class DamageSystem {
     if (stats && stats.invincibilityDuration > 0) {
       stats.invincibleUntil = currentTime + stats.invincibilityDuration;
     }
-
-    // Apply directional knockback
-    applyImpulseAwayFrom(target, source, this.knockbackForce * knockbackMultiplier);
 
     // Emit typed damage event
     EventBus.emit('entityDamaged', {
@@ -141,14 +129,13 @@ export class DamageSystem {
     EventBus.emit('thornsTriggered', undefined);
     const thornsDamage = actualDamage * stats.thorns;
 
-    // Thorns damage bypasses attacker's armor/dodge — raw damage to HP + knockback
+    // Thorns damage bypasses attacker's armor/dodge — raw damage to HP
     return this.damageEntity(
       attacker,
       thornsDamage,
       currentTime,
       attacker.get(Position)!,
       DamageSource.THORNS,
-      stats.knockback,
     );
   }
 }

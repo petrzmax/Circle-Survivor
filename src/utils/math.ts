@@ -215,12 +215,12 @@ export function directionTo(source: Vector2, target: Vector2): Vector2 {
   return normalize(subtractVectors(target, source));
 }
 
-const BASE_ENEMY_RADIUS_SQ = 15 * 15;
+const BASE_ENEMY_RADIUS = 15;
 
 /**
- * Computes enemy mass from radius, normalized so BASIC enemy (radius 15) = mass 1.
- * Formula: mass = r² / 15² (proportional to circle surface area).
+ * Computes mass from radius, normalized so BASIC enemy (radius 15) = mass 1.
+ * Formula: mass = r / 15 (linear scaling).
  */
 export function massFromRadius(radius: number): number {
-  return (radius * radius) / BASE_ENEMY_RADIUS_SQ;
+  return radius / BASE_ENEMY_RADIUS;
 }

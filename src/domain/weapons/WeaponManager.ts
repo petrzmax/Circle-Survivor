@@ -192,6 +192,7 @@ export class WeaponManager {
         bulletSpeed: speed,
         rotationSpeed: config.rotationSpeed,
         friction: config.friction,
+        mass: config.projectileMass,
         vx: velocityVector.x,
         vy: velocityVector.y,
       };
@@ -201,7 +202,6 @@ export class WeaponManager {
       // Set per-projectile state on ProjectileData (AoS — direct mutation)
       const projectileData = entity.get(ProjectileData)!;
       projectileData.isCrit = isCrit;
-      projectileData.knockbackMultiplier = config.knockbackMultiplier ?? 1;
     }
 
     EventBus.emit('weaponFired', { weaponType: weapon.type });

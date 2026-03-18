@@ -14,9 +14,11 @@ import {
   Health,
   IsBoss,
   IsDead,
+  PhysicsBody,
   PlayerStats,
   Position,
   ProjectileData,
+  Velocity,
 } from '@/ecs/traits';
 import { applyImpulse, applyImpulseAwayFrom } from '@/ecs/utils/entity-utils';
 import { circleOverlapDepth } from '@/utils/collision';
@@ -32,6 +34,8 @@ import { DeathSystem } from './DeathSystem';
 export class CollisionResponseSystem {
   private readonly bossContactDamageMultiplier: number;
   private readonly separationForce: number;
+  private readonly knockbackPerMomentum: number;
+  private readonly contactKnockback: number;
 
   public constructor(
     private entityManager: EntityManager,
@@ -41,6 +45,8 @@ export class CollisionResponseSystem {
   ) {
     this.bossContactDamageMultiplier = configService.getBossBalance().contactDamageMultiplier;
     this.separationForce = configService.getPhysicsConfig().separationForce;
+    this.knockbackPerMomentum = configService.getEnemyBalance().knockbackPerMomentum;
+    this.contactKnockback = configService.getEnemyBalance().contactKnockback;
   }
 
   public processCollisions(collisions: CollisionResult, currentTime: number): void {
@@ -80,6 +86,11 @@ export class CollisionResponseSystem {
         ePos,
         DamageSource.ENEMY_CONTACT,
       );
+
+      // Knockback: push player away from enemy on damage
+      if (result.actualDamage > 0) {
+        applyImpulseAwayFrom(playerEntity, ePos, this.contactKnockback);
+      }
 
       // Physical repulsion — push player away from enemy on overlap (works during invincibility too)
       const enemyRadius = enemy.get(Collider)!.radius;
@@ -133,6 +144,11 @@ export class CollisionResponseSystem {
         DamageSource.ENEMY_PROJECTILE,
       );
 
+      // Knockback: push player away from enemy projectile
+      if (result.actualDamage > 0) {
+        applyImpulseAwayFrom(playerEntity, pPos, this.contactKnockback);
+      }
+
       // Mark projectile dead
       if (!proj.has(IsDead)) proj.add(IsDead);
 
@@ -180,13 +196,19 @@ export class CollisionResponseSystem {
     currentTime: number,
   ): void {
     for (const shockwave of shockwaves) {
+      const shockwavePos = { x: shockwave.x, y: shockwave.y };
       const result = this.damageSystem.damageEntity(
         playerEntity,
         shockwave.damage,
         currentTime,
-        { x: shockwave.x, y: shockwave.y },
+        shockwavePos,
         DamageSource.SHOCKWAVE,
       );
+
+      // Knockback: push player away from shockwave center
+      if (result.actualDamage > 0) {
+        applyImpulseAwayFrom(playerEntity, shockwavePos, this.contactKnockback);
+      }
 
       shockwave.damageDealt = true;
 
@@ -245,7 +267,13 @@ export class CollisionResponseSystem {
 
     // Pre-bake offense damage: projectile damage already includes crit (from WeaponManager)
     const finalDamage = pDamage * playerStats.damageMultiplier;
-    const totalKnockback = playerStats.knockback * projectileData.knockbackMultiplier;
+
+    // Momentum-based knockback: mass × current speed
+    const vel = projectile.get(Velocity)!;
+    const body = projectile.get(PhysicsBody)!;
+    const speed = Math.sqrt(vel.vx * vel.vx + vel.vy * vel.vy);
+    const momentum = body.mass * speed;
+    const knockbackImpulse = playerStats.knockback * this.knockbackPerMomentum * momentum;
 
     const result = this.damageSystem.damageEntity(
       enemy,
@@ -253,8 +281,12 @@ export class CollisionResponseSystem {
       currentTime,
       pPos,
       DamageSource.ENEMY_CONTACT,
-      totalKnockback,
     );
+
+    // Apply momentum-based knockback to enemy
+    if (result.actualDamage > 0 && knockbackImpulse > 0) {
+      applyImpulseAwayFrom(enemy, pPos, knockbackImpulse);
+    }
 
     // Lifesteal on hit
     this.damageSystem.applyLifesteal(playerEntity);

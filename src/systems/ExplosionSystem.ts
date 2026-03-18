@@ -1,5 +1,5 @@
 import { singleton } from 'tsyringe';
-import { Collider, Health, IsDead, IsPlayer, PlayerStats, Position } from '@/ecs/traits';
+import { Collider, Health, IsDead, PlayerStats, Position } from '@/ecs/traits';
 import { spawnProjectile } from '@/ecs/factories/entity-factories';
 import { applyImpulseAwayFrom } from '@/ecs/utils/entity-utils';
 import { EventBus } from '@/events/EventBus';
@@ -12,6 +12,7 @@ import { DamageSource, ExplosionOrigin } from './damage.types';
 import { DamageSystem } from './DamageSystem';
 import { DeathSystem } from './DeathSystem';
 import type { ExplosionEvent } from './damage.types';
+import type { Entity } from 'koota';
 
 const MAX_CHAIN_ITERATIONS = 10;
 
@@ -113,14 +114,10 @@ export class ExplosionSystem {
     const playerEntity = this.entityManager.getPlayerEntity();
     if (playerEntity.has(IsDead)) return;
 
-    const pPos = playerEntity.get(Position)!;
-    const pRadius = playerEntity.get(Collider)!.radius;
-    const distToPlayer = distance(pPos, position);
-    if (distToPlayer > radius) return;
+    const falloff = this.entityExplosionFalloff(playerEntity, position, radius);
+    if (falloff < 0) return;
 
-    const effectiveDist = Math.max(0, distToPlayer - pRadius);
-    const falloffMultiplier = this.combatMath.explosionFalloff(effectiveDist, radius);
-    const finalDamage = Math.max(1, Math.round(damage * falloffMultiplier));
+    const finalDamage = Math.max(1, Math.round(damage * falloff));
 
     const result = this.damageSystem.damageEntity(
       playerEntity,
@@ -156,11 +153,10 @@ export class ExplosionSystem {
       const eHealth = enemy.get(Health);
       if (!eHealth || eHealth.hp <= 0) continue;
 
-      const dist = Math.sqrt(dSq);
-      const eRadius = enemy.get(Collider)!.radius;
-      const effectiveDist = Math.max(0, dist - eRadius);
-      const falloffMultiplier = this.combatMath.explosionFalloff(effectiveDist, radius);
-      const finalDamage = Math.max(1, Math.round(damage * falloffMultiplier));
+      const falloff = this.entityExplosionFalloff(enemy, position, radius);
+      if (falloff < 0) continue;
+
+      const finalDamage = Math.max(1, Math.round(damage * falloff));
 
       const result = this.damageSystem.damageEntity(
         enemy,
@@ -168,7 +164,6 @@ export class ExplosionSystem {
         currentTime,
         position,
         DamageSource.EXPLOSION,
-        0,
       );
 
       if (result.isDead) {
@@ -179,27 +174,32 @@ export class ExplosionSystem {
   }
 
   /**
-   * Apply explosion knockback to ALL entities with PhysicsBody (enemies, pickups, etc.).
+   * Apply explosion knockback to ALL entities with PhysicsBody (enemies, pickups, player).
    * Damage is handled separately — this only applies impulse forces.
    */
   private applyExplosionKnockbackToAll(position: Vector2, radius: number): void {
-    const radiusSq = radius * radius;
     const explosionKnockback = this.configService.getCombatConfig().explosionKnockback;
     const entities = this.entityManager.getKnockbackableEntities();
 
     for (const entity of entities) {
-      if (entity.has(IsPlayer)) continue;
+      const falloff = this.entityExplosionFalloff(entity, position, radius);
+      if (falloff < 0) continue;
 
-      const ePos = entity.get(Position)!;
-      const dSq = distanceSquared(ePos, position);
-      if (dSq > radiusSq) continue;
-
-      const dist = Math.sqrt(dSq);
-      const eRadius = entity.get(Collider)!.radius;
-      const effectiveDist = Math.max(0, dist - eRadius);
-      const falloffMultiplier = this.combatMath.explosionFalloff(effectiveDist, radius);
-
-      applyImpulseAwayFrom(entity, position, explosionKnockback * falloffMultiplier);
+      applyImpulseAwayFrom(entity, position, explosionKnockback * falloff);
     }
+  }
+
+  /**
+   * Compute explosion damage/knockback falloff for an entity.
+   * Returns the falloff multiplier (0–1), or -1 if the entity is out of range.
+   */
+  private entityExplosionFalloff(entity: Entity, center: Vector2, radius: number): number {
+    const pos = entity.get(Position)!;
+    const dist = distance(pos, center);
+    if (dist > radius) return -1;
+
+    const entityRadius = entity.get(Collider)!.radius;
+    const effectiveDist = Math.max(0, dist - entityRadius);
+    return this.combatMath.explosionFalloff(effectiveDist, radius);
   }
 }

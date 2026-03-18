@@ -52,7 +52,7 @@ export function spawnProjectile(config: ProjectileConfig): Entity {
   return world.spawn(
     IsProjectile,
     ...(isPlayerProjectile ? [IsPlayerOwned] : []),
-    PhysicsBody({ friction: config.friction ?? 0 }),
+    PhysicsBody({ mass: config.mass ?? 1, friction: config.friction ?? 0 }),
     Position({ x: config.position.x, y: config.position.y }),
     Velocity({ vx: config.vx ?? 0, vy: config.vy ?? 0 }),
     Collider({ radius: config.radius }),
@@ -65,7 +65,6 @@ export function spawnProjectile(config: ProjectileConfig): Entity {
       distanceTraveled: 0,
       maxDistance: config.maxDistance ?? 0,
       isCrit: false,
-      knockbackMultiplier: 1,
       weaponCategory: config.weaponCategory ?? 'gun',
       explosiveRange: config.explosiveRange ?? 0,
       baseSpeed: config.bulletSpeed ?? 0,

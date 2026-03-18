@@ -31,6 +31,8 @@ export interface ProjectileConfig extends EntityConfig {
   damage: number;
   ownerId: number;
   color?: string;
+  /** Projectile mass — set on PhysicsBody for momentum-based knockback. */
+  mass?: number;
 
   // Lifetime
   maxDistance?: number;

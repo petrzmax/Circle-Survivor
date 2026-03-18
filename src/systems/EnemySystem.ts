@@ -7,7 +7,7 @@ import { spawnProjectile } from '@/ecs/factories/entity-factories';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
 import { ProjectileType } from '@/types/enums';
-import { randomElement, randomInt, randomRange, type CanvasBounds, type Vector2 } from '@/utils';
+import { randomElement, randomInt, randomRange, massFromRadius, type CanvasBounds, type Vector2 } from '@/utils';
 import { circleInBounds } from '@/utils/collision';
 import { addVectors, normalize, scaleVector, subtractVectors, TWO_PI } from '@/utils/math';
 import type { Entity } from 'koota';
@@ -46,14 +46,16 @@ export class EnemySystem {
         if (attackResult) {
           if (attackResult.type === 'bullets') {
             for (const bulletData of attackResult.bullets) {
+              const bulletRadius = Math.floor(radius * GAME_BALANCE.enemy.bulletRadiusRatio);
               const projEntity = spawnProjectile({
                 position: { x: bulletData.x, y: bulletData.y },
-                radius: Math.floor(radius * GAME_BALANCE.enemy.bulletRadiusRatio),
+                radius: bulletRadius,
                 type: ProjectileType.ENEMY_BULLET,
                 damage: bulletData.damage,
                 ownerId: enemy.id(),
                 color: bulletData.color,
                 maxDistance: 1000,
+                mass: massFromRadius(bulletRadius),
                 vx: bulletData.vx,
                 vy: bulletData.vy,
               });

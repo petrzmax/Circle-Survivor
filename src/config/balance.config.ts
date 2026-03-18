@@ -47,8 +47,10 @@ export const GAME_BALANCE = {
     scalingStartWave: 5,
     /** Per-wave multiplier. Applied as Math.pow(factor, wave - startWave). */
     scalingFactor: 1.04,
-    /** Knockback force applied to enemies (px/s). */
-    knockbackForce: 180,
+    /** Knockback impulse for non-projectile damage (contact, shockwave → player). */
+    contactKnockback: 180,
+    /** Knockback coefficient for momentum-based projectile hits: impulse = this × playerKnockback × mass × speed. */
+    knockbackPerMomentum: 0.2,
     /** Enemy bullet radius as fraction of enemy radius. */
     bulletRadiusRatio: 0.15,
   },

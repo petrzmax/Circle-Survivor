@@ -15,7 +15,6 @@ export const ProjectileData = trait(() => ({
   distanceTraveled: 0,
   maxDistance: 0,
   isCrit: false,
-  knockbackMultiplier: 1,
   weaponCategory: 'gun',
   explosiveRange: 0,
   baseSpeed: 0,

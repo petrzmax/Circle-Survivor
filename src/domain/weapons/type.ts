@@ -13,14 +13,15 @@ export interface WeaponConfig {
   range: number;
   weaponCategory: WeaponCategory;
 
+  /** Projectile mass — affects momentum-based knockback (mass × speed). */
+  projectileMass: number;
+
   // Optional properties
   pierceCount?: number;
   explosive?: boolean;
   explosionRadius?: number;
   explosionEffect?: VisualEffect;
   bulletRadius?: number;
-  knockbackMultiplier?: number;
-  // TODO analyse if it's still needed
   shortRange?: boolean;
   maxDistance?: number;
 

@@ -193,7 +193,7 @@ export function spawnEnemy(entityConfig: EnemyEntityConfig): Entity {
       bulletSpeed: config.bulletSpeed ?? 240,
       bulletDamage: Math.floor((config.bulletDamage ?? 15) * scale),
       attackPatterns: config.attackPatterns ?? ['single'],
-      nextFireTime: 0,
+      nextFireTime: (world.get(Time)?.current ?? 0) + randomInt(0, config.fireRate ?? 2000),
       zigzagTimer: 0,
       zigzagDir: 1,
     }),

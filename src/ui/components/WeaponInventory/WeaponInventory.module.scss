@@ -11,6 +11,8 @@
   height: 340px;
   margin: 0;
   overflow-y: auto;
+
+  @include scrollbar;
 }
 
 .empty {

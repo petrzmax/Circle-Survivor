@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.2.2](https://github.com/petrzmax/Circle-Survivor/compare/v2.2.1...v2.2.2) (2026-03-19)
+
+
+### ⚖️ Balance Changes
+
+* **balance:** adjust enemy fire rates and weapon projectile mass for balance ([cf6eb6e](https://github.com/petrzmax/Circle-Survivor/commit/cf6eb6ee542b8fb67ad003c2bb0589c7437f3bad))
+
+
+### 🐛 Bug Fixes
+
+* desynchronize enemies firing ([a2629d4](https://github.com/petrzmax/Circle-Survivor/commit/a2629d45e650882f1772586c03e9187c897c429f))
+* scrollbar styling ([7bb67a5](https://github.com/petrzmax/Circle-Survivor/commit/7bb67a5cd277a9801616f55b453e536055f3747d))
+
 ## [2.2.1](https://github.com/petrzmax/Circle-Survivor/compare/v2.2.0...v2.2.1) (2026-03-19)
 
 

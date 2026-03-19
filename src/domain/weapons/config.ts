@@ -90,7 +90,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     color: '#ff6600',
     range: 160,
     weaponCategory: WeaponCategory.GUN,
-    projectileMass: 0.4,
+    projectileMass: 0.12,
     projectileType: ProjectileType.STANDARD,
   },
   [WeaponType.BAZOOKA]: {

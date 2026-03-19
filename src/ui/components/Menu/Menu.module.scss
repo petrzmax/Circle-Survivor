@@ -1,0 +1,66 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+// Shared overlay for all menu screens
+.overlay {
+  @include overlay;
+}
+
+// Start screen
+.controls {
+  font-size: $font-sm;
+  color: $color-text-dim;
+  margin-bottom: $space-lg;
+}
+
+.version {
+  position: absolute;
+  bottom: 10px;
+  right: $space-md;
+  font-size: $font-xs;
+  color: $color-text-dimmer;
+  font-style: italic;
+}
+
+.versionLink {
+  color: $color-text-dim;
+  text-decoration: none;
+  transition: color $transition-fast;
+
+  &:hover {
+    color: $color-gold;
+    text-decoration: underline;
+  }
+}
+
+// Pause menu
+.pauseBtn {
+  margin: 5px;
+}
+
+.quitBtn {
+  @include gray-button;
+}
+
+// Menu leaderboard
+.menuLeaderboardBtn {
+  margin-top: $space-md;
+  padding: 10px 25px;
+  font-size: $font-md;
+  background: transparent;
+  border: 2px solid $color-secondary;
+  color: $color-text-dim;
+
+  &:hover {
+    border-color: $color-primary;
+    color: $color-text-white;
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+.menuLeaderboardClose {
+  @include gray-button;
+  padding: 12px 30px;
+  font-size: $font-md;
+}

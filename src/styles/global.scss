@@ -1,0 +1,195 @@
+@use 'variables' as *;
+
+// ============ CSS Reset ============
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: $color-bg-dark;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-family: $font-family;
+  overflow: hidden;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+// ============ Infrastructure Elements ============
+
+#game-container {
+  position: relative;
+  width: var(--container-width, 906px);
+  height: var(--container-height, 706px);
+}
+
+#game {
+  background: $color-bg-canvas;
+  border: var(--border-width, 3px) solid $color-secondary;
+  border-radius: $radius-md;
+  display: block;
+}
+
+#loading-screen {
+  position: absolute;
+  inset: 0;
+  background: $color-bg-canvas;
+  border: var(--border-width, 3px) solid $color-secondary;
+  border-radius: $radius-md;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: $font-lg;
+  letter-spacing: 1px;
+}
+
+// Preact UI root — overlay layer
+#ui-root {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+
+  > * {
+    pointer-events: auto;
+  }
+}
+
+// ============ Utilities ============
+
+.hidden {
+  display: none !important;
+}
+
+// ============ Global Typography ============
+
+h1,
+h2 {
+  margin-bottom: $space-lg;
+  color: $color-primary;
+}
+
+h1 {
+  font-size: $font-title;
+  text-shadow: 0 0 20px $color-primary;
+}
+
+p {
+  margin-bottom: 10px;
+  color: $color-text-light;
+}
+
+// ============ Global Button Base ============
+
+button {
+  background: linear-gradient(135deg, $color-primary, $color-secondary);
+  color: $color-text-white;
+  border: none;
+  padding: $space-md 40px;
+  font-size: $font-xl;
+  border-radius: $radius-button;
+  cursor: pointer;
+  transition:
+    transform $transition-fast,
+    box-shadow $transition-fast;
+  margin-top: $space-lg;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba($color-primary, 0.5);
+  }
+}
+
+// ============ Mobile / Touch Support ============
+
+#touch-zone {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9000;
+  touch-action: none;
+  pointer-events: none;
+
+  &.active {
+    display: block;
+  }
+}
+
+#fullscreen-btn {
+  display: none;
+  position: fixed;
+  bottom: $radius-md;
+  right: $radius-md;
+  z-index: 9001;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  margin: 0;
+  font-size: 20px;
+  line-height: 40px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: $radius-md;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+
+  &:hover {
+    transform: none;
+    box-shadow: none;
+    background: rgba(0, 0, 0, 0.7);
+    color: rgba(255, 255, 255, 0.9);
+  }
+}
+
+@media (pointer: coarse) {
+  #game {
+    touch-action: none;
+  }
+
+  #fullscreen-btn {
+    display: block;
+  }
+}
+
+// ============ Weapons Display (imperative DOM) ============
+
+#weapons-display {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+}
+
+.weapon-slot {
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid $color-secondary;
+  border-radius: $radius-sm;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+
+  &.active {
+    border-color: $color-primary;
+  }
+}

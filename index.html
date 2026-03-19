@@ -6,7 +6,21 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Circle Survivor</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Critical styles inlined to prevent FOUC while JS/SCSS loads */
+        body {
+            margin: 0;
+            background: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        #loading-screen {
+            color: rgba(255, 255, 255, 0.5);
+        }
+    </style>
 </head>
 <body>
     <div id="game-container">

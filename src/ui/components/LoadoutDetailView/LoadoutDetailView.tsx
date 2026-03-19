@@ -5,12 +5,15 @@ import { CharacterType } from '@/types/enums';
 import type { LeaderboardEntry } from '@/ui/Leaderboard';
 import { JSX } from 'preact';
 import { useMemo } from 'preact/hooks';
-import { useItemTooltip } from '../hooks/useItemTooltip';
-import { useWeaponTooltip } from '../hooks/useWeaponTooltip';
-import { ItemTooltip } from './ItemTooltip';
-import { ItemsList } from './ItemsList';
-import { StatsColumn } from './StatsColumn';
-import { WeaponTooltip } from './WeaponTooltip';
+import { useItemTooltip } from '../../hooks/useItemTooltip';
+import { useWeaponTooltip } from '../../hooks/useWeaponTooltip';
+import { ItemTooltip } from '../ItemTooltip';
+import { ItemsList } from '../ItemsList';
+import { StatsColumn } from '../StatsColumn';
+import { WeaponTooltip } from '../WeaponTooltip';
+import styles from './LoadoutDetailView.module.scss';
+import layout from '../shared/items-layout.module.scss';
+import itemStyles from '../ItemsList/ItemsList.module.scss';
 
 interface LoadoutDetailViewProps {
   entry: LeaderboardEntry;
@@ -51,52 +54,51 @@ export function LoadoutDetailView({ entry, onClose }: LoadoutDetailViewProps): J
   }, [entry.items]);
 
   return (
-    <div class="loadout-detail-overlay">
-      <div class="loadout-detail-container">
+    <div class={styles.overlay}>
+      <div class={styles.container}>
         {/* Header */}
-        <div class="loadout-detail-header">
+        <div class={styles.header}>
           <h2>
             {getCharacterDisplay(entry.character).emoji} {entry.name}
           </h2>
-          <div class="loadout-detail-score">
+          <div class={styles.score}>
             {getCharacterDisplay(entry.character).name} | Fala {entry.wave} | {entry.xp} XP |{' '}
             {new Date(entry.date).toLocaleDateString()}
           </div>
         </div>
 
         {!hasLoadout ? (
-          <div class="loadout-detail-empty">
+          <div class={styles.empty}>
             <p>📦 Brak danych o ekwipunku</p>
-            <p class="loadout-detail-empty-hint">
-              Dane o ekwipunku są zapisywane od najnowszej wersji gry
-            </p>
+            <p class={styles.emptyHint}>Dane o ekwipunku są zapisywane od najnowszej wersji gry</p>
           </div>
         ) : (
-          /* Reuse .items-inventory two-column layout from shop */
-          <div class="items-inventory loadout-inventory" onMouseMove={handleMouseMove}>
+          <div class={`${layout.inventory} ${styles.inventory}`} onMouseMove={handleMouseMove}>
             {/* Left Column — Weapons + Items */}
-            <div class="items-column-left">
+            <div class={layout.columnLeft}>
               {/* Weapons */}
-              <div class="items-section-label">⚔️ Bronie</div>
+              <div class={itemStyles.sectionLabel}>⚔️ Bronie</div>
               {!entry.weapons || entry.weapons.length === 0 ? (
-                <div class="items-empty">Brak broni</div>
+                <div class={itemStyles.empty}>Brak broni</div>
               ) : (
-                <div class="items-list">
+                <div class={itemStyles.list}>
                   {entry.weapons.map((weapon, index) => {
                     const display = getWeaponDisplayData(weapon.type);
                     if (!display) return null;
                     return (
                       <div
-                        class="item-entry"
+                        class={itemStyles.entry}
                         key={`${weapon.type}-${index}`}
                         onMouseEnter={(): void => {
                           weaponTooltip.showTooltip(weapon.type as WeaponType, weapon.level);
                         }}
                         onMouseLeave={weaponTooltip.hideTooltip}
                       >
-                        <span class="item-emoji">{display.emoji}</span>
-                        <span class="item-name">{display.name}</span>
-                        {weapon.level > 1 && <span class="item-count">Lv.{weapon.level}</span>}
+                        <span class={itemStyles.emoji}>{display.emoji}</span>
+                        <span class={itemStyles.name}>{display.name}</span>
+                        {weapon.level > 1 && (
+                          <span class={itemStyles.count}>Lv.{weapon.level}</span>
+                        )}
                       </div>
                     );
                   })}
@@ -117,7 +119,7 @@ export function LoadoutDetailView({ entry, onClose }: LoadoutDetailViewProps): J
           </div>
         )}
 
-        <button class="loadout-detail-close" onClick={onClose}>
+        <button class={styles.closeBtn} onClick={onClose}>
           ⬅ Powrót
         </button>
       </div>

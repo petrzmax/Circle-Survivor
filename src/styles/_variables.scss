@@ -1,0 +1,69 @@
+// ============ Color Palette ============
+
+// Primary / Accent
+$color-primary: #e94560;
+$color-secondary: #0f3460;
+
+// Backgrounds
+$color-bg-dark: #1a1a2e;
+$color-bg-canvas: #16213e;
+
+// Highlight colors
+$color-gold: #ffd700;
+$color-teal: #4ecdc4;
+$color-success: #2ecc71;
+$color-danger: #ff4444;
+
+// HP gradient
+$color-hp-start: #e94560;
+$color-hp-end: #ff6b6b;
+
+// Text
+$color-text-white: #fff;
+$color-text-light: #ccc;
+$color-text-muted: #aaa;
+$color-text-dim: #888;
+$color-text-dimmer: #666;
+$color-text-faint: #555;
+
+// Misc
+$color-hp-bar-bg: #333;
+$color-gray-button: #666;
+$color-gray-button-hover: #888;
+
+// ============ Spacing ============
+
+$space-xs: 4px;
+$space-sm: 8px;
+$space-md: 15px;
+$space-lg: 20px;
+
+// ============ Border Radii ============
+
+$radius-xs: 3px;
+$radius-sm: 5px;
+$radius-md: 8px;
+$radius-lg: 10px;
+$radius-xl: 15px;
+$radius-pill: 20px;
+$radius-button: 30px;
+
+// ============ Font Sizes ============
+
+$font-xs: 11px;
+$font-sm: 12px;
+$font-md: 14px;
+$font-lg: 16px;
+$font-xl: 18px;
+$font-2xl: 22px;
+$font-3xl: 36px;
+$font-title: 48px;
+
+// ============ Font Family ============
+
+$font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+// ============ Transitions ============
+
+$transition-fast: 0.2s;
+$transition-normal: 0.3s;

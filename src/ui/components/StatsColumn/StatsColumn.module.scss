@@ -1,0 +1,55 @@
+@use '../../../styles/variables' as *;
+
+.column {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+  min-height: 0;
+}
+
+.sectionLabel {
+  font-size: $font-md;
+  color: $color-text-dim;
+  border-bottom: 1px solid $color-secondary;
+  padding-bottom: $space-xs;
+}
+
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px $space-sm;
+  border-radius: $space-xs;
+  font-size: $font-sm;
+  color: $color-text-muted;
+
+  &:nth-child(odd) {
+    background: rgba(0, 0, 0, 0.2);
+  }
+}
+
+.statValue {
+  font-weight: bold;
+}
+
+.positive {
+  color: $color-teal;
+}
+
+.negative {
+  color: $color-primary;
+}
+
+.neutral {
+  color: $color-text-dim;
+}

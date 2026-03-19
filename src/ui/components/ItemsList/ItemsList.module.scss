@@ -1,0 +1,45 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+.sectionLabel {
+  font-size: $font-md;
+  color: $color-text-dim;
+  border-bottom: 1px solid $color-secondary;
+  padding-bottom: $space-xs;
+}
+
+.empty {
+  @include empty-state;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-sm;
+  justify-content: center;
+}
+
+.entry {
+  background: $color-bg-dark;
+  border: 2px solid $color-secondary;
+  border-radius: $radius-md;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.emoji {
+  font-size: $font-xl;
+}
+
+.name {
+  color: $color-text-light;
+}
+
+.count {
+  color: $color-teal;
+  font-weight: bold;
+  font-size: $font-sm;
+}

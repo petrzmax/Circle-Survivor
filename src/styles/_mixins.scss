@@ -1,0 +1,133 @@
+@use 'variables' as *;
+
+// Full-screen dark overlay with flex centering
+// Used by: Shop, GameOver, StartScreen, PauseMenu, MenuLeaderboard
+@mixin overlay($bg: rgba(0, 0, 0, 0.9)) {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: $bg;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: $color-text-white;
+  z-index: 100;
+  border-radius: $radius-md;
+}
+
+// Webkit scrollbar styling
+@mixin scrollbar($thumb-color: $color-primary) {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: $radius-xs;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $thumb-color;
+    border-radius: $radius-xs;
+  }
+}
+
+// Card hover effect — border-color + translateY + box-shadow
+@mixin card-hover($color: $color-primary, $translate: -5px) {
+  &:hover {
+    border-color: $color;
+    transform: translateY($translate);
+    box-shadow: 0 #{abs($translate) * 2} #{abs($translate) * 6} rgba($color, 0.3);
+  }
+}
+
+// Small pill button — used by tab-btn, shop-tab, menu-tab-btn
+@mixin tab-button {
+  padding: $space-sm $space-lg;
+  font-size: $font-sm;
+  margin: 0;
+  background: $color-bg-dark;
+  border: 2px solid $color-secondary;
+  border-radius: $radius-pill;
+  transition: all $transition-fast;
+  cursor: pointer;
+  color: $color-text-dim;
+
+  &:hover {
+    border-color: $color-primary;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+// Empty state text
+@mixin empty-state {
+  color: $color-text-dimmer;
+  font-style: italic;
+  padding: 40px $space-lg;
+  text-align: center;
+}
+
+// Card base — shared by shop-item, weapon-card, item-entry, character-card
+@mixin card-base($width: auto, $padding: $space-md) {
+  background: $color-bg-dark;
+  border: 2px solid $color-secondary;
+  border-radius: $radius-lg;
+  padding: $padding;
+  width: $width;
+  text-align: center;
+  transition: all $transition-fast;
+}
+
+// Tooltip base — shared by item-tooltip and weapon-tooltip
+@mixin tooltip-base {
+  position: fixed;
+  background: rgba($color-bg-dark, 0.98);
+  border: 2px solid $color-secondary;
+  border-radius: $radius-md;
+  padding: 12px;
+  width: max-content;
+  white-space: nowrap;
+  font-size: $font-sm;
+  color: $color-text-white;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+// Gray close/quit button
+@mixin gray-button {
+  background: $color-gray-button;
+
+  &:hover {
+    background: $color-gray-button-hover;
+  }
+}
+
+// Card action button (merge, sell) inside weapon cards
+@mixin card-action-button($gradient-start, $gradient-end, $glow-color) {
+  background: linear-gradient(135deg, $gradient-start, $gradient-end);
+  padding: 6px 12px;
+  margin-top: 5px;
+  font-size: $font-xs;
+  border-radius: $radius-sm;
+  border: none;
+  color: $color-text-white;
+  cursor: pointer;
+  transition: all $transition-fast;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba($glow-color, 0.4);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}

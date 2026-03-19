@@ -1,6 +1,7 @@
 import { EventBus } from '@/events/EventBus';
 import { JSX } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
+import styles from './WaveClearOverlay.module.scss';
 
 const OVERLAY_DURATION_MS = 1200;
 
@@ -32,10 +33,10 @@ export function WaveClearOverlay(): JSX.Element | null {
   if (waveNumber === null) return null;
 
   return (
-    <div class="wave-clear-overlay">
-      <div class="wave-clear-content">
-        <div class="wave-clear-icon">⚔️</div>
-        <div class="wave-clear-title">Fala {waveNumber} ukończona!</div>
+    <div class={styles.overlay}>
+      <div class={styles.content}>
+        <div class={styles.icon}>⚔️</div>
+        <div class={styles.title}>Fala {waveNumber} ukończona!</div>
       </div>
     </div>
   );

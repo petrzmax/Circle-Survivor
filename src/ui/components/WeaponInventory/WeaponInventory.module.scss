@@ -1,0 +1,51 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+.inventory {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  align-content: flex-start;
+  max-width: 600px;
+  height: 340px;
+  margin: 0;
+  overflow-y: auto;
+}
+
+.empty {
+  @include empty-state;
+}
+
+.card {
+  @include card-base(140px, 12px);
+
+  &:hover {
+    border-color: $color-teal;
+  }
+}
+
+.emoji {
+  font-size: 24px;
+  margin-bottom: 5px;
+}
+
+.title {
+  font-size: 13px;
+  margin-bottom: 3px;
+  color: $color-text-white;
+}
+
+.level {
+  color: $color-teal;
+  font-size: $font-xs;
+  margin-bottom: $space-sm;
+}
+
+.mergeBtn {
+  @include card-action-button(#3baaa2, #2f9690, $color-teal);
+}
+
+.sellBtn {
+  @include card-action-button(#ff6b6b, #ee5a5a, #ff6b6b);
+}

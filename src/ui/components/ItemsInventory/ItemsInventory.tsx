@@ -1,10 +1,11 @@
 import type { PlayerData } from '@/domain/player/type';
 import { JSX } from 'preact';
 import { useMemo } from 'preact/hooks';
-import { useItemTooltip } from '../hooks/useItemTooltip';
-import { ItemTooltip } from './ItemTooltip';
-import { ItemsList } from './ItemsList';
-import { StatsColumn } from './StatsColumn';
+import { useItemTooltip } from '../../hooks/useItemTooltip';
+import { ItemTooltip } from '../ItemTooltip';
+import { ItemsList } from '../ItemsList';
+import { StatsColumn } from '../StatsColumn';
+import layout from '../shared/items-layout.module.scss';
 
 interface ItemsInventoryProps {
   player: PlayerData;
@@ -22,9 +23,9 @@ export function ItemsInventory({ player }: ItemsInventoryProps): JSX.Element {
   }, [player.items]);
 
   return (
-    <div class="items-inventory" onMouseMove={itemTooltip.handleMouseMove}>
+    <div class={layout.inventory} onMouseMove={itemTooltip.handleMouseMove}>
       {/* Left Column - Items */}
-      <div class="items-column-left">
+      <div class={layout.columnLeft}>
         <ItemsList groupedItems={groupedItems} itemTooltip={itemTooltip} />
       </div>
 

@@ -1,0 +1,176 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+.container {
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: $radius-xl;
+  padding: $space-md;
+  width: 350px;
+  margin: $space-md 0;
+}
+
+.containerLarge {
+  padding: $space-lg;
+  width: 400px;
+  margin: $space-lg 0;
+}
+
+// Score submit form
+.scoreSubmit {
+  display: flex;
+  gap: 10px;
+  margin: $space-md 0;
+  justify-content: center;
+}
+
+.playerName {
+  padding: 10px $space-md;
+  font-size: $font-lg;
+  border: 2px solid $color-secondary;
+  border-radius: $radius-md;
+  background: $color-bg-dark;
+  color: $color-text-white;
+  width: 200px;
+  outline: none;
+  transition: border-color $transition-fast;
+
+  &:focus {
+    border-color: $color-primary;
+  }
+
+  &::placeholder {
+    color: $color-text-dimmer;
+  }
+}
+
+.submitBtn {
+  padding: 10px $space-lg;
+  font-size: $font-md;
+  margin: 0;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+// Tabs
+.tabs {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 10px;
+  justify-content: center;
+}
+
+.tabBtn {
+  @include tab-button;
+
+  &.active {
+    background: linear-gradient(135deg, $color-primary, $color-secondary);
+    border-color: $color-primary;
+    color: $color-text-white;
+  }
+}
+
+// Content area
+.content {
+  h3 {
+    color: $color-gold;
+    font-size: $font-lg;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+}
+
+// List
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 250px;
+  overflow-y: auto;
+
+  @include scrollbar($color-primary);
+
+  li {
+    display: flex;
+    align-items: center;
+    padding: $space-sm 10px;
+    margin: $space-xs 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: $radius-md;
+    font-size: 13px;
+    transition: background $transition-fast;
+  }
+}
+
+.listLarge {
+  max-height: 350px;
+
+  li {
+    padding: 10px 12px;
+    margin: 5px 0;
+    font-size: $font-md;
+  }
+
+  .rank {
+    width: 35px;
+  }
+
+  .score {
+    font-size: $font-sm;
+  }
+}
+
+.entry {
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.highlighted {
+  background: rgba($color-primary, 0.3);
+  border: 1px solid $color-primary;
+}
+
+.noScores {
+  justify-content: center;
+  color: $color-text-dimmer;
+  font-style: italic;
+  cursor: default;
+}
+
+.rank {
+  width: 30px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.name {
+  flex: 1;
+  color: $color-text-white;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.score {
+  color: $color-text-muted;
+  font-size: $font-xs;
+  text-align: right;
+}
+
+.entryArrow {
+  color: $color-text-faint;
+  font-size: $font-lg;
+  margin-left: $space-sm;
+  transition: color $transition-fast;
+}
+
+.entry:hover .entryArrow {
+  color: $color-primary;
+}

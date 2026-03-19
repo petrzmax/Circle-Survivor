@@ -10,7 +10,7 @@ import { WeaponConfig } from '@/domain/weapons/type';
 import { CONTAINER_WIDTH, TOOLTIP_OFFSET, TOOLTIP_WIDTH } from '@/utils/viewport-scaler';
 import { JSX } from 'preact';
 import { container } from 'tsyringe';
-import './WeaponTooltip.css';
+import styles from './WeaponTooltip.module.scss';
 
 const statsCalculator = container.resolve(WeaponStatsCalculator);
 
@@ -46,38 +46,38 @@ export function WeaponTooltip({ weaponData, position }: WeaponTooltipProps): JSX
   const description = getWeaponDescription(config);
 
   return (
-    <div class="weapon-tooltip" style={{ left: `${left}px`, top: `${top}px` }}>
-      <div class="weapon-tooltip-header">
+    <div class={styles.tooltip} style={{ left: `${left}px`, top: `${top}px` }}>
+      <div class={styles.header}>
         {config.emoji} {config.name} {level > 1 && `(Lvl ${level})`}
       </div>
 
-      {description && <div class="weapon-tooltip-desc">{description}</div>}
+      {description && <div class={styles.desc}>{description}</div>}
 
-      <div class="weapon-tooltip-stats-label">Statystyki:</div>
+      <div class={styles.statsLabel}>Statystyki:</div>
 
-      <div class="weapon-tooltip-stat">
+      <div class={styles.stat}>
         {STAT_LABELS.damageMultiplier.emoji} {STAT_LABELS.damageMultiplier.label}: {damageDisplay}
       </div>
-      <div class="weapon-tooltip-stat">🔄 Przeładowanie: {cooldownSeconds} s</div>
-      <div class="weapon-tooltip-stat">
+      <div class={styles.stat}>🔄 Przeładowanie: {cooldownSeconds} s</div>
+      <div class={styles.stat}>
         {STAT_LABELS.attackRange.emoji} Zasięg: {config.range >= 9999 ? '∞' : config.range}
       </div>
 
       {config.pierceCount && (
-        <div class="weapon-tooltip-stat">
+        <div class={styles.stat}>
           {STAT_LABELS.pierce.emoji} {STAT_LABELS.pierce.label}: x{config.pierceCount}
         </div>
       )}
 
       {config.explosive && stats.explosionRadius && (
-        <div class="weapon-tooltip-stat">
+        <div class={styles.stat}>
           {STAT_LABELS.explosionRadius.emoji} {STAT_LABELS.explosionRadius.label}:{' '}
           {stats.explosionRadius}
         </div>
       )}
 
-      {config.shortRange && <div class="weapon-tooltip-stat">📍 Broń krótkiego zasięgu</div>}
-      {config.deployableType && <div class="weapon-tooltip-stat">⚙️ Do rozmieszczenia</div>}
+      {config.shortRange && <div class={styles.stat}>📍 Broń krótkiego zasięgu</div>}
+      {config.deployableType && <div class={styles.stat}>⚙️ Do rozmieszczenia</div>}
     </div>
   );
 }

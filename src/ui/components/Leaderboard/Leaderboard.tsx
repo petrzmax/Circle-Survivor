@@ -1,19 +1,29 @@
 import { CHARACTER_TYPES } from '@/config/characters.config';
-import { EventBus } from '@/events/EventBus';
 import { CharacterType } from '@/types/enums';
 import { JSX } from 'preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { container } from 'tsyringe';
 import {
   Leaderboard as LeaderboardService,
   type LeaderboardEntry,
   type LeaderboardPlayerStats,
   type LeaderboardWeapon,
-} from '../Leaderboard';
-import { LoadoutDetailView } from './LoadoutDetailView';
+} from '../../Leaderboard';
+import { LoadoutDetailView } from '../LoadoutDetailView';
+import styles from './Leaderboard.module.scss';
+
+interface GameOverData {
+  wave: number;
+  score: number;
+  character: CharacterType;
+  weapons: LeaderboardWeapon[];
+  items: string[];
+  playerStats: LeaderboardPlayerStats;
+}
 
 interface LeaderboardProps {
   mode: 'gameOver' | 'menu';
+  gameOverData?: GameOverData | null;
 }
 
 const leaderboardService = container.resolve(LeaderboardService);
@@ -31,7 +41,7 @@ function getCharacterEmoji(character?: CharacterType): string {
   return config.emoji;
 }
 
-export function LeaderboardComponent({ mode }: LeaderboardProps): JSX.Element {
+export function LeaderboardComponent({ mode, gameOverData }: LeaderboardProps): JSX.Element {
   const [activeTab, setActiveTab] = useState<'local' | 'global'>('local');
   const [scores, setScores] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,40 +52,6 @@ export function LeaderboardComponent({ mode }: LeaderboardProps): JSX.Element {
   const [playerName, setPlayerName] = useState(
     () => localStorage.getItem('circle_survivor_player_name') ?? '',
   );
-
-  // Subscribe to game events directly instead of prop drilling
-  const characterRef = useRef<CharacterType>(CharacterType.NORMIK);
-  const gameOverData = useRef<{
-    wave: number;
-    score: number;
-    character: CharacterType;
-    weapons: LeaderboardWeapon[];
-    items: string[];
-    playerStats: LeaderboardPlayerStats;
-  } | null>(null);
-
-  useEffect(() => {
-    const subs = [
-      EventBus.on('gameOver', ({ wave, score, weapons, items, playerStats }) => {
-        gameOverData.current = {
-          wave,
-          score,
-          character: characterRef.current,
-          weapons,
-          items,
-          playerStats,
-        };
-      }),
-      EventBus.on('characterSelected', ({ characterType }) => {
-        characterRef.current = characterType;
-      }),
-    ];
-    return (): void => {
-      subs.forEach((s) => {
-        s.unsubscribe();
-      });
-    };
-  }, []);
 
   useEffect(() => {
     void loadScores(activeTab);
@@ -94,18 +70,18 @@ export function LeaderboardComponent({ mode }: LeaderboardProps): JSX.Element {
   };
 
   const handleSubmit = async (): Promise<void> => {
-    if (!playerName.trim() || !gameOverData.current) return;
+    if (!playerName.trim() || !gameOverData) return;
 
     setIsSubmitting(true);
     try {
       await leaderboardService.submitScore(
         playerName.trim(),
-        gameOverData.current.wave,
-        gameOverData.current.score,
-        gameOverData.current.character,
-        gameOverData.current.weapons,
-        gameOverData.current.items,
-        gameOverData.current.playerStats,
+        gameOverData.wave,
+        gameOverData.score,
+        gameOverData.character,
+        gameOverData.weapons,
+        gameOverData.items,
+        gameOverData.playerStats,
       );
       localStorage.setItem('circle_survivor_player_name', playerName.trim());
       setHasSubmitted(true);
@@ -121,8 +97,7 @@ export function LeaderboardComponent({ mode }: LeaderboardProps): JSX.Element {
     void handleSubmit();
   };
 
-  const listClass =
-    mode === 'menu' ? 'leaderboard-list leaderboard-list--large' : 'leaderboard-list';
+  const listClass = mode === 'menu' ? `${styles.list} ${styles.listLarge}` : styles.list;
 
   return (
     <>
@@ -134,13 +109,15 @@ export function LeaderboardComponent({ mode }: LeaderboardProps): JSX.Element {
           }}
         />
       )}
-      <div id="leaderboard-container">
+      <div
+        class={mode === 'menu' ? `${styles.container} ${styles.containerLarge}` : styles.container}
+      >
         {/* Score submission (game over mode only) */}
         {mode === 'gameOver' && !hasSubmitted && (
-          <div id="score-submit">
+          <div class={styles.scoreSubmit}>
             <input
               type="text"
-              id="player-name"
+              class={styles.playerName}
               placeholder="Twoje imię..."
               maxLength={20}
               value={playerName}
@@ -148,16 +125,16 @@ export function LeaderboardComponent({ mode }: LeaderboardProps): JSX.Element {
                 setPlayerName((e.target as HTMLInputElement).value);
               }}
             />
-            <button id="submit-score-btn" onClick={onSubmitClick} disabled={isSubmitting}>
+            <button class={styles.submitBtn} onClick={onSubmitClick} disabled={isSubmitting}>
               {isSubmitting ? '⏳ Saving...' : '📊 Zapisz wynik'}
             </button>
           </div>
         )}
 
         {/* Tabs */}
-        <div class="leaderboard-tabs">
+        <div class={styles.tabs}>
           <button
-            class={`tab-btn ${activeTab === 'local' ? 'active' : ''}`}
+            class={`${styles.tabBtn} ${activeTab === 'local' ? styles.active : ''}`}
             onClick={(): void => {
               setActiveTab('local');
             }}
@@ -165,7 +142,7 @@ export function LeaderboardComponent({ mode }: LeaderboardProps): JSX.Element {
             🏠 Lokalne
           </button>
           <button
-            class={`tab-btn ${activeTab === 'global' ? 'active' : ''}`}
+            class={`${styles.tabBtn} ${activeTab === 'global' ? styles.active : ''}`}
             onClick={(): void => {
               setActiveTab('global');
             }}
@@ -175,33 +152,33 @@ export function LeaderboardComponent({ mode }: LeaderboardProps): JSX.Element {
         </div>
 
         {/* Content */}
-        <div class="leaderboard-content">
+        <div class={styles.content}>
           <h3>🏆 TOP 10</h3>
           {isLoading ? (
             <ol class={listClass}>
-              <li class="no-scores">⏳ Ładowanie...</li>
+              <li class={styles.noScores}>⏳ Ładowanie...</li>
             </ol>
           ) : (
             <ol class={listClass}>
               {scores.length === 0 ? (
-                <li class="no-scores">Brak wyników - bądź pierwszy!</li>
+                <li class={styles.noScores}>Brak wyników - bądź pierwszy!</li>
               ) : (
                 scores.map((score, index) => (
                   <li
                     key={`${score.name}-${index}`}
-                    class={`leaderboard-entry ${score.name === highlightedName ? 'highlighted' : ''}`}
+                    class={`${styles.entry} ${score.name === highlightedName ? styles.highlighted : ''}`}
                     onClick={(): void => {
                       setSelectedEntry(score);
                     }}
                   >
-                    <span class="rank">{getMedal(index)}</span>
-                    <span class="name">
+                    <span class={styles.rank}>{getMedal(index)}</span>
+                    <span class={styles.name}>
                       {getCharacterEmoji(score.character)} {score.name}
                     </span>
-                    <span class="score">
+                    <span class={styles.score}>
                       Fala {score.wave} | {score.xp} XP
                     </span>
-                    <span class="entry-arrow">›</span>
+                    <span class={styles.entryArrow}>›</span>
                   </li>
                 ))
               )}

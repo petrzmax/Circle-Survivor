@@ -1,0 +1,131 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+.shop {
+  @include overlay;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: $space-md;
+}
+
+.tab {
+  padding: $space-sm $space-lg;
+  background: rgba($color-secondary, 0.5);
+  border: 2px solid $color-secondary;
+  border-radius: $radius-sm;
+  color: $color-text-dim;
+  cursor: pointer;
+  transition: all $transition-fast;
+  font-size: $font-md;
+  margin: 0;
+
+  &:hover {
+    border-color: $color-teal;
+    color: $color-text-light;
+    transform: none;
+    box-shadow: none;
+  }
+
+  &.active {
+    background: rgba($color-secondary, 1);
+    border-color: $color-primary;
+    color: $color-text-white;
+  }
+}
+
+.info {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: $space-lg;
+  color: $color-text-dim;
+  padding: $space-sm 12px;
+  margin-bottom: $space-md;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: $radius-sm;
+}
+
+.rerollBtn {
+  background: rgba($color-secondary, 0.8);
+  border: 2px solid $color-secondary;
+  padding: 6px 12px;
+  margin: 0;
+  border-radius: $radius-sm;
+  color: $color-gold;
+  font-size: $font-xs;
+  font-weight: bold;
+  cursor: pointer;
+  transition:
+    background $transition-fast,
+    border-color $transition-fast,
+    transform $transition-fast;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.2;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+
+  &:hover:not(.disabled) {
+    background: rgba($color-secondary, 1);
+    border-color: $color-teal;
+    transform: scale(1.05);
+  }
+
+  &.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: $color-hp-bar-bg;
+  }
+}
+
+.items {
+  display: flex;
+  gap: $space-md;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: flex-start;
+  max-width: 600px;
+  height: 340px;
+  margin: 0;
+}
+
+.item {
+  @include card-base(150px);
+  cursor: pointer;
+
+  @include card-hover($color-primary);
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.sold {
+    opacity: 0.15;
+    cursor: default;
+    pointer-events: none;
+    border-style: dashed;
+  }
+
+  h3 {
+    font-size: $font-md;
+    margin-bottom: 5px;
+    color: $color-text-white;
+  }
+
+  p {
+    font-size: $font-xs;
+    color: $color-text-dim;
+    margin-bottom: $space-sm;
+  }
+}
+
+.price {
+  color: $color-gold;
+  font-weight: bold;
+}

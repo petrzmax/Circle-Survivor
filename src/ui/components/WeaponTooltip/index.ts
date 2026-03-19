@@ -1,0 +1,1 @@
+export { WeaponTooltip } from './WeaponTooltip';

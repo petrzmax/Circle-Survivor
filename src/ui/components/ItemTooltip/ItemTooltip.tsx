@@ -7,7 +7,7 @@ import { ItemEffect, StatShopItem } from '@/config/shop.config';
 import { STAT_LABELS } from '@/config/stats-labels.config';
 import { CONTAINER_WIDTH, TOOLTIP_OFFSET, TOOLTIP_WIDTH } from '@/utils/viewport-scaler';
 import { JSX } from 'preact';
-import './ItemTooltip.css';
+import styles from './ItemTooltip.module.scss';
 
 /**
  * Format functions for each ItemEffect key (how to display the delta value).
@@ -56,19 +56,19 @@ export function ItemTooltip({ itemData, position }: ItemTooltipProps): JSX.Eleme
   const effectEntries = Object.entries(itemData.effect) as Array<[keyof ItemEffect, number]>;
 
   return (
-    <div class="item-tooltip" style={{ left: `${left}px`, top: `${top}px` }}>
-      <div class="item-tooltip-header">
+    <div class={styles.tooltip} style={{ left: `${left}px`, top: `${top}px` }}>
+      <div class={styles.header}>
         {itemData.emoji} {itemData.name}
       </div>
-      <div class="item-tooltip-desc">{itemData.description}</div>
+      <div class={styles.desc}>{itemData.description}</div>
       {effectEntries.length > 0 && (
         <>
-          <div class="item-tooltip-effects-label">Efekty:</div>
+          <div class={styles.effectsLabel}>Efekty:</div>
           {effectEntries.map(([key, value]) => {
             const { emoji, label } = STAT_LABELS[key];
             const format = EFFECT_FORMATS[key];
             return (
-              <div class="item-tooltip-stat" key={key}>
+              <div class={styles.stat} key={key}>
                 {emoji} {label}: {format(value)}
               </div>
             );

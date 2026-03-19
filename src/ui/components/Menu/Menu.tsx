@@ -1,12 +1,14 @@
 import { AudioSystem } from '@/domain/audio/AudioSystem';
 import { EventBus } from '@/events/EventBus';
-import { GameState } from '@/types/enums';
+import { CharacterType, GameState } from '@/types/enums';
 import { GAME_VERSION } from '@/version';
 import { JSX } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { container } from 'tsyringe';
-import { CharacterSelect } from './CharacterSelect';
-import { LeaderboardComponent } from './Leaderboard';
+import type { LeaderboardPlayerStats, LeaderboardWeapon } from '../../Leaderboard';
+import { CharacterSelect } from '../CharacterSelect';
+import { LeaderboardComponent } from '../Leaderboard';
+import styles from './Menu.module.scss';
 
 interface MenuProps {
   gameState: GameState;
@@ -18,13 +20,38 @@ export function Menu({ gameState }: MenuProps): JSX.Element | null {
   const [finalWave, setFinalWave] = useState(1);
   const [finalXp, setFinalXp] = useState(0);
 
+  const characterRef = useRef<CharacterType>(CharacterType.NORMIK);
+  const gameOverData = useRef<{
+    wave: number;
+    score: number;
+    character: CharacterType;
+    weapons: LeaderboardWeapon[];
+    items: string[];
+    playerStats: LeaderboardPlayerStats;
+  } | null>(null);
+
   useEffect(() => {
-    const sub = EventBus.on('gameOver', ({ wave, score }) => {
-      setFinalWave(wave);
-      setFinalXp(score);
-    });
+    const subs = [
+      EventBus.on('gameOver', ({ wave, score, weapons, items, playerStats }) => {
+        setFinalWave(wave);
+        setFinalXp(score);
+        gameOverData.current = {
+          wave,
+          score,
+          character: characterRef.current,
+          weapons,
+          items,
+          playerStats,
+        };
+      }),
+      EventBus.on('characterSelected', ({ characterType }) => {
+        characterRef.current = characterType;
+      }),
+    ];
     return (): void => {
-      sub.unsubscribe();
+      subs.forEach((s) => {
+        s.unsubscribe();
+      });
     };
   }, []);
 
@@ -50,11 +77,11 @@ export function Menu({ gameState }: MenuProps): JSX.Element | null {
   if (gameState === GameState.MENU) {
     if (showMenuLeaderboard) {
       return (
-        <div id="menu-leaderboard">
+        <div class={styles.overlay}>
           <h2>🏆 TOP 10</h2>
           <LeaderboardComponent mode="menu" />
           <button
-            id="menu-leaderboard-close"
+            class={styles.menuLeaderboardClose}
             onClick={(): void => {
               setShowMenuLeaderboard(false);
             }}
@@ -66,11 +93,11 @@ export function Menu({ gameState }: MenuProps): JSX.Element | null {
     }
 
     return (
-      <div id="start-screen">
-        <div id="game-version">
+      <div class={styles.overlay}>
+        <div class={styles.version}>
           Circle Survivor{' '}
           <a
-            id="version-number"
+            class={styles.versionLink}
             href={
               GAME_VERSION === 'dev'
                 ? 'https://github.com/petrzmax/Circle-Survivor/releases'
@@ -86,9 +113,11 @@ export function Menu({ gameState }: MenuProps): JSX.Element | null {
         <h1>🎮 CIRCLE SURVIVOR</h1>
         <p>Wybierz swoją postać!</p>
         <CharacterSelect />
-        <p class="controls">WASD / Strzałki - ruch | Auto-strzelanie | Kliknij postać aby wybrać</p>
+        <p class={styles.controls}>
+          WASD / Strzałki - ruch | Auto-strzelanie | Kliknij postać aby wybrać
+        </p>
         <button
-          id="menu-leaderboard-btn"
+          class={styles.menuLeaderboardBtn}
           onClick={(): void => {
             setShowMenuLeaderboard(true);
           }}
@@ -102,17 +131,15 @@ export function Menu({ gameState }: MenuProps): JSX.Element | null {
   // Pause Menu
   if (gameState === GameState.PAUSED) {
     return (
-      <div id="pause-menu">
+      <div class={styles.overlay}>
         <h2>⏸️ PAUZA</h2>
         <p>Gra wstrzymana</p>
-        <p class="controls">ESC - wznów grę</p>
-        <button id="resume-btn" onClick={handleResume}>
-          ▶ Wznów
-        </button>
-        <button id="sound-toggle" onClick={handleToggleAudio}>
+        <p class={styles.controls}>ESC - wznów grę</p>
+        <button onClick={handleResume}>▶ Wznów</button>
+        <button onClick={handleToggleAudio}>
           {audioEnabled ? '🔊 Dźwięk: WŁ' : '🔇 Dźwięk: WYŁ'}
         </button>
-        <button id="quit-btn" onClick={handleQuit}>
+        <button class={styles.quitBtn} onClick={handleQuit}>
           🚪 Wyjdź do menu
         </button>
       </div>
@@ -122,18 +149,16 @@ export function Menu({ gameState }: MenuProps): JSX.Element | null {
   // Game Over
   if (gameState === GameState.GAME_OVER) {
     return (
-      <div id="game-over">
+      <div class={styles.overlay}>
         <h2>💀 GAME OVER</h2>
         <p>
-          Przetrwałeś do fali: <span id="final-wave">{finalWave}</span>
+          Przetrwałeś do fali: <span>{finalWave}</span>
         </p>
         <p>
-          Zdobyte XP: <span id="final-xp">{finalXp}</span>
+          Zdobyte XP: <span>{finalXp}</span>
         </p>
-        <LeaderboardComponent mode="gameOver" />
-        <button id="restart-btn" onClick={handleRestart}>
-          🔄 Zagraj ponownie
-        </button>
+        <LeaderboardComponent mode="gameOver" gameOverData={gameOverData.current} />
+        <button onClick={handleRestart}>🔄 Zagraj ponownie</button>
       </div>
     );
   }

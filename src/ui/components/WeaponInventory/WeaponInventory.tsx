@@ -5,8 +5,9 @@
 import { SHOP_ITEMS, WeaponShopItem } from '@/config/shop.config';
 import { WeaponType } from '@/domain/weapons/type';
 import { JSX } from 'preact';
-import { useWeaponTooltip } from '../hooks/useWeaponTooltip';
-import { WeaponTooltip } from './WeaponTooltip';
+import { useWeaponTooltip } from '../../hooks/useWeaponTooltip';
+import { WeaponTooltip } from '../WeaponTooltip';
+import styles from './WeaponInventory.module.scss';
 
 interface WeaponData {
   type: WeaponType;
@@ -47,37 +48,37 @@ export function WeaponInventory({
 
   if (weapons.length === 0) {
     return (
-      <div class="weapon-inventory">
-        <div class="weapon-inventory-empty">Brak broni w ekwipunku</div>
+      <div class={styles.inventory}>
+        <div class={styles.empty}>Brak broni w ekwipunku</div>
       </div>
     );
   }
 
   return (
-    <div class="weapon-inventory" onMouseMove={tooltip.handleMouseMove}>
+    <div class={styles.inventory} onMouseMove={tooltip.handleMouseMove}>
       {weapons.map((weapon) => {
         const sellPrice = getSellPrice(weapon.type, weapon.level);
         const emoji = getWeaponEmoji(weapon.type);
 
         return (
           <div
-            class="weapon-card"
+            class={styles.card}
             key={weapon.index}
             onMouseEnter={(): void => {
               tooltip.showTooltip(weapon.type, weapon.level);
             }}
             onMouseLeave={tooltip.hideTooltip}
           >
-            <div class="weapon-emoji">{emoji}</div>
+            <div class={styles.emoji}>{emoji}</div>
             <h4>{weapon.name}</h4>
-            <div class="level">Poziom {weapon.level}</div>
+            <div class={styles.level}>Poziom {weapon.level}</div>
             {weapon.level >= maxLevel ? (
-              <button class="merge-btn" disabled>
+              <button class={styles.mergeBtn} disabled>
                 ✨ Max poziom
               </button>
             ) : (
               <button
-                class="merge-btn"
+                class={styles.mergeBtn}
                 disabled={!canMerge(weapon.index)}
                 onClick={(): void => {
                   onMerge(weapon.index);
@@ -87,7 +88,7 @@ export function WeaponInventory({
               </button>
             )}
             <button
-              class="sell-btn"
+              class={styles.sellBtn}
               onClick={(): void => {
                 onSell(weapon.index, sellPrice);
               }}

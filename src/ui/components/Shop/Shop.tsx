@@ -7,14 +7,15 @@ import { calculatePrice, generateShopItems, getRerollPrice } from '@/systems/Sho
 import { JSX } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import { container } from 'tsyringe';
-import { usePlayer } from '../hooks/usePlayer';
-import { useWave } from '../hooks/useWave';
-import { useItemTooltip } from '../hooks/useItemTooltip';
-import { useWeaponTooltip } from '../hooks/useWeaponTooltip';
-import { ItemsInventory } from './ItemsInventory';
-import { ItemTooltip } from './ItemTooltip';
-import { WeaponInventory } from './WeaponInventory';
-import { WeaponTooltip } from './WeaponTooltip';
+import { usePlayer } from '../../hooks/usePlayer';
+import { useWave } from '../../hooks/useWave';
+import { useItemTooltip } from '../../hooks/useItemTooltip';
+import { useWeaponTooltip } from '../../hooks/useWeaponTooltip';
+import { ItemsInventory } from '../ItemsInventory';
+import { ItemTooltip } from '../ItemTooltip';
+import { WeaponInventory } from '../WeaponInventory';
+import { WeaponTooltip } from '../WeaponTooltip';
+import styles from './Shop.module.scss';
 
 const shopService = container.resolve(ShopService);
 
@@ -139,7 +140,7 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
 
   return (
     <div
-      id="shop"
+      class={styles.shop}
       onMouseMove={(e: MouseEvent): void => {
         tooltip.handleMouseMove(e);
         itemTooltip.handleMouseMove(e);
@@ -148,9 +149,9 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
       <h2>🛒 SKLEP</h2>
 
       {/* Tab Navigation */}
-      <div class="shop-tabs">
+      <div class={styles.tabs}>
         <button
-          class={`shop-tab ${activeTab === 'buy' ? 'active' : ''}`}
+          class={`${styles.tab} ${activeTab === 'buy' ? styles.active : ''}`}
           onClick={(): void => {
             setActiveTab('buy');
             tooltip.hideTooltip();
@@ -160,7 +161,7 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
           🛍️ Kup
         </button>
         <button
-          class={`shop-tab ${activeTab === 'inventory' ? 'active' : ''}`}
+          class={`${styles.tab} ${activeTab === 'inventory' ? styles.active : ''}`}
           onClick={(): void => {
             setActiveTab('inventory');
             tooltip.hideTooltip();
@@ -170,7 +171,7 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
           ⚔️ Ekwipunek
         </button>
         <button
-          class={`shop-tab ${activeTab === 'items' ? 'active' : ''}`}
+          class={`${styles.tab} ${activeTab === 'items' ? styles.active : ''}`}
           onClick={(): void => {
             setActiveTab('items');
             tooltip.hideTooltip();
@@ -182,13 +183,13 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
       </div>
 
       {/* Info bar - always visible */}
-      <div class="shop-info">
+      <div class={styles.info}>
         <small>
           Fala {waveNumber} | Bronie: {weapons.length}/{maxWeapons} | Przedmioty: {items.length} |{' '}
           <span style={{ color: '#ffd700' }}>💰 {gold}</span>
         </small>
         <button
-          class={`reroll-inline-btn ${gold < rerollPrice ? 'disabled' : ''}`}
+          class={`${styles.rerollBtn} ${gold < rerollPrice ? styles.disabled : ''}`}
           onClick={gold >= rerollPrice ? handleReroll : undefined}
           disabled={gold < rerollPrice || activeTab !== 'buy'}
           style={activeTab !== 'buy' ? { opacity: 0, pointerEvents: 'none' } : undefined}
@@ -199,14 +200,14 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
 
       {/* Tab Content */}
       {activeTab === 'buy' && (
-        <div id="shop-items">
+        <div class={styles.items}>
           {availableItems
             .filter((itemKey) => SHOP_ITEMS[itemKey])
             .map((itemKey, index) => {
               const isSold = soldItems.has(itemKey);
 
               if (isSold) {
-                return <div key={`${itemKey}-${index}`} class="shop-item sold" />;
+                return <div key={`${itemKey}-${index}`} class={`${styles.item} ${styles.sold}`} />;
               }
 
               const item = SHOP_ITEMS[itemKey]!;
@@ -306,7 +307,7 @@ function ShopItemCard({
 }: ShopItemCardProps): JSX.Element {
   return (
     <div
-      class={`shop-item ${canBuy ? '' : 'disabled'}`}
+      class={`${styles.item} ${canBuy ? '' : styles.disabled}`}
       onClick={canBuy ? onBuy : undefined}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -316,7 +317,7 @@ function ShopItemCard({
       <p>{item.description}</p>
       {isLocked && <div style={{ color: '#ff6b6b', fontSize: '10px' }}>🔒 Pełne sloty</div>}
       {upgradeInfo && <div style={{ color: '#4ecdc4', fontSize: '10px' }}>{upgradeInfo}</div>}
-      <div class="price">💰 {price}</div>
+      <div class={styles.price}>💰 {price}</div>
     </div>
   );
 }

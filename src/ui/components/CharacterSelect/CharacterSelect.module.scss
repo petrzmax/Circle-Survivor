@@ -1,0 +1,57 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+.select {
+  display: flex;
+  gap: $space-lg;
+  margin: $space-lg 0;
+  justify-content: center;
+}
+
+.card {
+  @include card-base(180px, $space-lg);
+  border-width: 3px;
+  border-radius: $radius-xl;
+  cursor: pointer;
+  transition: all $transition-normal;
+
+  @include card-hover($color-primary, -10px);
+
+  &.selected {
+    border-color: $color-success;
+    box-shadow: 0 0 20px rgba($color-success, 0.5);
+  }
+
+  h3 {
+    color: $color-primary;
+    margin-bottom: $radius-md;
+    font-size: $font-xl;
+  }
+}
+
+.icon {
+  font-size: $font-title;
+  margin-bottom: 10px;
+}
+
+.desc {
+  font-size: $font-xs;
+  color: $color-text-dim;
+  margin-bottom: 12px;
+  font-style: italic;
+  min-height: 32px;
+}
+
+.stats {
+  list-style: none;
+  text-align: left;
+  font-size: $font-sm;
+  color: $color-text-light;
+
+  li {
+    margin: $space-xs 0;
+    padding: 3px 5px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: $radius-xs;
+  }
+}

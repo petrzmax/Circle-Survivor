@@ -1,0 +1,1 @@
+export { LoadoutDetailView } from './LoadoutDetailView';

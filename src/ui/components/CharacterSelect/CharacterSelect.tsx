@@ -3,6 +3,7 @@ import { EventBus } from '@/events/EventBus';
 import { CharacterType } from '@/types/enums';
 import { CHARACTER_TYPES, CharacterConfig } from '@/config/characters.config';
 import { WEAPON_TYPES } from '@/domain/weapons/config';
+import styles from './CharacterSelect.module.scss';
 
 function getSpecialStat(charType: CharacterType, config: CharacterConfig): JSX.Element {
   const baseSpeed = 240;
@@ -51,23 +52,23 @@ export function CharacterSelect(): JSX.Element {
   };
 
   return (
-    <div id="character-select">
+    <div class={styles.select}>
       {Object.entries(CHARACTER_TYPES).map(([type, config]) => {
         const charType = type as CharacterType;
 
         return (
           <div
             key={type}
-            class="character-card"
+            class={styles.card}
             data-character={type}
             onClick={(): void => {
               handleSelect(charType);
             }}
           >
-            <div class="character-icon">{config.emoji}</div>
+            <div class={styles.icon}>{config.emoji}</div>
             <h3>{config.name}</h3>
-            <p class="character-desc">{config.description}</p>
-            <ul class="character-stats">
+            <p class={styles.desc}>{config.description}</p>
+            <ul class={styles.stats}>
               <li>❤️ HP: {config.maxHp}</li>
               {getSpecialStat(charType, config)}
               <li>🔫 Broń: {getWeaponName(config.startingWeapon)}</li>

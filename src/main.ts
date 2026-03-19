@@ -4,6 +4,7 @@
  */
 
 import 'reflect-metadata';
+import './styles/global.scss';
 import { Game } from '@/core/Game';
 import { mountUI } from '@/ui';
 import { ViewportScaler } from '@/utils/viewport-scaler';

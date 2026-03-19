@@ -2,7 +2,7 @@ import { CHARACTER_TYPES } from '@/config/characters.config';
 import { AudioSystem } from '@/domain/audio/AudioSystem';
 import { EnemySpawnSystem } from '@/domain/enemies/EnemySpawnSystem';
 import { spawnPlayer } from '@/ecs/factories/entity-factories';
-import { Health, PlayerStats, Position, WeaponInventory } from '@/ecs/traits';
+import { Health, PhysicsBody, PlayerStats, Position, Velocity, WeaponInventory } from '@/ecs/traits';
 import { fullHealEntity } from '@/ecs/utils/entity-utils';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager, StateManager } from '@/managers';
@@ -170,7 +170,12 @@ export class Game {
 
     const player = this.entityManager.getPlayerEntity();
     fullHealEntity(player);
-    player.set(Position, { x: this.canvas.width / 2, y: this.canvas.height / 2 }); // Center
+    player.set(Position, { x: this.canvas.width / 2, y: this.canvas.height / 2 });
+    player.set(Velocity, { vx: 0, vy: 0 });
+    const body = player.get(PhysicsBody);
+    if (body) {
+      player.set(PhysicsBody, { mass: body.mass, friction: body.friction, impulseX: 0, impulseY: 0 });
+    }
 
     this.entityManager.clearExceptPlayer();
     this.effectsSystem.reset();

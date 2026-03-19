@@ -393,6 +393,13 @@ button:hover {
     cursor: not-allowed;
 }
 
+.shop-item.sold {
+    opacity: 0.15;
+    cursor: default;
+    pointer-events: none;
+    border-style: dashed;
+}
+
 .shop-info {
     width: 100%;
     display: flex;

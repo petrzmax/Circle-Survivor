@@ -70,6 +70,8 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
     }
 
     setSoldItems((prev) => new Set([...prev, itemKey]));
+    tooltip.hideTooltip();
+    itemTooltip.hideTooltip();
     EventBus.emit('itemPurchased', { itemId: itemKey, cost: price });
   };
 
@@ -199,8 +201,14 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
       {activeTab === 'buy' && (
         <div id="shop-items">
           {availableItems
-            .filter((itemKey) => !soldItems.has(itemKey) && SHOP_ITEMS[itemKey])
+            .filter((itemKey) => SHOP_ITEMS[itemKey])
             .map((itemKey, index) => {
+              const isSold = soldItems.has(itemKey);
+
+              if (isSold) {
+                return <div key={`${itemKey}-${index}`} class="shop-item sold" />;
+              }
+
               const item = SHOP_ITEMS[itemKey]!;
               const currentPrice = currentCalculatePrice(item.price);
               const canAfford = gold >= currentPrice;
@@ -234,8 +242,6 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
                   }}
                   onMouseEnter={(): void => {
                     if (item.type === 'weapon') {
-                      // Only show upgraded level if this is actually an upgrade
-                      // (player has max weapons AND already owns this weapon type)
                       const existingWeapon = weapons.find((w) => w.type === item.weaponType);
                       const isUpgrade = weapons.length >= maxWeapons && existingWeapon;
                       const level = isUpgrade ? existingWeapon.level + 1 : 1;

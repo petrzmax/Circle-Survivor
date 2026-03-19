@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.1](https://github.com/petrzmax/Circle-Survivor/compare/v2.2.0...v2.2.1) (2026-03-19)
+
+
+### ♻️ Refactoring
+
+* css to saas & fix leaderboards save ([fb8c932](https://github.com/petrzmax/Circle-Survivor/commit/fb8c932cf77d6bf160f5e7f567d066c7a5e9a5d4))
+
 ## [2.2.0](https://github.com/petrzmax/Circle-Survivor/compare/v2.1.0...v2.2.0) (2026-03-19)
 
 

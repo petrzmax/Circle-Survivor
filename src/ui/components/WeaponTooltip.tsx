@@ -3,6 +3,7 @@
  * Reusable for Shop and Inventory tabs
  */
 
+import { SHOP_ITEMS, type WeaponShopItem } from '@/config/shop.config';
 import { STAT_LABELS } from '@/config/stats-labels.config';
 import { WeaponStatsCalculator } from '@/domain/weapons/WeaponStatsCalculator';
 import { WeaponConfig } from '@/domain/weapons/type';
@@ -13,6 +14,13 @@ import './WeaponTooltip.css';
 
 const statsCalculator = container.resolve(WeaponStatsCalculator);
 
+function getWeaponDescription(config: WeaponConfig): string | null {
+  const shopItem = Object.values(SHOP_ITEMS).find(
+    (item) => item.type === 'weapon' && item.name === config.name,
+  ) as WeaponShopItem | undefined;
+  return shopItem?.description ?? null;
+}
+
 interface WeaponTooltipProps {
   weaponData: { config: WeaponConfig; level: number } | null;
   position: { x: number; y: number };
@@ -20,6 +28,7 @@ interface WeaponTooltipProps {
 
 export function WeaponTooltip({ weaponData, position }: WeaponTooltipProps): JSX.Element | null {
   if (!weaponData) return null;
+  if (position.x === 0 && position.y === 0) return null;
 
   const { config, level } = weaponData;
   const stats = statsCalculator.calculate(config, level);
@@ -34,15 +43,18 @@ export function WeaponTooltip({ weaponData, position }: WeaponTooltipProps): JSX
   const damageDisplay =
     stats.bulletCount > 1 ? `${stats.bulletCount} x ${stats.damage}` : `${stats.damage}`;
   const cooldownSeconds = parseFloat((stats.fireRate / 1000).toFixed(3));
+  const description = getWeaponDescription(config);
 
   return (
     <div class="weapon-tooltip" style={{ left: `${left}px`, top: `${top}px` }}>
-      {/* Header */}
       <div class="weapon-tooltip-header">
         {config.emoji} {config.name} {level > 1 && `(Lvl ${level})`}
       </div>
 
-      {/* Always show: Damage, Cooldown, Range */}
+      {description && <div class="weapon-tooltip-desc">{description}</div>}
+
+      <div class="weapon-tooltip-stats-label">Statystyki:</div>
+
       <div class="weapon-tooltip-stat">
         {STAT_LABELS.damageMultiplier.emoji} {STAT_LABELS.damageMultiplier.label}: {damageDisplay}
       </div>
@@ -51,14 +63,12 @@ export function WeaponTooltip({ weaponData, position }: WeaponTooltipProps): JSX
         {STAT_LABELS.attackRange.emoji} Zasięg: {config.range >= 9999 ? '∞' : config.range}
       </div>
 
-      {/* Conditional: Pierce */}
       {config.pierceCount && (
         <div class="weapon-tooltip-stat">
           {STAT_LABELS.pierce.emoji} {STAT_LABELS.pierce.label}: x{config.pierceCount}
         </div>
       )}
 
-      {/* Conditional: Explosive - show upgraded radius */}
       {config.explosive && stats.explosionRadius && (
         <div class="weapon-tooltip-stat">
           {STAT_LABELS.explosionRadius.emoji} {STAT_LABELS.explosionRadius.label}:{' '}
@@ -66,7 +76,6 @@ export function WeaponTooltip({ weaponData, position }: WeaponTooltipProps): JSX
         </div>
       )}
 
-      {/* Special traits */}
       {config.shortRange && <div class="weapon-tooltip-stat">📍 Broń krótkiego zasięgu</div>}
       {config.deployableType && <div class="weapon-tooltip-stat">⚙️ Do rozmieszczenia</div>}
     </div>

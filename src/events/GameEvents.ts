@@ -2,6 +2,7 @@ import { AttackPattern, ShockwaveAttackResult } from '@/domain/enemies/type';
 import { WeaponType } from '@/domain/weapons';
 import { DamageSource, ExplosionEvent, KillSource } from '@/systems/damage.types';
 import { CharacterType, EnemyType, GameState, PickupType } from '@/types';
+import type { LeaderboardPlayerStats } from '@/ui/Leaderboard';
 import { Vector2 } from '@/utils';
 
 /** Snapshot of enemy data at time of death — no adapter reference */
@@ -71,7 +72,14 @@ export interface GameEvents {
   // Game state events
   gamePause: void;
   gameResume: void;
-  gameOver: { score: number; wave: number; time: number };
+  gameOver: {
+    score: number;
+    wave: number;
+    time: number;
+    weapons: Array<{ type: string; level: number }>;
+    items: string[];
+    playerStats: LeaderboardPlayerStats;
+  };
 
   // UI events
   countdownTick: { seconds: number };

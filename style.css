@@ -576,6 +576,7 @@ button:hover {
     padding: 10px 20px;
     font-size: 14px;
     margin: 0;
+    white-space: nowrap;
 }
 
 #submit-score-btn:disabled {
@@ -627,7 +628,8 @@ button:hover {
     text-align: center;
 }
 
-#leaderboard-list {
+/* Unified leaderboard list (replaces #leaderboard-list and #menu-leaderboard-list) */
+.leaderboard-list {
     list-style: none;
     padding: 0;
     margin: 0;
@@ -635,7 +637,11 @@ button:hover {
     overflow-y: auto;
 }
 
-#leaderboard-list li {
+.leaderboard-list--large {
+    max-height: 350px;
+}
+
+.leaderboard-list li {
     display: flex;
     align-items: center;
     padding: 8px 10px;
@@ -646,28 +652,43 @@ button:hover {
     transition: background 0.2s;
 }
 
-#leaderboard-list li:hover {
+.leaderboard-list--large li {
+    padding: 10px 12px;
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.leaderboard-list li.leaderboard-entry {
+    cursor: pointer;
+}
+
+.leaderboard-list li.leaderboard-entry:hover {
     background: rgba(255, 255, 255, 0.1);
 }
 
-#leaderboard-list li.highlighted {
+.leaderboard-list li.highlighted {
     background: rgba(233, 69, 96, 0.3);
     border: 1px solid #e94560;
 }
 
-#leaderboard-list li.no-scores {
+.leaderboard-list li.no-scores {
     justify-content: center;
     color: #666;
     font-style: italic;
+    cursor: default;
 }
 
-#leaderboard-list .rank {
+.leaderboard-list .rank {
     width: 30px;
     font-weight: bold;
     text-align: center;
 }
 
-#leaderboard-list .name {
+.leaderboard-list--large .rank {
+    width: 35px;
+}
+
+.leaderboard-list .name {
     flex: 1;
     color: #fff;
     overflow: hidden;
@@ -675,26 +696,38 @@ button:hover {
     white-space: nowrap;
 }
 
-#leaderboard-list .score {
+.leaderboard-list .score {
     color: #aaa;
     font-size: 11px;
     text-align: right;
 }
 
+.leaderboard-list--large .score {
+    font-size: 12px;
+}
+
+.leaderboard-list .entry-arrow {
+    color: #555;
+    font-size: 16px;
+    margin-left: 8px;
+    transition: color 0.2s;
+}
+
+.leaderboard-list li.leaderboard-entry:hover .entry-arrow {
+    color: #e94560;
+}
+
 /* Scrollbar for leaderboard */
-#leaderboard-list::-webkit-scrollbar,
-#menu-leaderboard-list::-webkit-scrollbar {
+.leaderboard-list::-webkit-scrollbar {
     width: 6px;
 }
 
-#leaderboard-list::-webkit-scrollbar-track,
-#menu-leaderboard-list::-webkit-scrollbar-track {
+.leaderboard-list::-webkit-scrollbar-track {
     background: rgba(0, 0, 0, 0.3);
     border-radius: 3px;
 }
 
-#leaderboard-list::-webkit-scrollbar-thumb,
-#menu-leaderboard-list::-webkit-scrollbar-thumb {
+.leaderboard-list::-webkit-scrollbar-thumb {
     background: #e94560;
     border-radius: 3px;
 }
@@ -724,55 +757,6 @@ button:hover {
     margin: 20px 0;
 }
 
-#menu-leaderboard-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    max-height: 350px;
-    overflow-y: auto;
-}
-
-#menu-leaderboard-list li {
-    display: flex;
-    align-items: center;
-    padding: 10px 12px;
-    margin: 5px 0;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    font-size: 14px;
-    transition: background 0.2s;
-}
-
-#menu-leaderboard-list li:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-#menu-leaderboard-list li.no-scores {
-    justify-content: center;
-    color: #666;
-    font-style: italic;
-}
-
-#menu-leaderboard-list .rank {
-    width: 35px;
-    font-weight: bold;
-    text-align: center;
-}
-
-#menu-leaderboard-list .name {
-    flex: 1;
-    color: #fff;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-#menu-leaderboard-list .score {
-    color: #aaa;
-    font-size: 12px;
-    text-align: right;
-}
-
 #menu-leaderboard-close {
     background: #666;
     padding: 12px 30px;
@@ -781,6 +765,86 @@ button:hover {
 
 #menu-leaderboard-close:hover {
     background: #888;
+}
+
+/* ============ LOADOUT DETAIL VIEW ============ */
+
+.loadout-detail-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.92);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    animation: loadoutFadeIn 0.2s ease-out;
+}
+
+@keyframes loadoutFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.loadout-detail-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    max-width: 700px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.loadout-detail-header {
+    text-align: center;
+}
+
+.loadout-detail-header h2 {
+    color: #ffd700;
+    font-size: 22px;
+    margin-bottom: 6px;
+}
+
+.loadout-detail-score {
+    color: #aaa;
+    font-size: 14px;
+}
+
+.loadout-detail-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+.loadout-detail-empty p {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.loadout-detail-empty-hint {
+    font-size: 12px;
+    color: #555;
+    font-style: italic;
+}
+
+.loadout-detail-close {
+    background: #666;
+    padding: 12px 30px;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.loadout-detail-close:hover {
+    background: #888;
+}
+
+.loadout-inventory {
+    height: 450px;
 }
 
 .menu-tab-btn {

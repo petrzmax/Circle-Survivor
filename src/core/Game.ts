@@ -2,7 +2,7 @@ import { CHARACTER_TYPES } from '@/config/characters.config';
 import { AudioSystem } from '@/domain/audio/AudioSystem';
 import { EnemySpawnSystem } from '@/domain/enemies/EnemySpawnSystem';
 import { spawnPlayer } from '@/ecs/factories/entity-factories';
-import { Position } from '@/ecs/traits';
+import { Health, PlayerStats, Position, WeaponInventory } from '@/ecs/traits';
 import { fullHealEntity } from '@/ecs/utils/entity-utils';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager, StateManager } from '@/managers';
@@ -21,6 +21,7 @@ import { ProjectileSystem } from '@/systems/ProjectileSystem';
 import { Shop } from '@/systems/Shop';
 import { WaveManager } from '@/systems/WaveManager';
 import { CharacterType, GameState } from '@/types/enums';
+import type { LeaderboardPlayerStats } from '@/ui/Leaderboard';
 import { injectable } from 'tsyringe';
 import { ConfigService } from '../config/ConfigService';
 import { WeaponManager } from '../domain/weapons/WeaponManager';
@@ -183,13 +184,48 @@ export class Game {
   }
 
   private onEnterGameOver(): void {
-    const stats = this.entityManager.getPlayerStats();
+    const playerEntity = this.entityManager.getPlayerEntity();
+    const stats = playerEntity.get(PlayerStats)!;
+    const health = playerEntity.get(Health)!;
+    const inv = playerEntity.get(WeaponInventory)!;
+
+    const weapons = inv.weapons.map((w) => ({ type: w.type, level: w.level }));
+    const items = [...inv.items];
 
     EventBus.emit('gameOver', {
       score: stats.xp,
       wave: this.waveManager.waveNumber,
       time: 0,
+      weapons,
+      items,
+      playerStats: this.snapshotPlayerStats(stats, health),
     });
+  }
+
+  private snapshotPlayerStats(
+    stats: Omit<LeaderboardPlayerStats, 'maxHp'> & Record<string, unknown>,
+    health: { maxHp: number },
+  ): LeaderboardPlayerStats {
+    return {
+      maxHp: health.maxHp,
+      armor: stats.armor,
+      dodge: stats.dodge,
+      regen: stats.regen,
+      thorns: stats.thorns,
+      lifesteal: stats.lifesteal,
+      damageMultiplier: stats.damageMultiplier,
+      critChance: stats.critChance,
+      critDamage: stats.critDamage,
+      attackSpeedMultiplier: stats.attackSpeedMultiplier,
+      attackRange: stats.attackRange,
+      explosionRadius: stats.explosionRadius,
+      knockback: stats.knockback,
+      speedMultiplier: stats.speedMultiplier,
+      pickupRange: stats.pickupRange,
+      luck: stats.luck,
+      xpMultiplier: stats.xpMultiplier,
+      goldMultiplier: stats.goldMultiplier,
+    };
   }
 
   /**

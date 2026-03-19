@@ -1,8 +1,7 @@
 import { DevMenu } from '@/debug/DevMenu';
-import { EventBus } from '@/events/EventBus';
-import { CharacterType, GameState } from '@/types/enums';
+import { GameState } from '@/types/enums';
 import { JSX } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect } from 'preact/hooks';
 import toast, { Toaster } from 'react-hot-toast';
 import { HUD } from './components/HUD';
 import { Menu } from './components/Menu';
@@ -38,30 +37,12 @@ export function App(): JSX.Element {
     };
   }, []);
 
-  // Game over stats
-  const [finalWave, setFinalWave] = useState(1);
-  const [finalXp, setFinalXp] = useState(0);
-  const [character, setCharacter] = useState<CharacterType>(CharacterType.NORMIK);
-
-  useEffect(() => {
-    const subs = [
-      EventBus.on('gameOver', ({ wave, score }) => {
-        setFinalWave(wave);
-        setFinalXp(score);
-      }),
-      EventBus.on('characterSelected', ({ characterType }) => {
-        setCharacter(characterType);
-      }),
-    ];
-
-    return (): void => {
-      subs.forEach((s) => {
-        s.unsubscribe();
-      });
-    };
-  }, []);
-
-  const showHUD = [GameState.PLAYING, GameState.WAVE_CLEARED, GameState.SHOP, GameState.PAUSED].includes(gameState);
+  const showHUD = [
+    GameState.PLAYING,
+    GameState.WAVE_CLEARED,
+    GameState.SHOP,
+    GameState.PAUSED,
+  ].includes(gameState);
   const showShop = gameState === GameState.SHOP;
 
   return (
@@ -80,7 +61,7 @@ export function App(): JSX.Element {
       <HUD visible={showHUD} />
       <Shop visible={showShop} />
       <WaveClearOverlay />
-      <Menu gameState={gameState} finalWave={finalWave} finalXp={finalXp} character={character} />
+      <Menu gameState={gameState} />
       {import.meta.env.DEV && <DevMenu />}
     </>
   );

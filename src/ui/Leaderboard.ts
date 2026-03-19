@@ -1,11 +1,38 @@
 /**
  * Leaderboard system - supports both local (localStorage) and global (JSONBin.io) scores
- * Matches original js/leaderboard.js exactly.
  */
 
 import { CharacterType } from '@/types/enums';
+import { singleton } from 'tsyringe';
 
 // ============ Types ============
+
+/** Slim stats snapshot stored in leaderboard entries (no weapons/items/heavy objects). */
+export interface LeaderboardPlayerStats {
+  maxHp: number;
+  armor: number;
+  dodge: number;
+  regen: number;
+  thorns: number;
+  lifesteal: number;
+  damageMultiplier: number;
+  critChance: number;
+  critDamage: number;
+  attackSpeedMultiplier: number;
+  attackRange: number;
+  explosionRadius: number;
+  knockback: number;
+  speedMultiplier: number;
+  pickupRange: number;
+  luck: number;
+  xpMultiplier: number;
+  goldMultiplier: number;
+}
+
+export interface LeaderboardWeapon {
+  type: string;
+  level: number;
+}
 
 export interface LeaderboardEntry {
   name: string;
@@ -13,6 +40,9 @@ export interface LeaderboardEntry {
   xp: number;
   character: CharacterType;
   date: string;
+  weapons?: LeaderboardWeapon[];
+  items?: string[];
+  playerStats?: LeaderboardPlayerStats;
 }
 
 // JSONBin API response types
@@ -24,6 +54,7 @@ interface JSONBinFetchResponse {
 
 // ============ Leaderboard Class ============
 
+@singleton()
 export class Leaderboard {
   // JSONBin.io configuration - injected by Vite at build time
   private JSONBIN_BIN_ID = __JSONBIN_BIN_ID__ || null;
@@ -176,13 +207,19 @@ export class Leaderboard {
     wave: number,
     xp: number,
     character: CharacterType,
+    weapons?: LeaderboardWeapon[],
+    items?: string[],
+    playerStats?: LeaderboardPlayerStats,
   ): Promise<LeaderboardEntry[]> {
     const entry: LeaderboardEntry = {
-      name: playerName.substring(0, 20), // Limit name length
+      name: playerName.substring(0, 20),
       wave: wave,
       xp: xp,
       character: character,
       date: new Date().toISOString(),
+      weapons,
+      items,
+      playerStats,
     };
 
     // Always save locally
@@ -225,60 +262,5 @@ export class Leaderboard {
       }
     }
     return rank;
-  }
-
-  // Format date for display
-  public formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pl-PL', {
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
-
-  // Render leaderboard HTML
-  public renderLeaderboard(
-    scores: LeaderboardEntry[],
-    highlightName: string | null = null,
-  ): string {
-    if (scores.length === 0) {
-      return '<li class="no-scores">Brak wyników - bądź pierwszy!</li>';
-    }
-
-    return scores
-      .map((score, index) => {
-        const medal =
-          index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
-        const isHighlighted = highlightName && score.name === highlightName;
-        const charEmoji = this.getCharacterEmoji(score.character);
-
-        return `
-                <li class="${isHighlighted ? 'highlighted' : ''}">
-                    <span class="rank">${medal}</span>
-                    <span class="name">${charEmoji} ${this.escapeHtml(score.name)}</span>
-                    <span class="score">Fala ${score.wave} | ${score.xp} XP</span>
-                </li>
-            `;
-      })
-      .join('');
-  }
-
-  public getCharacterEmoji(character: string): string {
-    const emojis: Record<string, string> = {
-      // TODO hmm there are no characters like janusz and grazyna... but maybe they should?
-      janusz: '💼',
-      wypaleniec: '🔥',
-      cwaniak: '😎',
-      grazyna: '👩',
-    };
-    return emojis[character] ?? '🎮';
-  }
-
-  public escapeHtml(text: string): string {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
   }
 }

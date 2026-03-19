@@ -32,7 +32,7 @@ export class StateManager {
     this.validTransitions.set(GameState.MENU, new Set([GameState.PLAYING]));
     this.validTransitions.set(
       GameState.PLAYING,
-      new Set([GameState.WAVE_CLEARED, GameState.PAUSED, GameState.GAME_OVER]),
+      new Set([GameState.WAVE_CLEARED, GameState.SHOP, GameState.PAUSED, GameState.GAME_OVER]),
     );
     this.validTransitions.set(GameState.WAVE_CLEARED, new Set([GameState.SHOP]));
     this.validTransitions.set(GameState.SHOP, new Set([GameState.PLAYING]));

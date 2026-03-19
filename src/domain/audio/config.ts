@@ -381,8 +381,22 @@ export const SOUND_DEFINITIONS: Record<string, SoundDefinition> = {
   countdownTick_0: {
     steps: [
       { type: 'tone', frequency: 523, duration: 0.1, oscillator: 'triangle', volume: 0.3 },
-      { type: 'tone', frequency: 659, duration: 0.1, oscillator: 'triangle', volume: 0.3, delay: 120 },
-      { type: 'tone', frequency: 784, duration: 0.15, oscillator: 'triangle', volume: 0.35, delay: 240 },
+      {
+        type: 'tone',
+        frequency: 659,
+        duration: 0.1,
+        oscillator: 'triangle',
+        volume: 0.3,
+        delay: 120,
+      },
+      {
+        type: 'tone',
+        frequency: 784,
+        duration: 0.15,
+        oscillator: 'triangle',
+        volume: 0.35,
+        delay: 240,
+      },
     ],
   },
 

@@ -44,6 +44,7 @@ interface ItemTooltipProps {
 
 export function ItemTooltip({ itemData, position }: ItemTooltipProps): JSX.Element | null {
   if (!itemData) return null;
+  if (position.x === 0 && position.y === 0) return null;
 
   // Edge detection — flip to left if would overflow container
   const shouldFlipLeft = position.x + TOOLTIP_WIDTH + TOOLTIP_OFFSET > CONTAINER_WIDTH;

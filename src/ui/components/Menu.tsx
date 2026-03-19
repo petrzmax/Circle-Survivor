@@ -1,23 +1,32 @@
 import { AudioSystem } from '@/domain/audio/AudioSystem';
 import { EventBus } from '@/events/EventBus';
-import { CharacterType, GameState } from '@/types/enums';
+import { GameState } from '@/types/enums';
 import { GAME_VERSION } from '@/version';
 import { JSX } from 'preact';
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { container } from 'tsyringe';
 import { CharacterSelect } from './CharacterSelect';
 import { LeaderboardComponent } from './Leaderboard';
 
 interface MenuProps {
   gameState: GameState;
-  finalWave?: number;
-  finalXp?: number;
-  character?: CharacterType;
 }
 
-export function Menu({ gameState, finalWave, finalXp, character }: MenuProps): JSX.Element | null {
+export function Menu({ gameState }: MenuProps): JSX.Element | null {
   const [showMenuLeaderboard, setShowMenuLeaderboard] = useState(false);
   const [, forceUpdate] = useState(0);
+  const [finalWave, setFinalWave] = useState(1);
+  const [finalXp, setFinalXp] = useState(0);
+
+  useEffect(() => {
+    const sub = EventBus.on('gameOver', ({ wave, score }) => {
+      setFinalWave(wave);
+      setFinalXp(score);
+    });
+    return (): void => {
+      sub.unsubscribe();
+    };
+  }, []);
 
   const audioSystem = container.resolve(AudioSystem);
 
@@ -77,7 +86,7 @@ export function Menu({ gameState, finalWave, finalXp, character }: MenuProps): J
         <h1>🎮 CIRCLE SURVIVOR</h1>
         <p>Wybierz swoją postać!</p>
         <CharacterSelect />
-        <p class="controls">WASD - ruch | Auto-strzelanie | Kliknij postać aby wybrać</p>
+        <p class="controls">WASD / Strzałki - ruch | Auto-strzelanie | Kliknij postać aby wybrać</p>
         <button
           id="menu-leaderboard-btn"
           onClick={(): void => {
@@ -116,17 +125,12 @@ export function Menu({ gameState, finalWave, finalXp, character }: MenuProps): J
       <div id="game-over">
         <h2>💀 GAME OVER</h2>
         <p>
-          Przetrwałeś do fali: <span id="final-wave">{finalWave ?? 1}</span>
+          Przetrwałeś do fali: <span id="final-wave">{finalWave}</span>
         </p>
         <p>
-          Zdobyte XP: <span id="final-xp">{finalXp ?? 0}</span>
+          Zdobyte XP: <span id="final-xp">{finalXp}</span>
         </p>
-        <LeaderboardComponent
-          mode="gameOver"
-          finalWave={finalWave}
-          finalXp={finalXp}
-          character={character}
-        />
+        <LeaderboardComponent mode="gameOver" />
         <button id="restart-btn" onClick={handleRestart}>
           🔄 Zagraj ponownie
         </button>

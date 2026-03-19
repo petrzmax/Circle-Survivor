@@ -11,7 +11,9 @@ export function WaveClearOverlay(): JSX.Element | null {
     const sub = EventBus.on('waveCleared', ({ waveNumber: wave }) => {
       setWaveNumber(wave);
     });
-    return () => { sub.unsubscribe(); };
+    return () => {
+      sub.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -22,7 +24,9 @@ export function WaveClearOverlay(): JSX.Element | null {
       EventBus.emit('waveClearAnimationDone', undefined);
     }, OVERLAY_DURATION_MS);
 
-    return () => { clearTimeout(timer); };
+    return () => {
+      clearTimeout(timer);
+    };
   }, [waveNumber]);
 
   if (waveNumber === null) return null;

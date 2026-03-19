@@ -82,7 +82,8 @@ export interface GameEvents {
   // State transition requests (triggers for StateManager)
   characterSelected: { characterType: CharacterType };
   startGameRequested: void;
-  waveCleared: void;
+  waveCleared: { waveNumber: number };
+  waveClearAnimationDone: void;
   pauseRequested: void;
   resumeRequested: void;
   quitToMenuRequested: void;

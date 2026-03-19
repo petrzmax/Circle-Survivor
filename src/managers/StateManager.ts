@@ -32,8 +32,9 @@ export class StateManager {
     this.validTransitions.set(GameState.MENU, new Set([GameState.PLAYING]));
     this.validTransitions.set(
       GameState.PLAYING,
-      new Set([GameState.SHOP, GameState.PAUSED, GameState.GAME_OVER]),
+      new Set([GameState.WAVE_CLEARED, GameState.PAUSED, GameState.GAME_OVER]),
     );
+    this.validTransitions.set(GameState.WAVE_CLEARED, new Set([GameState.SHOP]));
     this.validTransitions.set(GameState.SHOP, new Set([GameState.PLAYING]));
     this.validTransitions.set(GameState.PAUSED, new Set([GameState.PLAYING, GameState.MENU]));
     this.validTransitions.set(GameState.GAME_OVER, new Set([GameState.MENU]));
@@ -44,7 +45,8 @@ export class StateManager {
    */
   private subscribeToEvents(): void {
     EventBus.on('startGameRequested', () => this.transitionTo(GameState.PLAYING));
-    EventBus.on('waveCleared', () => this.transitionTo(GameState.SHOP));
+    EventBus.on('waveCleared', () => this.transitionTo(GameState.WAVE_CLEARED));
+    EventBus.on('waveClearAnimationDone', () => this.transitionTo(GameState.SHOP));
     EventBus.on('pauseRequested', () => this.transitionTo(GameState.PAUSED));
     EventBus.on('resumeRequested', () => this.transitionTo(GameState.PLAYING));
     EventBus.on('quitToMenuRequested', () => this.transitionTo(GameState.MENU));

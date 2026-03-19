@@ -7,6 +7,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import { HUD } from './components/HUD';
 import { Menu } from './components/Menu';
 import { Shop } from './components/Shop';
+import { WaveClearOverlay } from './components/WaveClearOverlay';
 import { useGameState } from './hooks/useGameState';
 
 /**
@@ -60,7 +61,7 @@ export function App(): JSX.Element {
     };
   }, []);
 
-  const showHUD = [GameState.PLAYING, GameState.SHOP, GameState.PAUSED].includes(gameState);
+  const showHUD = [GameState.PLAYING, GameState.WAVE_CLEARED, GameState.SHOP, GameState.PAUSED].includes(gameState);
   const showShop = gameState === GameState.SHOP;
 
   return (
@@ -78,6 +79,7 @@ export function App(): JSX.Element {
       />
       <HUD visible={showHUD} />
       <Shop visible={showShop} />
+      <WaveClearOverlay />
       <Menu gameState={gameState} finalWave={finalWave} finalXp={finalXp} character={character} />
       {import.meta.env.DEV && <DevMenu />}
     </>

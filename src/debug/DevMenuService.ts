@@ -43,8 +43,8 @@ export class DevMenuService {
   }
 
   public finishWave(): void {
-    // Emit waveCleared to trigger state transition to SHOP
-    EventBus.emit('waveCleared', undefined);
+    // Skip overlay animation, go directly to shop
+    EventBus.emit('waveClearAnimationDone', undefined);
     console.log(`[DevMenu] Finished wave, transitioning to shop`);
   }
 

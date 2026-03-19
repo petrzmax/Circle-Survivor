@@ -50,7 +50,8 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
       setAvailableItems(generateShopItems(gold, waveNumber));
       setShopInitialized(true);
     } else if (!visible && shopInitialized) {
-      // Reset when shop closes
+      // Reset when shop closes — clear items to prevent stale items flashing on next open
+      setAvailableItems([]);
       setShopInitialized(false);
     }
   }, [visible, shopInitialized]);

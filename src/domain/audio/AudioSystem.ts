@@ -225,6 +225,9 @@ export class AudioSystem {
     EventBus.on('shopError', () => {
       this.play('error');
     });
+    EventBus.on('shopOpened', () => {
+      this.play('shopOpened');
+    });
 
     // Game state
     EventBus.on('gameOver', () => {

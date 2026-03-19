@@ -250,8 +250,7 @@ export class Game {
 
     this.render();
 
-    // Continue loop only for active game states
-    if (currentState === GameState.PLAYING || currentState === GameState.SHOP) {
+    if (currentState === GameState.PLAYING) {
       requestAnimationFrame((t) => {
         this.gameLoop(t);
       });
@@ -302,7 +301,7 @@ export class Game {
     }
 
     if (waveResult.waveEnded) {
-      EventBus.emit('waveCleared', undefined);
+      EventBus.emit('waveCleared', { waveNumber: this.waveManager.waveNumber });
       return;
     }
 

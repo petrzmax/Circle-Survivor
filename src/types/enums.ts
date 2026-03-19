@@ -45,6 +45,7 @@ export enum VisualEffect {
 export enum GameState {
   MENU = 'menu',
   PLAYING = 'playing',
+  WAVE_CLEARED = 'waveCleared',
   SHOP = 'shop',
   PAUSED = 'paused',
   GAME_OVER = 'gameOver',

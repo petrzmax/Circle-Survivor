@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.2.0](https://github.com/petrzmax/Circle-Survivor/compare/v2.1.0...v2.2.0) (2026-03-19)
+
+
+### ✨ Features
+
+* enhance shop functionality with sold item indication and player physics adjustments ([dcefe5d](https://github.com/petrzmax/Circle-Survivor/commit/dcefe5de608317ee145c4fc3410530e8c28fa637))
+* implement wave clear overlay and update game state transitions ([4a426a0](https://github.com/petrzmax/Circle-Survivor/commit/4a426a09fc8d6c3c3516c599b6961fe0f1e11459))
+* player details on ranking & refactor and hud fixes ([d1eb2e7](https://github.com/petrzmax/Circle-Survivor/commit/d1eb2e775e3ba63cc3cd15111c57322a9b5469e6))
+
 ## [2.1.0](https://github.com/petrzmax/Circle-Survivor/compare/v2.0.0...v2.1.0) (2026-03-18)
 
 

@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.3.0](https://github.com/petrzmax/Circle-Survivor/compare/v2.2.2...v2.3.0) (2026-03-20)
+
+
+### ✨ Features
+
+* add settings component for volume control and leaderboard management ([dd34cba](https://github.com/petrzmax/Circle-Survivor/commit/dd34cba6a4611dd4cd4e670135ed4c4bf3cbd79d))
+* mini banana dmg & radius level scaling and tooltip ([3d1bb7e](https://github.com/petrzmax/Circle-Survivor/commit/3d1bb7eee5522c12e215db854e6a07d401ec9517))
+
+
+### 🐛 Bug Fixes
+
+* buying higher level weapon ([fc9233b](https://github.com/petrzmax/Circle-Survivor/commit/fc9233ba4bcae2ad1b16ede63541d6103523fd03))
+* weapon upgrade logic ([67d5310](https://github.com/petrzmax/Circle-Survivor/commit/67d5310c8cc0c53bdd04cb82f874bf5d5378afac))
+
+
+### ♻️ Refactoring
+
+* items apply stats unification ([46e3b8a](https://github.com/petrzmax/Circle-Survivor/commit/46e3b8a21422a879a00908bcb4b0ba23612c29b0))
+
 ## [2.2.2](https://github.com/petrzmax/Circle-Survivor/compare/v2.2.1...v2.2.2) (2026-03-19)
 
 

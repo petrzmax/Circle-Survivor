@@ -60,7 +60,7 @@ export class Shop {
             toast(`⬆️ ${item.name} +${upgraded.level}`);
           }
         } else {
-          this.weaponManager.addWeapon(weaponItem.weaponType);
+          this.weaponManager.addWeapon(weaponItem.weaponType, shopLevel);
         }
         break;
       }

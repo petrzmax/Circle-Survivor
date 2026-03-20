@@ -243,7 +243,7 @@ export class WeaponManager {
     EventBus.emit('weaponFired', { weaponType: WeaponType.MINES });
   }
 
-  public addWeapon(type: WeaponType): void {
+  public addWeapon(type: WeaponType, level: number = 1): void {
     const player = this.entityManager.getPlayerEntity();
     const inv = player.get(WeaponInventory)!;
     const stats = player.get(PlayerStats)!;
@@ -254,7 +254,7 @@ export class WeaponManager {
     inv.weapons.push({
       type,
       config,
-      level: 1,
+      level,
       lastFireTime: 0,
       multishot: 0,
       name: config.name,

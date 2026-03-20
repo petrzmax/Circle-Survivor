@@ -81,27 +81,30 @@ export function WeaponTooltip({ weaponData, position }: WeaponTooltipProps): JSX
       {config.shortRange && <div class={styles.stat}>📍 Broń krótkiego zasięgu</div>}
       {config.deployableType && <div class={styles.stat}>⚙️ Do rozmieszczenia</div>}
 
-      {config.projectileType === ProjectileType.BANANA && (() => {
-        const miniConfig = WEAPON_TYPES.minibanana;
-        const weaponDamageMult = statsCalculator.getDamageMultiplier(level);
-        const weaponExplosionMult = statsCalculator.getExplosionMultiplier(level);
-        const miniDamage = Math.round(miniConfig.damage * weaponDamageMult);
-        const miniExplosionRadius = Math.round((miniConfig.explosionRadius ?? 45) * weaponExplosionMult);
-        return (
-          <>
-            <div class={styles.statsLabel}>Mini banany:</div>
-            <div class={styles.stat}>🔢 Ilość: 4-6</div>
-            <div class={styles.stat}>
-              {STAT_LABELS.damageMultiplier.emoji} {STAT_LABELS.damageMultiplier.label}:{' '}
-              {miniDamage}
-            </div>
-            <div class={styles.stat}>
-              {STAT_LABELS.explosionRadius.emoji} {STAT_LABELS.explosionRadius.label}:{' '}
-              {miniExplosionRadius}
-            </div>
-          </>
-        );
-      })()}
+      {config.projectileType === ProjectileType.BANANA &&
+        (() => {
+          const miniConfig = WEAPON_TYPES.minibanana;
+          const weaponDamageMult = statsCalculator.getDamageMultiplier(level);
+          const weaponExplosionMult = statsCalculator.getExplosionMultiplier(level);
+          const miniDamage = Math.round(miniConfig.damage * weaponDamageMult);
+          const miniExplosionRadius = Math.round(
+            (miniConfig.explosionRadius ?? 45) * weaponExplosionMult,
+          );
+          return (
+            <>
+              <div class={styles.statsLabel}>Mini banany:</div>
+              <div class={styles.stat}>🔢 Ilość: 4-6</div>
+              <div class={styles.stat}>
+                {STAT_LABELS.damageMultiplier.emoji} {STAT_LABELS.damageMultiplier.label}:{' '}
+                {miniDamage}
+              </div>
+              <div class={styles.stat}>
+                {STAT_LABELS.explosionRadius.emoji} {STAT_LABELS.explosionRadius.label}:{' '}
+                {miniExplosionRadius}
+              </div>
+            </>
+          );
+        })()}
     </div>
   );
 }

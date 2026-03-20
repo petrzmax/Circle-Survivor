@@ -10,7 +10,6 @@ import { WeaponType } from '@/domain/weapons/type';
 import { PlayerStats, WeaponInventory } from '@/ecs/traits';
 import { addItem, applyStat } from '@/ecs/utils/player-utils';
 import { WeaponManager } from '@/domain/weapons/WeaponManager';
-import { randomElementStrict } from '@/utils';
 import type { Entity } from 'koota';
 import toast from 'react-hot-toast';
 import { singleton } from 'tsyringe';
@@ -53,13 +52,12 @@ export class Shop {
         const weaponItem = item;
         const inv = playerEntity.get(WeaponInventory)!;
         const stats = playerEntity.get(PlayerStats)!;
+        const shopLevel = weaponItem.level ?? 1;
 
         if (inv.weapons.length >= stats.maxWeapons) {
-          const sameTypeWeapons = inv.weapons.filter((w) => w.type === weaponItem.weaponType);
-          if (sameTypeWeapons.length > 0) {
-            const randomWeapon = randomElementStrict(sameTypeWeapons);
-            this.weaponManager.upgradeWeapon(randomWeapon);
-            toast(`⬆️ ${item.name} +${randomWeapon.level}`);
+          const upgraded = this.weaponManager.mergeWithShopWeapon(weaponItem.weaponType, shopLevel);
+          if (upgraded) {
+            toast(`⬆️ ${item.name} +${upgraded.level}`);
           }
         } else {
           this.weaponManager.addWeapon(weaponItem.weaponType);

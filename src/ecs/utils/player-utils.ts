@@ -3,47 +3,14 @@
  * Operations that were previously adapter methods, now trait-based.
  */
 
-import type { Entity } from 'koota';
-import type { WeaponInstance } from '@/domain/weapons/type';
-import type { WeaponType } from '@/domain/weapons/type';
-import type { InputState, PlayerStats as PlayerStatsType } from '@/domain/player/type';
-import { WEAPON_TYPES } from '@/domain/weapons';
 import { GAME_BALANCE } from '@/config';
+import type { InputState, PlayerStats as PlayerStatsType } from '@/domain/player/type';
+import type { WeaponInstance } from '@/domain/weapons/type';
 import { Health, PlayerCharacter, PlayerStats, Position, WeaponInventory } from '@/ecs/traits';
 import { applyImpulse, steadyStateForceFactor } from '@/ecs/utils/entity-utils';
 import { type Vector2 } from '@/utils';
 import { TWO_PI } from '@/utils/math';
-
-/**
- * Add a weapon to the player's inventory.
- * Returns true if weapon was added or upgraded, false if inventory full.
- */
-export function addWeapon(entity: Entity, type: WeaponType): boolean {
-  const inv = entity.get(WeaponInventory)!;
-  const stats = entity.get(PlayerStats)!;
-
-  if (inv.weapons.length >= stats.maxWeapons) {
-    const existing = inv.weapons.find((w) => w.type === type);
-    if (existing) {
-      existing.level++;
-      return true;
-    }
-    return false;
-  }
-
-  const config = WEAPON_TYPES[type];
-  inv.weapons.push({
-    type,
-    config,
-    level: 1,
-    lastFireTime: 0,
-    multishot: 0,
-    name: config.name,
-    fireOffset: 0,
-  });
-
-  return true;
-}
+import type { Entity } from 'koota';
 
 /**
  * Remove a weapon at the given index. Returns the removed weapon or null.

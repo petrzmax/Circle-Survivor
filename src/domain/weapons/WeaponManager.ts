@@ -1,7 +1,7 @@
 import { WeaponConfig, WeaponInstance, WeaponType } from '@/domain/weapons';
 import { spawnDeployable, spawnProjectile } from '@/ecs/factories/entity-factories';
 import { PlayerStats, Position, ProjectileData, WeaponInventory } from '@/ecs/traits';
-import { addWeapon, getWeaponPosition, removeWeaponAt } from '@/ecs/utils/player-utils';
+import { getWeaponPosition, removeWeaponAt } from '@/ecs/utils/player-utils';
 import type { ProjectileConfig } from '@/entities/Projectile';
 import { EventBus } from '@/events';
 import { EntityManager } from '@/managers';
@@ -245,11 +245,43 @@ export class WeaponManager {
 
   public addWeapon(type: WeaponType): void {
     const player = this.entityManager.getPlayerEntity();
+    const inv = player.get(WeaponInventory)!;
+    const stats = player.get(PlayerStats)!;
 
-    const added = addWeapon(player, type);
-    if (!added) return;
+    if (inv.weapons.length >= stats.maxWeapons) return;
+
+    const config = WEAPON_TYPES[type];
+    inv.weapons.push({
+      type,
+      config,
+      level: 1,
+      lastFireTime: 0,
+      multishot: 0,
+      name: config.name,
+      fireOffset: 0,
+    });
 
     this.recalculateFireOffsets();
+  }
+
+  /**
+   * Find inventory weapon matching type and level, optionally excluding an index.
+   */
+  private findMergeTarget(
+    type: WeaponType,
+    level: number,
+    excludeIndex?: number,
+  ): { weapon: WeaponInstance; index: number } | null {
+    const inv = this.entityManager.getPlayerEntity().get(WeaponInventory)!;
+    const maxLevel = this.configService.getWeaponsConfig().maxLevel;
+    if (level >= maxLevel) return null;
+
+    const index = inv.weapons.findIndex(
+      (w, i) => i !== excludeIndex && w.type === type && w.level === level,
+    );
+    if (index === -1) return null;
+
+    return { weapon: inv.weapons[index]!, index };
   }
 
   /**
@@ -260,25 +292,7 @@ export class WeaponManager {
     const weapon = inv.weapons[weaponIndex];
     if (!weapon) return false;
 
-    const maxLevel = this.configService.getWeaponsConfig().maxLevel;
-    if (weapon.level >= maxLevel) return false;
-
-    return inv.weapons.some(
-      (w, i) => i !== weaponIndex && w.type === weapon.type && w.level === weapon.level,
-    );
-  }
-
-  /**
-   * Find the index of a valid merge partner for the weapon at the given index.
-   */
-  public getMergePartnerIndex(weaponIndex: number): number {
-    const inv = this.entityManager.getPlayerEntity().get(WeaponInventory)!;
-    const weapon = inv.weapons[weaponIndex];
-    if (!weapon) return -1;
-
-    return inv.weapons.findIndex(
-      (w, i) => i !== weaponIndex && w.type === weapon.type && w.level === weapon.level,
-    );
+    return this.findMergeTarget(weapon.type, weapon.level, weaponIndex) !== null;
   }
 
   /**
@@ -290,14 +304,12 @@ export class WeaponManager {
     const weapon = inv.weapons[weaponIndex];
     if (!weapon) return false;
 
-    if (!this.canMergeWeapon(weaponIndex)) return false;
+    const partner = this.findMergeTarget(weapon.type, weapon.level, weaponIndex);
+    if (!partner) return false;
 
-    const partnerIndex = this.getMergePartnerIndex(weaponIndex);
-    if (partnerIndex === -1) return false;
+    removeWeaponAt(player, partner.index);
 
-    removeWeaponAt(player, partnerIndex);
-
-    const adjustedIndex = partnerIndex < weaponIndex ? weaponIndex - 1 : weaponIndex;
+    const adjustedIndex = partner.index < weaponIndex ? weaponIndex - 1 : weaponIndex;
     const targetWeapon = inv.weapons[adjustedIndex];
     if (!targetWeapon) return false;
 
@@ -307,8 +319,17 @@ export class WeaponManager {
     return true;
   }
 
-  public upgradeWeapon(weapon: WeaponInstance): void {
-    weapon.level++;
+  /**
+   * Merge a shop weapon into an existing inventory weapon of the same type and level.
+   * Returns the upgraded weapon instance, or null if no valid target found.
+   */
+  public mergeWithShopWeapon(type: WeaponType, shopLevel: number): WeaponInstance | null {
+    const target = this.findMergeTarget(type, shopLevel);
+    if (!target) return null;
+
+    target.weapon.level++;
+    this.recalculateFireOffsets();
+    return target.weapon;
   }
 
   /**

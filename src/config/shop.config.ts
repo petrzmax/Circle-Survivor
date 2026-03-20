@@ -55,6 +55,8 @@ export interface BaseShopItem {
 export interface WeaponShopItem extends BaseShopItem {
   type: 'weapon';
   weaponType: WeaponType;
+  /** Level of the weapon offered in shop. Defaults to 1 if not specified. */
+  level?: number;
 }
 
 /**

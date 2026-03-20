@@ -7,9 +7,9 @@ import { calculatePrice, generateShopItems, getRerollPrice } from '@/systems/Sho
 import { JSX } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import { container } from 'tsyringe';
+import { useItemTooltip } from '../../hooks/useItemTooltip';
 import { usePlayer } from '../../hooks/usePlayer';
 import { useWave } from '../../hooks/useWave';
-import { useItemTooltip } from '../../hooks/useItemTooltip';
 import { useWeaponTooltip } from '../../hooks/useWeaponTooltip';
 import { ItemsInventory } from '../ItemsInventory';
 import { ItemTooltip } from '../ItemTooltip';
@@ -218,12 +218,18 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
               let upgradeInfo = '';
 
               if (item.type === 'weapon') {
-                const hasThisWeapon = weapons.some((w) => w.type === item.weaponType);
+                const shopLevel = item.level ?? 1;
                 if (weapons.length >= maxWeapons) {
-                  if (!hasThisWeapon) {
+                  const hasMatchingWeapon = weapons.some(
+                    (w) =>
+                      w.type === item.weaponType &&
+                      w.level === shopLevel &&
+                      w.level < GAME_BALANCE.weapons.maxLevel,
+                  );
+                  if (!hasMatchingWeapon) {
                     isWeaponLocked = true;
                   } else {
-                    upgradeInfo = '⬆️ Upgrade';
+                    upgradeInfo = `⬆️ Upgrade → ${shopLevel + 1}`;
                   }
                 }
               }
@@ -243,9 +249,12 @@ export function Shop({ visible }: ShopProps): JSX.Element | null {
                   }}
                   onMouseEnter={(): void => {
                     if (item.type === 'weapon') {
-                      const existingWeapon = weapons.find((w) => w.type === item.weaponType);
-                      const isUpgrade = weapons.length >= maxWeapons && existingWeapon;
-                      const level = isUpgrade ? existingWeapon.level + 1 : 1;
+                      const shopLevel = item.level ?? 1;
+                      const matchingWeapon = weapons.find(
+                        (w) => w.type === item.weaponType && w.level === shopLevel,
+                      );
+                      const isUpgrade = weapons.length >= maxWeapons && matchingWeapon;
+                      const level = isUpgrade ? shopLevel + 1 : 1;
                       tooltip.showTooltip(item.weaponType, level);
                     } else {
                       itemTooltip.showTooltip(itemKey);

@@ -18,7 +18,7 @@ export const STAT_LABELS: Record<keyof ItemEffect, StatLabel> = {
   critChance: { emoji: '🎯', label: 'Szansa na kryt' },
   critDamage: { emoji: '💥', label: 'Obrażenia kryt' },
   attackSpeedMultiplier: { emoji: '⚡', label: 'Szybkość ataku' },
-  speed: { emoji: '🏃', label: 'Prędkość' },
+  speedMultiplier: { emoji: '🏃', label: 'Prędkość' },
   lifesteal: { emoji: '🧛', label: 'Szansa na kradzież życia' },
   thorns: { emoji: '🌵', label: 'Odbicie obrażeń' },
   luck: { emoji: '🍀', label: 'Szczęście' },

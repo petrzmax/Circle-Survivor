@@ -82,8 +82,8 @@ export const DISPLAYED_STATS: readonly DisplayedStat[] = [
   },
   // Utility
   {
-    key: 'speed',
-    ...STAT_LABELS.speed,
+    key: 'speedMultiplier',
+    ...STAT_LABELS.speedMultiplier,
     format: (p) => `+${Math.round((p.speedMultiplier - 1) * 100)}%`,
   },
   {

@@ -20,7 +20,7 @@ export interface ItemEffect {
   lifesteal?: number;
   explosionRadius?: number;
   pierce?: number;
-  speed?: number;
+  speedMultiplier?: number;
   pickupRange?: number;
   luck?: number;
   xpMultiplier?: number;
@@ -315,7 +315,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     description: 'Nyyyuuum!',
     price: 55,
     emoji: '👢',
-    effect: { speed: 0.08 },
+    effect: { speedMultiplier: 0.08 },
   },
   magnet: {
     type: 'item',
@@ -386,7 +386,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     effect: {
       damageMultiplier: 0.1,
       attackSpeedMultiplier: 0.1,
-      speed: 0.05,
+      speedMultiplier: 0.05,
       armor: 5,
       maxHp: 10,
     },
@@ -400,7 +400,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     price: 300,
     emoji: '🏎️',
     effect: {
-      speed: 0.25,
+      speedMultiplier: 0.25,
       dodge: 0.1,
     },
   },
@@ -476,7 +476,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     price: 260,
     emoji: '🐗',
     effect: {
-      speed: 0.15,
+      speedMultiplier: 0.15,
       damageMultiplier: 0.15,
       thorns: 0.1,
     },

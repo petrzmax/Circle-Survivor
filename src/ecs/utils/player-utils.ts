@@ -38,78 +38,28 @@ export function countItem(entity: Entity, itemId: string): number {
   return inv.items.filter((i) => i === itemId).length;
 }
 
+/** Stats with special clamping rules: stat key → max value getter. */
+const STAT_CLAMPS: Partial<Record<keyof PlayerStatsType, () => number>> = {
+  dodge: () => GAME_BALANCE.player.maxDodge,
+};
+
 /**
  * Apply a stat modification to the player.
  */
 export function applyStat(entity: Entity, stat: keyof PlayerStatsType, value: number): void {
-  const stats = entity.get(PlayerStats)!;
-  switch (stat) {
-    case 'maxHp': {
-      const h = entity.get(Health)!;
-      entity.set(Health, { hp: h.hp + value, maxHp: h.maxHp + value });
-      break;
-    }
-    case 'speed':
-      stats.speedMultiplier += value;
-      break;
-    case 'pickupRange':
-      stats.pickupRange += value;
-      break;
-    case 'armor':
-      stats.armor += value;
-      break;
-    case 'damageMultiplier':
-      stats.damageMultiplier += value;
-      break;
-    case 'attackSpeedMultiplier':
-      stats.attackSpeedMultiplier += value;
-      break;
-    case 'critChance':
-      stats.critChance += value;
-      break;
-    case 'critDamage':
-      stats.critDamage += value;
-      break;
-    case 'lifesteal':
-      stats.lifesteal += value;
-      break;
-    case 'knockback':
-      stats.knockback += value;
-      break;
-    case 'explosionRadius':
-      stats.explosionRadius += value;
-      break;
-    case 'projectileCount':
-      stats.projectileCount += value;
-      break;
-    case 'pierce':
-      stats.pierce += value;
-      break;
-    case 'attackRange':
-      stats.attackRange += value;
-      break;
-    case 'luck':
-      stats.luck += value;
-      break;
-    case 'xpMultiplier':
-      stats.xpMultiplier += value;
-      break;
-    case 'goldMultiplier':
-      stats.goldMultiplier += value;
-      break;
-    case 'dodge':
-      stats.dodge = Math.min(stats.dodge + value, GAME_BALANCE.player.maxDodge);
-      break;
-    case 'thorns':
-      stats.thorns += value;
-      break;
-    case 'regen':
-      stats.regen += value;
-      break;
-    case 'maxWeapons':
-      stats.maxWeapons += value;
-      break;
+  // maxHp is special — it lives on the Health trait, not PlayerStats
+  if (stat === 'maxHp') {
+    const h = entity.get(Health)!;
+    entity.set(Health, { hp: h.hp + value, maxHp: h.maxHp + value });
+    return;
   }
+
+  const stats = entity.get(PlayerStats)!;
+  const field = stat as keyof typeof stats;
+
+  const current = stats[field] as number;
+  const maxGetter = STAT_CLAMPS[stat];
+  (stats[field] as number) = maxGetter ? Math.min(current + value, maxGetter()) : current + value;
 }
 
 /**

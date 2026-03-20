@@ -37,7 +37,7 @@ export interface PlayerData {
 export interface PlayerStats {
   // Core
   maxHp: number;
-  speed: number;
+  speedMultiplier: number;
   pickupRange: number;
 
   // Combat

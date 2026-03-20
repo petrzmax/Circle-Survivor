@@ -1,22 +1,22 @@
 import { GAME_BALANCE } from '@/config/balance.config';
 import { ConfigService } from '@/config/ConfigService';
-import type { AttackPattern, AttackResult, EnemyBulletData } from '@/domain/enemies/type';
+import { ATTACK_STRATEGIES } from '@/domain/enemies/attack-strategy';
+import type { AttackResult } from '@/domain/enemies/type';
+import { spawnProjectile } from '@/ecs/factories/entity-factories';
 import { ArenaBound, Collider, EnemyData, IsBoss, Position } from '@/ecs/traits';
 import { applyImpulse, steadyStateForceFactor } from '@/ecs/utils/entity-utils';
-import { spawnProjectile } from '@/ecs/factories/entity-factories';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
 import { ProjectileType } from '@/types/enums';
 import {
-  randomElement,
-  randomInt,
-  randomRange,
   massFromRadius,
+  randomElement,
+  randomRange,
   type CanvasBounds,
   type Vector2,
 } from '@/utils';
 import { circleInBounds } from '@/utils/collision';
-import { addVectors, normalize, scaleVector, subtractVectors, TWO_PI } from '@/utils/math';
+import { addVectors, normalize, scaleVector, subtractVectors } from '@/utils/math';
 import type { Entity } from 'koota';
 import { singleton } from 'tsyringe';
 
@@ -140,90 +140,29 @@ export class EnemySystem {
     target: Vector2,
     currentTime: number,
   ): AttackResult {
-    const d = entity.get(EnemyData)!;
-    if (!d.canShoot) return null;
-    if (currentTime < d.nextFireTime) return null;
+    const enemyData = entity.get(EnemyData)!;
+    if (!enemyData.canShoot) return null;
+    if (currentTime < enemyData.nextFireTime) return null;
 
-    d.nextFireTime = currentTime + this.getRandomizedFireDelay(d.fireRate);
-    const pattern = randomElement(d.attackPatterns);
+    enemyData.nextFireTime = currentTime + this.getRandomizedFireDelay(enemyData.fireRate);
+    const pattern = randomElement(enemyData.attackPatterns);
+    if (!pattern) return null;
 
-    const pos = entity.get(Position)!;
-    const dx = target.x - pos.x;
-    const dy = target.y - pos.y;
+    const { bulletDamage, bulletSpeed, color } = enemyData;
+    const position = entity.get(Position)!;
+    const dx = target.x - position.x;
+    const dy = target.y - position.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
     if (dist === 0) return null;
 
     const baseAngle = Math.atan2(dy, dx);
 
-    switch (pattern) {
-      case 'spread':
-        return this.createSpreadProjectiles(
-          d,
-          pos,
-          radius,
-          baseAngle,
-          randomInt(4, 6),
-          Math.PI / 3,
-          'spread',
-        );
-      case 'shockwave':
-        return {
-          type: 'shockwave',
-          x: pos.x,
-          y: pos.y,
-          radius: radius * 3,
-          damage: d.bulletDamage * 1.5,
-          color: d.color,
-        };
-      case 'double':
-        return this.createSpreadProjectiles(d, pos, radius, baseAngle, 2, Math.PI / 9, 'double');
-      case 'around':
-        return this.createSpreadProjectiles(
-          d,
-          pos,
-          radius,
-          baseAngle,
-          randomInt(23, 26),
-          TWO_PI,
-          'around',
-        );
-      case 'single':
-      default:
-        return this.createSpreadProjectiles(d, pos, radius, baseAngle, 1, 0, pattern ?? 'single');
-    }
+    const strategy = ATTACK_STRATEGIES[pattern];
+    return strategy.execute({ bulletDamage, bulletSpeed, color, position, radius, baseAngle });
   }
 
   private getRandomizedFireDelay(fireRate: number): number {
     const deviation = fireRate * 0.3;
     return randomRange(fireRate - deviation, fireRate + deviation);
-  }
-
-  private createSpreadProjectiles(
-    d: { bulletDamage: number; bulletSpeed: number; color: string },
-    pos: { x: number; y: number },
-    radius: number,
-    baseAngle: number,
-    spreadCount: number,
-    spreadAngle: number,
-    pattern: AttackPattern,
-  ): AttackResult {
-    const bullets: EnemyBulletData[] = [];
-    const damagePerBullet = Math.max(d.bulletDamage / spreadCount, d.bulletDamage * 0.6);
-
-    for (let i = 0; i < spreadCount; i++) {
-      const angle =
-        spreadCount === 1
-          ? baseAngle
-          : baseAngle - spreadAngle / 2 + (spreadAngle / (spreadCount - 1)) * i;
-      bullets.push({
-        x: pos.x + Math.cos(angle) * radius,
-        y: pos.y + Math.sin(angle) * radius,
-        vx: Math.cos(angle) * d.bulletSpeed,
-        vy: Math.sin(angle) * d.bulletSpeed,
-        damage: damagePerBullet,
-        color: d.color,
-      });
-    }
-    return { type: 'bullets', pattern, bullets };
   }
 }

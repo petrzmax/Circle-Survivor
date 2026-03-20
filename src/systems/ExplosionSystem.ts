@@ -97,6 +97,8 @@ export class ExplosionSystem {
         damageMultiplier: playerStats.damageMultiplier,
         explosionRadiusMultiplier: playerStats.explosionRadius,
         ownerId: playerEntity.id(),
+        weaponLevelDamageMultiplier: explosion.weaponLevelDamageMultiplier ?? 1,
+        weaponLevelExplosionMultiplier: explosion.weaponLevelExplosionMultiplier ?? 1,
       });
 
       for (const config of configs) {

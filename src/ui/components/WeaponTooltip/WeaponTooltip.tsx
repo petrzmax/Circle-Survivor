@@ -5,8 +5,10 @@
 
 import { SHOP_ITEMS, type WeaponShopItem } from '@/config/shop.config';
 import { STAT_LABELS } from '@/config/stats-labels.config';
-import { WeaponStatsCalculator } from '@/domain/weapons/WeaponStatsCalculator';
+import { WEAPON_TYPES } from '@/domain/weapons/config';
 import { WeaponConfig } from '@/domain/weapons/type';
+import { WeaponStatsCalculator } from '@/domain/weapons/WeaponStatsCalculator';
+import { ProjectileType } from '@/types';
 import { CONTAINER_WIDTH, TOOLTIP_OFFSET, TOOLTIP_WIDTH } from '@/utils/viewport-scaler';
 import { JSX } from 'preact';
 import { container } from 'tsyringe';
@@ -78,6 +80,28 @@ export function WeaponTooltip({ weaponData, position }: WeaponTooltipProps): JSX
 
       {config.shortRange && <div class={styles.stat}>📍 Broń krótkiego zasięgu</div>}
       {config.deployableType && <div class={styles.stat}>⚙️ Do rozmieszczenia</div>}
+
+      {config.projectileType === ProjectileType.BANANA && (() => {
+        const miniConfig = WEAPON_TYPES.minibanana;
+        const weaponDamageMult = statsCalculator.getDamageMultiplier(level);
+        const weaponExplosionMult = statsCalculator.getExplosionMultiplier(level);
+        const miniDamage = Math.round(miniConfig.damage * weaponDamageMult);
+        const miniExplosionRadius = Math.round((miniConfig.explosionRadius ?? 45) * weaponExplosionMult);
+        return (
+          <>
+            <div class={styles.statsLabel}>Mini banany:</div>
+            <div class={styles.stat}>🔢 Ilość: 4-6</div>
+            <div class={styles.stat}>
+              {STAT_LABELS.damageMultiplier.emoji} {STAT_LABELS.damageMultiplier.label}:{' '}
+              {miniDamage}
+            </div>
+            <div class={styles.stat}>
+              {STAT_LABELS.explosionRadius.emoji} {STAT_LABELS.explosionRadius.label}:{' '}
+              {miniExplosionRadius}
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 }

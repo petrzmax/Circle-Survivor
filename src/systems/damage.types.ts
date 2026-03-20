@@ -1,5 +1,5 @@
-import { Vector2 } from '@/utils/math';
 import { ProjectileType, VisualEffect } from '@/types/enums';
+import { Vector2 } from '@/utils/math';
 
 // ============ Damage Source ============
 
@@ -74,4 +74,8 @@ export interface ExplosionEvent {
   origin?: ExplosionOrigin;
   /** If true, explosion damages player (enemy explosions only) */
   isEnemyExplosion?: boolean;
+  /** Weapon-level damage multiplier — propagated to sub-munitions (e.g. mini bananas) */
+  weaponLevelDamageMultiplier?: number;
+  /** Weapon-level explosion radius multiplier — propagated to sub-munitions */
+  weaponLevelExplosionMultiplier?: number;
 }

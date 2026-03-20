@@ -1,12 +1,12 @@
 import { WeaponConfig, WeaponInstance, WeaponType } from '@/domain/weapons';
-import { Position, PlayerStats, WeaponInventory, ProjectileData } from '@/ecs/traits';
-import { spawnProjectile, spawnDeployable } from '@/ecs/factories/entity-factories';
-import { addWeapon, removeWeaponAt, getWeaponPosition } from '@/ecs/utils/player-utils';
+import { spawnDeployable, spawnProjectile } from '@/ecs/factories/entity-factories';
+import { PlayerStats, Position, ProjectileData, WeaponInventory } from '@/ecs/traits';
+import { addWeapon, getWeaponPosition, removeWeaponAt } from '@/ecs/utils/player-utils';
 import type { ProjectileConfig } from '@/entities/Projectile';
-import type { DeployableConfig } from '@/types/common';
 import { EventBus } from '@/events';
 import { EntityManager } from '@/managers';
 import { DeployableType, ProjectileType, VisualEffect } from '@/types';
+import type { DeployableConfig } from '@/types/common';
 import {
   copyVector,
   degreesToRadians,
@@ -16,8 +16,8 @@ import {
   type Vector2,
 } from '@/utils';
 import type { Entity } from 'koota';
-import { singleton } from 'tsyringe';
 import toast from 'react-hot-toast';
+import { singleton } from 'tsyringe';
 import { ConfigService } from '../../config/ConfigService';
 import { WeaponStatsCalculator } from './WeaponStatsCalculator';
 import { WEAPON_TYPES } from './config';
@@ -185,6 +185,10 @@ export class WeaponManager {
                 stats.explosionRadius,
               explosionDamage: finalDamage,
               visualEffect: config.explosionEffect ?? VisualEffect.STANDARD,
+              weaponLevelDamageMultiplier: this.statsCalculator.getDamageMultiplier(weapon.level),
+              weaponLevelExplosionMultiplier: this.statsCalculator.getExplosionMultiplier(
+                weapon.level,
+              ),
             }
           : undefined,
         weaponCategory: config.weaponCategory,

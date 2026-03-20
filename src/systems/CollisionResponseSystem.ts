@@ -321,6 +321,8 @@ export class CollisionResponseSystem {
         visualEffect: projectileData.explosive.visualEffect,
         sourceId: projectile.id(),
         origin,
+        weaponLevelDamageMultiplier: projectileData.explosive.weaponLevelDamageMultiplier,
+        weaponLevelExplosionMultiplier: projectileData.explosive.weaponLevelExplosionMultiplier,
       });
     }
 

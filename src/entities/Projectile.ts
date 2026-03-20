@@ -2,16 +2,18 @@
  * Projectile entity — config and component interfaces.
  */
 
-import { IExplosive } from '@/types/common';
-import { VisualEffect } from '@/types/enums';
-import { EntityConfig } from '@/types/common';
-import { ProjectileType } from '@/types/enums';
+import { EntityConfig, IExplosive } from '@/types/common';
+import { ProjectileType, VisualEffect } from '@/types/enums';
 
 /**
  * Explosive component data
  */
 export interface ExplosiveComponent extends IExplosive {
   visualEffect: VisualEffect;
+  /** Weapon-level damage multiplier — propagated to sub-munitions (e.g. mini bananas) */
+  weaponLevelDamageMultiplier?: number;
+  /** Weapon-level explosion radius multiplier — propagated to sub-munitions */
+  weaponLevelExplosionMultiplier?: number;
 }
 
 /**

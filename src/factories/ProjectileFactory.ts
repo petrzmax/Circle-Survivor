@@ -1,7 +1,7 @@
 import { WEAPON_TYPES } from '@/domain/weapons/config';
 import type { ProjectileConfig } from '@/entities/Projectile';
 import { ProjectileType, VisualEffect } from '@/types/enums';
-import { Vector2, TWO_PI } from '@/utils/math';
+import { TWO_PI, Vector2 } from '@/utils/math';
 import { randomInt, randomRange } from '@/utils/random';
 
 export interface MiniBananaSpawnParams {
@@ -13,6 +13,10 @@ export interface MiniBananaSpawnParams {
   explosionRadiusMultiplier: number;
   /** Owner entity ID (player) */
   ownerId: number;
+  /** Weapon-level damage multiplier from banana weapon upgrades */
+  weaponLevelDamageMultiplier: number;
+  /** Weapon-level explosion radius multiplier from banana weapon upgrades */
+  weaponLevelExplosionMultiplier: number;
 }
 
 /**
@@ -21,7 +25,14 @@ export interface MiniBananaSpawnParams {
  */
 export function createMiniBananaConfigs(params: MiniBananaSpawnParams): ProjectileConfig[] {
   const config = WEAPON_TYPES.minibanana;
-  const { position, damageMultiplier, explosionRadiusMultiplier, ownerId } = params;
+  const {
+    position,
+    damageMultiplier,
+    explosionRadiusMultiplier,
+    ownerId,
+    weaponLevelDamageMultiplier,
+    weaponLevelExplosionMultiplier,
+  } = params;
 
   const count = randomInt(4, 6);
   const baseSpeed = config.bulletSpeed;
@@ -39,7 +50,7 @@ export function createMiniBananaConfigs(params: MiniBananaSpawnParams): Projecti
       radius: config.bulletRadius ?? 6,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
-      damage: config.damage * damageMultiplier,
+      damage: config.damage * weaponLevelDamageMultiplier * damageMultiplier,
       type: ProjectileType.MINI_BANANA,
       ownerId,
       color: config.color,
@@ -51,8 +62,11 @@ export function createMiniBananaConfigs(params: MiniBananaSpawnParams): Projecti
       rotation: randomRange(0, TWO_PI),
       rotationSpeed: config.rotationSpeed,
       explosive: {
-        explosionRadius: (config.explosionRadius ?? 45) * explosionRadiusMultiplier,
-        explosionDamage: config.damage * damageMultiplier,
+        explosionRadius:
+          (config.explosionRadius ?? 45) *
+          weaponLevelExplosionMultiplier *
+          explosionRadiusMultiplier,
+        explosionDamage: config.damage * weaponLevelDamageMultiplier * damageMultiplier,
         visualEffect: VisualEffect.BANANA,
       },
     });

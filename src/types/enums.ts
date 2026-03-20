@@ -16,7 +16,13 @@ export enum ProjectileType {
   NUKE = 'nuke',
   FLAMETHROWER = 'flamethrower',
   ENEMY_BULLET = 'enemyBullet',
+  BOSS_BULLET = 'bossBullet',
 }
+
+export const ENEMY_PROJECTILE_TYPES = new Set<ProjectileType>([
+  ProjectileType.ENEMY_BULLET,
+  ProjectileType.BOSS_BULLET,
+]);
 
 export enum DeployableType {
   MINE = 'mine',

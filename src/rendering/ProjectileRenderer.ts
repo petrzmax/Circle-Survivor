@@ -3,10 +3,10 @@
  * Separates rendering logic from entity logic.
  */
 
-import type { ProjectileRenderData } from './render-types';
 import { ProjectileType } from '@/types/enums';
 import { randomRange } from '@/utils';
 import { normalize, TWO_PI } from '@/utils/math';
+import type { ProjectileRenderData } from './render-types';
 
 /**
  * Renders a projectile to the canvas based on its type.
@@ -43,6 +43,9 @@ export function renderProjectile(ctx: CanvasRenderingContext2D, p: ProjectileRen
       break;
     case ProjectileType.ENEMY_BULLET:
       renderEnemyBullet(ctx, p);
+      break;
+    case ProjectileType.BOSS_BULLET:
+      renderBossBullet(ctx, p);
       break;
     default:
       renderStandardBullet(ctx, p);
@@ -238,20 +241,37 @@ function renderFlame(ctx: CanvasRenderingContext2D, p: ProjectileRenderData): vo
 }
 
 /**
- * Enemy Bullet - red hostile projectile with dark center
+ * Enemy Bullet - bright solid circle with strong glow for visibility
  */
 function renderEnemyBullet(ctx: CanvasRenderingContext2D, p: ProjectileRenderData): void {
-  // Glow effect
   ctx.shadowColor = p.color;
-  ctx.shadowBlur = 10;
+  ctx.shadowBlur = 15;
 
-  // Main bullet
   ctx.beginPath();
   ctx.arc(0, 0, p.radius, 0, TWO_PI);
   ctx.fillStyle = p.color;
   ctx.fill();
 
-  // Darker center
+  // Bright core for contrast
+  ctx.shadowBlur = 0;
+  ctx.beginPath();
+  ctx.arc(0, 0, p.radius * 0.5, 0, TWO_PI);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+  ctx.fill();
+}
+
+/**
+ * Boss Bullet - hostile projectile with dark center for menacing look
+ */
+function renderBossBullet(ctx: CanvasRenderingContext2D, p: ProjectileRenderData): void {
+  ctx.shadowColor = p.color;
+  ctx.shadowBlur = 10;
+
+  ctx.beginPath();
+  ctx.arc(0, 0, p.radius, 0, TWO_PI);
+  ctx.fillStyle = p.color;
+  ctx.fill();
+
   ctx.shadowBlur = 0;
   ctx.beginPath();
   ctx.arc(0, 0, p.radius * 0.5, 0, TWO_PI);

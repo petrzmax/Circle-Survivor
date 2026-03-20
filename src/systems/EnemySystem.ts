@@ -57,7 +57,7 @@ export class EnemySystem {
               const projEntity = spawnProjectile({
                 position: { x: bulletData.x, y: bulletData.y },
                 radius: bulletRadius,
-                type: ProjectileType.ENEMY_BULLET,
+                type: isBoss ? ProjectileType.BOSS_BULLET : ProjectileType.ENEMY_BULLET,
                 damage: bulletData.damage,
                 ownerId: enemy.id(),
                 color: bulletData.color,

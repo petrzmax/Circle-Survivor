@@ -13,7 +13,7 @@ import type { ProjectileConfig } from '@/entities/Projectile';
 import type { PlayerConfig } from '@/domain/player/type';
 import { CHARACTER_TYPES } from '@/config/characters.config';
 import { GAME_BALANCE } from '@/config';
-import { CharacterType, PickupType, ProjectileType, VisualEffect } from '@/types/enums';
+import { CharacterType, ENEMY_PROJECTILE_TYPES, PickupType, VisualEffect } from '@/types/enums';
 import { massFromRadius, randomAngle, randomInt } from '@/utils';
 import {
   Collider,
@@ -47,7 +47,7 @@ import { Time, world } from '@/ecs/world';
 // ============ Projectile ============
 
 export function spawnProjectile(config: ProjectileConfig): Entity {
-  const isPlayerProjectile = config.type !== ProjectileType.ENEMY_BULLET;
+  const isPlayerProjectile = !ENEMY_PROJECTILE_TYPES.has(config.type);
 
   return world.spawn(
     IsProjectile,

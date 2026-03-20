@@ -6,6 +6,32 @@
   @include overlay;
 }
 
+// Settings gear button
+.settingsBtn {
+  position: absolute;
+  top: $space-md;
+  left: $space-md;
+  background: transparent;
+  border: 2px solid $color-secondary;
+  border-radius: $radius-pill;
+  font-size: $font-xl;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color $transition-fast;
+
+  &:hover {
+    border-color: $color-primary;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
 // Start screen
 .controls {
   font-size: $font-sm;

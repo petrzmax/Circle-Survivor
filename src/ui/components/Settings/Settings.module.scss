@@ -1,0 +1,136 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+.overlay {
+  @include overlay;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+  width: 320px;
+  align-items: stretch;
+}
+
+.section {
+  @include card-base(auto, $space-md);
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+}
+
+.sectionTitle {
+  font-size: $font-lg;
+  color: $color-text-white;
+  margin: 0 0 $space-xs;
+}
+
+// Volume slider
+.volumeRow {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+}
+
+.volumeLabel {
+  font-size: $font-md;
+  color: $color-text-light;
+  min-width: 40px;
+  text-align: right;
+}
+
+.volumeSlider {
+  flex: 1;
+  appearance: none;
+  height: 6px;
+  border-radius: $radius-xs;
+  background: $color-secondary;
+  outline: none;
+  cursor: pointer;
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: $color-primary;
+    cursor: pointer;
+    transition: transform $transition-fast;
+
+    &:hover {
+      transform: scale(1.2);
+    }
+  }
+
+  &::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: $color-primary;
+    border: none;
+    cursor: pointer;
+  }
+}
+
+// Clear ranking
+.dangerBtn {
+  background: $color-danger;
+  border: 2px solid $color-danger;
+  color: $color-text-white;
+  margin-top: 0;
+  padding: $space-sm $space-md;
+  font-size: $font-sm;
+
+  &:hover {
+    background: lighten($color-danger, 8%);
+    border-color: lighten($color-danger, 8%);
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.confirmRow {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  font-size: $font-sm;
+  color: $color-text-muted;
+}
+
+.confirmYes {
+  background: $color-danger;
+  padding: $space-xs $space-md;
+  font-size: $font-sm;
+  margin-top: 0;
+
+  &:hover {
+    background: lighten($color-danger, 8%);
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.confirmNo {
+  @include gray-button;
+  padding: $space-xs $space-md;
+  font-size: $font-sm;
+  margin-top: 0;
+
+  &:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.successMsg {
+  color: $color-success;
+  font-size: $font-sm;
+}
+
+// Close button
+.closeBtn {
+  @include gray-button;
+  padding: 12px 30px;
+  font-size: $font-md;
+}

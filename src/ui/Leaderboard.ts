@@ -110,6 +110,10 @@ export class Leaderboard {
     }
   }
 
+  public clearLocalScores(): void {
+    localStorage.removeItem(this.LOCAL_STORAGE_KEY);
+  }
+
   // ============ GLOBAL LEADERBOARD (JSONBin.io) ============
 
   public isGlobalEnabled(): boolean {

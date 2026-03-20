@@ -7,7 +7,7 @@
 
 import { SOUND_DEFINITIONS } from '@/domain/audio/config';
 import { EventBus } from '@/events/EventBus';
-import { VisualEffect, PickupType } from '@/types';
+import { PickupType, VisualEffect } from '@/types';
 import { randomRange } from '@/utils';
 import { singleton } from 'tsyringe';
 import { SoundStep } from './type';
@@ -16,10 +16,14 @@ import { SoundStep } from './type';
  * Handles all game audio using Web Audio API.
  * Generates sounds procedurally (no external files needed).
  */
+const SETTINGS_STORAGE_KEY = 'circle_survivor_settings';
+
 @singleton()
 export class AudioSystem {
   private ctx: AudioContext | null = null;
+  private masterGain: GainNode | null = null;
   private enabled: boolean = true;
+  private volume: number = 1;
   private lastPlayedAt = new Map<string, number>();
 
   public constructor() {
@@ -34,12 +38,36 @@ export class AudioSystem {
   private init(): boolean {
     try {
       this.ctx = new AudioContext();
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.connect(this.ctx.destination);
+      this.loadSettings();
       return true;
     } catch (e) {
       console.warn('[AudioSystem] Failed to initialize:', e);
       this.enabled = false;
       return false;
     }
+  }
+
+  private loadSettings(): void {
+    try {
+      const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (raw) {
+        const settings = JSON.parse(raw) as { volume?: number };
+        if (typeof settings.volume === 'number') {
+          this.volume = Math.max(0, Math.min(1, settings.volume));
+          if (this.masterGain) {
+            this.masterGain.gain.value = this.volume;
+          }
+        }
+      }
+    } catch {
+      // Use defaults on parse error
+    }
+  }
+
+  private saveSettings(): void {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ volume: this.volume }));
   }
 
   // ========== Core Sound Generation ==========
@@ -66,7 +94,7 @@ export class AudioSystem {
     gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
 
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(this.masterGain ?? this.ctx.destination);
 
     osc.start(now);
     osc.stop(now + duration);
@@ -100,7 +128,7 @@ export class AudioSystem {
 
     noise.connect(filter);
     filter.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(this.masterGain ?? this.ctx.destination);
 
     noise.start(now);
   }
@@ -164,7 +192,22 @@ export class AudioSystem {
    */
   public toggle(): boolean {
     this.enabled = !this.enabled;
+    if (this.masterGain) {
+      this.masterGain.gain.value = this.enabled ? this.volume : 0;
+    }
     return this.enabled;
+  }
+
+  public getVolume(): number {
+    return this.volume;
+  }
+
+  public setVolume(value: number): void {
+    this.volume = Math.max(0, Math.min(1, value));
+    if (this.masterGain) {
+      this.masterGain.gain.value = this.enabled ? this.volume : 0;
+    }
+    this.saveSettings();
   }
 
   // ========== EventBus Integration ==========

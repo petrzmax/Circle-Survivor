@@ -8,6 +8,7 @@ import { container } from 'tsyringe';
 import type { LeaderboardPlayerStats, LeaderboardWeapon } from '../../Leaderboard';
 import { CharacterSelect } from '../CharacterSelect';
 import { LeaderboardComponent } from '../Leaderboard';
+import { Settings } from '../Settings';
 import styles from './Menu.module.scss';
 
 interface MenuProps {
@@ -16,6 +17,7 @@ interface MenuProps {
 
 export function Menu({ gameState }: MenuProps): JSX.Element | null {
   const [showMenuLeaderboard, setShowMenuLeaderboard] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [, forceUpdate] = useState(0);
   const [finalWave, setFinalWave] = useState(1);
   const [finalXp, setFinalXp] = useState(0);
@@ -75,6 +77,16 @@ export function Menu({ gameState }: MenuProps): JSX.Element | null {
 
   // Start Screen
   if (gameState === GameState.MENU) {
+    if (showSettings) {
+      return (
+        <Settings
+          onClose={(): void => {
+            setShowSettings(false);
+          }}
+        />
+      );
+    }
+
     if (showMenuLeaderboard) {
       return (
         <div class={styles.overlay}>
@@ -94,6 +106,14 @@ export function Menu({ gameState }: MenuProps): JSX.Element | null {
 
     return (
       <div class={styles.overlay}>
+        <button
+          class={styles.settingsBtn}
+          onClick={(): void => {
+            setShowSettings(true);
+          }}
+        >
+          ⚙️
+        </button>
         <div class={styles.version}>
           Circle Survivor{' '}
           <a
@@ -130,8 +150,26 @@ export function Menu({ gameState }: MenuProps): JSX.Element | null {
 
   // Pause Menu
   if (gameState === GameState.PAUSED) {
+    if (showSettings) {
+      return (
+        <Settings
+          onClose={(): void => {
+            setShowSettings(false);
+          }}
+        />
+      );
+    }
+
     return (
       <div class={styles.overlay}>
+        <button
+          class={styles.settingsBtn}
+          onClick={(): void => {
+            setShowSettings(true);
+          }}
+        >
+          ⚙️
+        </button>
         <h2>⏸️ PAUZA</h2>
         <p>Gra wstrzymana</p>
         <p class={styles.controls}>ESC - wznów grę</p>

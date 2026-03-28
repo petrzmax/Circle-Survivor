@@ -10,6 +10,7 @@ export interface EnemyDeathData {
   position: Vector2;
   type: EnemyType;
   color: string;
+  radius: number;
   isBoss: boolean;
   xpValue: number;
   goldValue: number;

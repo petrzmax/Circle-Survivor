@@ -17,38 +17,17 @@ export const GAME_BALANCE = {
   },
 
   /**
-   * Boss scaling parameters.
-   * Bosses appear every 3rd wave (3, 6, 9, ...) and get stronger with each appearance.
+   * Enemy and boss scaling.
+   * All enemies (including bosses) get progressively stronger each wave.
    *
-   * Example: On wave 9 (3rd boss), with default values:
-   * - HP: base × (1 + (3-1) × 0.5) × 1.04^2 = base × 2.16
-   * - DMG: base × (1 + (3-1) × 0.25) × 1.04^2 = base × 1.62
-   */
-  boss: {
-    /** HP increase per boss wave. 0.5 = +50% HP for 2nd boss, +100% for 3rd, etc. */
-    hpScalePerWave: 0.5,
-    /** Damage increase per boss wave. 0.25 = +25% DMG per boss appearance. */
-    dmgScalePerWave: 0.25,
-    /** Exponential scaling base. Applied as Math.pow(base, bossWave-1) from wave 3. */
-    exponentialBase: 1.04,
-    /** Contact damage multiplier. Boss melee hits deal base damage × this value. */
-    contactDamageMultiplier: 1.25,
-  },
-
-  /**
-   * Regular enemy scaling.
-   * Enemies get progressively stronger as waves increase.
-   *
-   * Example: On wave 10, with default values:
-   * - Stats: base × 1.04^(10-5) = base × 1.22 (+22% HP and damage)
+   * Example: On wave 5, with default values:
+   * - Stats: base × 1.04^(5-1) = base × 1.17 (+17% HP and damage)
    */
   enemy: {
-    /** Wave number when scaling begins. Before this, enemies have base stats. */
-    scalingStartWave: 5,
-    /** Per-wave multiplier. Applied as Math.pow(factor, wave - startWave). */
+    /** Per-wave multiplier. Applied as Math.pow(factor, wave - 1). */
     scalingFactor: 1.04,
     /** Knockback impulse for non-projectile damage (contact, shockwave → player). */
-    contactKnockback: 180,
+    contactKnockback: 400,
     /** Knockback coefficient for momentum-based projectile hits: impulse = this × playerKnockback × mass × speed. */
     knockbackPerMomentum: 0.2,
     /** Enemy bullet radius as fraction of enemy radius. */

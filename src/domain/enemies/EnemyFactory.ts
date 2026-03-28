@@ -3,12 +3,11 @@
  * Returns raw Koota Entity (no adapter).
  */
 
-import type { Entity } from 'koota';
-import { ENEMY_TYPES } from '@/domain/enemies/config';
-import { Damage, Health } from '@/ecs/traits';
 import { spawnEnemy } from '@/ecs/factories/entity-factories';
+import { Damage, EnemyData, Health } from '@/ecs/traits';
 import { EnemyType } from '@/types/enums';
 import { Vector2 } from '@/utils';
+import type { Entity } from 'koota';
 import { singleton } from 'tsyringe';
 import { EnemyScalingService } from './EnemyScalingService';
 
@@ -30,7 +29,7 @@ export class EnemyFactory {
     const entity = spawnEnemy({ type, position, scale: options?.scale });
 
     if (options?.waveNumber !== undefined) {
-      this.applyWaveScaling(entity, type, options.waveNumber);
+      this.applyWaveScaling(entity, options.waveNumber);
     }
 
     return entity;
@@ -39,17 +38,18 @@ export class EnemyFactory {
   /**
    * Apply wave-based stat scaling to an enemy entity.
    */
-  private applyWaveScaling(entity: Entity, type: EnemyType, waveNumber: number): void {
-    const config = ENEMY_TYPES[type];
-    const scaling = config.isBoss
-      ? this.scalingService.getBossScaling(waveNumber)
-      : this.scalingService.getEnemyScaling(waveNumber);
+  private applyWaveScaling(entity: Entity, waveNumber: number): void {
+    const multiplier = this.scalingService.getScalingMultiplier(waveNumber);
 
     const health = entity.get(Health)!;
-    const scaledMaxHp = Math.round(health.maxHp * scaling.hpMultiplier);
+    const scaledMaxHp = Math.round(health.maxHp * multiplier);
     entity.set(Health, { hp: scaledMaxHp, maxHp: scaledMaxHp });
 
     const damage = entity.get(Damage)!;
-    entity.set(Damage, { amount: Math.round(damage.amount * scaling.dmgMultiplier) });
+    entity.set(Damage, { amount: Math.round(damage.amount * multiplier) });
+
+    const enemyData = entity.get(EnemyData)!;
+    enemyData.bulletDamage = Math.round(enemyData.bulletDamage * multiplier);
+    enemyData.explosionDamage = Math.round(enemyData.explosionDamage * multiplier);
   }
 }

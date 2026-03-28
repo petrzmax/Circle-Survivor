@@ -3,8 +3,6 @@
  *
  * Reads CollisionResult (raw Entity references), dispatches to DamageSystem / DeathSystem.
  */
-import type { Entity } from 'koota';
-import { singleton } from 'tsyringe';
 import { ConfigService } from '@/config/ConfigService';
 import {
   Collider,
@@ -12,7 +10,6 @@ import {
   DeployableData,
   Explosive,
   Health,
-  IsBoss,
   IsDead,
   PhysicsBody,
   PlayerStats,
@@ -21,18 +18,19 @@ import {
   Velocity,
 } from '@/ecs/traits';
 import { applyImpulse, applyImpulseAwayFrom } from '@/ecs/utils/entity-utils';
-import { circleOverlapDepth } from '@/utils/collision';
-import { distance } from '@/utils/math';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
-import { DamageSource, getExplosionOrigin } from './damage.types';
+import { circleOverlapDepth } from '@/utils/collision';
+import { distance } from '@/utils/math';
+import type { Entity } from 'koota';
+import { singleton } from 'tsyringe';
 import { CollisionResult } from './CollisionSystem';
+import { DamageSource, getExplosionOrigin } from './damage.types';
 import { DamageSystem } from './DamageSystem';
 import { DeathSystem } from './DeathSystem';
 
 @singleton()
 export class CollisionResponseSystem {
-  private readonly bossContactDamageMultiplier: number;
   private readonly separationForce: number;
   private readonly knockbackPerMomentum: number;
   private readonly contactKnockback: number;
@@ -44,7 +42,6 @@ export class CollisionResponseSystem {
     private deathSystem: DeathSystem,
     configService: ConfigService,
   ) {
-    this.bossContactDamageMultiplier = configService.getBossBalance().contactDamageMultiplier;
     this.separationForce = configService.getPhysicsConfig().separationForce;
     this.knockbackPerMomentum = configService.getEnemyBalance().knockbackPerMomentum;
     this.contactKnockback = configService.getEnemyBalance().contactKnockback;
@@ -76,11 +73,7 @@ export class CollisionResponseSystem {
 
     for (const enemy of enemies) {
       const ePos = enemy.get(Position)!;
-      let damage = enemy.get(Damage)!.amount;
-      const isBoss = enemy.has(IsBoss);
-      if (isBoss) {
-        damage *= this.bossContactDamageMultiplier;
-      }
+      const damage = enemy.get(Damage)!.amount;
 
       const result = this.damageSystem.damageEntity(
         playerEntity,

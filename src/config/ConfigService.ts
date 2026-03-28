@@ -14,10 +14,6 @@ export class ConfigService {
     return GAME_BALANCE;
   }
 
-  public getBossBalance(): GameBalanceConfig['boss'] {
-    return GAME_BALANCE.boss;
-  }
-
   public getEnemyBalance(): GameBalanceConfig['enemy'] {
     return GAME_BALANCE.enemy;
   }

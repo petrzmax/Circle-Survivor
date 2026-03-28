@@ -6,7 +6,9 @@
 import { EventBus } from '@/events/EventBus';
 import { GameState } from '@/types/enums';
 import { clamp } from '@/utils/math';
-import nipplejs, { type EventData, type JoystickManager, type JoystickOutputData } from 'nipplejs';
+import { create as createJoystick } from 'nipplejs';
+
+type JoystickCollection = ReturnType<typeof createJoystick>;
 
 export interface TouchAnalog {
   x: number;
@@ -14,7 +16,7 @@ export interface TouchAnalog {
 }
 
 export class TouchHandler {
-  private manager: JoystickManager | null = null;
+  private manager: JoystickCollection | null = null;
   private analog: TouchAnalog = { x: 0, y: 0 };
   private isActive = false;
   private zone: HTMLElement | null = null;
@@ -47,7 +49,7 @@ export class TouchHandler {
 
     const joystickSize = Math.min(100, Math.floor(window.innerWidth * 0.22));
 
-    this.manager = nipplejs.create({
+    this.manager = createJoystick({
       zone: this.zone,
       mode: 'dynamic',
       color: 'rgba(255, 255, 255, 0.25)',
@@ -91,12 +93,12 @@ export class TouchHandler {
     }
   }
 
-  private onMove = (_evt: EventData, data: JoystickOutputData): void => {
-    // force is 0 at center, ~1 at edge. Clamp to 1 for consistency.
-    const strength = clamp(data.force, 0, 1);
+  private onMove = (evt: { data: { force: number; vector: { x: number; y: number } } }): void => {
+    const { force, vector } = evt.data;
+    const strength = clamp(force, 0, 1);
     this.analog = {
-      x: data.vector.x * strength,
-      y: -data.vector.y * strength, // nipplejs Y is inverted (up = positive)
+      x: vector.x * strength,
+      y: -vector.y * strength, // nipplejs Y is inverted (up = positive)
     };
     this.isActive = true;
   };

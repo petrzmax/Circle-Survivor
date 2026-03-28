@@ -4,18 +4,14 @@
  */
 // TODO overall i don't like this god factory. it should be splited per other factories
 
-import type { Entity } from 'koota';
+import { GAME_BALANCE } from '@/config';
+import { CHARACTER_TYPES } from '@/config/characters.config';
 import { ENEMY_TYPES } from '@/domain/enemies/config';
 import { generateBossName } from '@/domain/enemies/name';
 import type { EnemyEntityConfig } from '@/domain/enemies/type';
-import type { DeployableConfig, PickupConfig } from '@/types/common';
-import type { ProjectileConfig } from '@/entities/Projectile';
 import type { PlayerConfig } from '@/domain/player/type';
-import { CHARACTER_TYPES } from '@/config/characters.config';
-import { GAME_BALANCE } from '@/config';
-import { CharacterType, ENEMY_PROJECTILE_TYPES, PickupType, VisualEffect } from '@/types/enums';
-import { massFromRadius, randomAngle, randomInt } from '@/utils';
 import {
+  ArenaBound,
   Collider,
   Damage,
   DeployableData,
@@ -28,7 +24,6 @@ import {
   IsDeployable,
   IsEnemy,
   IsPickup,
-  ArenaBound,
   IsPlayer,
   IsPlayerOwned,
   IsProjectile,
@@ -43,6 +38,11 @@ import {
   WeaponInventory,
 } from '@/ecs/traits';
 import { Time, world } from '@/ecs/world';
+import type { ProjectileConfig } from '@/entities/Projectile';
+import type { DeployableConfig, PickupConfig } from '@/types/common';
+import { CharacterType, ENEMY_PROJECTILE_TYPES, PickupType, VisualEffect } from '@/types/enums';
+import { massFromRadius, randomAngle, randomInt } from '@/utils';
+import type { Entity } from 'koota';
 
 // ============ Projectile ============
 
@@ -155,7 +155,7 @@ export function spawnEnemy(entityConfig: EnemyEntityConfig): Entity {
   const radius = config.radius * scale;
 
   const hp = Math.floor(config.hp * scale);
-  const damage = Math.floor(config.damage * scale);
+  const damage = Math.floor(config.contactDamage * scale);
 
   const traits = [
     IsEnemy,

@@ -6,7 +6,7 @@ export interface EnemyConfig {
   radius: number;
   speed: number;
   hp: number;
-  damage: number;
+  contactDamage: number;
   xpValue: number;
   goldValue: number;
 

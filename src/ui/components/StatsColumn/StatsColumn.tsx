@@ -47,7 +47,9 @@ export function StatsColumn({ stats }: StatsColumnProps): JSX.Element {
               onMouseEnter={(e: MouseEvent) => {
                 showTooltip(e, stat.description);
               }}
-              onMouseLeave={() => { setTooltip(null); }}
+              onMouseLeave={() => {
+                setTooltip(null);
+              }}
             >
               <span>
                 {stat.emoji} {stat.label}

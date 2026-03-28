@@ -1,10 +1,10 @@
-import type { Entity } from 'koota';
-import { singleton } from 'tsyringe';
-import { EnemyData, Health, IsBoss, IsDead, Position } from '@/ecs/traits';
+import { Collider, EnemyData, Health, IsBoss, IsDead, Position } from '@/ecs/traits';
 import { EventBus } from '@/events/EventBus';
 import type { EnemyDeathData } from '@/events/GameEvents';
 import { EntityManager } from '@/managers/EntityManager';
 import { VisualEffect } from '@/types/enums';
+import type { Entity } from 'koota';
+import { singleton } from 'tsyringe';
 import { KillSource } from './damage.types';
 
 @singleton()
@@ -69,6 +69,7 @@ export class DeathSystem {
         position: pos,
         type: enemy.type,
         color: enemy.color,
+        radius: entity.get(Collider)?.radius ?? 0,
         isBoss: entity.has(IsBoss),
         xpValue: enemy.xpValue,
         goldValue: enemy.goldValue,

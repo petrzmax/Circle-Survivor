@@ -3,14 +3,7 @@
  * All visual effect parameters: particle counts, sizes, durations, and pool settings.
  */
 
-import { EnemyType } from '@/types/enums';
-
 // ============ Death Particle Config ============
-
-export interface DeathParticlePreset {
-  particleCount: number;
-  particleSize: number;
-}
 
 /** Boss second-wave golden particle settings */
 export interface BossGoldenParticleConfig {
@@ -26,26 +19,19 @@ export interface BossGoldenParticleConfig {
 // ============ Effects Config ============
 
 export const EFFECTS_CONFIG = {
-  /** Death particle presets by enemy type */
+  /** Death particle settings */
   deathParticles: {
-    /** Default preset for enemy types not listed below */
-    default: {
-      particleCount: 8,
-      particleSize: 4,
-    } satisfies DeathParticlePreset,
-
-    /** Per-type overrides */
-    presets: {
-      [EnemyType.SWARM]: { particleCount: 5, particleSize: 3 },
-      [EnemyType.TANK]: { particleCount: 15, particleSize: 6 },
-      [EnemyType.BRUTE]: { particleCount: 15, particleSize: 6 },
-    } as Partial<Record<EnemyType, DeathParticlePreset>>,
-
-    /** Boss primary particle burst */
-    boss: {
-      particleCount: 30,
-      particleSize: 8,
-    } satisfies DeathParticlePreset,
+    /** Radius-based scaling: particle count and size scale with enemy radius */
+    radiusScaling: {
+      /** Particle count produced at the reference radius */
+      baseCount: 6,
+      /** Particle size produced at the reference radius */
+      baseSize: 4,
+      /** Enemy radius that produces 1× scaling (BASIC enemy) */
+      referenceRadius: 15,
+      /** Scaling curve exponent applied to count, size, and speed (1 = linear, <1 = sub-linear) */
+      scalingExponent: 0.65,
+    },
 
     /** Boss secondary golden particle burst */
     bossGolden: {
@@ -60,13 +46,13 @@ export const EFFECTS_CONFIG = {
 
     /** Particle physics (all values in per-second units) */
     physics: {
-      speedMin: 120, // px/s
-      speedMax: 360, // px/s
+      speedMin: 100, // px/s
+      speedMax: 380, // px/s
       sizeVarianceMin: 0.5,
       sizeVarianceMax: 1,
-      decayMin: 1.2, // life drain per second
+      decayMin: 1.1, // life drain per second
       decayMax: 2.4, // life drain per second
-      angleJitter: 0.5,
+      angleJitter: 0.6,
       friction: 0.0461, // retention per second (0.95^60)
     },
   },

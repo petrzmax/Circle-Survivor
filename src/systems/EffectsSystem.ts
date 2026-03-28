@@ -5,8 +5,8 @@
 
 import { ConfigService } from '@/config/ConfigService';
 import { EffectsConfig } from '@/config/effects.config';
-import type { EnemyDeathData } from '@/events/GameEvents';
 import { EventBus } from '@/events/EventBus';
+import type { EnemyDeathData } from '@/events/GameEvents';
 import { renderExplosion } from '@/rendering';
 import { renderShockwave } from '@/rendering/ShockwaveRenderer';
 import { VisualEffect } from '@/types';
@@ -270,30 +270,22 @@ export class EffectsSystem {
    * Create death particle effect for enemy
    */
   public createDeathEffect(enemy: EnemyDeathData): void {
-    const { presets, boss, bossGolden, physics } = this.config.deathParticles;
-    const defaultPreset = this.config.deathParticles.default;
+    const { radiusScaling, bossGolden, physics } = this.config.deathParticles;
     const maxParticles = this.config.pool.maxDeathParticles;
 
-    // Resolve particle preset by enemy type
-    let particleCount: number;
-    let particleSize: number;
+    // Radius-based scaling for all enemies (including bosses)
+    const scaleFactor =
+      (enemy.radius / radiusScaling.referenceRadius) ** radiusScaling.scalingExponent;
+    const particleCount = Math.round(radiusScaling.baseCount * scaleFactor);
+    const particleSize = radiusScaling.baseSize * scaleFactor;
     const particleColor = enemy.color;
-
-    if (enemy.isBoss) {
-      particleCount = boss.particleCount;
-      particleSize = boss.particleSize;
-    } else {
-      const preset = presets[enemy.type] ?? defaultPreset;
-      particleCount = preset.particleCount;
-      particleSize = preset.particleSize;
-    }
 
     // Creating particles (skip if pool cap reached)
     for (let i = 0; i < particleCount; i++) {
       if (this.deathParticlePool.activeCount >= maxParticles) break;
 
       const angle = (TWO_PI / particleCount) * i + randomRange(0, physics.angleJitter);
-      const speed = randomRange(physics.speedMin, physics.speedMax);
+      const speed = randomRange(physics.speedMin, physics.speedMax) * scaleFactor;
       const p = this.deathParticlePool.acquire();
 
       p.x = enemy.position.x;
@@ -308,7 +300,7 @@ export class EffectsSystem {
       p.isBoss = enemy.isBoss;
     }
 
-    // Additional effect for boss - second wave of larger particles
+    // Additional effect for boss - second wave of golden particles
     if (enemy.isBoss) {
       for (let i = 0; i < bossGolden.count; i++) {
         if (this.deathParticlePool.activeCount >= maxParticles) break;

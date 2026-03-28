@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "koota": "^0.6.5",
-    "nipplejs": "^0.10.2",
+    "nipplejs": "^1.0.1",
     "preact": "^10.29.0",
     "react-hot-toast": "^2.6.0",
     "reflect-metadata": "^0.2.2",

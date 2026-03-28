@@ -5,6 +5,7 @@ export interface DisplayedStat {
   key: string;
   emoji: string;
   label: string;
+  description: string;
   format: (player: LeaderboardPlayerStats) => string;
 }
 

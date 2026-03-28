@@ -35,10 +35,17 @@
   border-radius: $space-xs;
   font-size: $font-sm;
   color: $color-text-muted;
+  cursor: default;
 
   &:nth-child(odd) {
     background: rgba(0, 0, 0, 0.2);
   }
+}
+
+.tooltip {
+  @include tooltip-base;
+  white-space: normal;
+  line-height: 1.4;
 }
 
 .statValue {

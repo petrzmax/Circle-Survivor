@@ -274,7 +274,8 @@ export class EffectsSystem {
     const maxParticles = this.config.pool.maxDeathParticles;
 
     // Radius-based scaling for all enemies (including bosses)
-    const scaleFactor = (enemy.radius / radiusScaling.referenceRadius) ** radiusScaling.scalingExponent;
+    const scaleFactor =
+      (enemy.radius / radiusScaling.referenceRadius) ** radiusScaling.scalingExponent;
     const particleCount = Math.round(radiusScaling.baseCount * scaleFactor);
     const particleSize = radiusScaling.baseSize * scaleFactor;
     const particleColor = enemy.color;

@@ -14,6 +14,9 @@ export const GAME_BALANCE = {
   physics: {
     /** Repulsion force multiplier per pixel of overlap. Used for all entity separation. */
     separationForce: 4,
+    /** How much entity size (area) affects mass. 0 = all enemies equal mass,
+     *  1 = pure area-based (small enemies very light, bosses very heavy). */
+    massAreaInfluence: 0.7,
   },
 
   /**

@@ -3,6 +3,8 @@
  * Common mathematical operations for game calculations.
  */
 
+import { GAME_BALANCE } from '@/config';
+
 export const TWO_PI = Math.PI * 2;
 
 /**
@@ -218,9 +220,15 @@ export function directionTo(source: Vector2, target: Vector2): Vector2 {
 const BASE_ENEMY_RADIUS = 15;
 
 /**
- * Computes mass from radius, normalized so BASIC enemy (radius 15) = mass 1.
- * Formula: mass = r / 15 (linear scaling).
+ * Computes mass from radius using offset quadratic formula:
+ * mass = (1 - areaInfluence) + areaInfluence × (r / BASE)²
+ *
+ * Normalized so BASIC enemy (r=15) always has mass 1.
+ * At areaInfluence=0, all enemies have equal mass.
+ * At areaInfluence=1, mass scales purely with circle area.
  */
 export function massFromRadius(radius: number): number {
-  return radius / BASE_ENEMY_RADIUS;
+  const areaInfluence = GAME_BALANCE.physics.massAreaInfluence;
+  const normalizedRadius = radius / BASE_ENEMY_RADIUS;
+  return (1 - areaInfluence) + areaInfluence * normalizedRadius * normalizedRadius;
 }

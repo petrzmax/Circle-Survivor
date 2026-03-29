@@ -112,6 +112,20 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyConfig> = {
     splitOnDeath: true,
     splitCount: 3,
   },
+  [EnemyType.STOMPER]: {
+    color: '#D2691E',
+    radius: 18,
+    speed: 55,
+    hp: 60,
+    contactDamage: 20,
+    xpValue: 30,
+    goldValue: 8,
+    canShoot: true,
+    fireRate: 4500,
+    bulletSpeed: 0,
+    bulletDamage: 12,
+    attackPatterns: ['shockwave'],
+  },
 
   // ============ BOSSES ============
   [EnemyType.BOSS]: {

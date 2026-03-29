@@ -252,16 +252,31 @@ export class WaveManager {
       return EnemyType.SPLITTER;
     }
 
-    // Wave 10+: + brute (all types)
-    if (rand < 0.08) return EnemyType.BASIC;
-    if (rand < 0.16) return EnemyType.FAST;
-    if (rand < 0.3) return EnemyType.SWARM;
-    if (rand < 0.4) return EnemyType.TANK;
-    if (rand < 0.5) return EnemyType.ZIGZAG;
-    if (rand < 0.6) return EnemyType.SPRINTER;
-    if (rand < 0.72) return EnemyType.EXPLODER;
-    if (rand < 0.82) return EnemyType.GHOST;
-    if (rand < 0.92) return EnemyType.SPLITTER;
+    // Wave 10: + stomper
+    if (wave === 10) {
+      if (rand < 0.08) return EnemyType.BASIC;
+      if (rand < 0.16) return EnemyType.FAST;
+      if (rand < 0.28) return EnemyType.SWARM;
+      if (rand < 0.38) return EnemyType.TANK;
+      if (rand < 0.48) return EnemyType.ZIGZAG;
+      if (rand < 0.58) return EnemyType.SPRINTER;
+      if (rand < 0.68) return EnemyType.EXPLODER;
+      if (rand < 0.78) return EnemyType.GHOST;
+      if (rand < 0.88) return EnemyType.SPLITTER;
+      return EnemyType.STOMPER;
+    }
+
+    // Wave 11+: + brute (all types)
+    if (rand < 0.07) return EnemyType.BASIC;
+    if (rand < 0.14) return EnemyType.FAST;
+    if (rand < 0.24) return EnemyType.SWARM;
+    if (rand < 0.34) return EnemyType.TANK;
+    if (rand < 0.44) return EnemyType.ZIGZAG;
+    if (rand < 0.54) return EnemyType.SPRINTER;
+    if (rand < 0.64) return EnemyType.EXPLODER;
+    if (rand < 0.74) return EnemyType.GHOST;
+    if (rand < 0.82) return EnemyType.SPLITTER;
+    if (rand < 0.92) return EnemyType.STOMPER;
     return EnemyType.BRUTE;
   }
 

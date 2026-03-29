@@ -230,5 +230,5 @@ const BASE_ENEMY_RADIUS = 15;
 export function massFromRadius(radius: number): number {
   const areaInfluence = GAME_BALANCE.physics.massAreaInfluence;
   const normalizedRadius = radius / BASE_ENEMY_RADIUS;
-  return (1 - areaInfluence) + areaInfluence * normalizedRadius * normalizedRadius;
+  return 1 - areaInfluence + areaInfluence * normalizedRadius * normalizedRadius;
 }

@@ -70,6 +70,7 @@ export enum EnemyType {
   EXPLODER = 'exploder',
   ZIGZAG = 'zigzag',
   SPLITTER = 'splitter',
+  STOMPER = 'stomper',
   // Bosses
   BOSS = 'boss',
   BOSS_SWARM = 'bossSwarm',

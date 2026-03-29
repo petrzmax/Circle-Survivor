@@ -16,7 +16,7 @@ export const GAME_BALANCE = {
     separationForce: 4,
     /** How much entity size (area) affects mass. 0 = all enemies equal mass,
      *  1 = pure area-based (small enemies very light, bosses very heavy). */
-    massAreaInfluence: 0.7,
+    massAreaInfluence: 0.75,
   },
 
   /**
@@ -32,7 +32,7 @@ export const GAME_BALANCE = {
     /** Knockback impulse for non-projectile damage (contact, shockwave → player). */
     contactKnockback: 400,
     /** Knockback coefficient for momentum-based projectile hits: impulse = this × playerKnockback × mass × speed. */
-    knockbackPerMomentum: 0.2,
+    knockbackPerMomentum: 0.18,
     /** Enemy bullet radius as fraction of enemy radius. */
     bulletRadiusRatio: 0.15,
   },

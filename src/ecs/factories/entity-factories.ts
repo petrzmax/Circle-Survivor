@@ -169,7 +169,7 @@ export function spawnEnemy(entityConfig: EnemyEntityConfig): Entity {
     }),
     Damage({ amount: damage }),
     DropsPickup({
-      goldValue: Math.floor(config.goldValue * scale),
+      goldValue: Math.max(1, Math.floor(config.goldValue * scale)),
     }),
     EnemyData({
       type: entityConfig.type,

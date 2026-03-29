@@ -1,4 +1,3 @@
-import type { Entity } from 'koota';
 import { ConfigService } from '@/config/ConfigService';
 import { EnemyData, IsBoss } from '@/ecs/traits';
 import { EventBus } from '@/events/EventBus';
@@ -6,7 +5,9 @@ import type { EnemyDeathData } from '@/events/GameEvents';
 import { EnemyType } from '@/types/enums';
 import { TWO_PI, Vector2 } from '@/utils/math';
 import { getSpawnPoint } from '@/utils/random';
+import type { Entity } from 'koota';
 import { singleton } from 'tsyringe';
+import { ENEMY_TYPES } from './config';
 import { EnemyCreateOptions, EnemyFactory } from './EnemyFactory';
 
 export interface EnemySpawnOptions extends EnemyCreateOptions {
@@ -14,11 +15,7 @@ export interface EnemySpawnOptions extends EnemyCreateOptions {
   position?: Vector2;
 }
 
-/** Offset distance for split enemies from the parent's death position */
-const SPLIT_OFFSET = 30;
-
-/** Scale factor for split enemies */
-const SPLIT_SCALE = 0.6;
+const SPLIT_OFFSET_MULTIPLIER = 0.7;
 
 @singleton()
 export class EnemySpawnSystem {
@@ -80,16 +77,18 @@ export class EnemySpawnSystem {
    * Distributes children evenly in a circle.
    */
   private spawnSplitEnemies(parent: EnemyDeathData): void {
-    const splitType = parent.type === EnemyType.SPLITTER ? EnemyType.SWARM : EnemyType.BASIC;
+    const childBaseRadius = ENEMY_TYPES[EnemyType.SWARM].radius;
+    const splitOffset = parent.radius * SPLIT_OFFSET_MULTIPLIER;
+    const splitScale = parent.radius / (childBaseRadius * parent.splitCount);
 
     for (let i = 0; i < parent.splitCount; i++) {
       const angle = (TWO_PI * i) / parent.splitCount;
       const position: Vector2 = {
-        x: parent.position.x + Math.cos(angle) * SPLIT_OFFSET,
-        y: parent.position.y + Math.sin(angle) * SPLIT_OFFSET,
+        x: parent.position.x + Math.cos(angle) * splitOffset,
+        y: parent.position.y + Math.sin(angle) * splitOffset,
       };
 
-      this.spawn(splitType, { position, scale: SPLIT_SCALE });
+      this.spawn(EnemyType.SWARM, { position, scale: splitScale });
     }
   }
 }

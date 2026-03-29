@@ -42,10 +42,6 @@ export const GAME_BALANCE = {
    * Controls how long waves last and how quickly enemies appear.
    */
   wave: {
-    /** Milliseconds between enemy spawn ticks. Lower = more frequent spawns. */
-    spawnInterval: 1200,
-    /** Number of enemies spawned per tick. */
-    enemiesPerSpawn: 2,
     /** Wave duration in seconds by game phase. */
     duration: {
       /** Waves 1-2: shorter for early game warmup. */
@@ -55,6 +51,26 @@ export const GAME_BALANCE = {
       /** Waves 5+: full length waves for sustained challenge. */
       late: 40,
     },
+    /** Spawn timing formula: interval = max(minInterval, baseInterval - wave × reductionPerWave). */
+    spawn: {
+      /** Starting spawn interval in ms (wave 1). */
+      baseInterval: 1000,
+      /** Interval reduction per wave in ms. */
+      reductionPerWave: 50,
+      /** Minimum spawn interval in ms. */
+      minInterval: 300,
+    },
+    /** Enemies per spawn formula: min(maxPerSpawn, 1 + floor(wave × growthFactor)). */
+    enemiesPerSpawn: {
+      /** Growth rate per wave. */
+      growthFactor: 0.4,
+      /** Maximum enemies spawned per tick. */
+      max: 6,
+    },
+    /** Boss spawns every N waves (at waveNumber % interval === 0). */
+    bossInterval: 3,
+    /** Boss spawns when remaining time drops below this (seconds). */
+    bossSpawnThreshold: 20,
   },
 
   /**

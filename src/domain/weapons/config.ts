@@ -165,7 +165,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
     bulletRadius: 15,
     range: 9999,
     weaponCategory: WeaponCategory.ROCKET,
-    projectileMass: 3.0,
+    projectileMass: 5.0,
     projectileType: ProjectileType.NUKE,
   },
   [WeaponType.SCYTHE]: {

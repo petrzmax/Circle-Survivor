@@ -65,7 +65,7 @@ export const GAME_BALANCE = {
       /** Growth rate per wave. */
       growthFactor: 0.4,
       /** Maximum enemies spawned per tick. */
-      max: 6,
+      max: 5,
     },
     /** Boss spawns every N waves (at waveNumber % interval === 0). */
     bossInterval: 3,

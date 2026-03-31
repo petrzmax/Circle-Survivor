@@ -7,6 +7,7 @@ import { ConfigService } from '@/config/ConfigService';
 import { IsDead, Position, ShockwaveData } from '@/ecs/traits';
 import { world } from '@/ecs/world';
 import { EntityManager } from '@/managers/EntityManager';
+import { TimeManager } from '@/managers/TimeManager';
 import { singleton } from 'tsyringe';
 
 @singleton()
@@ -16,6 +17,7 @@ export class ShockwaveSystem {
 
   public constructor(
     private entityManager: EntityManager,
+    private timeManager: TimeManager,
     configService: ConfigService,
   ) {
     const cfg = configService.getEffectsConfig().shockwaves;
@@ -23,7 +25,8 @@ export class ShockwaveSystem {
     this.expansionFactor = cfg.expansionFactor;
   }
 
-  public update(currentTime: number): void {
+  public update(): void {
+    const currentTime = this.timeManager.getElapsed();
     for (const entity of this.entityManager.getActiveShockwaves()) {
       const sd = entity.get(ShockwaveData)!;
 

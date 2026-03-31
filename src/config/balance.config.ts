@@ -177,12 +177,16 @@ export const GAME_BALANCE = {
     friction: 0.16,
     /** Base attraction force magnitude. Applied as impulse each frame when magnet is active. */
     attractionForce: 2000,
-    /** Seconds for attraction force to ramp from 0 to full strength. */
-    attractionRampUpDuration: 0.8,
+    /** Milliseconds for attraction force to ramp from 0 to full strength. */
+    attractionRampUpDuration: 800,
     /** Minimum distance factor multiplier. Pickups never move slower than base × this. */
     minDistanceFactor: 0.5,
     /** Maximum distance factor multiplier. Pickups at player position move at base × this. */
     maxDistanceFactor: 2.0,
+    /** Bobbing animation speed (radians per millisecond). */
+    bobbingSpeed: 0.003,
+    /** Bobbing animation amplitude in pixels. */
+    bobbingAmplitude: 1.5,
   },
 } as const;
 

@@ -8,6 +8,7 @@ import { PlayerStats, Position } from '@/ecs/traits';
 import { healEntity } from '@/ecs/utils/entity-utils';
 import { updatePlayerMovement } from '@/ecs/utils/player-utils';
 import { EntityManager } from '@/managers/EntityManager';
+import { TimeManager } from '@/managers/TimeManager';
 import { type CanvasBounds } from '@/utils';
 import { singleton } from 'tsyringe';
 import { InputSystem } from './InputSystem';
@@ -22,6 +23,7 @@ export class PlayerSystem {
   public constructor(
     private entityManager: EntityManager,
     private inputSystem: InputSystem,
+    private timeManager: TimeManager,
     configService: ConfigService,
   ) {
     this.canvasBounds = configService.getCanvasBounds();
@@ -30,9 +32,11 @@ export class PlayerSystem {
   /**
    * Update player: poll input, move, regen, set auto-aim target.
    */
-  public update(deltaTime: number, currentTime: number): void {
+  public update(): void {
     const player = this.entityManager.getPlayerEntity();
     const stats = player.get(PlayerStats)!;
+    const deltaTime = this.timeManager.getDelta();
+    const currentTime = this.timeManager.getElapsed();
 
     // Poll gamepad state and get unified input
     this.inputSystem.poll();

@@ -7,6 +7,7 @@ import { ConfigService } from '@/config/ConfigService';
 import { EffectsConfig } from '@/config/effects.config';
 import { EventBus } from '@/events/EventBus';
 import type { EnemyDeathData } from '@/events/GameEvents';
+import { TimeManager } from '@/managers/TimeManager';
 import { renderExplosion } from '@/rendering';
 import { VisualEffect } from '@/types';
 import { ObjectPool, randomAngle, randomRange } from '@/utils';
@@ -46,10 +47,11 @@ export class EffectsSystem {
   private readonly config: EffectsConfig;
   private explosionPool: ObjectPool<Explosion>;
   private deathParticlePool: ObjectPool<DeathParticle>;
-  /** Current game time, updated each frame via update() */
-  private currentTime: number = 0;
 
-  public constructor(configService: ConfigService) {
+  public constructor(
+    configService: ConfigService,
+    private timeManager: TimeManager,
+  ) {
     this.config = configService.getEffectsConfig();
     const poolConfig = this.config.pool;
 
@@ -126,8 +128,9 @@ export class EffectsSystem {
   /**
    * Update all effects (call in game update phase)
    */
-  public update(currentTime: number, deltaTime: number): void {
-    this.currentTime = currentTime;
+  public update(): void {
+    const currentTime = this.timeManager.getElapsed();
+    const deltaTime = this.timeManager.getDelta();
     this.updateExplosions(currentTime);
     this.updateDeathEffects(deltaTime);
   }
@@ -275,7 +278,7 @@ export class EffectsSystem {
     exp.radius = radius;
     exp.maxRadius = radius;
     exp.alpha = 1;
-    exp.created = this.currentTime;
+    exp.created = this.timeManager.getElapsed();
     exp.visualEffect = visualEffect;
   }
 

@@ -35,7 +35,7 @@ export class PickupAttractionSystem {
    * Updates attraction for all active pickups.
    * Only applies when the player has the magnet item.
    */
-  public update(deltaTime: number): void {
+  public update(): void {
     const playerEntity = this.entityManager.getPlayerEntity();
 
     const inventory = playerEntity.get(WeaponInventory);
@@ -45,6 +45,7 @@ export class PickupAttractionSystem {
     const playerStats = playerEntity.get(PlayerStats)!;
     const pickupRange = playerStats.pickupRange;
     const now = this.timeManager.getElapsed();
+    const deltaTime = this.timeManager.getDelta();
 
     const pickups = this.entityManager.getActivePickups();
 

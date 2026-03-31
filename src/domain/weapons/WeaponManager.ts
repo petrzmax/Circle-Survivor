@@ -19,6 +19,7 @@ import type { Entity } from 'koota';
 import toast from 'react-hot-toast';
 import { singleton } from 'tsyringe';
 import { ConfigService } from '../../config/ConfigService';
+import { TimeManager } from '../../managers/TimeManager';
 import { WeaponStatsCalculator } from './WeaponStatsCalculator';
 import { WEAPON_TYPES } from './config';
 
@@ -28,6 +29,7 @@ export class WeaponManager {
     private entityManager: EntityManager,
     private configService: ConfigService,
     private statsCalculator: WeaponStatsCalculator,
+    private timeManager: TimeManager,
   ) {
     this.setupEventListeners();
   }
@@ -62,7 +64,8 @@ export class WeaponManager {
     });
   }
 
-  public fireWeapons(currentTime: number, playerEntity: Entity): void {
+  public fireWeapons(playerEntity: Entity): void {
+    const currentTime = this.timeManager.getElapsed();
     const inv = playerEntity.get(WeaponInventory)!;
     const stats = playerEntity.get(PlayerStats)!;
 

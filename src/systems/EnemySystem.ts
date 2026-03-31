@@ -7,6 +7,7 @@ import { ArenaBound, Collider, EnemyData, IsBoss, Position } from '@/ecs/traits'
 import { applyImpulse, steadyStateForceFactor } from '@/ecs/utils/entity-utils';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
+import { TimeManager } from '@/managers/TimeManager';
 import { ProjectileType } from '@/types/enums';
 import {
   massFromRadius,
@@ -26,6 +27,7 @@ export class EnemySystem {
 
   public constructor(
     private entityManager: EntityManager,
+    private timeManager: TimeManager,
     configService: ConfigService,
   ) {
     this.canvasBounds = configService.getCanvasBounds();
@@ -34,7 +36,9 @@ export class EnemySystem {
   /**
    * Update all enemies: zigzag, movement, boss shooting.
    */
-  public update(deltaTime: number, currentTime: number): void {
+  public update(): void {
+    const deltaTime = this.timeManager.getDelta();
+    const currentTime = this.timeManager.getElapsed();
     const playerEntity = this.entityManager.getPlayerEntity();
     const playerPos = playerEntity.get(Position)!;
     const targetPos: Vector2 = { x: playerPos.x, y: playerPos.y };
@@ -81,7 +85,6 @@ export class EnemySystem {
               damage: attackResult.damage,
               maxRadius: attackResult.radius,
               color: attackResult.color,
-              created: currentTime,
               ownerEntity: enemy,
             });
             EventBus.emit('shockwaveTriggered', attackResult);

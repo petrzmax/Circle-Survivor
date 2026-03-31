@@ -1,18 +1,18 @@
-import { singleton } from 'tsyringe';
-import { Collider, Health, IsDead, PlayerStats, Position } from '@/ecs/traits';
+import { ConfigService } from '@/config/ConfigService';
 import { spawnProjectile } from '@/ecs/factories/entity-factories';
+import { Collider, Health, IsDead, PlayerStats, Position } from '@/ecs/traits';
 import { applyImpulseAwayFrom } from '@/ecs/utils/entity-utils';
 import { EventBus } from '@/events/EventBus';
-import { EntityManager } from '@/managers/EntityManager';
 import { createMiniBananaConfigs } from '@/factories/ProjectileFactory';
-import { distance, distanceSquared, Vector2 } from '@/utils/math';
+import { EntityManager } from '@/managers/EntityManager';
 import { CombatMath } from '@/utils/combat-math';
-import { ConfigService } from '@/config/ConfigService';
+import { distance, distanceSquared, Vector2 } from '@/utils/math';
+import type { Entity } from 'koota';
+import { singleton } from 'tsyringe';
+import type { ExplosionEvent } from './damage.types';
 import { DamageSource, ExplosionOrigin } from './damage.types';
 import { DamageSystem } from './DamageSystem';
 import { DeathSystem } from './DeathSystem';
-import type { ExplosionEvent } from './damage.types';
-import type { Entity } from 'koota';
 
 const MAX_CHAIN_ITERATIONS = 10;
 
@@ -41,41 +41,37 @@ export class ExplosionSystem {
    * Alternates between DeathSystem and ExplosionSystem until both are quiet.
    * After chain resolution, spawns mini-bananas from banana explosions.
    */
-  public resolveChain(currentTime: number): void {
+  public resolveChain(): void {
     let iterations = 0;
     while (
       (this.hasPendingExplosions() || this.deathSystem.hasPendingDeaths()) &&
       iterations < MAX_CHAIN_ITERATIONS
     ) {
       this.deathSystem.processDeaths();
-      this.processExplosions(currentTime);
+      this.processExplosions();
       iterations++;
     }
 
     this.spawnPendingMiniBananas();
   }
 
-  private processExplosions(currentTime: number): void {
+  private processExplosions(): void {
     const killedThisBatch = new Set<number>();
 
     while (this.pendingExplosions.length > 0) {
       const explosion = this.pendingExplosions.shift()!;
-      this.processExplosion(explosion, currentTime, killedThisBatch);
+      this.processExplosion(explosion, killedThisBatch);
     }
   }
 
-  private processExplosion(
-    explosion: ExplosionEvent,
-    currentTime: number,
-    killedThisBatch: Set<number>,
-  ): void {
+  private processExplosion(explosion: ExplosionEvent, killedThisBatch: Set<number>): void {
     const { position, radius, damage, isEnemyExplosion } = explosion;
 
     if (isEnemyExplosion) {
-      this.damagePlayerFromExplosion(position, radius, damage, currentTime);
+      this.damagePlayerFromExplosion(position, radius, damage);
     }
 
-    this.damageEnemiesFromExplosion(position, radius, damage, currentTime, killedThisBatch);
+    this.damageEnemiesFromExplosion(position, radius, damage, killedThisBatch);
     this.applyExplosionKnockbackToAll(position, radius);
 
     // Track banana explosions for mini-banana spawning after chain resolution
@@ -107,12 +103,7 @@ export class ExplosionSystem {
     }
   }
 
-  private damagePlayerFromExplosion(
-    position: Vector2,
-    radius: number,
-    damage: number,
-    currentTime: number,
-  ): void {
+  private damagePlayerFromExplosion(position: Vector2, radius: number, damage: number): void {
     const playerEntity = this.entityManager.getPlayerEntity();
     if (playerEntity.has(IsDead)) return;
 
@@ -124,7 +115,6 @@ export class ExplosionSystem {
     const result = this.damageSystem.damageEntity(
       playerEntity,
       finalDamage,
-      currentTime,
       position,
       DamageSource.EXPLOSION,
     );
@@ -138,7 +128,6 @@ export class ExplosionSystem {
     position: Vector2,
     radius: number,
     damage: number,
-    currentTime: number,
     killedThisBatch: Set<number>,
   ): void {
     const radiusSq = radius * radius;
@@ -163,7 +152,6 @@ export class ExplosionSystem {
       const result = this.damageSystem.damageEntity(
         enemy,
         finalDamage,
-        currentTime,
         position,
         DamageSource.EXPLOSION,
       );

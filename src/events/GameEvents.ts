@@ -75,6 +75,7 @@ export interface GameEvents {
   gameResume: void;
   gameOver: {
     score: number;
+    gold: number;
     wave: number;
     time: number;
     weapons: Array<{ type: string; level: number }>;

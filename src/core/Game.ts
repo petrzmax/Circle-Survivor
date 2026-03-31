@@ -218,8 +218,9 @@ export class Game {
 
     EventBus.emit('gameOver', {
       score: stats.xp,
+      gold: stats.gold,
       wave: this.waveManager.waveNumber,
-      time: 0,
+      time: this.timeManager.getElapsed(),
       weapons,
       items,
       playerStats: this.snapshotPlayerStats(stats, health),
@@ -277,6 +278,7 @@ export class Game {
     this.waveManager.reset();
     this.effectsSystem.reset();
     this.timeManager.reset();
+    this.lastHUDUpdate = 0;
 
     this.waveManager.startWave();
     this.updateHUD();

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.1](https://github.com/petrzmax/Circle-Survivor/compare/v2.4.0...v2.4.1) (2026-03-31)
+
+
+### 🐛 Bug Fixes
+
+* Hud time not refreshing ([6208c4d](https://github.com/petrzmax/Circle-Survivor/commit/6208c4d727751840562eb7c168bf040a2c38c9bc))
+
 ## [2.4.0](https://github.com/petrzmax/Circle-Survivor/compare/v2.3.0...v2.4.0) (2026-03-31)
 
 

@@ -1,5 +1,52 @@
 # Changelog
 
+## [2.4.0](https://github.com/petrzmax/Circle-Survivor/compare/v2.3.0...v2.4.0) (2026-03-31)
+
+
+### ✨ Features
+
+* add stomper enemy ([1968382](https://github.com/petrzmax/Circle-Survivor/commit/1968382d0b4ef353a22568f43f04923c6d709b7b))
+* add tooltips with description to stat labels ([91a444c](https://github.com/petrzmax/Circle-Survivor/commit/91a444c1fcbc9308ae2a80d7773fa21d467709f6))
+* death particles scaled with enemy radius and refined ([de684ff](https://github.com/petrzmax/Circle-Survivor/commit/de684ff2b40d93fe21a39aad489e82dd4946e54e))
+* implement attack strategies for enemy behavior ([66ffef6](https://github.com/petrzmax/Circle-Survivor/commit/66ffef69319e54fdd786325a9841e81c1631160c))
+* improve shockwave handling ([c25742e](https://github.com/petrzmax/Circle-Survivor/commit/c25742ef2c33a9ff188cbe837891b8f59dd031ec))
+
+
+### ⚖️ Balance Changes
+
+* **balance:** knockback adjustments ([8bcfa0d](https://github.com/petrzmax/Circle-Survivor/commit/8bcfa0d08eca65a180912b945cb4698b0e87f4b7))
+* **balance:** reduce maximum enemies spawned per tick, increase nuke mass ([48ca488](https://github.com/petrzmax/Circle-Survivor/commit/48ca48817bf56ef7f3f9dedc522df7ac565e0ef3))
+
+
+### 🐛 Bug Fixes
+
+* improve tank and brute bullet visibility ([39b8845](https://github.com/petrzmax/Circle-Survivor/commit/39b884514663af90e0c1f7475f8fc8e5ecbcd9a6))
+* split enemies gold and spawn issues ([9eefa0a](https://github.com/petrzmax/Circle-Survivor/commit/9eefa0a2cef3942336900859ad4666dca522fe3f))
+* unify enemy scaling calculations, cover bullets and explosions ([9762272](https://github.com/petrzmax/Circle-Survivor/commit/9762272d38cdb733f8b715122257503db061a669))
+
+
+### ♻️ Refactoring
+
+* refactor wave manager & improve late game hardness ([43e5886](https://github.com/petrzmax/Circle-Survivor/commit/43e58867af5bd87b57db4c8c59f19a6c8bc6bc90))
+* rename damage to contactDamage in enemy configuration ([f044624](https://github.com/petrzmax/Circle-Survivor/commit/f044624d62fec35b578a70f8c837dc313e9d5541))
+* time management and visibility change time elapse fix ([e98c1dc](https://github.com/petrzmax/Circle-Survivor/commit/e98c1dc04a22286d2d5f39eee707e245aca9c19b))
+
+
+### 📦 Other Changes
+
+* **deps:** bump @types/node from 25.3.5 to 25.5.0 ([#107](https://github.com/petrzmax/Circle-Survivor/issues/107)) ([999cf38](https://github.com/petrzmax/Circle-Survivor/commit/999cf38601aec6aa214c9145838098590a4a4d16))
+* **deps:** bump @typescript-eslint/eslint-plugin from 8.56.1 to 8.57.1 ([#109](https://github.com/petrzmax/Circle-Survivor/issues/109)) ([c3de28d](https://github.com/petrzmax/Circle-Survivor/commit/c3de28d2cf2974dc136f95316ff0e1468b920de4))
+* **deps:** bump @typescript-eslint/eslint-plugin from 8.57.1 to 8.57.2 ([#113](https://github.com/petrzmax/Circle-Survivor/issues/113)) ([fbb762d](https://github.com/petrzmax/Circle-Survivor/commit/fbb762dbe8a58d5afd575b77379d615343201019))
+* **deps:** bump @typescript-eslint/parser from 8.56.1 to 8.57.1 ([#104](https://github.com/petrzmax/Circle-Survivor/issues/104)) ([faad9c0](https://github.com/petrzmax/Circle-Survivor/commit/faad9c0318091382dfe018ac4c752d8a602f7dd6))
+* **deps:** bump @vitest/ui from 4.1.0 to 4.1.2 ([#115](https://github.com/petrzmax/Circle-Survivor/issues/115)) ([b569872](https://github.com/petrzmax/Circle-Survivor/commit/b569872f212503662f7846d32d2cd3751117b994))
+* **deps:** bump eslint from 10.0.3 to 10.1.0 ([#114](https://github.com/petrzmax/Circle-Survivor/issues/114)) ([6f04130](https://github.com/petrzmax/Circle-Survivor/commit/6f041306d210e2bbd224df7567bdf6cbaa9fc191))
+* **deps:** bump nipplejs from 0.10.2 to 1.0.1 ([#108](https://github.com/petrzmax/Circle-Survivor/issues/108)) ([a44b1e4](https://github.com/petrzmax/Circle-Survivor/commit/a44b1e45e94ba80b86ae33806d9f1cecabc28878))
+* **deps:** bump picomatch in the npm_and_yarn group across 1 directory ([#110](https://github.com/petrzmax/Circle-Survivor/issues/110)) ([4e7b31b](https://github.com/petrzmax/Circle-Survivor/commit/4e7b31bb6198b514c3c6b1b695b35d2ca4750844))
+* **deps:** bump preact from 10.28.4 to 10.29.0 ([#106](https://github.com/petrzmax/Circle-Survivor/issues/106)) ([2daec21](https://github.com/petrzmax/Circle-Survivor/commit/2daec21591b9a47ad488ff3aacb87e54a5120bfb))
+* **deps:** bump typescript from 5.9.3 to 6.0.2 ([#116](https://github.com/petrzmax/Circle-Survivor/issues/116)) ([84ada33](https://github.com/petrzmax/Circle-Survivor/commit/84ada33c8f7f803841192ba6d56d86e247842dfb))
+* **deps:** bump vite from 8.0.0 to 8.0.1 ([#105](https://github.com/petrzmax/Circle-Survivor/issues/105)) ([64d7872](https://github.com/petrzmax/Circle-Survivor/commit/64d787239a5e5e1c6e789b1f9de990fd02333f37))
+* **deps:** bump vite from 8.0.1 to 8.0.3 ([#117](https://github.com/petrzmax/Circle-Survivor/issues/117)) ([2966602](https://github.com/petrzmax/Circle-Survivor/commit/2966602ffeafe3fc44b90d60aae551606941acf3))
+
 ## [2.3.0](https://github.com/petrzmax/Circle-Survivor/compare/v2.2.2...v2.3.0) (2026-03-20)
 
 

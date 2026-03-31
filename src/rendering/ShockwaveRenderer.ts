@@ -1,4 +1,3 @@
-import { Shockwave } from '@/systems/EffectsSystem';
 import { TWO_PI } from '@/utils/math';
 
 const OUTER_LINE_WIDTH = 8;
@@ -8,7 +7,15 @@ const SHADOW_BLUR = 20;
 const ALPHA_MULTIPLIER = 0.6;
 const DEFAULT_COLOR = '#ff4444';
 
-export function renderShockwave(ctx: CanvasRenderingContext2D, sw: Shockwave): void {
+export interface ShockwaveRenderData {
+  x: number;
+  y: number;
+  currentRadius: number;
+  alpha: number;
+  color: string;
+}
+
+export function renderShockwave(ctx: CanvasRenderingContext2D, sw: ShockwaveRenderData): void {
   const color = sw.color || DEFAULT_COLOR;
 
   ctx.save();

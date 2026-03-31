@@ -13,6 +13,7 @@ import {
   PlayerStats,
   Position,
   ProjectileData,
+  ShockwaveData,
   Velocity,
   WeaponInventory,
 } from '@/ecs/traits';
@@ -26,6 +27,7 @@ import {
 } from '@/rendering';
 import { renderBackground } from '@/rendering/BackgroundRenderer';
 import { renderEnemy } from '@/rendering/EnemyRenderer';
+import { renderShockwave } from '@/rendering/ShockwaveRenderer';
 import type { BossRenderData, WeaponRenderData } from '@/rendering/render-types';
 import { TimeManager } from '@/managers/TimeManager';
 import { EffectsSystem } from '@/systems/EffectsSystem';
@@ -59,6 +61,7 @@ export class RenderSystem {
     this.renderPickups(ctx);
     this.renderDeployables(ctx, currentTime);
     this.renderProjectiles(ctx);
+    this.renderShockwaves(ctx);
     // TODO refactor to decouple from effects system.
     this.effectsSystem.renderAll(ctx);
     this.renderEnemies(ctx);
@@ -143,6 +146,22 @@ export class RenderSystem {
         vy: vel.vy,
         distanceTraveled: projectileData.distanceTraveled,
         maxDistance: projectileData.maxDistance,
+      });
+    }
+  }
+
+  private renderShockwaves(ctx: CanvasRenderingContext2D): void {
+    for (const entity of this.entityManager.getActiveShockwaves()) {
+      const pos = entity.get(Position)!;
+      const sd = entity.get(ShockwaveData)!;
+      if (sd.alpha <= 0) continue;
+
+      renderShockwave(ctx, {
+        x: pos.x,
+        y: pos.y,
+        currentRadius: sd.currentRadius,
+        alpha: sd.alpha,
+        color: sd.color,
       });
     }
   }

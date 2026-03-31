@@ -13,18 +13,19 @@ import {
 import { fullHealEntity } from '@/ecs/utils/entity-utils';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager, StateManager } from '@/managers';
-import { CollisionSystem } from '@/systems/CollisionSystem';
 import { CollisionResponseSystem } from '@/systems/CollisionResponseSystem';
+import { CollisionSystem } from '@/systems/CollisionSystem';
 import { DeathSystem } from '@/systems/DeathSystem';
 import { EffectsSystem } from '@/systems/EffectsSystem';
-import { ExplosionSystem } from '@/systems/ExplosionSystem';
-import { PickupCollisionSystem } from '@/systems/PickupCollisionSystem';
 import { EnemySystem } from '@/systems/EnemySystem';
+import { ExplosionSystem } from '@/systems/ExplosionSystem';
+import { PhysicsSystem } from '@/systems/PhysicsSystem';
 import { PickupAttractionSystem } from '@/systems/PickupAttractionSystem';
+import { PickupCollisionSystem } from '@/systems/PickupCollisionSystem';
 import { PickupSystem } from '@/systems/PickupSystem';
 import { PlayerSystem } from '@/systems/PlayerSystem';
-import { PhysicsSystem } from '@/systems/PhysicsSystem';
 import { ProjectileSystem } from '@/systems/ProjectileSystem';
+import { ShockwaveSystem } from '@/systems/ShockwaveSystem';
 import { Shop } from '@/systems/Shop';
 import { WaveManager } from '@/systems/WaveManager';
 import { CharacterType, GameState } from '@/types/enums';
@@ -73,6 +74,7 @@ export class Game {
     private projectileSystem: ProjectileSystem,
     private renderSystem: RenderSystem,
     private shop: Shop,
+    private shockwaveSystem: ShockwaveSystem,
     private stateManager: StateManager,
     private waveManager: WaveManager,
     private weaponManager: WeaponManager,
@@ -89,9 +91,6 @@ export class Game {
     const canvasBounds = this.configService.getCanvasBounds();
     this.canvas.width = canvasBounds.width;
     this.canvas.height = canvasBounds.height;
-
-    // Wire shockwave data from EffectsSystem to CollisionSystem
-    this.collisionSystem.setShockwaveProvider(() => this.effectsSystem.getActiveShockwaves());
 
     // Setup state change listeners
     this.setupStateListeners();
@@ -371,6 +370,9 @@ export class Game {
 
     // Physics: force→velocity→position (knockback, grenade friction)
     this.physicsSystem.update(deltaTime);
+
+    // Update shockwave positions (follow owner) and animation
+    this.shockwaveSystem.update(currentTime);
 
     // === Collision Detection & Response ===
     const collisions = this.collisionSystem.checkAll();

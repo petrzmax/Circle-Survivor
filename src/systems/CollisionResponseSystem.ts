@@ -15,6 +15,7 @@ import {
   PlayerStats,
   Position,
   ProjectileData,
+  ShockwaveData,
   Velocity,
 } from '@/ecs/traits';
 import { applyImpulse, applyImpulseAwayFrom } from '@/ecs/utils/entity-utils';
@@ -191,11 +192,13 @@ export class CollisionResponseSystem {
     shockwaves: CollisionResult['shockwavePlayerCollisions'],
     currentTime: number,
   ): void {
-    for (const shockwave of shockwaves) {
-      const shockwavePos = { x: shockwave.x, y: shockwave.y };
+    for (const shockwaveEntity of shockwaves) {
+      const sd = shockwaveEntity.get(ShockwaveData)!;
+      const shockwavePos = shockwaveEntity.get(Position)!;
+      const damage = shockwaveEntity.get(Damage)!.amount;
       const result = this.damageSystem.damageEntity(
         playerEntity,
-        shockwave.damage,
+        damage,
         currentTime,
         shockwavePos,
         DamageSource.SHOCKWAVE,
@@ -206,7 +209,7 @@ export class CollisionResponseSystem {
         applyImpulseAwayFrom(playerEntity, shockwavePos, this.contactKnockback);
       }
 
-      shockwave.damageDealt = true;
+      sd.damageDealt = true;
 
       if (result.isDead) {
         this.deathSystem.registerPlayerDeath();
@@ -219,8 +222,10 @@ export class CollisionResponseSystem {
     collisions: CollisionResult['shockwaveEntityCollisions'],
   ): void {
     for (const { shockwave, entity } of collisions) {
-      applyImpulseAwayFrom(entity, shockwave, this.shockwaveKnockback);
-      shockwave.knockedBackEntities.add(entity.id());
+      const swPos = shockwave.get(Position)!;
+      const sd = shockwave.get(ShockwaveData)!;
+      applyImpulseAwayFrom(entity, swPos, this.shockwaveKnockback);
+      sd.knockedBackEntities.add(entity.id());
     }
   }
 

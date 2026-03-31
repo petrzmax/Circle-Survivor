@@ -3,7 +3,6 @@
  * Operates directly on Koota Entity + traits (no adapters).
  */
 
-import type { Entity } from 'koota';
 import { ConfigService } from '@/config/ConfigService';
 import {
   Collider,
@@ -12,11 +11,12 @@ import {
   IsDead,
   Position,
   ProjectileData,
+  ShockwaveData,
 } from '@/ecs/traits';
 import { EntityManager } from '@/managers/EntityManager';
 import { distance, distanceSquared, Vector2 } from '@/utils';
+import type { Entity } from 'koota';
 import { singleton } from 'tsyringe';
-import { Shockwave } from './EffectsSystem';
 
 /**
  * Collision detection result — all arrays contain raw Koota Entity references.
@@ -33,25 +33,19 @@ export interface CollisionResult {
   /** Deployables triggered by enemies */
   deployableCollisions: Array<{ deployable: Entity; enemies: Entity[] }>;
   /** Shockwaves hitting the player */
-  shockwavePlayerCollisions: Shockwave[];
+  shockwavePlayerCollisions: Entity[];
   /** Shockwave-entity knockback pairs (ring passed through entity) */
-  shockwaveEntityCollisions: Array<{ shockwave: Shockwave; entity: Entity }>;
+  shockwaveEntityCollisions: Array<{ shockwave: Entity; entity: Entity }>;
   /** Enemies overlapping with other enemies */
   enemyEnemyCollisions: Array<{ enemyA: Entity; enemyB: Entity }>;
 }
 
 @singleton()
 export class CollisionSystem {
-  private shockwaveProvider: (() => Shockwave[]) | null = null;
-
   public constructor(
     private entityManager: EntityManager,
     private configService: ConfigService,
   ) {}
-
-  public setShockwaveProvider(provider: () => Shockwave[]): void {
-    this.shockwaveProvider = provider;
-  }
 
   public checkAll(): CollisionResult {
     const result: CollisionResult = {
@@ -241,18 +235,18 @@ export class CollisionSystem {
     return collisions;
   }
 
-  private checkShockwavePlayerCollisions(playerPos: { x: number; y: number }): Shockwave[] {
-    if (!this.shockwaveProvider) return [];
-
-    const shockwaves = this.shockwaveProvider();
-    const collisions: Shockwave[] = [];
+  private checkShockwavePlayerCollisions(playerPos: { x: number; y: number }): Entity[] {
+    const shockwaves = this.entityManager.getActiveShockwaves();
+    const collisions: Entity[] = [];
     const ringWidth = this.configService.getEffectsConfig().shockwaves.ringWidth;
 
     for (const sw of shockwaves) {
-      if (sw.damageDealt) continue;
+      const sd = sw.get(ShockwaveData)!;
+      if (sd.damageDealt) continue;
 
-      const dist = distance({ x: sw.x, y: sw.y }, playerPos);
-      if (dist <= sw.currentRadius && dist >= sw.currentRadius - ringWidth) {
+      const swPos = sw.get(Position)!;
+      const dist = distance(swPos, playerPos);
+      if (dist <= sd.currentRadius && dist >= sd.currentRadius - ringWidth) {
         collisions.push(sw);
       }
     }
@@ -260,22 +254,23 @@ export class CollisionSystem {
     return collisions;
   }
 
-  private checkShockwaveEntityCollisions(): Array<{ shockwave: Shockwave; entity: Entity }> {
-    if (!this.shockwaveProvider) return [];
-
-    const shockwaves = this.shockwaveProvider();
-    const collisions: Array<{ shockwave: Shockwave; entity: Entity }> = [];
+  private checkShockwaveEntityCollisions(): Array<{ shockwave: Entity; entity: Entity }> {
+    const shockwaves = this.entityManager.getActiveShockwaves();
+    const collisions: Array<{ shockwave: Entity; entity: Entity }> = [];
     const ringWidth = this.configService.getEffectsConfig().shockwaves.ringWidth;
     const entities = this.entityManager.getKnockbackableEntities();
 
     for (const sw of shockwaves) {
+      const sd = sw.get(ShockwaveData)!;
+      const swPos = sw.get(Position)!;
+
       for (const entity of entities) {
         const id = entity.id();
-        if (sw.knockedBackEntities.has(id)) continue;
+        if (sd.knockedBackEntities.has(id)) continue;
 
         const ePos = entity.get(Position)!;
-        const dist = distance(sw, ePos);
-        if (dist <= sw.currentRadius && dist >= sw.currentRadius - ringWidth) {
+        const dist = distance(swPos, ePos);
+        if (dist <= sd.currentRadius && dist >= sd.currentRadius - ringWidth) {
           collisions.push({ shockwave: sw, entity });
         }
       }

@@ -15,6 +15,7 @@ import {
   IsPlayer,
   IsPlayerOwned,
   IsProjectile,
+  IsShockwave,
   PhysicsBody,
   PlayerStats,
   Position,
@@ -42,6 +43,7 @@ const activeDeployablesQuery = createQuery(IsDeployable, Not(IsDead));
 const armedDeployablesQuery = createQuery(IsDeployable, IsArmed, Not(IsDead));
 const activePickupsQuery = createQuery(IsPickup, Not(IsDead));
 const knockbackableEntitiesQuery = createQuery(PhysicsBody, Position, Collider, Not(IsDead));
+const activeShockwavesQuery = createQuery(IsShockwave, Not(IsDead));
 const physicsEntitiesQuery = createQuery(PhysicsBody, Velocity, Position, Not(IsDead));
 const arenaBoundEntitiesQuery = createQuery(ArenaBound, Position, Collider, Velocity, Not(IsDead));
 const deadEntitiesQuery = createQuery(IsDead);
@@ -120,6 +122,12 @@ export class EntityManager {
 
   public getActivePickups(): readonly Entity[] {
     return world.query(activePickupsQuery);
+  }
+
+  // ========== Shockwaves ==========
+
+  public getActiveShockwaves(): readonly Entity[] {
+    return world.query(activeShockwavesQuery);
   }
 
   // ========== Physics ==========

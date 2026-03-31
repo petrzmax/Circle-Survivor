@@ -2,7 +2,7 @@ import { GAME_BALANCE } from '@/config/balance.config';
 import { ConfigService } from '@/config/ConfigService';
 import { ATTACK_STRATEGIES } from '@/domain/enemies/attack-strategy';
 import type { AttackResult } from '@/domain/enemies/type';
-import { spawnProjectile } from '@/ecs/factories/entity-factories';
+import { spawnProjectile, spawnShockwave } from '@/ecs/factories/entity-factories';
 import { ArenaBound, Collider, EnemyData, IsBoss, Position } from '@/ecs/traits';
 import { applyImpulse, steadyStateForceFactor } from '@/ecs/utils/entity-utils';
 import { EventBus } from '@/events/EventBus';
@@ -76,6 +76,14 @@ export class EnemySystem {
             }
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           } else if (attackResult.type === 'shockwave') {
+            spawnShockwave({
+              position: enemy.get(Position)!,
+              damage: attackResult.damage,
+              maxRadius: attackResult.radius,
+              color: attackResult.color,
+              created: currentTime,
+              ownerEntity: enemy,
+            });
             EventBus.emit('shockwaveTriggered', attackResult);
           }
         }

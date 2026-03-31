@@ -29,6 +29,7 @@ export {
   IsPlayerOwned,
   IsEnemyOwned,
   ArenaBound,
+  IsShockwave,
 } from './tags';
 
 // Per-type AoS traits
@@ -37,3 +38,4 @@ export { EnemyData } from './enemy';
 export { ProjectileData } from './projectile';
 export { PickupData } from './pickup';
 export { DeployableData } from './deployable';
+export { ShockwaveData } from './shockwave';

@@ -27,6 +27,7 @@ import {
   IsPlayer,
   IsPlayerOwned,
   IsProjectile,
+  IsShockwave,
   Lifetime,
   PhysicsBody,
   PickupData,
@@ -34,6 +35,7 @@ import {
   PlayerStats,
   Position,
   ProjectileData,
+  ShockwaveData,
   Velocity,
   WeaponInventory,
 } from '@/ecs/traits';
@@ -265,6 +267,35 @@ export function spawnPlayer(config: PlayerConfig): Entity {
     WeaponInventory({
       weapons: [],
       items: [],
+    }),
+  );
+}
+
+// ============ Shockwave ============
+
+export interface ShockwaveConfig {
+  position: { x: number; y: number };
+  damage: number;
+  maxRadius: number;
+  color: string;
+  created: number;
+  ownerEntity: Entity | null;
+}
+
+export function spawnShockwave(config: ShockwaveConfig): Entity {
+  return world.spawn(
+    IsShockwave,
+    Position(config.position),
+    Damage({ amount: config.damage }),
+    ShockwaveData({
+      ownerEntity: config.ownerEntity,
+      maxRadius: config.maxRadius,
+      currentRadius: 0,
+      color: config.color,
+      created: config.created,
+      damageDealt: false,
+      alpha: 1,
+      knockedBackEntities: new Set(),
     }),
   );
 }

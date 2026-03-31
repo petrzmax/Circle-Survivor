@@ -8,19 +8,23 @@
  * Operates on raw Koota Entity — reads Health, Position (SoA),
  * and PlayerStats (AoS, for defense stats like armor/dodge/invincibility).
  */
-import type { Entity } from 'koota';
-import { singleton } from 'tsyringe';
 import { Health, PlayerStats, Position } from '@/ecs/traits';
 import { healEntity } from '@/ecs/utils/entity-utils';
 import { EventBus } from '@/events/EventBus';
+import { TimeManager } from '@/managers/TimeManager';
+import { CombatMath } from '@/utils/combat-math';
 import type { Vector2 } from '@/utils/math';
 import { randomChance } from '@/utils/random';
-import { CombatMath } from '@/utils/combat-math';
+import type { Entity } from 'koota';
+import { singleton } from 'tsyringe';
 import { DamageResult, DamageSource } from './damage.types';
 
 @singleton()
 export class DamageSystem {
-  public constructor(private combatMath: CombatMath) {}
+  public constructor(
+    private combatMath: CombatMath,
+    private timeManager: TimeManager,
+  ) {}
 
   /**
    * Apply damage to any entity with Health and Position traits.
@@ -31,14 +35,12 @@ export class DamageSystem {
    *
    * @param target       The Koota entity receiving damage
    * @param incomingDamage  Final offense-side damage (caller already applied multipliers)
-   * @param currentTime  Current game time in ms (for invincibility checks)
    * @param source       Position the damage came from (for event reporting)
    * @param damageSource Categorized source type for events
    */
   public damageEntity(
     target: Entity,
     incomingDamage: number,
-    currentTime: number,
     source: Vector2,
     damageSource: DamageSource,
   ): DamageResult {
@@ -52,6 +54,7 @@ export class DamageSystem {
     }
 
     // Invincibility frames
+    const currentTime = this.timeManager.getElapsed();
     if (stats && currentTime < stats.invincibleUntil) {
       return { actualDamage: 0, isDead: false };
     }
@@ -115,12 +118,7 @@ export class DamageSystem {
    * @param actualDamage  The actual damage the player received (after armor)
    * @param currentTime   Current game time
    */
-  public applyThorns(
-    playerEntity: Entity,
-    attacker: Entity,
-    actualDamage: number,
-    currentTime: number,
-  ): DamageResult {
+  public applyThorns(playerEntity: Entity, attacker: Entity, actualDamage: number): DamageResult {
     const stats = playerEntity.get(PlayerStats);
     if (!stats || stats.thorns <= 0 || actualDamage <= 0) {
       return { actualDamage: 0, isDead: false };
@@ -130,12 +128,6 @@ export class DamageSystem {
     const thornsDamage = actualDamage * stats.thorns;
 
     // Thorns damage bypasses attacker's armor/dodge — raw damage to HP
-    return this.damageEntity(
-      attacker,
-      thornsDamage,
-      currentTime,
-      attacker.get(Position)!,
-      DamageSource.THORNS,
-    );
+    return this.damageEntity(attacker, thornsDamage, attacker.get(Position)!, DamageSource.THORNS);
   }
 }

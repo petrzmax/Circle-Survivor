@@ -2,11 +2,12 @@ import { GAME_BALANCE } from '@/config/balance.config';
 import { ConfigService } from '@/config/ConfigService';
 import { ATTACK_STRATEGIES } from '@/domain/enemies/attack-strategy';
 import type { AttackResult } from '@/domain/enemies/type';
-import { spawnProjectile } from '@/ecs/factories/entity-factories';
+import { spawnProjectile, spawnShockwave } from '@/ecs/factories/entity-factories';
 import { ArenaBound, Collider, EnemyData, IsBoss, Position } from '@/ecs/traits';
 import { applyImpulse, steadyStateForceFactor } from '@/ecs/utils/entity-utils';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
+import { TimeManager } from '@/managers/TimeManager';
 import { ProjectileType } from '@/types/enums';
 import {
   massFromRadius,
@@ -26,6 +27,7 @@ export class EnemySystem {
 
   public constructor(
     private entityManager: EntityManager,
+    private timeManager: TimeManager,
     configService: ConfigService,
   ) {
     this.canvasBounds = configService.getCanvasBounds();
@@ -34,7 +36,9 @@ export class EnemySystem {
   /**
    * Update all enemies: zigzag, movement, boss shooting.
    */
-  public update(deltaTime: number, currentTime: number): void {
+  public update(): void {
+    const deltaTime = this.timeManager.getDelta();
+    const currentTime = this.timeManager.getElapsed();
     const playerEntity = this.entityManager.getPlayerEntity();
     const playerPos = playerEntity.get(Position)!;
     const targetPos: Vector2 = { x: playerPos.x, y: playerPos.y };
@@ -76,6 +80,13 @@ export class EnemySystem {
             }
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           } else if (attackResult.type === 'shockwave') {
+            spawnShockwave({
+              position: enemy.get(Position)!,
+              damage: attackResult.damage,
+              maxRadius: attackResult.radius,
+              color: attackResult.color,
+              ownerEntity: enemy,
+            });
             EventBus.emit('shockwaveTriggered', attackResult);
           }
         }

@@ -1,4 +1,4 @@
-import { EntityManager } from '@/managers';
+import { GAME_BALANCE } from '@/config/balance.config';
 import {
   Collider,
   DeployableData,
@@ -13,10 +13,13 @@ import {
   PlayerStats,
   Position,
   ProjectileData,
+  ShockwaveData,
   Velocity,
   WeaponInventory,
 } from '@/ecs/traits';
 import { getWeaponPosition } from '@/ecs/utils/player-utils';
+import { EntityManager } from '@/managers';
+import { TimeManager } from '@/managers/TimeManager';
 import {
   renderDeployable,
   renderPickup,
@@ -26,8 +29,8 @@ import {
 } from '@/rendering';
 import { renderBackground } from '@/rendering/BackgroundRenderer';
 import { renderEnemy } from '@/rendering/EnemyRenderer';
+import { renderShockwave } from '@/rendering/ShockwaveRenderer';
 import type { BossRenderData, WeaponRenderData } from '@/rendering/render-types';
-import { TimeManager } from '@/managers/TimeManager';
 import { EffectsSystem } from '@/systems/EffectsSystem';
 import { singleton } from 'tsyringe';
 import { HUD } from './HUD';
@@ -54,11 +57,13 @@ export class RenderSystem {
     this.showEnemyCount = show;
   }
 
-  public renderAll(ctx: CanvasRenderingContext2D, currentTime: number): void {
+  public renderAll(ctx: CanvasRenderingContext2D): void {
+    const currentTime = this.timeManager.getElapsed();
     renderBackground(ctx);
     this.renderPickups(ctx);
     this.renderDeployables(ctx, currentTime);
     this.renderProjectiles(ctx);
+    this.renderShockwaves(ctx);
     // TODO refactor to decouple from effects system.
     this.effectsSystem.renderAll(ctx);
     this.renderEnemies(ctx);
@@ -147,6 +152,22 @@ export class RenderSystem {
     }
   }
 
+  private renderShockwaves(ctx: CanvasRenderingContext2D): void {
+    for (const entity of this.entityManager.getActiveShockwaves()) {
+      const pos = entity.get(Position)!;
+      const sd = entity.get(ShockwaveData)!;
+      if (sd.alpha <= 0) continue;
+
+      renderShockwave(ctx, {
+        x: pos.x,
+        y: pos.y,
+        currentRadius: sd.currentRadius,
+        alpha: sd.alpha,
+        color: sd.color,
+      });
+    }
+  }
+
   private renderDeployables(ctx: CanvasRenderingContext2D, currentTime: number): void {
     for (const entity of this.entityManager.getActiveDeployables()) {
       const pos = entity.get(Position)!;
@@ -186,7 +207,9 @@ export class RenderSystem {
       const speed = Math.abs(vel.vx) + Math.abs(vel.vy);
       if (!isAttracted && speed < 5) {
         const time = now - pickupData.spawnTime;
-        yOffset = Math.sin(time * 3 + pickupData.animationOffset) * 1.5;
+        yOffset =
+          Math.sin(time * GAME_BALANCE.pickup.bobbingSpeed + pickupData.animationOffset) *
+          GAME_BALANCE.pickup.bobbingAmplitude;
       }
 
       // Replicate getScale() logic from adapter

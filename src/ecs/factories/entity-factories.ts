@@ -27,6 +27,7 @@ import {
   IsPlayer,
   IsPlayerOwned,
   IsProjectile,
+  IsShockwave,
   Lifetime,
   PhysicsBody,
   PickupData,
@@ -34,10 +35,12 @@ import {
   PlayerStats,
   Position,
   ProjectileData,
+  ShockwaveData,
   Velocity,
   WeaponInventory,
 } from '@/ecs/traits';
-import { Time, world } from '@/ecs/world';
+import { world } from '@/ecs/world';
+import { TimeManager } from '@/managers/TimeManager';
 import type { ProjectileConfig } from '@/entities/Projectile';
 import type { DeployableConfig, PickupConfig } from '@/types/common';
 import { CharacterType, ENEMY_PROJECTILE_TYPES, PickupType, VisualEffect } from '@/types/enums';
@@ -140,7 +143,7 @@ export function spawnPickup(config: PickupConfig): Entity {
       value: config.value,
       animationOffset: randomAngle(),
       shrinkDuration: 1,
-      spawnTime: world.get(Time)?.elapsed ?? 0,
+      spawnTime: TimeManager.elapsed(),
       attractionStartTime: 0,
     }),
   );
@@ -193,7 +196,7 @@ export function spawnEnemy(entityConfig: EnemyEntityConfig): Entity {
       bulletSpeed: config.bulletSpeed ?? 240,
       bulletDamage: Math.floor((config.bulletDamage ?? 15) * scale),
       attackPatterns: config.attackPatterns ?? ['single'],
-      nextFireTime: (world.get(Time)?.current ?? 0) + randomInt(0, config.fireRate ?? 2000),
+      nextFireTime: TimeManager.elapsed() + randomInt(0, config.fireRate ?? 2000),
       zigzagTimer: 0,
       zigzagDir: 1,
     }),
@@ -265,6 +268,34 @@ export function spawnPlayer(config: PlayerConfig): Entity {
     WeaponInventory({
       weapons: [],
       items: [],
+    }),
+  );
+}
+
+// ============ Shockwave ============
+
+export interface ShockwaveConfig {
+  position: { x: number; y: number };
+  damage: number;
+  maxRadius: number;
+  color: string;
+  ownerEntity: Entity | null;
+}
+
+export function spawnShockwave(config: ShockwaveConfig): Entity {
+  return world.spawn(
+    IsShockwave,
+    Position(config.position),
+    Damage({ amount: config.damage }),
+    ShockwaveData({
+      ownerEntity: config.ownerEntity,
+      maxRadius: config.maxRadius,
+      currentRadius: 0,
+      color: config.color,
+      created: TimeManager.elapsed(),
+      damageDealt: false,
+      alpha: 1,
+      knockedBackEntities: new Set(),
     }),
   );
 }

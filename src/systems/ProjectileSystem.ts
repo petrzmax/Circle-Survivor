@@ -7,11 +7,12 @@ import { ConfigService } from '@/config/ConfigService';
 import { IsDead, Lifetime, Position, ProjectileData, Velocity } from '@/ecs/traits';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager } from '@/managers/EntityManager';
+import { TimeManager } from '@/managers/TimeManager';
 import { type CanvasBounds, type Vector2 } from '@/utils';
 import { distance } from '@/utils/math';
-import { getExplosionOrigin } from './damage.types';
 import type { Entity } from 'koota';
 import { singleton } from 'tsyringe';
+import { getExplosionOrigin } from './damage.types';
 
 @singleton()
 export class ProjectileSystem {
@@ -23,6 +24,7 @@ export class ProjectileSystem {
 
   public constructor(
     private entityManager: EntityManager,
+    private timeManager: TimeManager,
     configService: ConfigService,
   ) {
     this.canvasBounds = configService.getCanvasBounds();
@@ -32,7 +34,8 @@ export class ProjectileSystem {
   /**
    * Update all active projectiles: movement, expiration, off-screen cleanup.
    */
-  public update(deltaTime: number): void {
+  public update(): void {
+    const deltaTime = this.timeManager.getDelta();
     const playerStats = this.entityManager.getPlayerStats();
     const projectiles = this.entityManager.getActiveProjectiles();
 

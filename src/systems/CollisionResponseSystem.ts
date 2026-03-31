@@ -15,6 +15,7 @@ import {
   PlayerStats,
   Position,
   ProjectileData,
+  ShockwaveData,
   Velocity,
 } from '@/ecs/traits';
 import { applyImpulse, applyImpulseAwayFrom } from '@/ecs/utils/entity-utils';
@@ -48,24 +49,20 @@ export class CollisionResponseSystem {
     this.shockwaveKnockback = configService.getCombatConfig().shockwaveKnockback;
   }
 
-  public processCollisions(collisions: CollisionResult, currentTime: number): void {
+  public processCollisions(collisions: CollisionResult): void {
     const playerEntity = this.entityManager.getPlayerEntity();
 
-    this.handlePlayerEnemyContacts(playerEntity, collisions.playerEnemyCollisions, currentTime);
-    this.handlePlayerProjectiles(playerEntity, collisions.playerProjectileCollisions, currentTime);
-    this.handleProjectileEnemyHits(playerEntity, collisions.projectileEnemyCollisions, currentTime);
-    this.handleShockwaves(playerEntity, collisions.shockwavePlayerCollisions, currentTime);
+    this.handlePlayerEnemyContacts(playerEntity, collisions.playerEnemyCollisions);
+    this.handlePlayerProjectiles(playerEntity, collisions.playerProjectileCollisions);
+    this.handleProjectileEnemyHits(playerEntity, collisions.projectileEnemyCollisions);
+    this.handleShockwaves(playerEntity, collisions.shockwavePlayerCollisions);
     this.handleShockwaveEntityKnockback(collisions.shockwaveEntityCollisions);
     this.handleDeployables(playerEntity, collisions.deployableCollisions);
     this.handleEnemyEnemyCollisions(collisions.enemyEnemyCollisions);
   }
 
   /** 1. Player-Enemy contact damage + thorns */
-  private handlePlayerEnemyContacts(
-    playerEntity: Entity,
-    enemies: Entity[],
-    currentTime: number,
-  ): void {
+  private handlePlayerEnemyContacts(playerEntity: Entity, enemies: Entity[]): void {
     const playerStats = playerEntity.get(PlayerStats)!;
 
     const playerPos = playerEntity.get(Position)!;
@@ -78,7 +75,6 @@ export class CollisionResponseSystem {
       const result = this.damageSystem.damageEntity(
         playerEntity,
         damage,
-        currentTime,
         ePos,
         DamageSource.ENEMY_CONTACT,
       );
@@ -106,7 +102,6 @@ export class CollisionResponseSystem {
           playerEntity,
           enemy,
           result.actualDamage,
-          currentTime,
         );
         if (thornsResult.isDead) {
           this.deathSystem.registerEnemyDeath(enemy);
@@ -120,11 +115,7 @@ export class CollisionResponseSystem {
   }
 
   /** 2. Player hit by enemy projectiles + thorns reflected to shooter */
-  private handlePlayerProjectiles(
-    playerEntity: Entity,
-    projectiles: Entity[],
-    currentTime: number,
-  ): void {
+  private handlePlayerProjectiles(playerEntity: Entity, projectiles: Entity[]): void {
     const playerStats = playerEntity.get(PlayerStats)!;
 
     for (const proj of projectiles) {
@@ -135,7 +126,6 @@ export class CollisionResponseSystem {
       const result = this.damageSystem.damageEntity(
         playerEntity,
         pDamage,
-        currentTime,
         pPos,
         DamageSource.ENEMY_PROJECTILE,
       );
@@ -159,7 +149,6 @@ export class CollisionResponseSystem {
               playerEntity,
               attackerEntity,
               result.actualDamage,
-              currentTime,
             );
             if (thornsResult.isDead) {
               this.deathSystem.registerEnemyDeath(attackerEntity);
@@ -178,10 +167,9 @@ export class CollisionResponseSystem {
   private handleProjectileEnemyHits(
     playerEntity: Entity,
     hits: Array<{ projectile: Entity; enemy: Entity }>,
-    currentTime: number,
   ): void {
     for (const { projectile, enemy } of hits) {
-      this.processProjectileHit(playerEntity, projectile, enemy, currentTime);
+      this.processProjectileHit(playerEntity, projectile, enemy);
     }
   }
 
@@ -189,14 +177,14 @@ export class CollisionResponseSystem {
   private handleShockwaves(
     playerEntity: Entity,
     shockwaves: CollisionResult['shockwavePlayerCollisions'],
-    currentTime: number,
   ): void {
-    for (const shockwave of shockwaves) {
-      const shockwavePos = { x: shockwave.x, y: shockwave.y };
+    for (const shockwaveEntity of shockwaves) {
+      const sd = shockwaveEntity.get(ShockwaveData)!;
+      const shockwavePos = shockwaveEntity.get(Position)!;
+      const damage = shockwaveEntity.get(Damage)!.amount;
       const result = this.damageSystem.damageEntity(
         playerEntity,
-        shockwave.damage,
-        currentTime,
+        damage,
         shockwavePos,
         DamageSource.SHOCKWAVE,
       );
@@ -206,7 +194,7 @@ export class CollisionResponseSystem {
         applyImpulseAwayFrom(playerEntity, shockwavePos, this.contactKnockback);
       }
 
-      shockwave.damageDealt = true;
+      sd.damageDealt = true;
 
       if (result.isDead) {
         this.deathSystem.registerPlayerDeath();
@@ -219,8 +207,10 @@ export class CollisionResponseSystem {
     collisions: CollisionResult['shockwaveEntityCollisions'],
   ): void {
     for (const { shockwave, entity } of collisions) {
-      applyImpulseAwayFrom(entity, shockwave, this.shockwaveKnockback);
-      shockwave.knockedBackEntities.add(entity.id());
+      const swPos = shockwave.get(Position)!;
+      const sd = shockwave.get(ShockwaveData)!;
+      applyImpulseAwayFrom(entity, swPos, this.shockwaveKnockback);
+      sd.knockedBackEntities.add(entity.id());
     }
   }
 
@@ -256,12 +246,7 @@ export class CollisionResponseSystem {
   /**
    * Process a projectile hitting an enemy.
    */
-  private processProjectileHit(
-    playerEntity: Entity,
-    projectile: Entity,
-    enemy: Entity,
-    currentTime: number,
-  ): void {
+  private processProjectileHit(playerEntity: Entity, projectile: Entity, enemy: Entity): void {
     // Skip already-dead enemies
     const eHealth = enemy.get(Health);
     if (!eHealth || eHealth.hp <= 0) return;
@@ -284,7 +269,6 @@ export class CollisionResponseSystem {
     const result = this.damageSystem.damageEntity(
       enemy,
       finalDamage,
-      currentTime,
       pPos,
       DamageSource.ENEMY_CONTACT,
     );

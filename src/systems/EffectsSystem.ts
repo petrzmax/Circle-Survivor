@@ -7,8 +7,8 @@ import { ConfigService } from '@/config/ConfigService';
 import { EffectsConfig } from '@/config/effects.config';
 import { EventBus } from '@/events/EventBus';
 import type { EnemyDeathData } from '@/events/GameEvents';
+import { TimeManager } from '@/managers/TimeManager';
 import { renderExplosion } from '@/rendering';
-import { renderShockwave } from '@/rendering/ShockwaveRenderer';
 import { VisualEffect } from '@/types';
 import { ObjectPool, randomAngle, randomRange } from '@/utils';
 import { TWO_PI, Vector2 } from '@/utils/math';
@@ -40,20 +40,6 @@ export interface DeathParticle {
   isBoss: boolean;
 }
 
-export interface Shockwave {
-  x: number;
-  y: number;
-  maxRadius: number;
-  currentRadius: number;
-  damage: number;
-  color: string;
-  created: number;
-  damageDealt: boolean;
-  alpha: number;
-  /** Entities already knocked back by this shockwave (prevents repeated knockback) */
-  knockedBackEntities: Set<number>;
-}
-
 // ============ Effects System ============
 
 @singleton()
@@ -61,11 +47,11 @@ export class EffectsSystem {
   private readonly config: EffectsConfig;
   private explosionPool: ObjectPool<Explosion>;
   private deathParticlePool: ObjectPool<DeathParticle>;
-  private shockwaves: Shockwave[] = [];
-  /** Current game time, updated each frame via update() */
-  private currentTime: number = 0;
 
-  public constructor(configService: ConfigService) {
+  public constructor(
+    configService: ConfigService,
+    private timeManager: TimeManager,
+  ) {
     this.config = configService.getEffectsConfig();
     const poolConfig = this.config.pool;
 
@@ -127,10 +113,6 @@ export class EffectsSystem {
     EventBus.on('enemyDeath', (data) => {
       this.createDeathEffect(data.enemy);
     });
-
-    EventBus.on('shockwaveTriggered', (data) => {
-      this.createShockwave(data);
-    });
   }
 
   /**
@@ -139,35 +121,6 @@ export class EffectsSystem {
   public reset(): void {
     this.explosionPool.releaseAll();
     this.deathParticlePool.releaseAll();
-    this.shockwaves = [];
-  }
-
-  /**
-   * Get active shockwaves for collision detection
-   */
-  public getActiveShockwaves(): Shockwave[] {
-    return this.shockwaves;
-  }
-
-  /**
-   * Update shockwave visuals (radius expansion, alpha fade, removal)
-   */
-  public updateShockwaves(currentTime: number): void {
-    const { duration, expansionFactor } = this.config.shockwaves;
-    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
-      const sw = this.shockwaves[i]!;
-      const age = currentTime - sw.created;
-
-      // Expand ring
-      sw.currentRadius = sw.maxRadius * Math.min(1, age / (duration * expansionFactor));
-      sw.alpha = 1 - age / duration;
-
-      // Remove finished ones (swap-and-pop for O(1) removal)
-      if (sw.alpha <= 0) {
-        this.shockwaves[i] = this.shockwaves[this.shockwaves.length - 1]!;
-        this.shockwaves.pop();
-      }
-    }
   }
 
   // ============ Update Methods ============
@@ -175,11 +128,11 @@ export class EffectsSystem {
   /**
    * Update all effects (call in game update phase)
    */
-  public update(currentTime: number, deltaTime: number): void {
-    this.currentTime = currentTime;
+  public update(): void {
+    const currentTime = this.timeManager.getElapsed();
+    const deltaTime = this.timeManager.getDelta();
     this.updateExplosions(currentTime);
     this.updateDeathEffects(deltaTime);
-    this.updateShockwaves(currentTime);
   }
 
   /**
@@ -257,16 +210,6 @@ export class EffectsSystem {
   }
 
   /**
-   * Render shockwave effects
-   */
-  private renderShockwaves(ctx: CanvasRenderingContext2D): void {
-    for (const sw of this.shockwaves) {
-      if (sw.alpha <= 0) continue;
-      renderShockwave(ctx, sw);
-    }
-  }
-
-  /**
    * Create death particle effect for enemy
    */
   public createDeathEffect(enemy: EnemyDeathData): void {
@@ -335,32 +278,8 @@ export class EffectsSystem {
     exp.radius = radius;
     exp.maxRadius = radius;
     exp.alpha = 1;
-    exp.created = this.currentTime;
+    exp.created = this.timeManager.getElapsed();
     exp.visualEffect = visualEffect;
-  }
-
-  /**
-   * Create shockwave effect (boss attack)
-   */
-  private createShockwave(shockwave: {
-    x: number;
-    y: number;
-    radius: number;
-    damage: number;
-    color?: string;
-  }): void {
-    this.shockwaves.push({
-      x: shockwave.x,
-      y: shockwave.y,
-      maxRadius: shockwave.radius,
-      currentRadius: 0,
-      damage: shockwave.damage,
-      color: shockwave.color ?? '',
-      created: this.currentTime,
-      damageDealt: false,
-      alpha: 1,
-      knockedBackEntities: new Set(),
-    });
   }
 
   /**
@@ -370,6 +289,5 @@ export class EffectsSystem {
     // TODO move to rendering
     this.renderExplosions(ctx);
     this.renderDeathEffects(ctx);
-    this.renderShockwaves(ctx);
   }
 }

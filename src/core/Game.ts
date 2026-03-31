@@ -13,18 +13,19 @@ import {
 import { fullHealEntity } from '@/ecs/utils/entity-utils';
 import { EventBus } from '@/events/EventBus';
 import { EntityManager, StateManager } from '@/managers';
-import { CollisionSystem } from '@/systems/CollisionSystem';
 import { CollisionResponseSystem } from '@/systems/CollisionResponseSystem';
+import { CollisionSystem } from '@/systems/CollisionSystem';
 import { DeathSystem } from '@/systems/DeathSystem';
 import { EffectsSystem } from '@/systems/EffectsSystem';
-import { ExplosionSystem } from '@/systems/ExplosionSystem';
-import { PickupCollisionSystem } from '@/systems/PickupCollisionSystem';
 import { EnemySystem } from '@/systems/EnemySystem';
+import { ExplosionSystem } from '@/systems/ExplosionSystem';
+import { PhysicsSystem } from '@/systems/PhysicsSystem';
 import { PickupAttractionSystem } from '@/systems/PickupAttractionSystem';
+import { PickupCollisionSystem } from '@/systems/PickupCollisionSystem';
 import { PickupSystem } from '@/systems/PickupSystem';
 import { PlayerSystem } from '@/systems/PlayerSystem';
-import { PhysicsSystem } from '@/systems/PhysicsSystem';
 import { ProjectileSystem } from '@/systems/ProjectileSystem';
+import { ShockwaveSystem } from '@/systems/ShockwaveSystem';
 import { Shop } from '@/systems/Shop';
 import { WaveManager } from '@/systems/WaveManager';
 import { CharacterType, GameState } from '@/types/enums';
@@ -32,7 +33,7 @@ import type { LeaderboardPlayerStats } from '@/ui/Leaderboard';
 import { injectable } from 'tsyringe';
 import { ConfigService } from '../config/ConfigService';
 import { WeaponManager } from '../domain/weapons/WeaponManager';
-import { Time, world } from '../ecs/world';
+import { TimeManager } from '../managers/TimeManager';
 import { PickupSpawnSystem } from './../systems/PickupSpawnSystem';
 import { RenderSystem } from './../systems/RenderSystem';
 import { RewardSystem } from './../systems/RewardSystem';
@@ -73,7 +74,9 @@ export class Game {
     private projectileSystem: ProjectileSystem,
     private renderSystem: RenderSystem,
     private shop: Shop,
+    private shockwaveSystem: ShockwaveSystem,
     private stateManager: StateManager,
+    private timeManager: TimeManager,
     private waveManager: WaveManager,
     private weaponManager: WeaponManager,
     rewardSystem: RewardSystem,
@@ -90,11 +93,15 @@ export class Game {
     this.canvas.width = canvasBounds.width;
     this.canvas.height = canvasBounds.height;
 
-    // Wire shockwave data from EffectsSystem to CollisionSystem
-    this.collisionSystem.setShockwaveProvider(() => this.effectsSystem.getActiveShockwaves());
-
     // Setup state change listeners
     this.setupStateListeners();
+
+    // Auto-pause when the browser tab loses focus
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && this.stateManager.getCurrentState() === GameState.PLAYING) {
+        EventBus.emit('pauseRequested', undefined);
+      }
+    });
   }
 
   /**
@@ -269,6 +276,7 @@ export class Game {
     // Reset game state
     this.waveManager.reset();
     this.effectsSystem.reset();
+    this.timeManager.reset();
 
     this.waveManager.startWave();
     this.updateHUD();
@@ -298,7 +306,8 @@ export class Game {
     const currentState = this.stateManager.getCurrentState();
 
     if (currentState === GameState.PLAYING) {
-      this.update(deltaTime, timestamp);
+      this.timeManager.tick(deltaTime);
+      this.update();
     }
 
     this.render();
@@ -327,26 +336,17 @@ export class Game {
 
   // ============ Update ============
 
-  private update(deltaTimeMs: number, currentTime: number): void {
+  private update(): void {
     const playerEntity = this.entityManager.getPlayerEntity();
-    const deltaTime = deltaTimeMs / 1000;
-
-    // Update ECS world time resource
-    const prevTime = world.get(Time);
-    world.set(Time, {
-      delta: deltaTime,
-      elapsed: (prevTime?.elapsed ?? 0) + deltaTime,
-      current: currentTime,
-    });
 
     // Update player (input, movement, regen, auto-aim)
-    this.playerSystem.update(deltaTime, currentTime);
+    this.playerSystem.update();
 
     // Check if boss is alive
     const bossAlive = this.entityManager.getActiveBosses().length > 0;
 
-    // Update wave manager (expects milliseconds)
-    const waveResult = this.waveManager.update(deltaTimeMs, bossAlive);
+    // Update wave manager
+    const waveResult = this.waveManager.update(bossAlive);
 
     // Countdown sound
     if (waveResult.countdown !== false) {
@@ -359,39 +359,43 @@ export class Game {
     }
 
     // Fire weapons
-    this.weaponManager.fireWeapons(currentTime, playerEntity);
+    this.weaponManager.fireWeapons(playerEntity);
 
     // Update entity systems
-    this.enemySystem.update(deltaTime, currentTime);
-    this.projectileSystem.update(deltaTime);
-    this.pickupSystem.update(deltaTime);
+    this.enemySystem.update();
+    this.projectileSystem.update();
+    this.pickupSystem.update();
 
     // Magnet attraction
-    this.pickupAttractionSystem.update(deltaTime);
+    this.pickupAttractionSystem.update();
 
     // Physics: force→velocity→position (knockback, grenade friction)
-    this.physicsSystem.update(deltaTime);
+    this.physicsSystem.update();
+
+    // Update shockwave positions (follow owner) and animation
+    this.shockwaveSystem.update();
 
     // === Collision Detection & Response ===
     const collisions = this.collisionSystem.checkAll();
 
     // 1. Route collisions → DamageSystem (registers deaths but does NOT process them yet)
-    this.collisionResponseSystem.processCollisions(collisions, currentTime);
+    this.collisionResponseSystem.processCollisions(collisions);
 
     // 2. Pickups BEFORE death check — health pickups can save the player
     this.pickupCollisionSystem.processPickups(collisions.pickupCollisions);
 
     // 3. Death ↔ Explosion chain resolution loop
-    this.explosionSystem.resolveChain(currentTime);
+    this.explosionSystem.resolveChain();
 
-    // Update visual effects (particles, explosions, shockwaves)
-    this.effectsSystem.update(currentTime, deltaTime);
+    // Update visual effects (particles, explosions)
+    this.effectsSystem.update();
 
     // Cleanup
     this.entityManager.removeInactive();
 
     // TODO migrate to canvas overlay HUD?
     // Throttle HUD updates to reduce DOM manipulation cost (60 FPS → 10 updates/sec)
+    const currentTime = TimeManager.elapsed();
     if (currentTime - this.lastHUDUpdate >= 100) {
       this.updateHUD();
       this.lastHUDUpdate = currentTime;
@@ -401,7 +405,7 @@ export class Game {
   // ============ Render ============
 
   private render(): void {
-    this.renderSystem.renderAll(this.ctx, this.lastTime);
+    this.renderSystem.renderAll(this.ctx);
   }
 
   // ============ HUD ============

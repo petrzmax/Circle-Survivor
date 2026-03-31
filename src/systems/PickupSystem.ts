@@ -3,18 +3,23 @@
  * Handles lifetime countdown, arming, animation, and expiry.
  */
 
-import { DeployableData, IsArmed, IsDead, IsAttracted, Lifetime } from '@/ecs/traits';
+import { DeployableData, IsArmed, IsAttracted, IsDead, Lifetime } from '@/ecs/traits';
 import { EntityManager } from '@/managers/EntityManager';
+import { TimeManager } from '@/managers/TimeManager';
 import { singleton } from 'tsyringe';
 
 @singleton()
 export class PickupSystem {
-  public constructor(private entityManager: EntityManager) {}
+  public constructor(
+    private entityManager: EntityManager,
+    private timeManager: TimeManager,
+  ) {}
 
   /**
    * Update all pickups and deployables (lifetime, arming, animation).
    */
-  public update(deltaTime: number): void {
+  public update(): void {
+    const deltaTime = this.timeManager.getDelta();
     this.updateDeployables(deltaTime);
     this.updatePickups(deltaTime);
   }

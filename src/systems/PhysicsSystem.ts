@@ -6,12 +6,13 @@
  * friction-based velocity decay, and Euler position integration.
  */
 
-import { Collider, PhysicsBody, Position, Velocity } from '@/ecs/traits';
 import { ConfigService } from '@/config/ConfigService';
+import { Collider, PhysicsBody, Position, Velocity } from '@/ecs/traits';
+import { EntityManager } from '@/managers/EntityManager';
+import { TimeManager } from '@/managers/TimeManager';
 import type { CanvasBounds } from '@/utils';
 import { clampCircleToBounds } from '@/utils/collision';
 import { FRICTION_REFERENCE_FPS } from '@/utils/math';
-import { EntityManager } from '@/managers/EntityManager';
 import { singleton } from 'tsyringe';
 
 @singleton()
@@ -20,12 +21,14 @@ export class PhysicsSystem {
 
   public constructor(
     private entityManager: EntityManager,
+    private timeManager: TimeManager,
     configService: ConfigService,
   ) {
     this.canvasBounds = configService.getCanvasBounds();
   }
 
-  public update(deltaTime: number): void {
+  public update(): void {
+    const deltaTime = this.timeManager.getDelta();
     const entities = this.entityManager.getPhysicsEntities();
 
     for (const entity of entities) {

@@ -21,6 +21,9 @@ export const IsPickup = trait();
 /** Marks deployable entities */
 export const IsDeployable = trait();
 
+/** Marks shockwave entities */
+export const IsShockwave = trait();
+
 // ============ State Flags ============
 
 /** Marks boss enemies */

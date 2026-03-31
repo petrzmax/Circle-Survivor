@@ -5,8 +5,14 @@
 
 import { createWorld, trait } from 'koota';
 
-/** Global time resource — updated each frame in Game.ts */
-export const Time = trait({ delta: 0, elapsed: 0, current: 0 });
+/**
+ * Global time resource — updated each frame by TimeManager.
+ * All values pause-safe: only advance while the game is in PLAYING state.
+ *
+ * - `delta`   — frame delta in seconds
+ * - `elapsed` — total game time in milliseconds
+ */
+export const Time = trait({ delta: 0, elapsed: 0 });
 
 // Only EntityManager and entity factories should import world directly.
 /** Single Koota world instance for the entire game */

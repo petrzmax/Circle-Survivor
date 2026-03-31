@@ -7,6 +7,7 @@ import { GAME_BALANCE } from '@/config/balance.config';
 import { BOSS_ROTATION, MAX_DEFINED_WAVE, WAVE_COMPOSITION } from '@/config/waves.config';
 import { EnemySpawnSystem } from '@/domain/enemies/EnemySpawnSystem';
 import { EventBus } from '@/events/EventBus';
+import { TimeManager } from '@/managers/TimeManager';
 import { EnemyType } from '@/types/enums';
 import { weightedRandom } from '@/utils';
 import { singleton } from 'tsyringe';
@@ -33,7 +34,10 @@ export class WaveManager {
 
   private readonly waveConfig = GAME_BALANCE.wave;
 
-  public constructor(private enemySpawnSystem: EnemySpawnSystem) {}
+  public constructor(
+    private enemySpawnSystem: EnemySpawnSystem,
+    private timeManager: TimeManager,
+  ) {}
 
   public reset(): void {
     this.waveNumber = 1;
@@ -73,14 +77,16 @@ export class WaveManager {
     this.startWave();
   }
 
-  public update(deltaTime: number, bossAlive: boolean = false): WaveUpdateResult {
+  public update(bossAlive: boolean = false): WaveUpdateResult {
     if (!this.isWaveActive) return { waveEnded: false, countdown: false };
 
     if (bossAlive) {
       return { waveEnded: false, countdown: false };
     }
 
-    this.timeRemaining -= deltaTime / 1000;
+    const deltaTime = this.timeManager.getDelta();
+    const deltaTimeMs = deltaTime * 1000;
+    this.timeRemaining -= deltaTime;
 
     const countdown = this.checkCountdown();
 
@@ -94,7 +100,7 @@ export class WaveManager {
       this.bossSpawned = true;
     }
 
-    this.spawnTimer += deltaTime;
+    this.spawnTimer += deltaTimeMs;
     if (this.spawnTimer >= this.spawnInterval) {
       this.spawnTimer = 0;
 

@@ -96,11 +96,40 @@ export const CHARACTER_ENUM_FIELDS = new Set(['startingWeapon']);
 
 // ============ Sheet Reading ============
 
+/** Primitive value types found in game config objects */
+type ConfigValue = string | number | boolean;
+
+type ConfigRecord = Record<string, ConfigValue | undefined>;
+
 type SheetRow = Record<string, unknown>;
 
-/** Convert a typed config object to a plain Record without unsafe casts */
-function toRecord(obj: object): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(obj));
+/** Convert a typed config object to a plain Record */
+function toRecord(obj: object): Record<string, ConfigValue> {
+  return Object.fromEntries(Object.entries(obj)) as Record<string, ConfigValue>;
+}
+
+/**
+ * Resolve a null/blank cell value using the current config value as a type hint.
+ * - If current value is boolean → blank means false
+ * - Otherwise → returns null (caller should skip and warn)
+ */
+function resolveBlank(currentVal: ConfigValue | undefined): ConfigValue | null {
+  if (typeof currentVal === 'boolean') return false;
+  return null;
+}
+
+/** Extract a plain value from an ExcelJS cell (handles rich text objects, normalizes blanks) */
+function cellValue(cell: ExcelJS.Cell): unknown {
+  const v = cell.value;
+  if (v === null || v === undefined) return null;
+  if (v !== null && typeof v === 'object' && 'richText' in v) {
+    const text = (v as ExcelJS.CellRichTextValue).richText.map((r) => r.text).join('');
+    if (text.trim() === '') return null;
+    const num = Number(text);
+    return !isNaN(num) ? num : text;
+  }
+  if (typeof v === 'string' && v.trim() === '') return null;
+  return v;
 }
 
 function readSheet(workbook: ExcelJS.Workbook, sheetName: string): SheetRow[] {
@@ -109,7 +138,7 @@ function readSheet(workbook: ExcelJS.Workbook, sheetName: string): SheetRow[] {
 
   const headers: string[] = [];
   sheet.getRow(1).eachCell({ includeEmpty: false }, (cell, colNumber) => {
-    headers[colNumber] = String(cell.value);
+    headers[colNumber] = String(cellValue(cell));
   });
 
   const rows: SheetRow[] = [];
@@ -120,11 +149,9 @@ function readSheet(workbook: ExcelJS.Workbook, sheetName: string): SheetRow[] {
     for (let c = 1; c <= headers.length; c++) {
       const header = headers[c];
       if (!header) continue;
-      const cell = row.getCell(c);
-      if (cell.value !== null && cell.value !== undefined) {
-        obj[header] = cell.value;
-        hasData = true;
-      }
+      const val = cellValue(row.getCell(c));
+      obj[header] = val; // include nulls so downstream can detect cleared cells
+      if (val !== null && val !== undefined) hasData = true;
     }
     if (hasData) rows.push(obj);
   }
@@ -271,7 +298,7 @@ interface SheetConfig {
   filePath: string;
   blockKeys?: Record<string, string>;
   enumFields?: Set<string>;
-  getValues: () => Record<string, Record<string, unknown>>;
+  getValues: () => Record<string, ConfigRecord>;
   formatValue?: (field: string, value: unknown) => string | undefined;
 }
 
@@ -290,7 +317,8 @@ function importSheet(
   const enumFields = config.enumFields ?? new Set<string>();
 
   for (const row of rows) {
-    const key = String(row[config.keyField]);
+    const key = String(row[config.keyField]).trim();
+    if (!key) continue;
     const currentVals = current[key];
     if (!currentVals) {
       stats.warnings.push(`${config.label}: unknown ${config.keyField} '${key}'`);
@@ -299,8 +327,19 @@ function importSheet(
 
     const blockKey = config.blockKeys?.[key] ?? key;
 
-    for (const [field, newVal] of Object.entries(row)) {
-      if (field === config.keyField || newVal == null) continue;
+    for (const [field, rawVal] of Object.entries(row)) {
+      if (field === config.keyField) continue;
+      // Skip fields that don't exist in this config entry (optional fields from other entries)
+      if (currentVals[field] === undefined) continue;
+      const newVal = rawVal == null ? resolveBlank(currentVals[field]) : rawVal;
+      if (newVal == null) {
+        if (rawVal == null && currentVals[field] !== undefined) {
+          stats.warnings.push(
+            `${config.label}[${key}].${field}: blank cell skipped (keeping ${String(currentVals[field])})`,
+          );
+        }
+        continue;
+      }
       stats.checked++;
       if (String(newVal) === String(currentVals[field] ?? '')) continue;
 
@@ -337,7 +376,7 @@ const ENEMY_SHEET: SheetConfig = {
   filePath: FILES.enemiesConfig,
   blockKeys: ENEMY_BLOCK_KEYS,
   getValues: () => {
-    const result: Record<string, Record<string, unknown>> = {};
+    const result: Record<string, ConfigRecord> = {};
     for (const [key, config] of Object.entries(ENEMY_TYPES)) {
       const record = toRecord(config);
       if (Array.isArray(record.attackPatterns)) {
@@ -357,7 +396,7 @@ const CHARACTER_SHEET: SheetConfig = {
   blockKeys: CHARACTER_BLOCK_KEYS,
   enumFields: CHARACTER_ENUM_FIELDS,
   getValues: () => {
-    const result: Record<string, Record<string, unknown>> = {};
+    const result: Record<string, ConfigRecord> = {};
     for (const [key, config] of Object.entries(CHARACTER_TYPES)) {
       result[key] = toRecord(config);
     }
@@ -370,7 +409,7 @@ const ITEM_SHEET: SheetConfig = {
   keyField: 'id',
   filePath: FILES.shopConfig,
   getValues: () => {
-    const result: Record<string, Record<string, unknown>> = {};
+    const result: Record<string, ConfigRecord> = {};
     for (const [key, item] of Object.entries(SHOP_ITEMS)) {
       if (item.type !== 'item') continue;
       result[key] = { price: item.price, minWave: item.minWave, ...toRecord(item.effect) };
@@ -389,7 +428,7 @@ function importWeapons(rows: SheetRow[]): { files: string[]; stats: ImportStats 
       shopLookup[item.weaponType] = { price: item.price, minWave: item.minWave };
     }
   }
-  const current: Record<string, Record<string, unknown>> = {};
+  const current: Record<string, ConfigRecord> = {};
   for (const [key, config] of Object.entries(WEAPON_TYPES)) {
     const shop = shopLookup[key];
     current[key] = { ...toRecord(config), price: shop?.price, minWave: shop?.minWave };
@@ -401,7 +440,8 @@ function importWeapons(rows: SheetRow[]): { files: string[]; stats: ImportStats 
   let shopSource = fs.readFileSync(FILES.shopConfig, 'utf-8');
 
   for (const row of rows) {
-    const type = String(row.type);
+    const type = String(row.type).trim();
+    if (!type) continue;
     const currentVals = current[type];
     if (!currentVals) {
       stats.warnings.push(`Weapons: unknown type '${type}'`);
@@ -411,8 +451,19 @@ function importWeapons(rows: SheetRow[]): { files: string[]; stats: ImportStats 
     const blockKey = WEAPON_BLOCK_KEYS[type]!;
     const shopKey = findShopKeyForWeapon(type);
 
-    for (const [field, newVal] of Object.entries(row)) {
-      if (field === 'type' || newVal == null) continue;
+    for (const [field, rawVal] of Object.entries(row)) {
+      if (field === 'type') continue;
+      // Skip fields that don't exist in this weapon's config (optional fields from other weapons)
+      if (currentVals[field] === undefined) continue;
+      const newVal = rawVal == null ? resolveBlank(currentVals[field]) : rawVal;
+      if (newVal == null) {
+        if (rawVal == null && currentVals[field] !== undefined) {
+          stats.warnings.push(
+            `Weapons[${type}].${field}: blank cell skipped (keeping ${String(currentVals[field])})`,
+          );
+        }
+        continue;
+      }
       stats.checked++;
       if (String(newVal) === String(currentVals[field] ?? '')) continue;
 
@@ -448,12 +499,12 @@ function importWeapons(rows: SheetRow[]): { files: string[]; stats: ImportStats 
 
 /** Balance uses dot-path patching (patchBalanceValue) instead of block patching */
 function importBalance(rows: SheetRow[]): { files: string[]; stats: ImportStats } {
-  const flat: Record<string, unknown> = {};
-  (function walk(obj: Record<string, unknown>, prefix = '') {
+  const flat: ConfigRecord = {};
+  (function walk(obj: ConfigRecord, prefix = '') {
     for (const [key, val] of Object.entries(obj)) {
       const p = prefix ? `${prefix}.${key}` : key;
       if (val !== null && typeof val === 'object' && !Array.isArray(val)) {
-        walk(val as Record<string, unknown>, p);
+        walk(val as ConfigRecord, p);
       } else {
         flat[p] = val;
       }

@@ -543,6 +543,68 @@ describe('Balance Export/Import Integration', () => {
       fs.writeFileSync(weaponsFile, originalWeaponSource, 'utf-8');
       execSync('npm run balance:export', { cwd: ROOT_DIR, stdio: 'pipe' });
     });
+
+    it('does not patch when numeric cell is cleared in Excel', async () => {
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.readFile(REAL_XLSX);
+      const sheet = workbook.getWorksheet('Weapons')!;
+
+      const headers: Record<string, number> = {};
+      sheet.getRow(1).eachCell((cell, col) => {
+        headers[String(cell.value)] = col;
+      });
+
+      // Clear the spread cell for pistol (set to empty string — simulates Excel blank)
+      for (let r = 2; r <= sheet.rowCount; r++) {
+        const row = sheet.getRow(r);
+        if (row.getCell(headers.type!).value === 'pistol') {
+          row.getCell(headers.spread!).value = '';
+          break;
+        }
+      }
+
+      await workbook.xlsx.writeFile(REAL_XLSX);
+      execSync('npm run balance:import', { cwd: ROOT_DIR, stdio: 'pipe' });
+
+      // spread should NOT be replaced with '' — it should remain numeric
+      const source = fs.readFileSync(weaponsFile, 'utf-8');
+      expect(source).not.toMatch(/spread:\s*''/);
+
+      // Restore
+      fs.writeFileSync(weaponsFile, originalWeaponSource, 'utf-8');
+      execSync('npm run balance:export', { cwd: ROOT_DIR, stdio: 'pipe' });
+    });
+
+    it('patches boolean to false when cell is cleared in Excel', async () => {
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.readFile(REAL_XLSX);
+      const sheet = workbook.getWorksheet('Weapons')!;
+
+      const headers: Record<string, number> = {};
+      sheet.getRow(1).eachCell((cell, col) => {
+        headers[String(cell.value)] = col;
+      });
+
+      // Clear the explosive cell for bazooka (which has explosive: true)
+      for (let r = 2; r <= sheet.rowCount; r++) {
+        const row = sheet.getRow(r);
+        if (row.getCell(headers.type!).value === 'bazooka') {
+          row.getCell(headers.explosive!).value = null;
+          break;
+        }
+      }
+
+      await workbook.xlsx.writeFile(REAL_XLSX);
+      execSync('npm run balance:import', { cwd: ROOT_DIR, stdio: 'pipe' });
+
+      const source = fs.readFileSync(weaponsFile, 'utf-8');
+      // bazooka's explosive should now be false
+      expect(source).toMatch(/\[WeaponType\.BAZOOKA\][\s\S]*?explosive:\s*false/);
+
+      // Restore
+      fs.writeFileSync(weaponsFile, originalWeaponSource, 'utf-8');
+      execSync('npm run balance:export', { cwd: ROOT_DIR, stdio: 'pipe' });
+    });
   });
 
   describe('Import — unknown/new entries', () => {

@@ -8,7 +8,6 @@ export interface WeaponConfig {
   bulletSpeed: number;
   bulletCount: number;
   spread: number;
-  price: number;
   color: string;
   range: number;
   weaponCategory: WeaponCategory;

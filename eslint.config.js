@@ -1,7 +1,7 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
-export default [
+export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
@@ -83,6 +83,14 @@ export default [
     extends: [tseslint.configs.disableTypeChecked],
   },
   {
+    // Scripts use tsc for type checking, disable type-checked ESLint rules
+    files: ['scripts/**/*.ts'],
+    extends: [tseslint.configs.disableTypeChecked],
+    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'off',
+    },
+  },
+  {
     // Allow JSX in .tsx files
     files: ['src/**/*.tsx'],
     languageOptions: {
@@ -96,4 +104,4 @@ export default [
   {
     ignores: ['dist/**', 'node_modules/**', 'js/**'],
   },
-];
+);

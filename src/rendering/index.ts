@@ -1,4 +1,6 @@
 export * from './BackgroundRenderer';
+export * from './BossHealthBarRenderer';
+export * from './DeathParticleRenderer';
 export * from './DeployableRenderer';
 export * from './EnemyRenderer';
 export * from './ExplosionRenderer';

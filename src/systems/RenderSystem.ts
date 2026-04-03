@@ -21,6 +21,7 @@ import { getWeaponPosition } from '@/ecs/utils/player-utils';
 import { EntityManager } from '@/managers';
 import { TimeManager } from '@/managers/TimeManager';
 import {
+  renderBossHealthBar,
   renderDeployable,
   renderPickup,
   renderPlayer,
@@ -244,6 +245,6 @@ export class RenderSystem {
         maxHp: h.maxHp,
       };
     });
-    HUD.renderBossHealthBar(ctx, ctx.canvas.width, bossData);
+    renderBossHealthBar(ctx, ctx.canvas.width, bossData);
   }
 }

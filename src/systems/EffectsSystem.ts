@@ -8,7 +8,7 @@ import { EffectsConfig } from '@/config/effects.config';
 import { EventBus } from '@/events/EventBus';
 import type { EnemyDeathData } from '@/events/GameEvents';
 import { TimeManager } from '@/managers/TimeManager';
-import { renderExplosion } from '@/rendering';
+import { renderDeathParticle, renderExplosion } from '@/rendering';
 import { VisualEffect } from '@/types';
 import { ObjectPool, randomAngle, randomRange } from '@/utils';
 import { TWO_PI, Vector2 } from '@/utils/math';
@@ -186,26 +186,12 @@ export class EffectsSystem {
   }
 
   /**
-   * Render death particle effects (pure draw, no state mutation)
+   * Render death particle effects (delegates to DeathParticleRenderer)
    */
   private renderDeathEffects(ctx: CanvasRenderingContext2D): void {
     this.deathParticlePool.forEachActiveForward((p) => {
       if (p.life <= 0) return;
-
-      ctx.save();
-      ctx.globalAlpha = p.alpha;
-      ctx.fillStyle = p.color;
-
-      if (p.isBoss) {
-        // Boss particles with glow
-        ctx.shadowColor = p.color;
-        ctx.shadowBlur = 10;
-      }
-
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * p.life, 0, TWO_PI);
-      ctx.fill();
-      ctx.restore();
+      renderDeathParticle(ctx, p);
     });
   }
 
@@ -286,7 +272,6 @@ export class EffectsSystem {
    * Render all effects
    */
   public renderAll(ctx: CanvasRenderingContext2D): void {
-    // TODO move to rendering
     this.renderExplosions(ctx);
     this.renderDeathEffects(ctx);
   }

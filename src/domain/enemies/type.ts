@@ -14,7 +14,7 @@ export interface EnemyConfig {
   isBoss?: boolean; // TODO
   massOverride?: number;
   canShoot?: boolean;
-  fireRate?: number;
+  cooldown?: number;
   bulletSpeed?: number;
   bulletDamage?: number;
   attackPatterns?: AttackPattern[];

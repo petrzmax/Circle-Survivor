@@ -31,7 +31,7 @@ export const EnemyData = trait(() => ({
 
   // Shooting
   canShoot: false,
-  fireRate: 2000,
+  cooldown: 2000,
   bulletSpeed: 240,
   bulletDamage: 15,
   attackPatterns: ['single'] as AttackPattern[],

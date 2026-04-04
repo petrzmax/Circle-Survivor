@@ -95,7 +95,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     weaponType: WeaponType.SHOTGUN,
     name: 'Shotgun',
     description: '5 pocisków na strzał',
-    price: 80,
+    price: 75,
     emoji: '💥🔫',
   },
   sniper: {
@@ -111,7 +111,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     weaponType: WeaponType.LASER,
     name: 'Laser',
     description: 'Ciągły ogień',
-    price: 120,
+    price: 75,
     emoji: '🔫⚡',
   },
   minigun: {
@@ -127,7 +127,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     weaponType: WeaponType.BAZOOKA,
     name: 'Bazooka',
     description: 'Rakieta z eksplozją obszarową',
-    price: 180,
+    price: 120,
     emoji: '🚀',
   },
   flamethrower: {
@@ -135,7 +135,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     weaponType: WeaponType.FLAMETHROWER,
     name: 'Miotacz Ognia',
     description: 'Krótki zasięg, duże obrażenia',
-    price: 140,
+    price: 110,
     emoji: '🔥🔫',
   },
   mines: {
@@ -143,7 +143,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     weaponType: WeaponType.MINES,
     name: 'Miny',
     description: 'Stawiaj pułapki za sobą',
-    price: 130,
+    price: 65,
     emoji: '💣',
   },
   nuke: {
@@ -160,7 +160,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     weaponType: WeaponType.SCYTHE,
     name: 'Kosa Kubusia',
     description: 'Obracająca się kosa, przebija wielu',
-    price: 200,
+    price: 140,
     emoji: '🌙',
   },
   sword: {
@@ -168,7 +168,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     weaponType: WeaponType.SWORD,
     name: 'Miecz Kamilka',
     description: 'Szybkie cięcia w łuk',
-    price: 180,
+    price: 79,
     emoji: '⚔️',
   },
   holyGrenade: {
@@ -176,7 +176,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     weaponType: WeaponType.HOLY_GRENADE,
     name: 'Święty Granat',
     description: 'AAAlleelluujjaaa!',
-    price: 250,
+    price: 200,
     emoji: '✝️',
   },
   banana: {
@@ -184,7 +184,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     weaponType: WeaponType.BANANA,
     name: 'Banan z Worms',
     description: 'Klasyczny banan-bomba',
-    price: 220,
+    price: 120,
     emoji: '🍌',
   },
   crossbow: {
@@ -192,7 +192,7 @@ export const SHOP_ITEMS: Record<string, ShopItem> = {
     weaponType: WeaponType.CROSSBOW,
     name: 'Kusza Przebijająca',
     description: 'Przebija do 3 wrogów!',
-    price: 280,
+    price: 260,
     emoji: '🏹',
   },
 

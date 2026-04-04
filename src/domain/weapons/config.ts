@@ -5,7 +5,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   [WeaponType.PISTOL]: {
     name: 'Pistolet',
     emoji: '🔫',
-    fireRate: 500,
+    cooldown: 500,
     damage: 10,
     bulletSpeed: 900,
     bulletCount: 1,
@@ -19,7 +19,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   [WeaponType.SMG]: {
     name: 'SMG',
     emoji: '💨',
-    fireRate: 150,
+    cooldown: 150,
     damage: 5,
     bulletSpeed: 900,
     bulletCount: 1,
@@ -33,7 +33,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   [WeaponType.SHOTGUN]: {
     name: 'Shotgun',
     emoji: '💥',
-    fireRate: 800,
+    cooldown: 800,
     damage: 8,
     bulletSpeed: 420,
     bulletCount: 5,
@@ -47,7 +47,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   [WeaponType.SNIPER]: {
     name: 'Snajperka',
     emoji: '🎯',
-    fireRate: 1500,
+    cooldown: 1500,
     damage: 50,
     bulletSpeed: 900,
     bulletCount: 1,
@@ -62,8 +62,8 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   [WeaponType.LASER]: {
     name: 'Laser',
     emoji: '⚡',
-    fireRate: 100,
-    damage: 3,
+    cooldown: 80,
+    damage: 4,
     bulletSpeed: 1200,
     bulletCount: 1,
     spread: 5,
@@ -76,8 +76,8 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   [WeaponType.MINIGUN]: {
     name: 'Minigun',
     emoji: '🔥',
-    fireRate: 50,
-    damage: 2,
+    cooldown: 30,
+    damage: 3,
     bulletSpeed: 720,
     bulletCount: 1,
     spread: 20,
@@ -90,7 +90,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   [WeaponType.BAZOOKA]: {
     name: 'Bazooka',
     emoji: '🚀',
-    fireRate: 2000,
+    cooldown: 2000,
     damage: 80,
     bulletSpeed: 300,
     bulletCount: 1,
@@ -108,7 +108,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   [WeaponType.FLAMETHROWER]: {
     name: 'Miotacz Ognia',
     emoji: '🔥',
-    fireRate: 80,
+    cooldown: 82,
     damage: 2,
     bulletSpeed: 360,
     bulletCount: 3,
@@ -125,8 +125,8 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   [WeaponType.MINES]: {
     name: 'Miny',
     emoji: '💣',
-    fireRate: 4500,
-    damage: 60,
+    cooldown: 3000,
+    damage: 65,
     bulletSpeed: 0,
     bulletCount: 1,
     spread: 0,
@@ -143,7 +143,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   [WeaponType.NUKE]: {
     name: 'Wyrzutnia Nuklearna',
     emoji: '☢️',
-    fireRate: 8000,
+    cooldown: 8000,
     damage: 300,
     bulletSpeed: 180,
     bulletCount: 1,
@@ -161,8 +161,8 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   [WeaponType.SCYTHE]: {
     name: 'Kosa Kubusia',
     emoji: '🌙',
-    fireRate: 1200,
-    damage: 35,
+    cooldown: 1225,
+    damage: 38,
     bulletSpeed: 360,
     bulletCount: 1,
     spread: 0,
@@ -179,8 +179,8 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   [WeaponType.SWORD]: {
     name: 'Miecz Kamilka',
     emoji: '⚔️',
-    fireRate: 700,
-    damage: 10,
+    cooldown: 800,
+    damage: 14,
     bulletSpeed: 720,
     bulletCount: 3,
     spread: 60,
@@ -196,8 +196,8 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   [WeaponType.HOLY_GRENADE]: {
     name: 'Święty Granat',
     emoji: '✝️',
-    fireRate: 3000,
-    damage: 150,
+    cooldown: 3000,
+    damage: 100,
     bulletSpeed: 360,
     bulletCount: 1,
     spread: 0,
@@ -216,8 +216,8 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   [WeaponType.BANANA]: {
     name: 'Banan z Worms',
     emoji: '🍌',
-    fireRate: 2500,
-    damage: 40,
+    cooldown: 2300,
+    damage: 45,
     bulletSpeed: 420,
     bulletCount: 1,
     spread: 0,
@@ -237,8 +237,8 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   [WeaponType.CROSSBOW]: {
     name: 'Kusza Przebijająca',
     emoji: '🏹',
-    fireRate: 1000,
-    damage: 60,
+    cooldown: 900,
+    damage: 52,
     bulletSpeed: 840,
     bulletCount: 1,
     spread: 0,
@@ -255,7 +255,7 @@ export const WEAPON_TYPES: Record<WeaponType | 'minibanana', WeaponConfig> = {
   minibanana: {
     name: 'Mini Banan',
     emoji: '🍌',
-    fireRate: 0,
+    cooldown: 0,
     damage: 16,
     bulletSpeed: 600,
     bulletCount: 1,

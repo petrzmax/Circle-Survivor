@@ -155,7 +155,7 @@ export class EnemySystem {
     if (!enemyData.canShoot) return null;
     if (currentTime < enemyData.nextFireTime) return null;
 
-    enemyData.nextFireTime = currentTime + this.getRandomizedFireDelay(enemyData.fireRate);
+    enemyData.nextFireTime = currentTime + this.getRandomizedFireDelay(enemyData.cooldown);
     const pattern = randomElement(enemyData.attackPatterns);
     if (!pattern) return null;
 
@@ -172,8 +172,8 @@ export class EnemySystem {
     return strategy.execute({ bulletDamage, bulletSpeed, color, position, radius, baseAngle });
   }
 
-  private getRandomizedFireDelay(fireRate: number): number {
-    const deviation = fireRate * 0.3;
-    return randomRange(fireRate - deviation, fireRate + deviation);
+  private getRandomizedFireDelay(cooldown: number): number {
+    const deviation = cooldown * 0.3;
+    return randomRange(cooldown - deviation, cooldown + deviation);
   }
 }

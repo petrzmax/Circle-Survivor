@@ -3,7 +3,7 @@ import { DeployableType, ProjectileType, VisualEffect } from '@/types';
 export interface WeaponConfig {
   name: string;
   emoji: string;
-  fireRate: number;
+  cooldown: number;
   damage: number;
   bulletSpeed: number;
   bulletCount: number;

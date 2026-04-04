@@ -9,7 +9,7 @@ import { singleton } from 'tsyringe';
 
 export interface UpgradedWeaponStats {
   damage: number;
-  fireRate: number;
+  cooldown: number;
   explosionRadius?: number;
   bulletCount: number;
 }
@@ -26,7 +26,7 @@ export class WeaponStatsCalculator {
    */
   public calculate(config: WeaponConfig, level: number): UpgradedWeaponStats {
     const damage = config.damage * this.getDamageMultiplier(level);
-    const fireRate = config.fireRate / this.getAttackSpeedMultiplier(level);
+    const cooldown = config.cooldown / this.getAttackSpeedMultiplier(level);
 
     let explosionRadius: number | undefined;
     if (config.explosive && config.explosionRadius) {
@@ -35,7 +35,7 @@ export class WeaponStatsCalculator {
 
     return {
       damage: Math.round(damage),
-      fireRate: Math.round(fireRate),
+      cooldown: Math.round(cooldown),
       explosionRadius: explosionRadius ? Math.round(explosionRadius) : undefined,
       bulletCount: config.bulletCount,
     };

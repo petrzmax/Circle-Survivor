@@ -40,8 +40,8 @@ import {
   WeaponInventory,
 } from '@/ecs/traits';
 import { world } from '@/ecs/world';
-import { TimeManager } from '@/managers/TimeManager';
 import type { ProjectileConfig } from '@/entities/Projectile';
+import { TimeManager } from '@/managers/TimeManager';
 import type { DeployableConfig, PickupConfig } from '@/types/common';
 import { CharacterType, ENEMY_PROJECTILE_TYPES, PickupType, VisualEffect } from '@/types/enums';
 import { massFromRadius, randomAngle, randomInt } from '@/utils';
@@ -192,11 +192,11 @@ export function spawnEnemy(entityConfig: EnemyEntityConfig): Entity {
       splitOnDeath: config.splitOnDeath ?? false,
       splitCount: config.splitCount ?? 0,
       canShoot: config.canShoot ?? false,
-      fireRate: config.fireRate ?? 2000,
+      cooldown: config.cooldown ?? 2000,
       bulletSpeed: config.bulletSpeed ?? 240,
       bulletDamage: Math.floor((config.bulletDamage ?? 15) * scale),
       attackPatterns: config.attackPatterns ?? ['single'],
-      nextFireTime: TimeManager.elapsed() + randomInt(0, config.fireRate ?? 2000),
+      nextFireTime: TimeManager.elapsed() + randomInt(0, config.cooldown ?? 2000),
       zigzagTimer: 0,
       zigzagDir: 1,
     }),

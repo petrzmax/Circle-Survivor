@@ -5,16 +5,16 @@
  * Unit tests cover the patch/format utility functions.
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import ExcelJS from 'exceljs';
-import path from 'node:path';
-import fs from 'node:fs';
 import { execSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import {
-  toTSValue,
-  patchFieldInBlock,
   patchBalanceValue,
+  patchFieldInBlock,
+  toTSValue,
   WEAPON_ENUM_FIELDS,
 } from './balance-import';
 
@@ -85,7 +85,7 @@ describe('patchFieldInBlock', () => {
   [WeaponType.PISTOL]: {
     name: 'Pistolet',
     emoji: '🔫',
-    fireRate: 500,
+    cooldown: 500,
     damage: 10,
     bulletSpeed: 900,
     range: 265,
@@ -98,10 +98,10 @@ describe('patchFieldInBlock', () => {
     expect(result.source).not.toContain('damage: 10,');
   });
 
-  it('patches fireRate field', () => {
-    const result = patchFieldInBlock(source, '\\[WeaponType\\.PISTOL\\]', 'fireRate', '300');
+  it('patches cooldown field', () => {
+    const result = patchFieldInBlock(source, '\\[WeaponType\\.PISTOL\\]', 'cooldown', '300');
     expect(result.patched).toBe(true);
-    expect(result.source).toContain('fireRate: 300,');
+    expect(result.source).toContain('cooldown: 300,');
   });
 
   it('returns patched: false when block not found', () => {
@@ -274,7 +274,7 @@ describe('Balance Export/Import Integration', () => {
       expect(headers).toContain('type');
       expect(headers).toContain('price');
       expect(headers).toContain('damage');
-      expect(headers).toContain('fireRate');
+      expect(headers).toContain('cooldown');
       expect(headers).toContain('weaponCategory');
     });
 
@@ -364,7 +364,7 @@ describe('Balance Export/Import Integration', () => {
 
       expect(pistolRow).not.toBeNull();
       expect(pistolRow!.getCell(headers.damage!).value).toBe(pistolConfig.damage);
-      expect(pistolRow!.getCell(headers.fireRate!).value).toBe(pistolConfig.fireRate);
+      expect(pistolRow!.getCell(headers.cooldown!).value).toBe(pistolConfig.cooldown);
       expect(pistolRow!.getCell(headers.bulletSpeed!).value).toBe(pistolConfig.bulletSpeed);
     });
   });
@@ -622,7 +622,7 @@ describe('Balance Export/Import Integration', () => {
       const newRow = sheet.getRow(sheet.rowCount + 1);
       newRow.getCell(headers.type!).value = 'railgun';
       newRow.getCell(headers.damage!).value = 500;
-      newRow.getCell(headers.fireRate!).value = 3000;
+      newRow.getCell(headers.cooldown!).value = 3000;
       newRow.getCell(headers.price!).value = 999;
 
       await workbook.xlsx.writeFile(REAL_XLSX);

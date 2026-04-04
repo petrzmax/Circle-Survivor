@@ -73,12 +73,12 @@ export class WeaponManager {
       const weapon = inv.weapons[i]!;
       const config = weapon.config;
 
-      // Calculate fire rate with level and player multiplier
+      // Calculate cooldown with level and player multiplier
       const attackSpeedMultiplier = this.statsCalculator.getAttackSpeedMultiplier(weapon.level);
-      const fireRate = config.fireRate / attackSpeedMultiplier / stats.attackSpeedMultiplier;
+      const cooldown = config.cooldown / attackSpeedMultiplier / stats.attackSpeedMultiplier;
 
       // Include fire offset for staggered shooting
-      if (currentTime - weapon.lastFireTime < fireRate + weapon.fireOffset) continue;
+      if (currentTime - weapon.lastFireTime < cooldown + weapon.fireOffset) continue;
 
       // Reset offset after first shot (staggering only applies to initial burst)
       weapon.fireOffset = 0;
@@ -351,7 +351,7 @@ export class WeaponManager {
       const weapons = weaponsByType[type]!;
       const count = weapons.length;
       for (let i = 0; i < count; i++) {
-        weapons[i]!.fireOffset = (i / count) * weapons[i]!.config.fireRate;
+        weapons[i]!.fireOffset = (i / count) * weapons[i]!.config.cooldown;
       }
     }
   }

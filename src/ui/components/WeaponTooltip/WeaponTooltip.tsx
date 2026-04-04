@@ -44,7 +44,7 @@ export function WeaponTooltip({ weaponData, position }: WeaponTooltipProps): JSX
 
   const damageDisplay =
     stats.bulletCount > 1 ? `${stats.bulletCount} x ${stats.damage}` : `${stats.damage}`;
-  const cooldownSeconds = parseFloat((stats.fireRate / 1000).toFixed(3));
+  const cooldownSeconds = parseFloat((stats.cooldown / 1000).toFixed(3));
   const description = getWeaponDescription(config);
 
   return (

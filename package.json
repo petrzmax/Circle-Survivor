@@ -38,7 +38,7 @@
     "babel-plugin-transform-typescript-metadata": "^0.4.0",
     "eslint": "^10.2.0",
     "exceljs": "^4.4.0",
-    "jsdom": "^29.0.0",
+    "jsdom": "^29.0.1",
     "prettier": "^3.8.1",
     "sass": "^1.98.0",
     "tsx": "^4.21.0",

@@ -39,7 +39,7 @@
     "eslint": "^10.3.0",
     "exceljs": "^4.4.0",
     "jsdom": "^29.0.2",
-    "prettier": "^3.8.1",
+    "prettier": "^3.8.3",
     "sass": "^1.99.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",

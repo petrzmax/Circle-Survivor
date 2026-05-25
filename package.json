@@ -50,7 +50,7 @@
   "dependencies": {
     "koota": "^0.6.6",
     "nipplejs": "^1.0.1",
-    "preact": "^10.29.1",
+    "preact": "^10.29.2",
     "react-hot-toast": "^2.6.0",
     "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.10.0"

@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/petrzmax/Circle-Survivor#readme",
   "devDependencies": {
-    "@babel/plugin-proposal-decorators": "^7.29.0",
+    "@babel/plugin-proposal-decorators": "^7.29.7",
     "@eslint/js": "^10.0.1",
     "@preact/preset-vite": "^2.10.5",
     "@testing-library/preact": "^3.2.4",

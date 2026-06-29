@@ -32,7 +32,7 @@
     "@preact/preset-vite": "^2.10.5",
     "@testing-library/preact": "^3.2.4",
     "@types/node": "^25.9.3",
-    "@typescript-eslint/eslint-plugin": "^8.58.0",
+    "@typescript-eslint/eslint-plugin": "^8.62.0",
     "@typescript-eslint/parser": "^8.61.1",
     "@vitest/ui": "^4.1.6",
     "babel-plugin-transform-typescript-metadata": "^0.4.0",

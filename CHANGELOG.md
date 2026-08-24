@@ -1,5 +1,124 @@
 # Changelog
 
+## [2.5.0](https://github.com/petrzmax/Circle-Survivor/compare/v2.4.1...v2.5.0) (2026-08-24)
+
+
+### ✨ Features
+
+* Add balance export/import scripts ([36b859d](https://github.com/petrzmax/Circle-Survivor/commit/36b859d0b609bc28d970ba1dec8c76417b81a397))
+
+
+### ⚖️ Balance Changes
+
+* **balance:** weapons price & dps adjustments ([df3db97](https://github.com/petrzmax/Circle-Survivor/commit/df3db9791d37e6e4d1e1e7758c13db4c2e5833c0))
+
+
+### 🐛 Bug Fixes
+
+* handling cleared numeric cells in balance Excel ([7a90b69](https://github.com/petrzmax/Circle-Survivor/commit/7a90b695b60dd868e3f03cbcb84c794cceb2f315))
+
+
+### ♻️ Refactoring
+
+* boss health bar and death particle rendering ([1a53eb5](https://github.com/petrzmax/Circle-Survivor/commit/1a53eb5627905570d7ef536ad7eb9a3e65e7c642))
+
+
+### 📚 Documentation
+
+* update copilot instructions with project guidelines, tech stack, and best practices ([7056505](https://github.com/petrzmax/Circle-Survivor/commit/70565058d062b70de56c698dd82bec112cfeff15))
+
+
+### 📦 Other Changes
+
+* **deps:** bump @babel/plugin-proposal-decorators ([#179](https://github.com/petrzmax/Circle-Survivor/issues/179)) ([e7508d2](https://github.com/petrzmax/Circle-Survivor/commit/e7508d29746af38c0639d9e9bd79abbc779fa43a))
+* **deps:** bump @preact/preset-vite from 2.10.4 to 2.10.5 ([#121](https://github.com/petrzmax/Circle-Survivor/issues/121)) ([8c0f76d](https://github.com/petrzmax/Circle-Survivor/commit/8c0f76d769a1b61b2e106199e41bf88894017df0))
+* **deps:** bump @preact/preset-vite from 2.10.5 to 2.10.6 ([#210](https://github.com/petrzmax/Circle-Survivor/issues/210)) ([b328ce1](https://github.com/petrzmax/Circle-Survivor/commit/b328ce14e2102890da3699e300fc19cd0f15f800))
+* **deps:** bump @types/node from 25.5.0 to 25.5.2 ([#124](https://github.com/petrzmax/Circle-Survivor/issues/124)) ([9991776](https://github.com/petrzmax/Circle-Survivor/commit/9991776efb3617129092b4b58bb5b3013d42815c))
+* **deps:** bump @types/node from 25.5.2 to 25.6.0 ([#136](https://github.com/petrzmax/Circle-Survivor/issues/136)) ([5d603d7](https://github.com/petrzmax/Circle-Survivor/commit/5d603d7f737df6c42d09a7677e89b2cab16d0341))
+* **deps:** bump @types/node from 25.6.0 to 25.6.2 ([#152](https://github.com/petrzmax/Circle-Survivor/issues/152)) ([f6c8483](https://github.com/petrzmax/Circle-Survivor/commit/f6c8483746fea4559224f0b770bda3d3fe138a1b))
+* **deps:** bump @types/node from 25.6.2 to 25.9.1 ([#168](https://github.com/petrzmax/Circle-Survivor/issues/168)) ([59890c1](https://github.com/petrzmax/Circle-Survivor/commit/59890c10965e7ef932551800b077cbcf00725fd6))
+* **deps:** bump @types/node from 25.9.1 to 25.9.2 ([#176](https://github.com/petrzmax/Circle-Survivor/issues/176)) ([7e38c5f](https://github.com/petrzmax/Circle-Survivor/commit/7e38c5fc2df9482885f715b022faa492d2e79ec6))
+* **deps:** bump @types/node from 25.9.2 to 25.9.3 ([#185](https://github.com/petrzmax/Circle-Survivor/issues/185)) ([e7b063c](https://github.com/petrzmax/Circle-Survivor/commit/e7b063cdc5e521412b85d895ef95810eaa035899))
+* **deps:** bump @types/node from 25.9.3 to 26.0.1 ([#197](https://github.com/petrzmax/Circle-Survivor/issues/197)) ([82957cb](https://github.com/petrzmax/Circle-Survivor/commit/82957cb1947975c71af16453b77cb1c5d4084b9f))
+* **deps:** bump @types/node from 26.0.1 to 26.1.0 ([#202](https://github.com/petrzmax/Circle-Survivor/issues/202)) ([9e43b2c](https://github.com/petrzmax/Circle-Survivor/commit/9e43b2c8085bc68d0267706664a6ffaaa45392af))
+* **deps:** bump @types/node from 26.1.0 to 26.1.1 ([#207](https://github.com/petrzmax/Circle-Survivor/issues/207)) ([2e9d488](https://github.com/petrzmax/Circle-Survivor/commit/2e9d4882a9e91c426b46280f715972b4dc4c15a8))
+* **deps:** bump @types/node from 26.1.1 to 26.1.2 ([#220](https://github.com/petrzmax/Circle-Survivor/issues/220)) ([bf676d2](https://github.com/petrzmax/Circle-Survivor/commit/bf676d29e21fb6f88e5bf6f115723b621f632b6e))
+* **deps:** bump @typescript-eslint/eslint-plugin from 8.61.0 to 8.62.0 ([#198](https://github.com/petrzmax/Circle-Survivor/issues/198)) ([9019d82](https://github.com/petrzmax/Circle-Survivor/commit/9019d829c45bb77114ef6577df1d46b23d1836e4))
+* **deps:** bump @typescript-eslint/eslint-plugin from 8.64.0 to 8.65.0 ([#216](https://github.com/petrzmax/Circle-Survivor/issues/216)) ([46f2ca2](https://github.com/petrzmax/Circle-Survivor/commit/46f2ca2fe04d682dd822331f361e11430ae8a152))
+* **deps:** bump @typescript-eslint/parser from 8.58.1 to 8.59.1 ([#140](https://github.com/petrzmax/Circle-Survivor/issues/140)) ([e0b7ae1](https://github.com/petrzmax/Circle-Survivor/commit/e0b7ae1165e6a4870769f44f8b3028c3730934f1))
+* **deps:** bump @typescript-eslint/parser from 8.59.1 to 8.59.2 ([#151](https://github.com/petrzmax/Circle-Survivor/issues/151)) ([3f7573c](https://github.com/petrzmax/Circle-Survivor/commit/3f7573cedba445364db704ab40a3f26421fbe606))
+* **deps:** bump @typescript-eslint/parser from 8.59.3 to 8.59.4 ([#164](https://github.com/petrzmax/Circle-Survivor/issues/164)) ([17c3c48](https://github.com/petrzmax/Circle-Survivor/commit/17c3c48bad3881758b09b09392598079f57015cc))
+* **deps:** bump @typescript-eslint/parser from 8.61.0 to 8.61.1 ([#192](https://github.com/petrzmax/Circle-Survivor/issues/192)) ([98d4aea](https://github.com/petrzmax/Circle-Survivor/commit/98d4aeacc1eefb8c8637c788f0d223f182b0061f))
+* **deps:** bump @typescript-eslint/parser from 8.64.0 to 8.65.0 ([#218](https://github.com/petrzmax/Circle-Survivor/issues/218)) ([97a30a0](https://github.com/petrzmax/Circle-Survivor/commit/97a30a04320c864053ea6fa049657bb9ccd60733))
+* **deps:** bump @vitest/ui from 4.1.2 to 4.1.4 ([#132](https://github.com/petrzmax/Circle-Survivor/issues/132)) ([f8347a8](https://github.com/petrzmax/Circle-Survivor/commit/f8347a85eae56a199f7a7765fc7fe4a89fa5b322))
+* **deps:** bump @vitest/ui from 4.1.5 to 4.1.6 ([#159](https://github.com/petrzmax/Circle-Survivor/issues/159)) ([d9ea8e3](https://github.com/petrzmax/Circle-Survivor/commit/d9ea8e30bf21e9da249601362ff25bf570fd6cb3))
+* **deps:** bump @vitest/ui from 4.1.9 to 4.1.10 ([#204](https://github.com/petrzmax/Circle-Survivor/issues/204)) ([35be05f](https://github.com/petrzmax/Circle-Survivor/commit/35be05fb7af5e90f507846b78320a0dd9a881f99))
+* **deps:** bump esbuild in the npm_and_yarn group across 1 directory ([#180](https://github.com/petrzmax/Circle-Survivor/issues/180)) ([358fac5](https://github.com/petrzmax/Circle-Survivor/commit/358fac52bd228642f98d42f680845b98f861bec0))
+* **deps:** bump eslint from 10.1.0 to 10.2.0 ([#122](https://github.com/petrzmax/Circle-Survivor/issues/122)) ([e93bfb7](https://github.com/petrzmax/Circle-Survivor/commit/e93bfb7b99a4f308a8af52699316f054aab12c70))
+* **deps:** bump eslint from 10.2.0 to 10.2.1 ([#138](https://github.com/petrzmax/Circle-Survivor/issues/138)) ([1022e7e](https://github.com/petrzmax/Circle-Survivor/commit/1022e7e099ef500d459088667356c882ff1a8277))
+* **deps:** bump eslint from 10.2.1 to 10.3.0 ([#144](https://github.com/petrzmax/Circle-Survivor/issues/144)) ([929ffff](https://github.com/petrzmax/Circle-Survivor/commit/929ffffe8e9041090eeb42507c3c1ff4cf722d63))
+* **deps:** bump eslint from 10.3.0 to 10.4.0 ([#155](https://github.com/petrzmax/Circle-Survivor/issues/155)) ([75e029b](https://github.com/petrzmax/Circle-Survivor/commit/75e029ba40c4835e6aae69d9db3587c0b0abf493))
+* **deps:** bump eslint from 10.4.0 to 10.4.1 ([#178](https://github.com/petrzmax/Circle-Survivor/issues/178)) ([8d54ed6](https://github.com/petrzmax/Circle-Survivor/commit/8d54ed6b3104710d7aee5546042a2bef89044d9f))
+* **deps:** bump eslint from 10.4.1 to 10.5.0 ([#183](https://github.com/petrzmax/Circle-Survivor/issues/183)) ([c265230](https://github.com/petrzmax/Circle-Survivor/commit/c26523091caba86a2254ad8df444a62701cfbf1e))
+* **deps:** bump eslint from 10.5.0 to 10.6.0 ([#196](https://github.com/petrzmax/Circle-Survivor/issues/196)) ([261181c](https://github.com/petrzmax/Circle-Survivor/commit/261181c58e341d87b2e1c85de518c93784101bc7))
+* **deps:** bump eslint from 10.6.0 to 10.8.0 ([#219](https://github.com/petrzmax/Circle-Survivor/issues/219)) ([3c1666c](https://github.com/petrzmax/Circle-Survivor/commit/3c1666c08e11cd03b9aed59f627837847ca407f4))
+* **deps:** bump eslint from 10.8.0 to 10.8.1 ([#230](https://github.com/petrzmax/Circle-Survivor/issues/230)) ([a9dc6fd](https://github.com/petrzmax/Circle-Survivor/commit/a9dc6fd5d8d0e162e59ed5cfbb7dad2f3ed1b2a9))
+* **deps:** bump immutable in the npm_and_yarn group across 1 directory ([#215](https://github.com/petrzmax/Circle-Survivor/issues/215)) ([ff4b17e](https://github.com/petrzmax/Circle-Survivor/commit/ff4b17eb8039459ace54c0b8a37a9061222f0dfc))
+* **deps:** bump jsdom from 29.0.0 to 29.0.1 ([#125](https://github.com/petrzmax/Circle-Survivor/issues/125)) ([ea6e10f](https://github.com/petrzmax/Circle-Survivor/commit/ea6e10f61c1d0f52f5b610f24d3782799418b3ec))
+* **deps:** bump jsdom from 29.0.1 to 29.0.2 ([#133](https://github.com/petrzmax/Circle-Survivor/issues/133)) ([264a0c7](https://github.com/petrzmax/Circle-Survivor/commit/264a0c78d05c97053368af321aa6304bd39b51f3))
+* **deps:** bump jsdom from 29.0.2 to 29.1.1 ([#146](https://github.com/petrzmax/Circle-Survivor/issues/146)) ([eb8f8ca](https://github.com/petrzmax/Circle-Survivor/commit/eb8f8ca936055ae2d10c67b517e16c6ef9f26eaa))
+* **deps:** bump koota from 0.6.5 to 0.6.6 ([#154](https://github.com/petrzmax/Circle-Survivor/issues/154)) ([d15af75](https://github.com/petrzmax/Circle-Survivor/commit/d15af75508f2baeabd3d63b07dfd6886a3e91c97))
+* **deps:** bump nipplejs from 1.0.1 to 1.0.4 ([#175](https://github.com/petrzmax/Circle-Survivor/issues/175)) ([dd78cd1](https://github.com/petrzmax/Circle-Survivor/commit/dd78cd1264557fa8a7d8ad42f6308555ad0d4c1e))
+* **deps:** bump postcss in the npm_and_yarn group across 1 directory ([#142](https://github.com/petrzmax/Circle-Survivor/issues/142)) ([a7a2d70](https://github.com/petrzmax/Circle-Survivor/commit/a7a2d70dff3d3a7646e39e005e1fec6f7c8e923f))
+* **deps:** bump preact from 10.29.0 to 10.29.1 ([#123](https://github.com/petrzmax/Circle-Survivor/issues/123)) ([89cf505](https://github.com/petrzmax/Circle-Survivor/commit/89cf5055e34abd5db450170a0c974187495f00fe))
+* **deps:** bump preact from 10.29.1 to 10.29.2 ([#166](https://github.com/petrzmax/Circle-Survivor/issues/166)) ([80899b4](https://github.com/petrzmax/Circle-Survivor/commit/80899b4fb7e775f6d920f963aae399e0dffd9cc1))
+* **deps:** bump preact from 10.29.2 to 10.29.3 ([#194](https://github.com/petrzmax/Circle-Survivor/issues/194)) ([5cc86a7](https://github.com/petrzmax/Circle-Survivor/commit/5cc86a79f46f75e2d8a7f2fd1a6f448985d871fc))
+* **deps:** bump preact from 10.29.3 to 10.29.7 ([#214](https://github.com/petrzmax/Circle-Survivor/issues/214)) ([353eaaa](https://github.com/petrzmax/Circle-Survivor/commit/353eaaaeb4d881c5ff0a4a257ec3be75a8393d90))
+* **deps:** bump preact from 10.29.7 to 10.29.8 ([#228](https://github.com/petrzmax/Circle-Survivor/issues/228)) ([02e3579](https://github.com/petrzmax/Circle-Survivor/commit/02e3579a310fa8959b870e8285d436ae43f2a27b))
+* **deps:** bump prettier from 3.8.1 to 3.8.3 ([#148](https://github.com/petrzmax/Circle-Survivor/issues/148)) ([de24d51](https://github.com/petrzmax/Circle-Survivor/commit/de24d51d0e9896465dbdbb8534d51b2bf8a03ba5))
+* **deps:** bump prettier from 3.8.3 to 3.8.4 ([#191](https://github.com/petrzmax/Circle-Survivor/issues/191)) ([a17ca28](https://github.com/petrzmax/Circle-Survivor/commit/a17ca28d480245b23888c20e3331f68d29699efe))
+* **deps:** bump prettier from 3.8.4 to 3.9.1 ([#195](https://github.com/petrzmax/Circle-Survivor/issues/195)) ([c041c4b](https://github.com/petrzmax/Circle-Survivor/commit/c041c4bf639a992975b166836e09f27db1249f54))
+* **deps:** bump prettier from 3.9.1 to 3.9.4 ([#201](https://github.com/petrzmax/Circle-Survivor/issues/201)) ([60d7601](https://github.com/petrzmax/Circle-Survivor/commit/60d760135aac4d1bc1f000745cca9467eb88bf16))
+* **deps:** bump prettier from 3.9.4 to 3.9.6 ([#217](https://github.com/petrzmax/Circle-Survivor/issues/217)) ([f1d6bbc](https://github.com/petrzmax/Circle-Survivor/commit/f1d6bbcadb9ef1f8b3cc4fe879a37b2b88a40315))
+* **deps:** bump sass from 1.100.0 to 1.101.0 ([#182](https://github.com/petrzmax/Circle-Survivor/issues/182)) ([a1a2ae7](https://github.com/petrzmax/Circle-Survivor/commit/a1a2ae70dfd5de17b28c5ea687dfb6ea96a13322))
+* **deps:** bump sass from 1.101.0 to 1.102.0 ([#227](https://github.com/petrzmax/Circle-Survivor/issues/227)) ([1acbfa7](https://github.com/petrzmax/Circle-Survivor/commit/1acbfa7f9fd64291eb65c621c1ab6f60c1a52725))
+* **deps:** bump sass from 1.98.0 to 1.99.0 ([#130](https://github.com/petrzmax/Circle-Survivor/issues/130)) ([dfba183](https://github.com/petrzmax/Circle-Survivor/commit/dfba1834c783ad8ffd80ff5df55cf8d9651b7d07))
+* **deps:** bump sass from 1.99.0 to 1.100.0 ([#162](https://github.com/petrzmax/Circle-Survivor/issues/162)) ([c7be328](https://github.com/petrzmax/Circle-Survivor/commit/c7be32848cbe75102671f8030ad60b5b718dc3d1))
+* **deps:** bump the npm_and_yarn group across 1 directory with 2 updates ([#224](https://github.com/petrzmax/Circle-Survivor/issues/224)) ([60d223b](https://github.com/petrzmax/Circle-Survivor/commit/60d223b72b8793a0893924d74c865f022d0dbc49))
+* **deps:** bump tmp in the npm_and_yarn group across 1 directory ([#167](https://github.com/petrzmax/Circle-Survivor/issues/167)) ([c38192a](https://github.com/petrzmax/Circle-Survivor/commit/c38192aad85783db12f2fdeb9d6235a0054eb1f2))
+* **deps:** bump tsx from 4.21.0 to 4.22.1 ([#160](https://github.com/petrzmax/Circle-Survivor/issues/160)) ([91c1007](https://github.com/petrzmax/Circle-Survivor/commit/91c1007d51c828efb3dec5056b7f136ad48f5741))
+* **deps:** bump tsx from 4.22.1 to 4.22.3 ([#165](https://github.com/petrzmax/Circle-Survivor/issues/165)) ([d877731](https://github.com/petrzmax/Circle-Survivor/commit/d8777319ea685712c7cb12c917cb54ecd88ca91e))
+* **deps:** bump tsx from 4.22.3 to 4.22.4 ([#170](https://github.com/petrzmax/Circle-Survivor/issues/170)) ([4eec497](https://github.com/petrzmax/Circle-Survivor/commit/4eec497b7d07a335997c34bb7e463d94f7e4e08d))
+* **deps:** bump tsx from 4.22.4 to 4.23.1 ([#206](https://github.com/petrzmax/Circle-Survivor/issues/206)) ([c716b28](https://github.com/petrzmax/Circle-Survivor/commit/c716b289405b483ecab23f1a6d53343ead08c2c7))
+* **deps:** bump typescript from 6.0.2 to 6.0.3 ([#145](https://github.com/petrzmax/Circle-Survivor/issues/145)) ([b1ff36d](https://github.com/petrzmax/Circle-Survivor/commit/b1ff36d9325a344ee777b688e8f8d9aad648b7a3))
+* **deps:** bump typescript-eslint from 8.58.0 to 8.58.1 ([#131](https://github.com/petrzmax/Circle-Survivor/issues/131)) ([928d944](https://github.com/petrzmax/Circle-Survivor/commit/928d944ed58109145baffd8acd7591c326f5ca00))
+* **deps:** bump typescript-eslint from 8.58.1 to 8.59.1 ([#139](https://github.com/petrzmax/Circle-Survivor/issues/139)) ([c7a9681](https://github.com/petrzmax/Circle-Survivor/commit/c7a9681859b1cfd7f5d8c7e5ec749d7c0cdf7d92))
+* **deps:** bump typescript-eslint from 8.59.1 to 8.59.2 ([#150](https://github.com/petrzmax/Circle-Survivor/issues/150)) ([7f6d2bf](https://github.com/petrzmax/Circle-Survivor/commit/7f6d2bfed825d13155b179fd31d46d9c8b6b424a))
+* **deps:** bump typescript-eslint from 8.59.2 to 8.59.3 ([#156](https://github.com/petrzmax/Circle-Survivor/issues/156)) ([b1b5c16](https://github.com/petrzmax/Circle-Survivor/commit/b1b5c16b3ab01658115e3bbc674b9a7556398656))
+* **deps:** bump typescript-eslint from 8.59.3 to 8.59.4 ([#163](https://github.com/petrzmax/Circle-Survivor/issues/163)) ([97fdffe](https://github.com/petrzmax/Circle-Survivor/commit/97fdffe443f2ffadf8e2ffa27ba24e2db691376a))
+* **deps:** bump typescript-eslint from 8.59.4 to 8.60.0 ([#172](https://github.com/petrzmax/Circle-Survivor/issues/172)) ([d67a8f2](https://github.com/petrzmax/Circle-Survivor/commit/d67a8f2caf5c51935b68adfd54101b0b9249909d))
+* **deps:** bump typescript-eslint from 8.60.0 to 8.60.1 ([#177](https://github.com/petrzmax/Circle-Survivor/issues/177)) ([68e0671](https://github.com/petrzmax/Circle-Survivor/commit/68e0671cc2239e82fc2e88b23a6b8612887bea4c))
+* **deps:** bump typescript-eslint from 8.60.1 to 8.61.0 ([#184](https://github.com/petrzmax/Circle-Survivor/issues/184)) ([f510b6c](https://github.com/petrzmax/Circle-Survivor/commit/f510b6c61b4695d868f089abc88d19978b5e6664))
+* **deps:** bump typescript-eslint from 8.61.0 to 8.62.1 ([#199](https://github.com/petrzmax/Circle-Survivor/issues/199)) ([704d7ac](https://github.com/petrzmax/Circle-Survivor/commit/704d7ac15f9a473c74bb996ab78c9846fc75edb0))
+* **deps:** bump typescript-eslint from 8.62.1 to 8.63.0 ([#205](https://github.com/petrzmax/Circle-Survivor/issues/205)) ([8ce8d6f](https://github.com/petrzmax/Circle-Survivor/commit/8ce8d6fb2ef6ae78cc3e63de3e77f34bf66e299f))
+* **deps:** bump typescript-eslint from 8.63.0 to 8.64.0 ([#213](https://github.com/petrzmax/Circle-Survivor/issues/213)) ([1167b95](https://github.com/petrzmax/Circle-Survivor/commit/1167b95ca1497938d16662d7d6126bf144bf7150))
+* **deps:** bump typescript-eslint from 8.64.0 to 8.65.0 ([#221](https://github.com/petrzmax/Circle-Survivor/issues/221)) ([66ce73c](https://github.com/petrzmax/Circle-Survivor/commit/66ce73cdaf43b0c3af60f8326567715290d8c18c))
+* **deps:** bump typescript-eslint from 8.65.0 to 8.66.0 ([#226](https://github.com/petrzmax/Circle-Survivor/issues/226)) ([9f51d8d](https://github.com/petrzmax/Circle-Survivor/commit/9f51d8d970a717a1bb94f65f8374d0fd125b0b9b))
+* **deps:** bump undici in the npm_and_yarn group across 1 directory ([#186](https://github.com/petrzmax/Circle-Survivor/issues/186)) ([d00b58e](https://github.com/petrzmax/Circle-Survivor/commit/d00b58eb89456b7be3c1b2ab6b9808ebb5ae3803))
+* **deps:** bump vite from 8.0.10 to 8.0.11 ([#149](https://github.com/petrzmax/Circle-Survivor/issues/149)) ([528376e](https://github.com/petrzmax/Circle-Survivor/commit/528376e4bec339faff37a7a0fb8a2424cad22317))
+* **deps:** bump vite from 8.0.11 to 8.0.13 ([#158](https://github.com/petrzmax/Circle-Survivor/issues/158)) ([11d92b7](https://github.com/petrzmax/Circle-Survivor/commit/11d92b7c3bb90e50196a00674f91f1da2ee578b9))
+* **deps:** bump vite from 8.0.13 to 8.0.14 ([#161](https://github.com/petrzmax/Circle-Survivor/issues/161)) ([b26bef1](https://github.com/petrzmax/Circle-Survivor/commit/b26bef1e2b20d0821e98a0c1c06d3269174671ac))
+* **deps:** bump vite from 8.0.14 to 8.0.16 ([#174](https://github.com/petrzmax/Circle-Survivor/issues/174)) ([1205512](https://github.com/petrzmax/Circle-Survivor/commit/120551254aba7066d49690ee15a092b160bd0703))
+* **deps:** bump vite from 8.0.16 to 8.1.3 ([#203](https://github.com/petrzmax/Circle-Survivor/issues/203)) ([05d5471](https://github.com/petrzmax/Circle-Survivor/commit/05d5471ea242ecc48fc1e91b9064eb1b1e234cc9))
+* **deps:** bump vite from 8.0.5 to 8.0.8 ([#128](https://github.com/petrzmax/Circle-Survivor/issues/128)) ([c97fa4c](https://github.com/petrzmax/Circle-Survivor/commit/c97fa4c269f3b087b95b5c67037426816685cf5e))
+* **deps:** bump vite from 8.0.8 to 8.0.10 ([#143](https://github.com/petrzmax/Circle-Survivor/issues/143)) ([e29ae82](https://github.com/petrzmax/Circle-Survivor/commit/e29ae82ae8b4522c70bb6eb16b15b7a7e8a35295))
+* **deps:** bump vite from 8.1.3 to 8.1.5 ([#212](https://github.com/petrzmax/Circle-Survivor/issues/212)) ([673c146](https://github.com/petrzmax/Circle-Survivor/commit/673c1461c0604a770bb99503f35a197f98fa0415))
+* **deps:** bump vite from 8.1.5 to 8.2.0 ([#222](https://github.com/petrzmax/Circle-Survivor/issues/222)) ([9b458f2](https://github.com/petrzmax/Circle-Survivor/commit/9b458f2927ecf9d5a8d93e1e3d7795b180249dd8))
+* **deps:** bump vite in the npm_and_yarn group across 1 directory ([#126](https://github.com/petrzmax/Circle-Survivor/issues/126)) ([e171e24](https://github.com/petrzmax/Circle-Survivor/commit/e171e24e53e3884492d9e24556b1b6a771f8c6e7))
+* **deps:** bump vitest from 4.1.4 to 4.1.5 ([#147](https://github.com/petrzmax/Circle-Survivor/issues/147)) ([2f0ca6d](https://github.com/petrzmax/Circle-Survivor/commit/2f0ca6db95a97d05f1e2da69e083ea7abb910353))
+* **deps:** bump vitest from 4.1.6 to 4.1.8 ([#169](https://github.com/petrzmax/Circle-Survivor/issues/169)) ([7a186ed](https://github.com/petrzmax/Circle-Survivor/commit/7a186ed56354355a071e21f4fcca7c9323b848c3))
+* **deps:** bump vitest from 4.1.8 to 4.1.9 ([#189](https://github.com/petrzmax/Circle-Survivor/issues/189)) ([bb1583e](https://github.com/petrzmax/Circle-Survivor/commit/bb1583e935248ef1066ab91aa5c3e9f7de4ee62e))
+
 ## [2.4.1](https://github.com/petrzmax/Circle-Survivor/compare/v2.4.0...v2.4.1) (2026-03-31)
 
 
